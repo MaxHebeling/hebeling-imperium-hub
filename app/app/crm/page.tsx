@@ -121,6 +121,8 @@ interface Lead {
   timeline: string | null;
   preferred_contact_method: string | null;
   additional_notes: string | null;
+  brand: string | null;
+  origin_page: string | null;
   status: LeadStatus;
   created_at: string;
 }
@@ -471,11 +473,11 @@ export default function CRMPage() {
                 <TableHeader>
                   <TableRow className="hover:bg-transparent border-border/50">
                     <TableHead>Codigo</TableHead>
+                    <TableHead>Origen</TableHead>
                     <TableHead>Nombre</TableHead>
                     <TableHead>Contacto</TableHead>
                     <TableHead>Ubicacion</TableHead>
                     <TableHead>Proyecto</TableHead>
-                    <TableHead>Presupuesto</TableHead>
                     <TableHead>Estado</TableHead>
                     <TableHead>Fecha</TableHead>
                   </TableRow>
@@ -489,6 +491,11 @@ export default function CRMPage() {
                     >
                       <TableCell className="font-mono text-xs text-primary">
                         {lead.lead_code}
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant="secondary" className="text-xs capitalize">
+                          {lead.brand || "ikingdom"}
+                        </Badge>
                       </TableCell>
                       <TableCell>
                         <div>
@@ -519,9 +526,6 @@ export default function CRMPage() {
                       </TableCell>
                       <TableCell className="text-sm">
                         {lead.project_type || "-"}
-                      </TableCell>
-                      <TableCell className="text-sm">
-                        {lead.budget_range || "-"}
                       </TableCell>
                       <TableCell>
                         <Badge

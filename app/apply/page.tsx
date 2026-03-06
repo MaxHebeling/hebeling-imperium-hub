@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -11,6 +12,15 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { CheckCircle2, Loader2, AlertCircle, ArrowLeft, ArrowRight, Crown } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
+
+// Configuracion de marcas disponibles
+const BRAND_CONFIG: Record<string, { name: string; logo: string; color: string }> = {
+  ikingdom: { name: "iKingdom", logo: "/logo.png", color: "primary" },
+  // Agrega tus otras marcas aqui:
+  // marca2: { name: "Marca 2", logo: "/logo-marca2.png", color: "blue" },
+  // marca3: { name: "Marca 3", logo: "/logo-marca3.png", color: "green" },
+  // marca4: { name: "Marca 4", logo: "/logo-marca4.png", color: "orange" },
+};
 
 interface FormData {
   // Basic info
@@ -83,6 +93,11 @@ const STEPS = [
 ];
 
 export default function ApplyPage() {
+  const searchParams = useSearchParams();
+  const brandParam = searchParams.get("brand") || "ikingdom";
+  const brand = BRAND_CONFIG[brandParam] ? brandParam : "ikingdom";
+  const brandConfig = BRAND_CONFIG[brand];
+  
   const [formData, setFormData] = useState<FormData>(initialFormData);
   const [currentStep, setCurrentStep] = useState(1);
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
@@ -106,8 +121,8 @@ export default function ApplyPage() {
           has_brand_colors: formData.has_brand_colors === "yes",
           has_current_landing: formData.has_current_landing === "yes",
           source: "website",
-          brand: "ikingdom",
-          origin_page: "/apply",
+          brand: brand,
+          origin_page: `/apply?brand=${brand}`,
           form_type: "full_application",
         }),
       });
@@ -160,13 +175,13 @@ export default function ApplyPage() {
       <nav className="container mx-auto px-4 py-4 flex items-center justify-between border-b border-border/50">
         <Link href="/" className="flex items-center gap-2">
           <Image
-            src="/logo.png"
-            alt="iKingdom"
+            src={brandConfig.logo}
+            alt={brandConfig.name}
             width={40}
             height={40}
             className="rounded-full"
           />
-          <span className="text-xl font-semibold">iKingdom</span>
+          <span className="text-xl font-semibold">{brandConfig.name}</span>
         </Link>
         <Link href="/login">
           <Button variant="ghost" size="sm">Staff Login</Button>
@@ -184,7 +199,7 @@ export default function ApplyPage() {
                 </div>
                 <h2 className="text-2xl font-semibold mb-2">Aplicacion Enviada</h2>
                 <p className="text-muted-foreground mb-4 max-w-md">
-                  Gracias por tu interes en iKingdom. Hemos recibido tu aplicacion y nos pondremos en contacto contigo pronto.
+                  Gracias por tu interes en {brandConfig.name}. Hemos recibido tu aplicacion y nos pondremos en contacto contigo pronto.
                 </p>
                 {leadCode && (
                   <div className="bg-muted/50 rounded-lg px-6 py-4 mb-6">
@@ -212,7 +227,7 @@ export default function ApplyPage() {
                 Aplica para trabajar con nosotros
               </div>
               <h1 className="text-3xl font-bold tracking-tight sm:text-4xl mb-3">
-                Formulario de Aplicacion iKingdom
+                Formulario de Aplicacion {brandConfig.name}
               </h1>
               <p className="text-muted-foreground max-w-xl mx-auto">
                 Cuentanos sobre tu proyecto y objetivos. Esta informacion nos ayudara a entender mejor tus necesidades.
