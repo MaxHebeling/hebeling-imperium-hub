@@ -427,6 +427,47 @@ export default function CRMPage() {
 
         {/* Leads Tab */}
         <TabsContent value="leads" className="space-y-6">
+          {/* Brand Links */}
+          <Card className="bg-card/50 border-border/50">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm font-medium flex items-center gap-2">
+                <ExternalLink className="h-4 w-4" />
+                Links de Formularios por Marca
+              </CardTitle>
+              <CardDescription className="text-xs">
+                Copia y comparte estos links con tus clientes
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="pt-0">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                {[
+                  { brand: "ikingdom", name: "iKingdom" },
+                  { brand: "editorialreino", name: "Editorial Reino" },
+                  { brand: "imperium", name: "Imperium Group" },
+                  { brand: "maxhebeling", name: "Max Hebeling" },
+                ].map((item) => (
+                  <div key={item.brand} className="flex items-center gap-2 bg-muted/30 rounded-lg p-2">
+                    <span className="text-xs font-medium min-w-[110px]">{item.name}:</span>
+                    <code className="text-xs bg-background/50 px-2 py-1 rounded flex-1 truncate">
+                      /apply?brand={item.brand}
+                    </code>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-7 px-2"
+                      onClick={() => {
+                        const url = `${window.location.origin}/apply?brand=${item.brand}`;
+                        navigator.clipboard.writeText(url);
+                      }}
+                    >
+                      <ClipboardList className="h-3 w-3" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+
           {/* Leads Search */}
           <Card className="bg-card/50 border-border/50">
             <CardContent className="p-4">
