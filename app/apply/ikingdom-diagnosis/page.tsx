@@ -419,8 +419,8 @@ export default function iKingdomDiagnosisPage() {
                         value={formData.country}
                         onChange={(e) => handleInputChange("country", e.target.value)}
                         style={{
-                          backgroundColor: "rgba(33, 209, 172, 0.05)",
-                          borderColor: "rgba(33, 209, 172, 0.3)",
+                          backgroundColor: "rgba(212, 175, 55, 0.05)",
+                          borderColor: "rgba(212, 175, 55, 0.3)",
                           color: "#E2E8F0",
                         }}
                         className="placeholder:text-gray-600"
@@ -436,8 +436,8 @@ export default function iKingdomDiagnosisPage() {
                         value={formData.city}
                         onChange={(e) => handleInputChange("city", e.target.value)}
                         style={{
-                          backgroundColor: "rgba(33, 209, 172, 0.05)",
-                          borderColor: "rgba(33, 209, 172, 0.3)",
+                          backgroundColor: "rgba(212, 175, 55, 0.05)",
+                          borderColor: "rgba(212, 175, 55, 0.3)",
                           color: "#E2E8F0",
                         }}
                         className="placeholder:text-gray-600"
@@ -600,11 +600,13 @@ export default function iKingdomDiagnosisPage() {
                     <Label style={{ color: "#E2E8F0" }}>¿Tienes un landing page o sitio web actual?</Label>
                     <RadioGroup value={formData.has_current_landing} onValueChange={(value) => handleInputChange("has_current_landing", value)}>
                       <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="si" id="landing_si" style={{ borderColor: "#21D1AC" }} />
-                        <Label htmlFor="landing_si" style={{ color: "#E2E8F0" }}>Sí</Label>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="no" id="landing_no" style={{ borderColor: "#21D1AC" }} />
+                <RadioGroupItem value="si" id="landing_si" style={{ borderColor: "#D4AF37" }} />
+                <Label htmlFor="landing_si" style={{ color: "#E2E8F0" }} className="ml-2 cursor-pointer">
+                  Sí, tengo
+                </Label>
+              </div>
+              <div className="flex items-center">
+                <RadioGroupItem value="no" id="landing_no" style={{ borderColor: "#D4AF37" }} />
                         <Label htmlFor="landing_no" style={{ color: "#E2E8F0" }}>No</Label>
                       </div>
                     </RadioGroup>
@@ -614,11 +616,13 @@ export default function iKingdomDiagnosisPage() {
                     <Label style={{ color: "#E2E8F0" }}>¿Tienes un logo?</Label>
                     <RadioGroup value={formData.has_logo} onValueChange={(value) => handleInputChange("has_logo", value)}>
                       <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="si" id="logo_si" style={{ borderColor: "#21D1AC" }} />
-                        <Label htmlFor="logo_si" style={{ color: "#E2E8F0" }}>Sí</Label>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="no" id="logo_no" style={{ borderColor: "#21D1AC" }} />
+                <RadioGroupItem value="si" id="logo_si" style={{ borderColor: "#D4AF37" }} />
+                <Label htmlFor="logo_si" style={{ color: "#E2E8F0" }} className="ml-2 cursor-pointer">
+                  Sí, tengo
+                </Label>
+              </div>
+              <div className="flex items-center">
+                <RadioGroupItem value="no" id="logo_no" style={{ borderColor: "#D4AF37" }} />
                         <Label htmlFor="logo_no" style={{ color: "#E2E8F0" }}>No</Label>
                       </div>
                     </RadioGroup>
@@ -628,11 +632,13 @@ export default function iKingdomDiagnosisPage() {
                     <Label style={{ color: "#E2E8F0" }}>¿Tienes colores de marca definidos?</Label>
                     <RadioGroup value={formData.has_brand_colors} onValueChange={(value) => handleInputChange("has_brand_colors", value)}>
                       <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="si" id="colors_si" style={{ borderColor: "#21D1AC" }} />
-                        <Label htmlFor="colors_si" style={{ color: "#E2E8F0" }}>Sí</Label>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="no" id="colors_no" style={{ borderColor: "#21D1AC" }} />
+                <RadioGroupItem value="si" id="colors_si" style={{ borderColor: "#D4AF37" }} />
+                <Label htmlFor="colors_si" style={{ color: "#E2E8F0" }} className="ml-2 cursor-pointer">
+                  Sí, tengo
+                </Label>
+              </div>
+              <div className="flex items-center">
+                <RadioGroupItem value="no" id="colors_no" style={{ borderColor: "#D4AF37" }} />
                         <Label htmlFor="colors_no" style={{ color: "#E2E8F0" }}>No</Label>
                       </div>
                     </RadioGroup>
