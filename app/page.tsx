@@ -53,7 +53,7 @@ export default function CommandPage() {
           <h1 className="title">HEBELING IMPERIUM COMMAND</h1>
 
           {/* Subtitle */}
-          <p className="subtitle">ecosistema digital</p>
+          <p className="subtitle">Ecosistema Digital</p>
         </div>
 
         {/* Staff Access - Top Right */}
@@ -160,11 +160,11 @@ export default function CommandPage() {
 
         /* Subtitle */
         .subtitle {
-          color: rgba(255, 255, 255, 0.7);
+          color: rgba(255, 255, 255, 0.95);
           font-size: 1.1rem;
           font-weight: 200;
           letter-spacing: 0.6em;
-          text-transform: lowercase;
+          text-transform: none;
           opacity: 0;
           animation: slideUpFade 1.5s ease-out 1s forwards;
         }
