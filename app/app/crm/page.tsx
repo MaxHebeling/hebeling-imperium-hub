@@ -438,7 +438,8 @@ export default function CRMPage() {
                 Copia y comparte estos links con tus clientes
               </CardDescription>
             </CardHeader>
-            <CardContent className="pt-0">
+            <CardContent className="pt-0 space-y-3">
+              {/* Standard Brand Form Links */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                 {[
                   { brand: "ikingdom", name: "iKingdom", domain: "https://ikingdom.org" },
@@ -471,6 +472,36 @@ export default function CRMPage() {
                   </div>
                   );
                 })}
+              </div>
+
+              {/* Special Forms Section */}
+              <div className="border-t border-border/30 pt-3">
+                <p className="text-xs font-medium text-muted-foreground mb-2">Formularios Especializados:</p>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                  {[
+                    { name: "iKingdom Diagnosis", url: "/apply/ikingdom-diagnosis" },
+                  ].map((item) => (
+                    <div key={item.url} className="flex items-center gap-2 bg-muted/30 rounded-lg p-2">
+                      <span className="text-xs font-medium min-w-fit">{item.name}:</span>
+                      <a 
+                        href={item.url} 
+                        className="text-xs bg-background/50 px-2 py-1 rounded flex-1 truncate text-primary hover:underline"
+                      >
+                        {item.url}
+                      </a>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-7 px-2"
+                        onClick={() => {
+                          navigator.clipboard.writeText(item.url);
+                        }}
+                      >
+                        <ClipboardList className="h-3 w-3" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
               </div>
             </CardContent>
           </Card>
