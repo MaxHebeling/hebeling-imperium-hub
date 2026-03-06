@@ -84,6 +84,13 @@ export async function middleware(request: NextRequest) {
 
   // HUB (staff)
   if (isHubHost) {
+    // If staff user is logged in and visits /login, redirect to dashboard
+    if (pathname === "/login" && user && isStaff) {
+      const url = request.nextUrl.clone();
+      url.pathname = "/app/dashboard";
+      return NextResponse.redirect(url);
+    }
+
     // Protected routes under /app/* require authentication AND staff role
     if (pathname.startsWith("/app")) {
       if (!user || !profile) {
@@ -92,29 +99,9 @@ export async function middleware(request: NextRequest) {
         return NextResponse.redirect(url);
       }
       if (!isStaff) {
-        // User is logged in but not staff - sign them out and redirect
         const url = request.nextUrl.clone();
         url.pathname = "/login";
         return NextResponse.redirect(url);
-      }
-    }
-
-    // If staff user is logged in and visits /login, redirect to dashboard
-    if (pathname === "/login" && user && isStaff) {
-      const url = request.nextUrl.clone();
-      url.pathname = "/app/dashboard";
-      return NextResponse.redirect(url);
-    }
-
-    // Public routes in hub: login, apply, assets
-    if (pathname === "/login" || pathname.startsWith("/apply") || isAsset || pathname === "/") {
-      return supabaseResponse;
-    }
-
-    // Protected routes in /app require staff
-    if (pathname.startsWith("/app")) {
-      if (!user || !isStaff) {
-        return NextResponse.redirect(new URL("/login", request.url));
       }
     }
     
@@ -131,7 +118,6 @@ export async function middleware(request: NextRequest) {
         return NextResponse.redirect(url);
       }
       if (!isClient) {
-        // User is logged in but not client - redirect
         const url = request.nextUrl.clone();
         url.pathname = "/client-login";
         return NextResponse.redirect(url);
