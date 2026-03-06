@@ -106,16 +106,17 @@ export async function middleware(request: NextRequest) {
       return NextResponse.redirect(url);
     }
 
-    const allowed =
-      pathname === "/login" ||
-      pathname === "/apply" ||
-      pathname.startsWith("/apply") ||
-      pathname.startsWith("/app") ||
-      pathname === "/" ||
-      isAsset;
+    // Public routes in hub: login, apply, assets
+    if (pathname === "/login" || pathname.startsWith("/apply") || isAsset || pathname === "/") {
+      return supabaseResponse;
+    }
 
-    if (!allowed) return NextResponse.redirect(new URL("/login", request.url));
-    if (pathname === "/" && !user) return NextResponse.redirect(new URL("/login", request.url));
+    // Protected routes in /app require staff
+    if (pathname.startsWith("/app")) {
+      if (!user || !isStaff) {
+        return NextResponse.redirect(new URL("/login", request.url));
+      }
+    }
     
     return supabaseResponse;
   }
