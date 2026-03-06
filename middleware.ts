@@ -68,6 +68,7 @@ export async function middleware(request: NextRequest) {
     const allowed =
       pathname === "/login" ||
       pathname === "/apply" ||
+      pathname.startsWith("/apply") ||
       pathname.startsWith("/app") ||
       pathname === "/" ||
       isAsset;
