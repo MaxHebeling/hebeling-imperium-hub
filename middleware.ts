@@ -13,6 +13,42 @@ export async function middleware(request: NextRequest) {
   const hostname = normalizeHost(hostHeader);
   const pathname = request.nextUrl.pathname;
 
+  // Brand domain routing - CHECK FIRST before other logic
+  const BRAND_DOMAINS: Record<string, string> = {
+    "ikingdom.org": "ikingdom",
+    "www.ikingdom.org": "ikingdom",
+    "editorialreino.com": "editorial-reino",
+    "www.editorialreino.com": "editorial-reino",
+    "imperiug.org": "imperiug",
+    "www.imperiug.org": "imperiug",
+    "maxhebeling.com": "max-hebeling",
+    "www.maxhebeling.com": "max-hebeling",
+  };
+
+  const brandSlug = BRAND_DOMAINS[hostname];
+
+  if (brandSlug) {
+    // Special handling for iKingdom - redirect /apply to the diagnosis form
+    if (brandSlug === "ikingdom") {
+      if (pathname === "/apply") {
+        const url = request.nextUrl.clone();
+        url.pathname = "/apply/ikingdom-diagnosis";
+        return NextResponse.redirect(url);
+      }
+      // Allow /apply routes for iKingdom
+      if (pathname.startsWith("/apply")) {
+        return NextResponse.next();
+      }
+    } else {
+      // For other brands, allow /apply routes without auth
+      if (pathname === "/apply" || pathname.startsWith("/apply")) {
+        return NextResponse.next();
+      }
+    }
+    // All other routes redirect to hub for now
+    return NextResponse.redirect("https://hub.hebelingimperium.com/login");
+  }
+
   // Public routes - no authentication required
   if (pathname === "/apply" || pathname.startsWith("/apply")) {
     return NextResponse.next();
@@ -123,17 +159,6 @@ export async function middleware(request: NextRequest) {
   }
 
   // Brand domain routing
-  const BRAND_DOMAINS: Record<string, string> = {
-    "ikingdom.org": "ikingdom",
-    "www.ikingdom.org": "ikingdom",
-    "editorialreino.com": "editorial-reino",
-    "www.editorialreino.com": "editorial-reino",
-    "imperiug.org": "imperiug",
-    "www.imperiug.org": "imperiug",
-    "maxhebeling.com": "max-hebeling",
-    "www.maxhebeling.com": "max-hebeling",
-  };
-
   const brandSlug = BRAND_DOMAINS[hostname];
 
   if (brandSlug) {
