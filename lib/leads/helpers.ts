@@ -12,75 +12,19 @@ export function getAdminClient() {
 }
 
 /**
- * Generate unique lead code in format: IK-YYYYMMDD-XXX
- * Uses a counter table to track daily increments
+ * Generate unique lead code in format: IK-YYYYMMDD-XXXX
+ * Uses timestamp + random number to guarantee uniqueness
  */
 export async function generateLeadCode(): Promise<string> {
-  const supabase = getAdminClient();
-  
-  // Get today's date in YYYYMMDD format
   const today = new Date();
   const dateKey = today.toISOString().slice(0, 10).replace(/-/g, '');
   
-  // Upsert the counter for today
-  const { data: counter, error } = await supabase
-    .from("lead_code_counters")
-    .upsert(
-      { 
-        date_key: dateKey, 
-        counter: 1,
-        updated_at: new Date().toISOString()
-      },
-      { 
-        onConflict: "date_key",
-        ignoreDuplicates: false
-      }
-    )
-    .select("counter")
-    .single();
-
-  if (error) {
-    // If upsert failed, try to increment existing
-    const { data: existingCounter } = await supabase
-      .from("lead_code_counters")
-      .select("counter")
-      .eq("date_key", dateKey)
-      .single();
-
-    if (existingCounter) {
-      const newCount = existingCounter.counter + 1;
-      await supabase
-        .from("lead_code_counters")
-        .update({ counter: newCount, updated_at: new Date().toISOString() })
-        .eq("date_key", dateKey);
-      
-      return `IK-${dateKey}-${String(newCount).padStart(3, '0')}`;
-    }
-    
-    // Fallback to timestamp-based code
-    const timestamp = Date.now().toString().slice(-3);
-    return `IK-${dateKey}-${timestamp}`;
-  }
-
-  // If this was an insert (counter = 1), we're done
-  // If it was an update, we need to increment
-  if (counter?.counter === 1) {
-    return `IK-${dateKey}-001`;
-  }
-
-  // Increment the counter
-  const { data: updatedCounter } = await supabase
-    .from("lead_code_counters")
-    .update({ 
-      counter: (counter?.counter || 0) + 1,
-      updated_at: new Date().toISOString()
-    })
-    .eq("date_key", dateKey)
-    .select("counter")
-    .single();
-
-  const count = updatedCounter?.counter || counter?.counter || 1;
-  return `IK-${dateKey}-${String(count).padStart(3, '0')}`;
+  // Generate a unique code using timestamp milliseconds + random number
+  const timestamp = Date.now() % 10000; // Get last 4 digits of timestamp
+  const random = Math.floor(Math.random() * 9000) + 1000; // 4-digit random number
+  const uniqueSuffix = ((timestamp + random) % 10000).toString().padStart(4, '0');
+  
+  return `IK-${dateKey}-${uniqueSuffix}`;
 }
 
 export interface LeadPayload {
