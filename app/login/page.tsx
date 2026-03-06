@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Lock, Mail } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
+import Image from "next/image";
 
 export default function StaffLoginPage() {
   const router = useRouter();
@@ -85,6 +86,16 @@ export default function StaffLoginPage() {
     <div className="min-h-screen flex items-center justify-center bg-background px-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
+          <div className="flex justify-center mb-4">
+            <Image
+              src="/logo.png"
+              alt="Hebeling Imperium"
+              width={100}
+              height={100}
+              className="rounded-full"
+              priority
+            />
+          </div>
           <h1 className="text-3xl font-semibold tracking-tight text-foreground">
             Hebeling Imperium
           </h1>

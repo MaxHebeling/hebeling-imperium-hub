@@ -53,13 +53,13 @@ export function AppSidebar({ userName, userRole }: AppSidebarProps) {
       {/* Logo */}
       <div className="p-6 border-b border-sidebar-border">
         <Link href="/app/dashboard" className="flex items-center gap-3">
-          <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-sidebar-primary/20 to-sidebar-primary/5 flex items-center justify-center border border-sidebar-border">
+          <div className="h-10 w-10 rounded-full overflow-hidden flex items-center justify-center">
             <Image
-              src="/placeholder-logo.png"
+              src="/logo.png"
               alt="Hebeling Imperium"
-              width={24}
-              height={24}
-              className="opacity-90"
+              width={40}
+              height={40}
+              className="object-cover"
             />
           </div>
           <div>
