@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { CheckCircle2, Loader2, AlertCircle, ArrowLeft, ArrowRight, Crown } from "lucide-react";
+import { CheckCircle2, Loader2, AlertCircle, ArrowLeft, ArrowRight } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 
@@ -290,7 +290,7 @@ export default function iKingdomDiagnosisPage() {
             <span style={{ color: "#E5E7EB" }} className="text-sm font-medium">Volver</span>
           </Link>
           <div className="flex items-center gap-3 mb-4">
-            <Crown className="w-8 h-8" style={{ color: "#D4AF37" }} />
+            <Image src="/ikingdom-logo.png" alt="iKingdom" width={40} height={40} />
             <h1 style={{ color: "#FFFFFF" }} className="text-3xl font-bold">Diagnóstico Estratégico</h1>
           </div>
           <p style={{ color: "#9CA3AF" }} className="text-lg">
