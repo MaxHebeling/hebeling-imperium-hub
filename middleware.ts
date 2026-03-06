@@ -13,6 +13,11 @@ export async function middleware(request: NextRequest) {
   const hostname = normalizeHost(hostHeader);
   const pathname = request.nextUrl.pathname;
 
+  // Public routes - no authentication required
+  if (pathname === "/apply" || pathname.startsWith("/apply")) {
+    return NextResponse.next();
+  }
+
   // Update Supabase session and get user + profile
   const { supabaseResponse, user, profile } = await updateSession(request);
 
