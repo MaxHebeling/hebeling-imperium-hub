@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -91,7 +91,7 @@ const STEPS = [
   { id: 4, title: "Alcance", description: "Presupuesto y tiempos" },
 ];
 
-export default function ApplyPage() {
+function ApplyPageContent() {
   const searchParams = useSearchParams();
   const brandParam = searchParams.get("brand") || "ikingdom";
   const brand = BRAND_CONFIG[brandParam] ? brandParam : "ikingdom";
@@ -721,5 +721,17 @@ export default function ApplyPage() {
         <p>iKingdom by Hebeling Imperium Group</p>
       </footer>
     </div>
+  );
+}
+
+export default function ApplyPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    }>
+      <ApplyPageContent />
+    </Suspense>
   );
 }
