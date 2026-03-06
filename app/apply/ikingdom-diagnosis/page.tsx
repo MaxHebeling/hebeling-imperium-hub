@@ -297,8 +297,6 @@ export default function iKingdomDiagnosisPage() {
             Análisis de tu arquitectura digital y posicionamiento
           </p>
         </div>
-          <p style={{ color: "#A0AEC0" }}>Diagnóstico Digital</p>
-        </div>
 
         {/* Progress Bar */}
         <div className="mb-8">
