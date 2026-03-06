@@ -156,6 +156,27 @@ export default function iKingdomDiagnosisPage() {
     setIsSubmitting(true);
     setSubmitError("");
 
+    // Validate required fields
+    if (!formData.full_name || !formData.full_name.trim()) {
+      setSubmitError("El nombre completo es requerido");
+      setIsSubmitting(false);
+      return;
+    }
+
+    if (!formData.email || !formData.email.trim()) {
+      setSubmitError("El email es requerido para poder contactarte");
+      setIsSubmitting(false);
+      return;
+    }
+
+    // Basic email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(formData.email)) {
+      setSubmitError("Por favor, ingresa un email válido");
+      setIsSubmitting(false);
+      return;
+    }
+
     try {
       const payload = {
         full_name: formData.full_name,
@@ -195,16 +216,18 @@ export default function iKingdomDiagnosisPage() {
         body: JSON.stringify(payload),
       });
 
+      const data = await response.json();
+
       if (!response.ok) {
-        throw new Error("Error al enviar el formulario");
+        throw new Error(data.error || "Error al enviar el formulario");
       }
 
-      const data = await response.json();
       setLeadCode(data.leadCode);
       localStorage.removeItem(STORAGE_KEY); // Clear form after successful submission
     } catch (error) {
+      console.error("[v0] Submit error:", error);
       setSubmitError(
-        error instanceof Error ? error.message : "Error desconocido"
+        error instanceof Error ? error.message : "Error al enviar el formulario. Intenta de nuevo."
       );
     } finally {
       setIsSubmitting(false);

@@ -266,6 +266,130 @@ Hebeling Imperium Group
 }
 
 /**
+ * Send confirmation email to the lead
+ */
+export async function sendLeadConfirmationEmail(lead: Lead): Promise<boolean> {
+  const resend = getResendClient();
+  
+  if (!resend || !lead.email) {
+    console.log("Confirmation email skipped - Resend not configured or no email");
+    return false;
+  }
+
+  const subject = `Tu Diagnóstico iKingdom — Código: ${lead.lead_code}`;
+
+  const confirmationHtml = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tu Diagnóstico iKingdom</title>
+</head>
+<body style="margin: 0; padding: 0; background-color: #0F172A; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #0F172A; padding: 40px 20px;">
+    <tr>
+      <td align="center">
+        <table width="600" cellpadding="0" cellspacing="0" style="background-color: #111827; border-radius: 8px; overflow: hidden; border: 1px solid rgba(212, 175, 55, 0.2);">
+          
+          <!-- Header -->
+          <tr>
+            <td style="background: linear-gradient(135deg, #0F172A 0%, #111827 100%); padding: 40px 32px; text-align: center;">
+              <h1 style="margin: 0; color: #D4AF37; font-size: 28px; font-weight: 600;">
+                ¡Gracias por tu confianza!
+              </h1>
+              <p style="margin: 12px 0 0; color: #9CA3AF; font-size: 16px;">
+                Hemos recibido tu formulario de diagnóstico
+              </p>
+            </td>
+          </tr>
+          
+          <!-- Lead Code Badge -->
+          <tr>
+            <td style="padding: 32px; text-align: center;">
+              <p style="margin: 0 0 12px; color: #9CA3AF; font-size: 13px; text-transform: uppercase; letter-spacing: 1px;">
+                Tu código de referencia
+              </p>
+              <div style="background-color: rgba(212, 175, 55, 0.1); border: 2px solid #D4AF37; border-radius: 8px; padding: 24px; margin-bottom: 24px;">
+                <p style="margin: 0; color: #D4AF37; font-size: 32px; font-weight: 600; font-family: 'SF Mono', Monaco, monospace; letter-spacing: 2px;">
+                  ${lead.lead_code}
+                </p>
+              </div>
+              <p style="margin: 0; color: #9CA3AF; font-size: 13px;">
+                Guarda este código para futuras consultas
+              </p>
+            </td>
+          </tr>
+          
+          <!-- Message -->
+          <tr>
+            <td style="padding: 0 32px 32px; text-align: center;">
+              <h2 style="margin: 0 0 12px; color: #FFFFFF; font-size: 18px; font-weight: 600;">
+                ¿Qué sucede ahora?
+              </h2>
+              <p style="margin: 0; color: #A0AEC0; font-size: 14px; line-height: 1.6;">
+                Nuestro equipo revisará cuidadosamente la información que proporcionaste y te contactaremos dentro de 24-48 horas a través del medio que seleccionaste (${lead.preferred_contact_method === 'whatsapp' ? 'WhatsApp' : lead.preferred_contact_method === 'email' ? 'Email' : 'Llamada'}) para discutir tu proyecto en detalle.
+              </p>
+            </td>
+          </tr>
+          
+          <!-- Info Box -->
+          <tr>
+            <td style="padding: 0 32px 32px;">
+              <div style="background-color: rgba(212, 175, 55, 0.05); border-left: 4px solid #D4AF37; padding: 16px 20px; border-radius: 4px;">
+                <p style="margin: 0; color: #E2E8F0; font-size: 13px; line-height: 1.6;">
+                  <strong style="color: #D4AF37;">💡 Tip:</strong> Si tienes preguntas adicionales mientras tanto, puedes responder a este email o contactarnos directamente a través de nuestro sitio web.
+                </p>
+              </div>
+            </td>
+          </tr>
+          
+          <!-- Footer -->
+          <tr>
+            <td style="background-color: #0A0E17; padding: 24px 32px; text-align: center; border-top: 1px solid rgba(212, 175, 55, 0.1);">
+              <p style="margin: 0 0 8px; color: #D4AF37; font-size: 14px; font-weight: 600;">
+                iKingdom
+              </p>
+              <p style="margin: 0; color: #71717a; font-size: 12px;">
+                Arquitectura Digital Estratégica
+              </p>
+              <p style="margin: 8px 0 0; color: #52525b; font-size: 11px;">
+                © ${new Date().getFullYear()} Hebeling Imperium Group. Todos los derechos reservados.
+              </p>
+            </td>
+          </tr>
+          
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
+  `.trim();
+
+  try {
+    const { error } = await resend.emails.send({
+      from: process.env.RESEND_FROM_EMAIL || "iKingdom <noreply@hebeling.io>",
+      to: lead.email,
+      subject,
+      html: confirmationHtml,
+      text: `Tu Diagnóstico iKingdom\n\nCódigo de referencia: ${lead.lead_code}\n\nGracias por tu confianza. Nos pondremos en contacto contigo pronto.\n\niKingdom - Arquitectura Digital Estratégica`,
+    });
+
+    if (error) {
+      console.error("Resend error sending confirmation:", error);
+      return false;
+    }
+
+    console.log(`Confirmation email sent to ${lead.email} with code ${lead.lead_code}`);
+    return true;
+  } catch (err) {
+    console.error("Failed to send confirmation email:", err);
+    return false;
+  }
+}
+
+/**
  * Send internal notification email for new lead
  */
 export async function sendLeadNotificationEmail(lead: Lead): Promise<boolean> {
