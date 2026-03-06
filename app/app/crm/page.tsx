@@ -479,7 +479,7 @@ export default function CRMPage() {
                 <p className="text-xs font-medium text-muted-foreground mb-2">Formularios Especializados:</p>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                   {[
-                    { name: "iKingdom Diagnosis", url: "/apply/ikingdom-diagnosis", fullUrl: "https://hub.hebelingimperium.com/apply/ikingdom-diagnosis" },
+                    { name: "iKingdom Leads Link", url: "/apply/ikingdom-diagnosis", fullUrl: "https://hub.hebelingimperium.com/apply/ikingdom-diagnosis" },
                   ].map((item) => (
                     <div key={item.url} className="flex items-center gap-2 bg-muted/30 rounded-lg p-2">
                       <span className="text-xs font-medium min-w-fit">{item.name}:</span>
