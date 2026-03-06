@@ -76,6 +76,19 @@ interface Tenant {
   name: string;
 }
 
+interface VercelProject {
+  id: string;
+  vercel_project_id: string;
+  name: string;
+  framework: string | null;
+  repo_name: string | null;
+  production_domain: string | null;
+  vercel_url: string | null;
+  preview_url: string | null;
+  deployment_status: string | null;
+  last_synced_at: string | null;
+}
+
 const STATUS_CONFIG: Record<WebsiteStatus, { label: string; color: string; icon: React.ReactNode }> = {
   draft: { label: "Draft", color: "bg-muted text-muted-foreground", icon: <FileEdit className="h-3 w-3" /> },
   in_progress: { label: "In Progress", color: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400", icon: <Activity className="h-3 w-3" /> },
@@ -86,6 +99,7 @@ const STATUS_CONFIG: Record<WebsiteStatus, { label: string; color: string; icon:
 
 export default function WebsitesPage() {
   const [websites, setWebsites] = useState<Website[]>([]);
+  const [vercelProjects, setVercelProjects] = useState<VercelProject[]>([]);
   const [brands, setBrands] = useState<Brand[]>([]);
   const [tenants, setTenants] = useState<Tenant[]>([]);
   const [orgId, setOrgId] = useState<string | null>(null);
@@ -155,6 +169,15 @@ export default function WebsitesPage() {
         .order("created_at", { ascending: false });
 
       setWebsites(websitesData as Website[] || []);
+
+      // Fetch Vercel projects
+      const { data: vercelData } = await supabase
+        .from("vercel_projects")
+        .select("*")
+        .eq("org_id", profile.org_id)
+        .order("last_synced_at", { ascending: false });
+
+      setVercelProjects(vercelData || []);
       setLoading(false);
     }
 
@@ -182,33 +205,20 @@ export default function WebsitesPage() {
     setIsSyncing(true);
     setSyncMessage(null);
     try {
-      const response = await fetch("/api/vercel/sync", { method: "POST" });
+      const response = await fetch("/api/vercel/import-projects", { method: "POST" });
       const data = await response.json();
       
       if (response.ok) {
         setSyncMessage(data.message);
-        // Refresh websites list
-        const { data: { user } } = await supabase.auth.getUser();
-        if (user) {
-          const { data: profile } = await supabase
-            .from("profiles")
-            .select("org_id")
-            .eq("id", user.id)
-            .single();
+        // Refresh vercel projects list
+        if (orgId) {
+          const { data: vercelData } = await supabase
+            .from("vercel_projects")
+            .select("*")
+            .eq("org_id", orgId)
+            .order("last_synced_at", { ascending: false });
           
-          if (profile) {
-            const { data: websitesData } = await supabase
-              .from("websites")
-              .select(`
-                id, name, primary_domain, environment, status, notes, created_at,
-                tenant:tenants(id, name),
-                brand:brands(id, name)
-              `)
-              .eq("org_id", profile.org_id)
-              .order("created_at", { ascending: false });
-            
-            setWebsites(websitesData as Website[] || []);
-          }
+          setVercelProjects(vercelData || []);
         }
       } else {
         setSyncMessage(`Error: ${data.error}`);
@@ -623,6 +633,101 @@ export default function WebsitesPage() {
             </TableBody>
           </Table>
         </Card>
+      )}
+
+      {/* Vercel Projects Section */}
+      {vercelProjects.length > 0 && (
+        <div className="space-y-4 mt-8">
+          <div className="flex items-center gap-2">
+            <Server className="h-5 w-5 text-muted-foreground" />
+            <h2 className="text-lg font-semibold">Vercel Projects</h2>
+            <Badge variant="secondary">{vercelProjects.length}</Badge>
+          </div>
+          <Card>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Name</TableHead>
+                  <TableHead>Production Domain</TableHead>
+                  <TableHead>Framework</TableHead>
+                  <TableHead>Repository</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Last Synced</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {vercelProjects.map((project) => (
+                  <TableRow key={project.id}>
+                    <TableCell className="font-medium">{project.name}</TableCell>
+                    <TableCell>
+                      {project.production_domain ? (
+                        <a
+                          href={`https://${project.production_domain}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-blue-600 hover:underline flex items-center gap-1"
+                        >
+                          {project.production_domain}
+                          <ExternalLink className="h-3 w-3" />
+                        </a>
+                      ) : (
+                        <span className="text-muted-foreground">-</span>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      {project.framework ? (
+                        <Badge variant="outline" className="capitalize">
+                          {project.framework}
+                        </Badge>
+                      ) : (
+                        <span className="text-muted-foreground">-</span>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      {project.repo_name || <span className="text-muted-foreground">-</span>}
+                    </TableCell>
+                    <TableCell>
+                      {project.deployment_status ? (
+                        <Badge 
+                          className={
+                            project.deployment_status === "READY" 
+                              ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400" 
+                              : project.deployment_status === "ERROR"
+                              ? "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"
+                              : "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400"
+                          }
+                        >
+                          {project.deployment_status}
+                        </Badge>
+                      ) : (
+                        <span className="text-muted-foreground">-</span>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      {project.last_synced_at 
+                        ? new Date(project.last_synced_at).toLocaleDateString()
+                        : "-"}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      {project.vercel_url && (
+                        <a
+                          href={project.vercel_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          <Button variant="ghost" size="sm">
+                            <ExternalLink className="h-4 w-4" />
+                          </Button>
+                        </a>
+                      )}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </Card>
+        </div>
       )}
     </div>
   );
