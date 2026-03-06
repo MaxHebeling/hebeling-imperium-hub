@@ -59,6 +59,14 @@ import {
   ClipboardList,
   Phone,
   Mail,
+  X,
+  Globe,
+  Target,
+  Palette,
+  Calendar,
+  MessageSquare,
+  ExternalLink,
+  Check,
 } from "lucide-react";
 import Link from "next/link";
 
@@ -94,8 +102,25 @@ interface Lead {
   whatsapp: string | null;
   country: string | null;
   city: string | null;
+  project_description: string | null;
+  organization_type: string | null;
+  website_url: string | null;
+  social_links: string | null;
+  main_goal: string | null;
+  expected_result: string | null;
+  main_service: string | null;
+  ideal_client: string | null;
+  has_logo: boolean | null;
+  has_brand_colors: boolean | null;
+  visual_style: string | null;
+  available_content: string | null;
+  reference_websites: string | null;
+  has_current_landing: boolean | null;
   project_type: string | null;
   budget_range: string | null;
+  timeline: string | null;
+  preferred_contact_method: string | null;
+  additional_notes: string | null;
   status: LeadStatus;
   created_at: string;
 }
@@ -125,6 +150,8 @@ export default function CRMPage() {
   const [loading, setLoading] = useState(true);
   const [contactsLoading, setContactsLoading] = useState(true);
   const [leadsLoading, setLeadsLoading] = useState(true);
+  const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
+  const [isLeadModalOpen, setIsLeadModalOpen] = useState(false);
   const [search, setSearch] = useState("");
   const [contactSearch, setContactSearch] = useState("");
   const [leadSearch, setLeadSearch] = useState("");
@@ -226,7 +253,7 @@ export default function CRMPage() {
 
     let query = supabase
       .from("leads")
-      .select("id, lead_code, full_name, company_name, email, whatsapp, country, city, project_type, budget_range, status, created_at")
+      .select("*")
       .order("created_at", { ascending: false });
 
     if (leadSearch) {
@@ -350,6 +377,11 @@ export default function CRMPage() {
 
   const totalPages = Math.ceil(totalCount / ITEMS_PER_PAGE);
 
+  const handleViewLead = (lead: Lead) => {
+    setSelectedLead(lead);
+    setIsLeadModalOpen(true);
+  };
+
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString("en-US", {
       year: "numeric",
@@ -452,7 +484,8 @@ export default function CRMPage() {
                   {leads.map((lead) => (
                     <TableRow
                       key={lead.id}
-                      className="border-border/50 hover:bg-muted/30"
+                      className="border-border/50 hover:bg-muted/30 cursor-pointer"
+                      onClick={() => handleViewLead(lead)}
                     >
                       <TableCell className="font-mono text-xs text-primary">
                         {lead.lead_code}
@@ -866,6 +899,261 @@ export default function CRMPage() {
             >
               {saving && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
               {editingTenant ? "Save Changes" : "Create Client"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Lead Detail Modal */}
+      <Dialog open={isLeadModalOpen} onOpenChange={setIsLeadModalOpen}>
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <div className="flex items-center justify-between">
+              <div>
+                <DialogTitle className="text-xl">{selectedLead?.full_name}</DialogTitle>
+                <DialogDescription className="flex items-center gap-2 mt-1">
+                  <span className="font-mono text-primary">{selectedLead?.lead_code}</span>
+                  {selectedLead && (
+                    <Badge
+                      variant="outline"
+                      className={`capitalize text-xs ${leadStatusColors[selectedLead.status]}`}
+                    >
+                      {selectedLead.status.replace("_", " ")}
+                    </Badge>
+                  )}
+                </DialogDescription>
+              </div>
+            </div>
+          </DialogHeader>
+
+          {selectedLead && (
+            <div className="space-y-6 mt-4">
+              {/* Informacion Basica */}
+              <div className="space-y-3">
+                <h3 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide flex items-center gap-2">
+                  <Contact className="h-4 w-4" />
+                  Informacion Basica
+                </h3>
+                <div className="grid grid-cols-2 gap-4 bg-muted/30 rounded-lg p-4">
+                  <div>
+                    <p className="text-xs text-muted-foreground">Nombre</p>
+                    <p className="font-medium">{selectedLead.full_name}</p>
+                  </div>
+                  {selectedLead.company_name && (
+                    <div>
+                      <p className="text-xs text-muted-foreground">Empresa</p>
+                      <p className="font-medium">{selectedLead.company_name}</p>
+                    </div>
+                  )}
+                  {selectedLead.email && (
+                    <div>
+                      <p className="text-xs text-muted-foreground">Email</p>
+                      <a href={`mailto:${selectedLead.email}`} className="font-medium text-primary hover:underline flex items-center gap-1">
+                        <Mail className="h-3 w-3" />
+                        {selectedLead.email}
+                      </a>
+                    </div>
+                  )}
+                  {selectedLead.whatsapp && (
+                    <div>
+                      <p className="text-xs text-muted-foreground">WhatsApp</p>
+                      <a href={`https://wa.me/${selectedLead.whatsapp.replace(/\D/g, '')}`} target="_blank" rel="noopener noreferrer" className="font-medium text-primary hover:underline flex items-center gap-1">
+                        <Phone className="h-3 w-3" />
+                        {selectedLead.whatsapp}
+                      </a>
+                    </div>
+                  )}
+                  {(selectedLead.city || selectedLead.country) && (
+                    <div>
+                      <p className="text-xs text-muted-foreground">Ubicacion</p>
+                      <p className="font-medium">{[selectedLead.city, selectedLead.country].filter(Boolean).join(", ")}</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Detalles del Proyecto */}
+              <div className="space-y-3">
+                <h3 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide flex items-center gap-2">
+                  <Target className="h-4 w-4" />
+                  Detalles del Proyecto
+                </h3>
+                <div className="bg-muted/30 rounded-lg p-4 space-y-4">
+                  {selectedLead.project_description && (
+                    <div>
+                      <p className="text-xs text-muted-foreground">Descripcion del Proyecto</p>
+                      <p className="mt-1">{selectedLead.project_description}</p>
+                    </div>
+                  )}
+                  <div className="grid grid-cols-2 gap-4">
+                    {selectedLead.organization_type && (
+                      <div>
+                        <p className="text-xs text-muted-foreground">Tipo de Organizacion</p>
+                        <p className="font-medium">{selectedLead.organization_type}</p>
+                      </div>
+                    )}
+                    {selectedLead.main_goal && (
+                      <div>
+                        <p className="text-xs text-muted-foreground">Objetivo Principal</p>
+                        <p className="font-medium">{selectedLead.main_goal}</p>
+                      </div>
+                    )}
+                    {selectedLead.expected_result && (
+                      <div>
+                        <p className="text-xs text-muted-foreground">Resultado Esperado</p>
+                        <p className="font-medium">{selectedLead.expected_result}</p>
+                      </div>
+                    )}
+                    {selectedLead.main_service && (
+                      <div>
+                        <p className="text-xs text-muted-foreground">Servicio Principal</p>
+                        <p className="font-medium">{selectedLead.main_service}</p>
+                      </div>
+                    )}
+                    {selectedLead.ideal_client && (
+                      <div>
+                        <p className="text-xs text-muted-foreground">Cliente Ideal</p>
+                        <p className="font-medium">{selectedLead.ideal_client}</p>
+                      </div>
+                    )}
+                  </div>
+                  {selectedLead.website_url && (
+                    <div>
+                      <p className="text-xs text-muted-foreground">Sitio Web Actual</p>
+                      <a href={selectedLead.website_url} target="_blank" rel="noopener noreferrer" className="font-medium text-primary hover:underline flex items-center gap-1">
+                        <Globe className="h-3 w-3" />
+                        {selectedLead.website_url}
+                        <ExternalLink className="h-3 w-3" />
+                      </a>
+                    </div>
+                  )}
+                  {selectedLead.social_links && (
+                    <div>
+                      <p className="text-xs text-muted-foreground">Redes Sociales</p>
+                      <p className="font-medium">{selectedLead.social_links}</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Branding */}
+              <div className="space-y-3">
+                <h3 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide flex items-center gap-2">
+                  <Palette className="h-4 w-4" />
+                  Branding
+                </h3>
+                <div className="bg-muted/30 rounded-lg p-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <p className="text-xs text-muted-foreground">Tiene Logo</p>
+                      <p className="font-medium flex items-center gap-1">
+                        {selectedLead.has_logo ? <Check className="h-4 w-4 text-emerald-500" /> : <X className="h-4 w-4 text-red-500" />}
+                        {selectedLead.has_logo ? "Si" : "No"}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted-foreground">Tiene Colores de Marca</p>
+                      <p className="font-medium flex items-center gap-1">
+                        {selectedLead.has_brand_colors ? <Check className="h-4 w-4 text-emerald-500" /> : <X className="h-4 w-4 text-red-500" />}
+                        {selectedLead.has_brand_colors ? "Si" : "No"}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted-foreground">Tiene Landing Actual</p>
+                      <p className="font-medium flex items-center gap-1">
+                        {selectedLead.has_current_landing ? <Check className="h-4 w-4 text-emerald-500" /> : <X className="h-4 w-4 text-red-500" />}
+                        {selectedLead.has_current_landing ? "Si" : "No"}
+                      </p>
+                    </div>
+                    {selectedLead.visual_style && (
+                      <div>
+                        <p className="text-xs text-muted-foreground">Estilo Visual</p>
+                        <p className="font-medium">{selectedLead.visual_style}</p>
+                      </div>
+                    )}
+                  </div>
+                  {selectedLead.available_content && (
+                    <div className="mt-4">
+                      <p className="text-xs text-muted-foreground">Contenido Disponible</p>
+                      <p className="font-medium">{selectedLead.available_content}</p>
+                    </div>
+                  )}
+                  {selectedLead.reference_websites && (
+                    <div className="mt-4">
+                      <p className="text-xs text-muted-foreground">Sitios de Referencia</p>
+                      <p className="font-medium">{selectedLead.reference_websites}</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Alcance */}
+              <div className="space-y-3">
+                <h3 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide flex items-center gap-2">
+                  <Calendar className="h-4 w-4" />
+                  Alcance del Proyecto
+                </h3>
+                <div className="bg-muted/30 rounded-lg p-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    {selectedLead.project_type && (
+                      <div>
+                        <p className="text-xs text-muted-foreground">Tipo de Proyecto</p>
+                        <p className="font-medium">{selectedLead.project_type}</p>
+                      </div>
+                    )}
+                    {selectedLead.budget_range && (
+                      <div>
+                        <p className="text-xs text-muted-foreground">Rango de Presupuesto</p>
+                        <p className="font-medium">{selectedLead.budget_range}</p>
+                      </div>
+                    )}
+                    {selectedLead.timeline && (
+                      <div>
+                        <p className="text-xs text-muted-foreground">Timeline</p>
+                        <p className="font-medium">{selectedLead.timeline}</p>
+                      </div>
+                    )}
+                    {selectedLead.preferred_contact_method && (
+                      <div>
+                        <p className="text-xs text-muted-foreground">Metodo de Contacto Preferido</p>
+                        <p className="font-medium">{selectedLead.preferred_contact_method}</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Notas Adicionales */}
+              {selectedLead.additional_notes && (
+                <div className="space-y-3">
+                  <h3 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide flex items-center gap-2">
+                    <MessageSquare className="h-4 w-4" />
+                    Notas Adicionales
+                  </h3>
+                  <div className="bg-muted/30 rounded-lg p-4">
+                    <p>{selectedLead.additional_notes}</p>
+                  </div>
+                </div>
+              )}
+
+              {/* Fecha de Creacion */}
+              <div className="text-xs text-muted-foreground text-right">
+                Recibido el {formatDate(selectedLead.created_at)}
+              </div>
+            </div>
+          )}
+
+          <DialogFooter className="mt-4">
+            {selectedLead?.whatsapp && (
+              <Button asChild variant="outline" className="gap-2">
+                <a href={`https://wa.me/${selectedLead.whatsapp.replace(/\D/g, '')}`} target="_blank" rel="noopener noreferrer">
+                  <Phone className="h-4 w-4" />
+                  Contactar por WhatsApp
+                </a>
+              </Button>
+            )}
+            <Button onClick={() => setIsLeadModalOpen(false)}>
+              Cerrar
             </Button>
           </DialogFooter>
         </DialogContent>
