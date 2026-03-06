@@ -48,6 +48,7 @@ import {
   Archive,
   FileEdit,
   Eye,
+  RefreshCw,
 } from "lucide-react";
 import Link from "next/link";
 
@@ -96,6 +97,10 @@ export default function WebsitesPage() {
   const [brandFilter, setBrandFilter] = useState<string>("all");
   const [tenantFilter, setTenantFilter] = useState<string>("all");
   const [statusFilter, setStatusFilter] = useState<string>("all");
+
+  // Vercel Sync
+  const [isSyncing, setIsSyncing] = useState(false);
+  const [syncMessage, setSyncMessage] = useState<string | null>(null);
 
   // Modal
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -173,6 +178,48 @@ export default function WebsitesPage() {
     draft: websites.filter((w) => w.status === "draft").length,
   };
 
+  const handleSyncVercel = async () => {
+    setIsSyncing(true);
+    setSyncMessage(null);
+    try {
+      const response = await fetch("/api/vercel/sync", { method: "POST" });
+      const data = await response.json();
+      
+      if (response.ok) {
+        setSyncMessage(data.message);
+        // Refresh websites list
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          const { data: profile } = await supabase
+            .from("profiles")
+            .select("org_id")
+            .eq("id", user.id)
+            .single();
+          
+          if (profile) {
+            const { data: websitesData } = await supabase
+              .from("websites")
+              .select(`
+                id, name, primary_domain, environment, status, notes, created_at,
+                tenant:tenants(id, name),
+                brand:brands(id, name)
+              `)
+              .eq("org_id", profile.org_id)
+              .order("created_at", { ascending: false });
+            
+            setWebsites(websitesData as Website[] || []);
+          }
+        }
+      } else {
+        setSyncMessage(`Error: ${data.error}`);
+      }
+    } catch (error) {
+      setSyncMessage("Error connecting to Vercel");
+    } finally {
+      setIsSyncing(false);
+    }
+  };
+
   const handleCreateWebsite = async () => {
     if (!orgId || !newWebsite.name) return;
 
@@ -230,13 +277,18 @@ export default function WebsitesPage() {
             Manage all web properties across your organization
           </p>
         </div>
-        <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-          <DialogTrigger asChild>
-            <Button>
-              <Plus className="mr-2 h-4 w-4" />
-              Add Website
-            </Button>
-          </DialogTrigger>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={handleSyncVercel} disabled={isSyncing}>
+            <RefreshCw className={`mr-2 h-4 w-4 ${isSyncing ? "animate-spin" : ""}`} />
+            {isSyncing ? "Syncing..." : "Sync Vercel"}
+          </Button>
+          <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+            <DialogTrigger asChild>
+              <Button>
+                <Plus className="mr-2 h-4 w-4" />
+                Add Website
+              </Button>
+            </DialogTrigger>
           <DialogContent className="sm:max-w-[500px]">
             <DialogHeader>
               <DialogTitle>Add New Website</DialogTitle>
@@ -371,8 +423,16 @@ export default function WebsitesPage() {
               </Button>
             </DialogFooter>
           </DialogContent>
-        </Dialog>
+          </Dialog>
+        </div>
       </div>
+
+      {/* Sync Message */}
+      {syncMessage && (
+        <div className={`p-3 rounded-md text-sm ${syncMessage.startsWith("Error") ? "bg-destructive/10 text-destructive" : "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"}`}>
+          {syncMessage}
+        </div>
+      )}
 
       {/* Stats */}
       <div className="grid gap-4 md:grid-cols-4">
