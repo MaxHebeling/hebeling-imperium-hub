@@ -11,12 +11,13 @@ import {
   FolderKanban, 
   Globe,
   FileText,
-  Settings
+  Settings,
+  ClipboardList
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useLanguage } from "@/lib/i18n";
 
-type NavKey = "dashboard" | "crm" | "deals" | "projects" | "websites" | "documents" | "settings";
+type NavKey = "dashboard" | "crm" | "deals" | "projects" | "websites" | "documents" | "settings" | "applyForm";
 
 const navItems: { href: string; labelKey: NavKey; icon: typeof LayoutDashboard }[] = [
   { href: "/app/dashboard", labelKey: "dashboard", icon: LayoutDashboard },
@@ -26,6 +27,7 @@ const navItems: { href: string; labelKey: NavKey; icon: typeof LayoutDashboard }
   { href: "/app/websites", labelKey: "websites", icon: Globe },
   { href: "/app/documents", labelKey: "documents", icon: FileText },
   { href: "/app/settings", labelKey: "settings", icon: Settings },
+  { href: "/apply", labelKey: "applyForm", icon: ClipboardList },
 ];
 
 interface AppSidebarProps {
