@@ -281,16 +281,22 @@ export default function iKingdomDiagnosisPage() {
   }
 
   return (
-    <div className="min-h-screen p-4" style={{ backgroundColor: "#0B0F19" }}>
-      <div className="max-w-2xl mx-auto py-8">
+    <div style={{ backgroundColor: "#0A0E17", minHeight: "100vh" }} className="p-8">
+      <div className="max-w-2xl mx-auto">
         {/* Header */}
         <div className="mb-8">
+          <Link href="/" className="inline-flex items-center gap-2 mb-6 hover:opacity-80 transition-opacity">
+            <ArrowLeft className="w-5 h-5" style={{ color: "#10D981" }} />
+            <span style={{ color: "#F3F4F6" }} className="text-sm font-medium">Volver</span>
+          </Link>
           <div className="flex items-center gap-3 mb-4">
-            <Crown size={32} style={{ color: "#21D1AC" }} />
-            <h1 className="text-3xl font-bold" style={{ color: "#21D1AC" }}>
-              iKingdom
-            </h1>
+            <Crown className="w-8 h-8" style={{ color: "#10D981" }} />
+            <h1 style={{ color: "#F3F4F6" }} className="text-3xl font-bold">Diagnóstico Estratégico</h1>
           </div>
+          <p style={{ color: "#9CA3AF" }} className="text-lg">
+            Análisis de tu arquitectura digital y posicionamiento
+          </p>
+        </div>
           <p style={{ color: "#A0AEC0" }}>Diagnóstico Digital</p>
         </div>
 
