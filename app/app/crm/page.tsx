@@ -479,7 +479,7 @@ export default function CRMPage() {
                 <p className="text-xs font-medium text-muted-foreground mb-2">Formularios Especializados:</p>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                   {[
-                    { name: "iKingdom Diagnosis", url: "https://ikingdom.org/apply/ikingdom-diagnosis" },
+                    { name: "iKingdom Diagnosis", url: "/apply/ikingdom-diagnosis", fullUrl: "https://hub.hebelingimperium.com/apply/ikingdom-diagnosis" },
                   ].map((item) => (
                     <div key={item.url} className="flex items-center gap-2 bg-muted/30 rounded-lg p-2">
                       <span className="text-xs font-medium min-w-fit">{item.name}:</span>
@@ -489,14 +489,14 @@ export default function CRMPage() {
                         rel="noopener noreferrer"
                         className="text-xs bg-background/50 px-2 py-1 rounded flex-1 truncate text-primary hover:underline"
                       >
-                        {item.url}
+                        {item.fullUrl}
                       </a>
                       <Button
                         variant="ghost"
                         size="sm"
                         className="h-7 px-2"
                         onClick={() => {
-                          navigator.clipboard.writeText(item.url);
+                          navigator.clipboard.writeText(item.fullUrl);
                         }}
                       >
                         <ClipboardList className="h-3 w-3" />
