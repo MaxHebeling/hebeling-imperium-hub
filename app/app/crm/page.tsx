@@ -56,6 +56,9 @@ import {
   ChevronRight,
   Loader2,
   Contact,
+  ClipboardList,
+  Phone,
+  Mail,
 } from "lucide-react";
 import Link from "next/link";
 
@@ -80,6 +83,23 @@ interface Tenant {
   org_id: string;
 }
 
+type LeadStatus = "new_lead" | "contacted" | "qualified" | "converted" | "lost";
+
+interface Lead {
+  id: string;
+  lead_code: string;
+  full_name: string;
+  company_name: string | null;
+  email: string | null;
+  whatsapp: string | null;
+  country: string | null;
+  city: string | null;
+  project_type: string | null;
+  budget_range: string | null;
+  status: LeadStatus;
+  created_at: string;
+}
+
 const statusColors: Record<TenantStatus, string> = {
   lead: "bg-amber-500/20 text-amber-400 border-amber-500/30",
   active: "bg-emerald-500/20 text-emerald-400 border-emerald-500/30",
@@ -87,16 +107,27 @@ const statusColors: Record<TenantStatus, string> = {
   archived: "bg-zinc-500/20 text-zinc-400 border-zinc-500/30",
 };
 
+const leadStatusColors: Record<LeadStatus, string> = {
+  new_lead: "bg-amber-500/20 text-amber-400 border-amber-500/30",
+  contacted: "bg-blue-500/20 text-blue-400 border-blue-500/30",
+  qualified: "bg-purple-500/20 text-purple-400 border-purple-500/30",
+  converted: "bg-emerald-500/20 text-emerald-400 border-emerald-500/30",
+  lost: "bg-zinc-500/20 text-zinc-400 border-zinc-500/30",
+};
+
 const ITEMS_PER_PAGE = 10;
 
 export default function CRMPage() {
-  const [activeTab, setActiveTab] = useState("contacts");
+  const [activeTab, setActiveTab] = useState("leads");
   const [tenants, setTenants] = useState<Tenant[]>([]);
   const [contacts, setContacts] = useState<ContactRecord[]>([]);
+  const [leads, setLeads] = useState<Lead[]>([]);
   const [loading, setLoading] = useState(true);
   const [contactsLoading, setContactsLoading] = useState(true);
+  const [leadsLoading, setLeadsLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [contactSearch, setContactSearch] = useState("");
+  const [leadSearch, setLeadSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<TenantStatus | "all">("all");
   const [sortField, setSortField] = useState<"name" | "created_at">("created_at");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
@@ -189,6 +220,30 @@ export default function CRMPage() {
     setContactsLoading(false);
   }, [contactSearch]);
 
+  const fetchLeads = useCallback(async () => {
+    setLeadsLoading(true);
+    const supabase = createClient();
+
+    let query = supabase
+      .from("leads")
+      .select("id, lead_code, full_name, company_name, email, whatsapp, country, city, project_type, budget_range, status, created_at")
+      .order("created_at", { ascending: false });
+
+    if (leadSearch) {
+      query = query.or(`full_name.ilike.%${leadSearch}%,email.ilike.%${leadSearch}%,lead_code.ilike.%${leadSearch}%,company_name.ilike.%${leadSearch}%`);
+    }
+
+    const { data, error } = await query;
+
+    if (error) {
+      console.error("Error fetching leads:", error);
+    } else {
+      setLeads(data || []);
+    }
+
+    setLeadsLoading(false);
+  }, [leadSearch]);
+
   useEffect(() => {
     fetchTenants();
   }, [fetchTenants]);
@@ -196,6 +251,10 @@ export default function CRMPage() {
   useEffect(() => {
     fetchContacts();
   }, [fetchContacts]);
+
+  useEffect(() => {
+    fetchLeads();
+  }, [fetchLeads]);
 
   const handleSort = (field: "name" | "created_at") => {
     if (sortField === field) {
@@ -318,6 +377,10 @@ export default function CRMPage() {
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
         <TabsList>
+          <TabsTrigger value="leads" className="gap-2">
+            <ClipboardList className="h-4 w-4" />
+            Leads
+          </TabsTrigger>
           <TabsTrigger value="contacts" className="gap-2">
             <Contact className="h-4 w-4" />
             Contacts
@@ -327,6 +390,124 @@ export default function CRMPage() {
             Clients
           </TabsTrigger>
         </TabsList>
+
+        {/* Leads Tab */}
+        <TabsContent value="leads" className="space-y-6">
+          {/* Leads Search */}
+          <Card className="bg-card/50 border-border/50">
+            <CardContent className="p-4">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Buscar leads por nombre, email o codigo..."
+                  value={leadSearch}
+                  onChange={(e) => setLeadSearch(e.target.value)}
+                  className="pl-9 bg-background/50"
+                />
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Leads Table */}
+          <Card className="bg-card/50 border-border/50 overflow-hidden">
+            {leadsLoading ? (
+              <div className="flex items-center justify-center py-20">
+                <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+              </div>
+            ) : leads.length === 0 ? (
+              <CardContent className="p-0">
+                <div className="flex flex-col items-center justify-center py-20 text-center">
+                  <div className="h-16 w-16 rounded-2xl bg-muted/50 flex items-center justify-center mb-4">
+                    <ClipboardList className="h-8 w-8 text-muted-foreground" />
+                  </div>
+                  <p className="text-lg font-medium text-foreground">No hay leads aun</p>
+                  <p className="text-sm text-muted-foreground mt-1 max-w-[300px]">
+                    {leadSearch
+                      ? "Intenta ajustar tu busqueda."
+                      : "Los leads del formulario de aplicacion apareceran aqui."}
+                  </p>
+                  <Link href="/apply" className="mt-4">
+                    <Button variant="outline" className="gap-2">
+                      <ClipboardList className="h-4 w-4" />
+                      Ver Formulario
+                    </Button>
+                  </Link>
+                </div>
+              </CardContent>
+            ) : (
+              <Table>
+                <TableHeader>
+                  <TableRow className="hover:bg-transparent border-border/50">
+                    <TableHead>Codigo</TableHead>
+                    <TableHead>Nombre</TableHead>
+                    <TableHead>Contacto</TableHead>
+                    <TableHead>Ubicacion</TableHead>
+                    <TableHead>Proyecto</TableHead>
+                    <TableHead>Presupuesto</TableHead>
+                    <TableHead>Estado</TableHead>
+                    <TableHead>Fecha</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {leads.map((lead) => (
+                    <TableRow
+                      key={lead.id}
+                      className="border-border/50 hover:bg-muted/30"
+                    >
+                      <TableCell className="font-mono text-xs text-primary">
+                        {lead.lead_code}
+                      </TableCell>
+                      <TableCell>
+                        <div>
+                          <p className="font-medium">{lead.full_name}</p>
+                          {lead.company_name && (
+                            <p className="text-xs text-muted-foreground">{lead.company_name}</p>
+                          )}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex flex-col gap-1">
+                          {lead.email && (
+                            <a href={`mailto:${lead.email}`} className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground">
+                              <Mail className="h-3 w-3" />
+                              {lead.email}
+                            </a>
+                          )}
+                          {lead.whatsapp && (
+                            <a href={`https://wa.me/${lead.whatsapp.replace(/\D/g, '')}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground">
+                              <Phone className="h-3 w-3" />
+                              {lead.whatsapp}
+                            </a>
+                          )}
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-muted-foreground text-sm">
+                        {[lead.city, lead.country].filter(Boolean).join(", ") || "-"}
+                      </TableCell>
+                      <TableCell className="text-sm">
+                        {lead.project_type || "-"}
+                      </TableCell>
+                      <TableCell className="text-sm">
+                        {lead.budget_range || "-"}
+                      </TableCell>
+                      <TableCell>
+                        <Badge
+                          variant="outline"
+                          className={`capitalize text-xs ${leadStatusColors[lead.status]}`}
+                        >
+                          {lead.status.replace("_", " ")}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-muted-foreground text-sm">
+                        {formatDate(lead.created_at)}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            )}
+          </Card>
+        </TabsContent>
 
         {/* Contacts Tab */}
         <TabsContent value="contacts" className="space-y-6">
