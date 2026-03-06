@@ -1,24 +1,21 @@
 import { createClient } from "@supabase/supabase-js";
 import { NextRequest, NextResponse } from "next/server";
 
-// Use service role key for API access (bypasses RLS for reading)
+// Hardcoded org_id for Hebeling Imperium Group
+const ORG_ID = "c9be7472-7c8a-4b48-b5e1-5a0e26b9ed84";
+
+// Use service role key for API access (bypasses RLS)
 const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
-type LeadSource = "landing_page" | "linkedin" | "whatsapp" | "referral" | "manual";
-
 interface LeadPayload {
-  brand_slug: string;
   full_name: string;
   email?: string;
   phone?: string;
-  notes?: string;
-  source?: LeadSource;
-  deal_title?: string;
-  deal_value?: number;
-  deal_currency?: string;
+  message?: string;
+  source?: string;
 }
 
 export async function POST(request: NextRequest) {
@@ -26,72 +23,24 @@ export async function POST(request: NextRequest) {
     const body: LeadPayload = await request.json();
 
     // Validate required fields
-    if (!body.brand_slug || !body.full_name) {
+    if (!body.full_name) {
       return NextResponse.json(
-        { error: "brand_slug and full_name are required" },
+        { success: false, error: "full_name is required" },
         { status: 400 }
       );
     }
 
-    // Look up brand by slug
-    const { data: brand, error: brandError } = await supabaseAdmin
-      .from("brands")
-      .select("id, org_id, name")
-      .eq("slug", body.brand_slug)
-      .single();
-
-    if (brandError || !brand) {
-      return NextResponse.json(
-        { error: `Brand not found: ${body.brand_slug}` },
-        { status: 404 }
-      );
-    }
-
-    const orgId = brand.org_id;
-    const brandId = brand.id;
     const source = body.source || "landing_page";
 
-    // Generate slug from full_name for tenant
-    const tenantSlug = body.full_name
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, "-")
-      .replace(/(^-|-$)/g, "")
-      + "-" + Date.now().toString(36);
-
-    // 1. Create tenant (lead status)
-    const { data: tenant, error: tenantError } = await supabaseAdmin
-      .from("tenants")
-      .insert({
-        org_id: orgId,
-        brand_id: brandId,
-        name: body.full_name,
-        slug: tenantSlug,
-        status: "lead",
-        primary_contact_name: body.full_name,
-        primary_contact_email: body.email || null,
-      })
-      .select()
-      .single();
-
-    if (tenantError) {
-      console.error("Tenant creation error:", tenantError);
-      return NextResponse.json(
-        { error: "Failed to create lead tenant" },
-        { status: 500 }
-      );
-    }
-
-    // 2. Create contact
+    // 1. Create contact
     const { data: contact, error: contactError } = await supabaseAdmin
       .from("contacts")
       .insert({
-        org_id: orgId,
-        brand_id: brandId,
-        tenant_id: tenant.id,
+        org_id: ORG_ID,
         full_name: body.full_name,
         email: body.email || null,
         phone: body.phone || null,
-        notes: body.notes || null,
+        notes: body.message || null,
         source: source,
       })
       .select()
@@ -99,35 +48,30 @@ export async function POST(request: NextRequest) {
 
     if (contactError) {
       console.error("Contact creation error:", contactError);
-      // Don't fail - tenant was created
+      return NextResponse.json(
+        { success: false, error: "Failed to create contact" },
+        { status: 500 }
+      );
     }
 
-    // 3. Create deal if deal info provided or create default lead deal
-    let deal = null;
-    
-    // Get the Lead stage from the default pipeline
+    // 2. Get the Lead stage from the default pipeline
     const { data: stages } = await supabaseAdmin
       .from("stages")
-      .select("id, pipeline_id")
+      .select("id")
       .eq("name", "Lead")
       .limit(1);
 
     const leadStageId = stages?.[0]?.id || null;
 
-    const dealTitle = body.deal_title || `Lead: ${body.full_name}`;
-    const dealValue = body.deal_value || 0;
-    const dealCurrency = body.deal_currency || "USD";
-
-    const { data: dealData, error: dealError } = await supabaseAdmin
+    // 3. Create deal related to the contact
+    const { data: deal, error: dealError } = await supabaseAdmin
       .from("deals")
       .insert({
-        org_id: orgId,
-        brand_id: brandId,
-        tenant_id: tenant.id,
+        org_id: ORG_ID,
         stage_id: leadStageId,
-        title: dealTitle,
-        value: dealValue,
-        currency: dealCurrency,
+        title: `Lead: ${body.full_name}`,
+        value: 0,
+        currency: "USD",
         source: source,
       })
       .select()
@@ -135,34 +79,26 @@ export async function POST(request: NextRequest) {
 
     if (dealError) {
       console.error("Deal creation error:", dealError);
-      // Don't fail - tenant and contact were created
-    } else {
-      deal = dealData;
+      // Don't fail - contact was created
     }
 
     // 4. Log activity
     await supabaseAdmin.from("activity_logs").insert({
-      org_id: orgId,
-      brand_id: brandId,
+      org_id: ORG_ID,
       action: "lead_created",
-      entity: "tenant",
-      entity_id: tenant.id,
+      entity: "contact",
+      entity_id: contact.id,
     });
 
     return NextResponse.json({
       success: true,
-      data: {
-        tenant_id: tenant.id,
-        contact_id: contact?.id || null,
-        deal_id: deal?.id || null,
-        brand: brand.name,
-        source: source,
-      },
+      contact: contact,
+      deal: deal || null,
     });
   } catch (error) {
     console.error("Lead API error:", error);
     return NextResponse.json(
-      { error: "Internal server error" },
+      { success: false, error: "Internal server error" },
       { status: 500 }
     );
   }
@@ -174,8 +110,7 @@ export async function GET() {
     status: "ok",
     endpoint: "/api/leads",
     method: "POST",
-    required_fields: ["brand_slug", "full_name"],
-    optional_fields: ["email", "phone", "notes", "source", "deal_title", "deal_value", "deal_currency"],
-    valid_sources: ["landing_page", "linkedin", "whatsapp", "referral", "manual"],
+    required_fields: ["full_name"],
+    optional_fields: ["email", "phone", "message", "source"],
   });
 }
