@@ -2,7 +2,7 @@ import { createClient } from "@supabase/supabase-js";
 import { NextRequest, NextResponse } from "next/server";
 
 // Hardcoded org_id for Hebeling Imperium Group
-const ORG_ID = "c9be7472-7c8a-4b48-b5e1-5a0e26b9ed84";
+const ORG_ID = "4059832a-ff39-43e6-984f-d9e866dfb8a4";
 
 // Use service role key for API access (bypasses RLS)
 const supabaseAdmin = createClient(
