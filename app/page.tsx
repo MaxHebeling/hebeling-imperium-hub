@@ -60,7 +60,7 @@ export default function CommandPage() {
         <div className="fixed top-8 right-8 z-50 staff-access">
           <Link
             href="/login"
-            className="flex items-center gap-3 px-6 py-3 text-base font-semibold text-white border border-[#d4af37]/60 hover:border-[#d4af37] rounded-lg bg-black/40 hover:bg-[#d4af37]/10 backdrop-blur-md transition-all duration-300 hover:shadow-lg hover:shadow-[#d4af37]/20"
+            className="staff-login-btn flex items-center gap-3 px-6 py-3 text-base border border-[#d4af37]/60 hover:border-[#d4af37] rounded-lg bg-black/40 hover:bg-[#d4af37]/10 backdrop-blur-md transition-all duration-300 hover:shadow-lg hover:shadow-[#d4af37]/20"
           >
             <svg
               className="w-5 h-5 text-[#d4af37]"
@@ -185,6 +185,15 @@ export default function CommandPage() {
         .staff-access {
           opacity: 0;
           animation: fadeIn 1s ease-out 1.5s forwards;
+        }
+
+        /* Staff Login Button - Same typography as Subtitle */
+        .staff-login-btn {
+          color: rgba(255, 255, 255, 0.95);
+          font-size: 0.9rem;
+          font-weight: 200;
+          letter-spacing: 0.4em;
+          text-transform: uppercase;
         }
 
         /* Animations */
