@@ -24,6 +24,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Plus, DollarSign, Building2, GripVertical } from "lucide-react";
+import { useLanguage, stageKeyMap } from "@/lib/i18n";
 
 interface Stage {
   id: string;
@@ -79,6 +80,7 @@ const STAGE_HEADER_COLORS: Record<string, string> = {
 };
 
 export default function DealsPage() {
+  const { t } = useLanguage();
   const [stages, setStages] = useState<Stage[]>([]);
   const [deals, setDeals] = useState<Deal[]>([]);
   const [tenants, setTenants] = useState<Tenant[]>([]);
@@ -88,6 +90,12 @@ export default function DealsPage() {
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [draggedDeal, setDraggedDeal] = useState<Deal | null>(null);
   const [dragOverStage, setDragOverStage] = useState<string | null>(null);
+
+  // Helper to translate stage names
+  const translateStageName = (stageName: string) => {
+    const key = stageKeyMap[stageName];
+    return key ? t.stages[key] : stageName;
+  };
 
   // New deal form state
   const [newDeal, setNewDeal] = useState({
@@ -279,16 +287,16 @@ export default function DealsPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Deals Pipeline</h1>
+          <h1 className="text-2xl font-bold tracking-tight">{t.deals.title}</h1>
           <p className="text-muted-foreground">
-            Drag and drop deals between stages to update their status
+            {t.deals.searchPlaceholder}
           </p>
         </div>
         <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
           <DialogTrigger asChild>
             <Button>
               <Plus className="h-4 w-4 mr-2" />
-              Add Deal
+              {t.deals.addDeal}
             </Button>
           </DialogTrigger>
           <DialogContent>
@@ -516,7 +524,7 @@ export default function DealsPage() {
               }`}
             >
               <div className="flex items-center justify-between">
-                <span className="font-semibold">{stage.name}</span>
+                <span className="font-semibold">{translateStageName(stage.name)}</span>
                 <Badge variant="secondary" className="bg-white/50">
                   {getDealsForStage(stage.id).length}
                 </Badge>
@@ -529,7 +537,7 @@ export default function DealsPage() {
             <div className="p-2 space-y-2 min-h-[200px]">
               {getDealsForStage(stage.id).length === 0 ? (
                 <div className="text-center py-8 text-muted-foreground text-sm">
-                  No deals
+                  {t.deals.noDeals}
                 </div>
               ) : (
                 getDealsForStage(stage.id).map((deal) => (

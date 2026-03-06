@@ -14,15 +14,18 @@ import {
   Settings
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { useLanguage } from "@/lib/i18n";
 
-const navItems = [
-  { href: "/app/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/app/crm", label: "CRM", icon: Users },
-  { href: "/app/deals", label: "Deals", icon: Handshake },
-  { href: "/app/projects", label: "Projects", icon: FolderKanban },
-  { href: "/app/websites", label: "Websites", icon: Globe },
-  { href: "/app/documents", label: "Documents", icon: FileText },
-  { href: "/app/settings", label: "Settings", icon: Settings },
+type NavKey = "dashboard" | "crm" | "deals" | "projects" | "websites" | "documents" | "settings";
+
+const navItems: { href: string; labelKey: NavKey; icon: typeof LayoutDashboard }[] = [
+  { href: "/app/dashboard", labelKey: "dashboard", icon: LayoutDashboard },
+  { href: "/app/crm", labelKey: "crm", icon: Users },
+  { href: "/app/deals", labelKey: "deals", icon: Handshake },
+  { href: "/app/projects", labelKey: "projects", icon: FolderKanban },
+  { href: "/app/websites", labelKey: "websites", icon: Globe },
+  { href: "/app/documents", labelKey: "documents", icon: FileText },
+  { href: "/app/settings", labelKey: "settings", icon: Settings },
 ];
 
 interface AppSidebarProps {
@@ -32,6 +35,7 @@ interface AppSidebarProps {
 
 export function AppSidebar({ userName, userRole }: AppSidebarProps) {
   const pathname = usePathname();
+  const { t } = useLanguage();
 
   const getRoleBadgeColor = (role: string) => {
     switch (role) {
@@ -66,7 +70,7 @@ export function AppSidebar({ userName, userRole }: AppSidebarProps) {
             <h2 className="font-semibold text-sidebar-foreground text-sm tracking-tight">
               Hebeling Imperium
             </h2>
-            <p className="text-xs text-muted-foreground">Management Hub</p>
+            <p className="text-xs text-muted-foreground">{t.nav.managementHub}</p>
           </div>
         </Link>
       </div>
@@ -87,7 +91,7 @@ export function AppSidebar({ userName, userRole }: AppSidebarProps) {
               )}
             >
               <item.icon className={cn("h-4 w-4", isActive && "text-sidebar-primary")} />
-              {item.label}
+              {t.nav[item.labelKey]}
             </Link>
           );
         })}

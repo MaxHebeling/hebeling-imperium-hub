@@ -4,6 +4,8 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { LogOut, Building2 } from "lucide-react";
+import { LanguageSelector } from "@/components/language-selector";
+import { useLanguage } from "@/lib/i18n";
 
 interface AppTopbarProps {
   organizationName: string;
@@ -12,6 +14,7 @@ interface AppTopbarProps {
 
 export function AppTopbar({ organizationName, userName }: AppTopbarProps) {
   const router = useRouter();
+  const { t } = useLanguage();
 
   const handleSignOut = async () => {
     const supabase = createClient();
@@ -29,6 +32,7 @@ export function AppTopbar({ organizationName, userName }: AppTopbarProps) {
       
       <div className="flex items-center gap-4">
         <span className="text-sm text-muted-foreground">{userName}</span>
+        <LanguageSelector />
         <Button 
           variant="ghost" 
           size="sm" 
@@ -36,7 +40,7 @@ export function AppTopbar({ organizationName, userName }: AppTopbarProps) {
           className="text-muted-foreground hover:text-foreground"
         >
           <LogOut className="h-4 w-4 mr-2" />
-          Sign Out
+          {t.nav.logout}
         </Button>
       </div>
     </header>
