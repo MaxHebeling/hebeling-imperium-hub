@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import { createClient as createServerClient } from "@/lib/supabase/server";
 
 const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -38,7 +39,6 @@ export async function POST() {
   try {
     // Validate environment variables
     const VERCEL_ACCESS_TOKEN = process.env.VERCEL_ACCESS_TOKEN;
-    const CRM_ORG_ID = process.env.CRM_ORG_ID;
     const VERCEL_TEAM_ID = process.env.VERCEL_TEAM_ID;
 
     if (!VERCEL_ACCESS_TOKEN) {
@@ -48,12 +48,28 @@ export async function POST() {
       );
     }
 
-    if (!CRM_ORG_ID) {
+    // Get org_id from authenticated user
+    const supabase = await createServerClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    if (!user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("org_id")
+      .eq("id", user.id)
+      .single();
+
+    if (!profile?.org_id) {
       return NextResponse.json(
-        { error: "CRM_ORG_ID is not configured. Please add it to your environment variables." },
-        { status: 500 }
+        { error: "User organization not found" },
+        { status: 400 }
       );
     }
+
+    const CRM_ORG_ID = profile.org_id;
 
     // Fetch all projects from Vercel API with pagination support
     const allProjects: VercelProject[] = [];
