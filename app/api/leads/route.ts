@@ -1,22 +1,11 @@
-import { createClient } from "@supabase/supabase-js";
 import { NextRequest, NextResponse } from "next/server";
-
-// Hardcoded org_id for Hebeling Imperium Group
-const ORG_ID = "4059832a-ff39-43e6-984f-d9e866dfb8a4";
-
-// Use service role key for API access (bypasses RLS)
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
-
-interface LeadPayload {
-  full_name: string;
-  email?: string;
-  phone?: string;
-  message?: string;
-  source?: string;
-}
+import { 
+  createLead, 
+  createDealFromLead, 
+  logActivity,
+  LeadPayload 
+} from "@/lib/leads/helpers";
+import { sendLeadNotificationEmail } from "@/lib/leads/email";
 
 export async function POST(request: NextRequest) {
   try {
@@ -30,76 +19,39 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const source = body.source || "landing_page";
+    // 1. Create lead with auto-generated lead code
+    const lead = await createLead(body);
 
-    // 1. Create contact
-    const { data: contact, error: contactError } = await supabaseAdmin
-      .from("contacts")
-      .insert({
-        org_id: ORG_ID,
-        full_name: body.full_name,
-        email: body.email || null,
-        phone: body.phone || null,
-        notes: body.message || null,
-        source: source,
-      })
-      .select()
-      .single();
+    // 2. Create associated deal
+    const deal = await createDealFromLead(lead);
 
-    if (contactError) {
-      console.error("Contact creation error:", contactError);
-      return NextResponse.json(
-        { success: false, error: "Failed to create contact" },
-        { status: 500 }
-      );
-    }
+    // 3. Log activity
+    await logActivity("lead_created", "lead", lead.id, {
+      lead_code: lead.lead_code,
+      source: lead.source,
+      brand: lead.brand,
+      form_type: lead.form_type,
+    });
 
-    // 2. Get the Lead stage from the default pipeline
-    const { data: stages } = await supabaseAdmin
-      .from("stages")
-      .select("id")
-      .eq("name", "Lead")
-      .limit(1);
-
-    const leadStageId = stages?.[0]?.id || null;
-
-    // 3. Create deal related to the contact with contact_id link
-    const { data: deal, error: dealError } = await supabaseAdmin
-      .from("deals")
-      .insert({
-        org_id: ORG_ID,
-        stage_id: leadStageId,
-        contact_id: contact.id,
-        title: `${body.full_name} — Landing Lead`,
-        value: 0,
-        currency: "USD",
-        source: source,
-      })
-      .select()
-      .single();
-
-    if (dealError) {
-      console.error("Deal creation error:", dealError);
-      // Don't fail - contact was created
-    }
-
-    // 4. Log activity
-    await supabaseAdmin.from("activity_logs").insert({
-      org_id: ORG_ID,
-      action: "lead_created",
-      entity: "contact",
-      entity_id: contact.id,
+    // 4. Send internal notification email (non-blocking)
+    sendLeadNotificationEmail(lead).catch((err) => {
+      console.error("Email notification error:", err);
     });
 
     return NextResponse.json({
       success: true,
-      contact: contact,
-      deal: deal || null,
+      message: "Lead created successfully",
+      leadId: lead.id,
+      leadCode: lead.lead_code,
+      dealCreated: !!deal,
     });
   } catch (error) {
     console.error("Lead API error:", error);
     return NextResponse.json(
-      { success: false, error: "Internal server error" },
+      { 
+        success: false, 
+        error: error instanceof Error ? error.message : "Internal server error" 
+      },
       { status: 500 }
     );
   }
@@ -112,6 +64,35 @@ export async function GET() {
     endpoint: "/api/leads",
     method: "POST",
     required_fields: ["full_name"],
-    optional_fields: ["email", "phone", "message", "source"],
+    optional_fields: [
+      "company_name",
+      "email",
+      "whatsapp",
+      "country",
+      "city",
+      "project_description",
+      "organization_type",
+      "website_url",
+      "social_links",
+      "main_goal",
+      "expected_result",
+      "main_service",
+      "ideal_client",
+      "has_logo",
+      "has_brand_colors",
+      "visual_style",
+      "available_content",
+      "reference_websites",
+      "has_current_landing",
+      "project_type",
+      "budget_range",
+      "timeline",
+      "preferred_contact_method",
+      "additional_notes",
+      "source",
+      "brand",
+      "origin_page",
+      "form_type",
+    ],
   });
 }
