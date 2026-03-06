@@ -439,43 +439,8 @@ export default function CRMPage() {
               </CardDescription>
             </CardHeader>
             <CardContent className="pt-0 space-y-3">
-              {/* Standard Brand Form Links */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                {[
-                  { brand: "ikingdom", name: "iKingdom", domain: "https://ikingdom.org" },
-                  { brand: "editorialreino", name: "Editorial Reino", domain: "https://editorialreino.com" },
-                  { brand: "imperium", name: "Imperium Group", domain: "https://imperiumg.com" },
-                  { brand: "maxhebeling", name: "Max Hebeling", domain: "https://maxhebeling.com" },
-                ].map((item) => {
-                  const fullUrl = `${item.domain}/apply?brand=${item.brand}`;
-                  return (
-                  <div key={item.brand} className="flex items-center gap-2 bg-muted/30 rounded-lg p-2">
-                    <span className="text-xs font-medium min-w-[110px]">{item.name}:</span>
-                    <a 
-                      href={fullUrl} 
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                      className="text-xs bg-background/50 px-2 py-1 rounded flex-1 truncate text-primary hover:underline"
-                    >
-                      {fullUrl}
-                    </a>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-7 px-2"
-                      onClick={() => {
-                        navigator.clipboard.writeText(fullUrl);
-                      }}
-                    >
-                      <ClipboardList className="h-3 w-3" />
-                    </Button>
-                  </div>
-                  );
-                })}
-              </div>
-
               {/* Special Forms Section */}
-              <div className="border-t border-border/30 pt-3">
+              <div>
                 <p className="text-xs font-medium text-muted-foreground mb-2">Formularios Especializados:</p>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                   {[
