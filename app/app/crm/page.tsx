@@ -37,6 +37,12 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@/components/ui/tabs";
+import {
   Users,
   UserPlus,
   Search,
@@ -49,10 +55,20 @@ import {
   ChevronLeft,
   ChevronRight,
   Loader2,
+  Contact,
 } from "lucide-react";
 import Link from "next/link";
 
 type TenantStatus = "lead" | "active" | "paused" | "archived";
+
+interface ContactRecord {
+  id: string;
+  full_name: string;
+  email: string | null;
+  phone: string | null;
+  source: string | null;
+  created_at: string;
+}
 
 interface Tenant {
   id: string;
@@ -74,9 +90,13 @@ const statusColors: Record<TenantStatus, string> = {
 const ITEMS_PER_PAGE = 10;
 
 export default function CRMPage() {
+  const [activeTab, setActiveTab] = useState("contacts");
   const [tenants, setTenants] = useState<Tenant[]>([]);
+  const [contacts, setContacts] = useState<ContactRecord[]>([]);
   const [loading, setLoading] = useState(true);
+  const [contactsLoading, setContactsLoading] = useState(true);
   const [search, setSearch] = useState("");
+  const [contactSearch, setContactSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<TenantStatus | "all">("all");
   const [sortField, setSortField] = useState<"name" | "created_at">("created_at");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
@@ -145,9 +165,37 @@ export default function CRMPage() {
     setLoading(false);
   }, [search, statusFilter, sortField, sortOrder, currentPage]);
 
+  const fetchContacts = useCallback(async () => {
+    setContactsLoading(true);
+    const supabase = createClient();
+
+    let query = supabase
+      .from("contacts")
+      .select("id, full_name, email, phone, source, created_at")
+      .order("created_at", { ascending: false });
+
+    if (contactSearch) {
+      query = query.or(`full_name.ilike.%${contactSearch}%,email.ilike.%${contactSearch}%,phone.ilike.%${contactSearch}%`);
+    }
+
+    const { data, error } = await query;
+
+    if (error) {
+      console.error("Error fetching contacts:", error);
+    } else {
+      setContacts(data || []);
+    }
+
+    setContactsLoading(false);
+  }, [contactSearch]);
+
   useEffect(() => {
     fetchTenants();
   }, [fetchTenants]);
+
+  useEffect(() => {
+    fetchContacts();
+  }, [fetchContacts]);
 
   const handleSort = (field: "name" | "created_at") => {
     if (sortField === field) {
@@ -267,6 +315,102 @@ export default function CRMPage() {
         </Button>
       </div>
 
+      {/* Tabs */}
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+        <TabsList>
+          <TabsTrigger value="contacts" className="gap-2">
+            <Contact className="h-4 w-4" />
+            Contacts
+          </TabsTrigger>
+          <TabsTrigger value="clients" className="gap-2">
+            <Users className="h-4 w-4" />
+            Clients
+          </TabsTrigger>
+        </TabsList>
+
+        {/* Contacts Tab */}
+        <TabsContent value="contacts" className="space-y-6">
+          {/* Contacts Search */}
+          <Card className="bg-card/50 border-border/50">
+            <CardContent className="p-4">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search contacts..."
+                  value={contactSearch}
+                  onChange={(e) => setContactSearch(e.target.value)}
+                  className="pl-9 bg-background/50"
+                />
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Contacts Table */}
+          <Card className="bg-card/50 border-border/50 overflow-hidden">
+            {contactsLoading ? (
+              <div className="flex items-center justify-center py-20">
+                <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+              </div>
+            ) : contacts.length === 0 ? (
+              <CardContent className="p-0">
+                <div className="flex flex-col items-center justify-center py-20 text-center">
+                  <div className="h-16 w-16 rounded-2xl bg-muted/50 flex items-center justify-center mb-4">
+                    <Contact className="h-8 w-8 text-muted-foreground" />
+                  </div>
+                  <p className="text-lg font-medium text-foreground">No contacts yet</p>
+                  <p className="text-sm text-muted-foreground mt-1 max-w-[300px]">
+                    {contactSearch
+                      ? "Try adjusting your search."
+                      : "Contacts captured from landing pages will appear here."}
+                  </p>
+                </div>
+              </CardContent>
+            ) : (
+              <Table>
+                <TableHeader>
+                  <TableRow className="hover:bg-transparent border-border/50">
+                    <TableHead>Full Name</TableHead>
+                    <TableHead>Email</TableHead>
+                    <TableHead>Phone</TableHead>
+                    <TableHead>Source</TableHead>
+                    <TableHead>Created</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {contacts.map((contact) => (
+                    <TableRow
+                      key={contact.id}
+                      className="border-border/50 hover:bg-muted/30"
+                    >
+                      <TableCell className="font-medium">{contact.full_name}</TableCell>
+                      <TableCell className="text-muted-foreground">
+                        {contact.email || "-"}
+                      </TableCell>
+                      <TableCell className="text-muted-foreground">
+                        {contact.phone || "-"}
+                      </TableCell>
+                      <TableCell>
+                        {contact.source ? (
+                          <Badge variant="outline" className="capitalize">
+                            {contact.source}
+                          </Badge>
+                        ) : (
+                          "-"
+                        )}
+                      </TableCell>
+                      <TableCell className="text-muted-foreground">
+                        {formatDate(contact.created_at)}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            )}
+          </Card>
+        </TabsContent>
+
+        {/* Clients Tab */}
+        <TabsContent value="clients" className="space-y-6">
       {/* Filters */}
       <Card className="bg-card/50 border-border/50">
         <CardContent className="p-4">
@@ -455,6 +599,9 @@ export default function CRMPage() {
           </>
         )}
       </Card>
+
+        </TabsContent>
+      </Tabs>
 
       {/* Create/Edit Modal */}
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
