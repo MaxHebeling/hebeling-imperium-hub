@@ -83,7 +83,6 @@ const STEPS = [
 ];
 
 export default function ApplyPage() {
-  console.log("[v0] ApplyPage rendering");
   const [formData, setFormData] = useState<FormData>(initialFormData);
   const [currentStep, setCurrentStep] = useState(1);
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
