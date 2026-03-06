@@ -19,7 +19,7 @@ import { useLanguage } from "@/lib/i18n";
 
 type NavKey = "dashboard" | "crm" | "deals" | "projects" | "websites" | "documents" | "settings" | "applyForm";
 
-const navItems: { href: string; labelKey: NavKey; icon: typeof LayoutDashboard }[] = [
+const navItems: { href: string; labelKey: NavKey; icon: typeof LayoutDashboard; external?: boolean }[] = [
   { href: "/app/dashboard", labelKey: "dashboard", icon: LayoutDashboard },
   { href: "/app/crm", labelKey: "crm", icon: Users },
   { href: "/app/deals", labelKey: "deals", icon: Handshake },
@@ -27,7 +27,7 @@ const navItems: { href: string; labelKey: NavKey; icon: typeof LayoutDashboard }
   { href: "/app/websites", labelKey: "websites", icon: Globe },
   { href: "/app/documents", labelKey: "documents", icon: FileText },
   { href: "/app/settings", labelKey: "settings", icon: Settings },
-  { href: "/apply", labelKey: "applyForm", icon: ClipboardList },
+  { href: "https://ikingdom.org/apply?brand=ikingdom", labelKey: "applyForm", icon: ClipboardList, external: true },
 ];
 
 interface AppSidebarProps {
@@ -80,7 +80,23 @@ export function AppSidebar({ userName, userRole }: AppSidebarProps) {
       {/* Navigation */}
       <nav className="flex-1 p-4 space-y-1">
         {navItems.map((item) => {
-          const isActive = pathname === item.href || pathname.startsWith(item.href + "/");
+          const isActive = !item.external && (pathname === item.href || pathname.startsWith(item.href + "/"));
+          
+          if (item.external) {
+            return (
+              <a
+                key={item.href}
+                href={item.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 text-muted-foreground hover:bg-sidebar-accent/50 hover:text-sidebar-foreground"
+              >
+                <item.icon className="h-4 w-4" />
+                {t.nav[item.labelKey]}
+              </a>
+            );
+          }
+          
           return (
             <Link
               key={item.href}
