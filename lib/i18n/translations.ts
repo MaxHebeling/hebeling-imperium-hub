@@ -20,6 +20,7 @@ export const translations = {
       documents: "Documentos",
       managementHub: "Centro de Gestión",
       applyForm: "Formulario de Aplicación",
+      leads: "Leads",
     },
     // Deal stages
     stages: {
@@ -140,6 +141,7 @@ export const translations = {
       documents: "Documents",
       managementHub: "Management Hub",
       applyForm: "Application Form",
+      leads: "Leads",
     },
     // Deal stages
     stages: {
