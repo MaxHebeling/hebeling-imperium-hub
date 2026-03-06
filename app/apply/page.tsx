@@ -15,10 +15,10 @@ import Image from "next/image";
 
 // Configuracion de marcas disponibles
 const BRAND_CONFIG: Record<string, { name: string; logo: string; color: string }> = {
-  ikingdom: { name: "iKingdom", logo: "/logo.png", color: "primary" },
-  editorialreino: { name: "Editorial Reino", logo: "/logo-editorialreino.png", color: "amber" },
+  ikingdom: { name: "iKingdom", logo: "/logo-ikingdom.png", color: "amber" },
+  editorialreino: { name: "Editorial Reino", logo: "/logo-editorialreino.png", color: "sky" },
   imperium: { name: "Imperium Group", logo: "/logo-imperium.png", color: "slate" },
-  maxhebeling: { name: "Max Hebeling", logo: "/logo-maxhebeling.png", color: "blue" },
+  maxhebeling: { name: "Max Hebeling", logo: "/logo-maxhebeling.png", color: "orange" },
 };
 
 interface FormData {
