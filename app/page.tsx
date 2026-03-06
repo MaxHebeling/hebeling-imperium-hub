@@ -2,239 +2,196 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
 
 export default function CommandPage() {
-  const [isLoaded, setIsLoaded] = useState(false);
-
-  useEffect(() => {
-    setIsLoaded(true);
-  }, []);
-
   return (
-    <div className="w-full h-screen bg-background overflow-hidden">
-      {/* Full Screen Hero */}
-      <section className="relative w-full h-screen flex items-center justify-center">
-        {/* Background Image with Overlays */}
+    <div className="w-full h-screen overflow-hidden bg-[#050a14] font-sans">
+      {/* Hero Section */}
+      <section className="hero-command relative h-screen w-full flex flex-col justify-center items-center text-center">
+        {/* Background Image */}
         <div className="absolute inset-0">
           <Image
             src="/imperium-command-bg.jpg"
-            alt="Hebeling Imperium Command Center"
+            alt="Corporate Skyline"
             fill
             className="object-cover"
             priority
             quality={100}
           />
-
-          {/* Dark Overlay (45%) */}
-          <div className="absolute inset-0 bg-black/45" />
-
-          {/* Subtle Vignette Effect */}
-          <div className="absolute inset-0 bg-gradient-radial from-transparent via-transparent to-black/30" />
-
-          {/* Subtle Gradient Overlay for Depth */}
-          <div className="absolute inset-0 bg-gradient-to-b from-background/20 via-transparent to-background/40" />
         </div>
 
-        {/* Content Container */}
-        <div className="relative z-10 flex flex-col items-center justify-center w-full h-full px-4">
-          {/* Global Network Effect */}
-          <div className="absolute inset-0 pointer-events-none overflow-hidden">
-            <svg
-              className="w-full h-full opacity-10"
-              viewBox="0 0 1000 1000"
-              preserveAspectRatio="xMidYMid slice"
-            >
-              <defs>
-                <radialGradient id="globalGlow" cx="50%" cy="50%" r="50%">
-                  <stop offset="0%" stopColor="#d4af37" stopOpacity="0.1" />
-                  <stop offset="100%" stopColor="#d4af37" stopOpacity="0" />
-                </radialGradient>
-              </defs>
+        {/* Radial Overlay / Vignette */}
+        <div className="hero-overlay absolute inset-0 z-[1]" />
 
-              {/* Orbital Lines */}
-              <circle
-                cx="500"
-                cy="500"
-                r="200"
-                fill="none"
-                stroke="#d4af37"
-                strokeWidth="0.5"
-                opacity="0.3"
-              />
-              <circle
-                cx="500"
-                cy="500"
-                r="350"
-                fill="none"
-                stroke="#d4af37"
-                strokeWidth="0.5"
-                opacity="0.2"
-              />
+        {/* Global Grid Effect */}
+        <div className="global-grid absolute inset-0 z-[2]" />
 
-              {/* Connection Points */}
-              <circle cx="500" cy="250" r="3" fill="#d4af37" opacity="0.4" />
-              <circle cx="700" cy="450" r="3" fill="#d4af37" opacity="0.4" />
-              <circle cx="500" cy="700" r="3" fill="#d4af37" opacity="0.4" />
-              <circle cx="300" cy="450" r="3" fill="#d4af37" opacity="0.4" />
-              <circle cx="650" cy="350" r="2" fill="#d4af37" opacity="0.3" />
-              <circle cx="350" cy="650" r="2" fill="#d4af37" opacity="0.3" />
+        {/* Particles Drift */}
+        <div className="particles absolute inset-0 z-[3] pointer-events-none" />
 
-              {/* Connecting Lines */}
-              <line
-                x1="500"
-                y1="250"
-                x2="700"
-                y2="450"
-                stroke="#d4af37"
-                strokeWidth="0.3"
-                opacity="0.2"
-              />
-              <line
-                x1="700"
-                y1="450"
-                x2="500"
-                y2="700"
-                stroke="#d4af37"
-                strokeWidth="0.3"
-                opacity="0.2"
-              />
-              <line
-                x1="500"
-                y1="700"
-                x2="300"
-                y2="450"
-                stroke="#d4af37"
-                strokeWidth="0.3"
-                opacity="0.2"
-              />
-              <line
-                x1="300"
-                y1="450"
-                x2="500"
-                y2="250"
-                stroke="#d4af37"
-                strokeWidth="0.3"
-                opacity="0.2"
-              />
+        {/* Orbital Lines - Rotating */}
+        <div className="orbital-lines absolute z-[2]" />
 
-              {/* Central Radial Gradient */}
-              <circle cx="500" cy="500" r="300" fill="url(#globalGlow)" />
-            </svg>
-          </div>
-
-          {/* Central Illumination - Subtle Golden Halo */}
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-gradient-radial from-yellow-500/10 via-yellow-500/5 to-transparent rounded-full blur-3xl pointer-events-none" />
+        {/* Main Content */}
+        <div className="main-content relative z-10 flex flex-col items-center max-w-[90vw]">
+          {/* Logo Halo */}
+          <div className="logo-halo" />
 
           {/* Logo Container */}
-          <div
-            className={`relative z-20 flex flex-col items-center gap-6 md:gap-8 transition-all duration-1000 ${
-              isLoaded ? 'opacity-100 scale-100' : 'opacity-0 scale-95'
-            }`}
+          <div className="logo-container">
+            <Image
+              src="/logo-command.png"
+              alt="Hebeling Logo"
+              width={280}
+              height={280}
+              className="w-full h-auto"
+              priority
+            />
+          </div>
+
+          {/* Title */}
+          <h1 className="title">HEBELING IMPERIUM COMMAND</h1>
+
+          {/* Subtitle */}
+          <p className="subtitle">ecosistema digital</p>
+        </div>
+
+        {/* Staff Access - Top Right */}
+        <div className="fixed top-8 right-8 z-50 staff-access">
+          <Link
+            href="/login"
+            className="flex items-center gap-3 px-6 py-3 text-base font-semibold text-white border border-[#d4af37]/60 hover:border-[#d4af37] rounded-lg bg-black/40 hover:bg-[#d4af37]/10 backdrop-blur-md transition-all duration-300 hover:shadow-lg hover:shadow-[#d4af37]/20"
           >
-            {/* Main Logo */}
-            <div className="relative">
-              {/* Logo Glow Effect */}
-              <div className="absolute inset-0 bg-gradient-radial from-yellow-500/20 to-transparent blur-2xl -z-10" />
-
-              <Image
-                src="/logo-command.png"
-                alt="Hebeling Imperium"
-                width={280}
-                height={280}
-                className="w-64 h-64 md:w-80 md:h-80 object-contain drop-shadow-2xl"
-                priority
+            <svg
+              className="w-5 h-5 text-[#d4af37]"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
               />
-            </div>
-
-            {/* Title - HEBELING IMPERIUM COMMAND */}
-            <div
-              className={`flex flex-col items-center gap-3 transition-all duration-1000 delay-200 ${
-                isLoaded ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
-              }`}
-            >
-              <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold tracking-widest text-white text-center leading-tight">
-                HEBELING IMPERIUM
-              </h1>
-              <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold tracking-widest text-white text-center">
-                COMMAND
-              </h2>
-            </div>
-
-            {/* Subtitle - ecosistema digital */}
-            <div
-              className={`transition-all duration-1000 delay-400 ${
-                isLoaded ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
-              }`}
-            >
-              <p className="text-lg md:text-xl font-light tracking-widest text-gray-300 text-center">
-                ecosistema digital
-              </p>
-            </div>
-          </div>
-
-          {/* Animated Particles - Golden Dust Effect */}
-          <div className="absolute inset-0 pointer-events-none">
-            {[...Array(12)].map((_, i) => (
-              <div
-                key={i}
-                className="absolute w-1 h-1 bg-yellow-400/30 rounded-full"
-                style={{
-                  left: `${Math.random() * 100}%`,
-                  top: `${Math.random() * 100}%`,
-                  animation: `float ${4 + Math.random() * 4}s ease-in-out infinite`,
-                  animationDelay: `${i * 0.3}s`,
-                }}
-              />
-            ))}
-          </div>
-
-          {/* Staff Access - Top Right */}
-          <div
-            className={`fixed top-8 right-8 z-50 transition-all duration-1000 ${
-              isLoaded ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-4'
-            }`}
-          >
-            <Link
-              href="/login"
-              className="flex items-center gap-3 px-6 py-3 text-base font-semibold text-white border border-yellow-500/60 hover:border-yellow-400 rounded-lg bg-black/40 hover:bg-yellow-500/10 backdrop-blur-md transition-all duration-300 hover:shadow-lg hover:shadow-yellow-500/20"
-            >
-              <svg
-                className="w-5 h-5 text-yellow-500"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
-                />
-              </svg>
-              <span>Staff Login</span>
-            </Link>
-          </div>
+            </svg>
+            <span>Staff Login</span>
+          </Link>
         </div>
       </section>
 
       <style jsx>{`
-        @keyframes float {
-          0%,
-          100% {
-            opacity: 0;
-            transform: translateY(0) translateX(0);
-          }
-          50% {
-            opacity: 0.3;
-            transform: translateY(-20px) translateX(10px);
-          }
+        /* Hero Overlay - Radial Vignette */
+        .hero-overlay {
+          background: radial-gradient(
+            circle,
+            rgba(5, 10, 20, 0.45) 0%,
+            rgba(0, 0, 0, 0.9) 100%
+          );
         }
 
+        /* Global Grid Effect */
+        .global-grid {
+          background: radial-gradient(
+            circle at center,
+            transparent 30%,
+            rgba(212, 175, 55, 0.05) 100%
+          );
+          opacity: 0.4;
+        }
+
+        /* Orbital Lines */
+        .orbital-lines {
+          width: 600px;
+          height: 600px;
+          border: 1px solid rgba(212, 175, 55, 0.1);
+          border-radius: 50%;
+          animation: rotate 60s linear infinite;
+        }
+
+        .orbital-lines::before {
+          content: '';
+          position: absolute;
+          top: -10%;
+          left: -10%;
+          right: -10%;
+          bottom: -10%;
+          border: 1px solid rgba(212, 175, 55, 0.05);
+          border-radius: 50%;
+        }
+
+        /* Logo Halo */
+        .logo-halo {
+          position: absolute;
+          width: 450px;
+          height: 450px;
+          background: radial-gradient(
+            circle,
+            rgba(212, 175, 55, 0.15) 0%,
+            transparent 70%
+          );
+          top: 40%;
+          left: 50%;
+          transform: translate(-50%, -50%);
+          z-index: -1;
+          filter: blur(40px);
+        }
+
+        /* Logo Container */
+        .logo-container {
+          width: 280px;
+          margin-bottom: 40px;
+          filter: drop-shadow(0 0 15px rgba(212, 175, 55, 0.3));
+          animation: fadeInScale 1.8s ease-out forwards;
+        }
+
+        /* Title */
+        .title {
+          color: #ffffff;
+          font-size: 2.8rem;
+          font-weight: 700;
+          letter-spacing: 0.4em;
+          text-transform: uppercase;
+          margin-bottom: 15px;
+          opacity: 0;
+          animation: slideUpFade 1.5s ease-out 0.5s forwards;
+          text-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+        }
+
+        /* Subtitle */
+        .subtitle {
+          color: rgba(255, 255, 255, 0.7);
+          font-size: 1.1rem;
+          font-weight: 200;
+          letter-spacing: 0.6em;
+          text-transform: lowercase;
+          opacity: 0;
+          animation: slideUpFade 1.5s ease-out 1s forwards;
+        }
+
+        /* Particles */
+        .particles {
+          background-image: radial-gradient(
+            circle,
+            #d4af37 1px,
+            transparent 1px
+          );
+          background-size: 100px 100px;
+          opacity: 0.1;
+          animation: drift 20s linear infinite;
+        }
+
+        /* Staff Access */
+        .staff-access {
+          opacity: 0;
+          animation: fadeIn 1s ease-out 1.5s forwards;
+        }
+
+        /* Animations */
         @keyframes fadeInScale {
           from {
             opacity: 0;
-            transform: scale(0.95);
+            transform: scale(0.9);
           }
           to {
             opacity: 1;
@@ -242,10 +199,10 @@ export default function CommandPage() {
           }
         }
 
-        @keyframes fadeInUp {
+        @keyframes slideUpFade {
           from {
             opacity: 0;
-            transform: translateY(10px);
+            transform: translateY(30px);
           }
           to {
             opacity: 1;
@@ -253,8 +210,54 @@ export default function CommandPage() {
           }
         }
 
-        .bg-gradient-radial {
-          background: radial-gradient(ellipse at center, var(--tw-gradient-stops));
+        @keyframes rotate {
+          from {
+            transform: rotate(0deg);
+          }
+          to {
+            transform: rotate(360deg);
+          }
+        }
+
+        @keyframes drift {
+          from {
+            background-position: 0 0;
+          }
+          to {
+            background-position: 100px 100px;
+          }
+        }
+
+        @keyframes fadeIn {
+          from {
+            opacity: 0;
+          }
+          to {
+            opacity: 1;
+          }
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+          .logo-container {
+            width: 180px;
+          }
+          .title {
+            font-size: 1.5rem;
+            letter-spacing: 0.2em;
+          }
+          .subtitle {
+            font-size: 0.8rem;
+            letter-spacing: 0.4em;
+          }
+          .logo-halo {
+            width: 300px;
+            height: 300px;
+          }
+          .orbital-lines {
+            width: 350px;
+            height: 350px;
+          }
         }
       `}</style>
     </div>
