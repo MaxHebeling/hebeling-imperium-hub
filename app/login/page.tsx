@@ -9,9 +9,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Lock, Mail } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import Image from "next/image";
+import { LanguageProvider, useLanguage } from "@/lib/i18n";
+import { LanguageSelector } from "@/components/language-selector";
 
-export default function StaffLoginPage() {
+function LoginForm() {
   const router = useRouter();
+  const { t } = useLanguage();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -83,7 +86,10 @@ export default function StaffLoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background px-4">
+    <div className="min-h-screen flex items-center justify-center bg-background px-4 relative">
+      <div className="absolute top-4 right-4">
+        <LanguageSelector />
+      </div>
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <div className="flex justify-center mb-4">
@@ -97,36 +103,36 @@ export default function StaffLoginPage() {
             />
           </div>
           <h1 className="text-3xl font-semibold tracking-tight text-foreground">
-            Hebeling Imperium
+            {t.login.title}
           </h1>
-          <p className="text-muted-foreground mt-2">Group Hub</p>
+          <p className="text-muted-foreground mt-2">{t.login.subtitle}</p>
         </div>
         
         <Card className="border-border/50 bg-card/50 backdrop-blur-sm">
           <CardHeader className="space-y-1 pb-4">
-            <CardTitle className="text-xl font-medium">Staff Login</CardTitle>
+            <CardTitle className="text-xl font-medium">{t.login.signIn}</CardTitle>
             <CardDescription>
-              Enter your credentials to access the admin portal
+              {t.login.emailPlaceholder}
             </CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
               {error && (
                 <div className="p-3 rounded-md bg-destructive/10 text-destructive text-sm">
-                  {error}
+                  {t.login.errorTitle}: {error}
                 </div>
               )}
               
               <div className="space-y-2">
                 <Label htmlFor="email" className="text-sm font-medium">
-                  Email
+                  {t.login.emailLabel}
                 </Label>
                 <div className="relative">
                   <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
                     id="email"
                     type="email"
-                    placeholder="staff@hebelingimperium.com"
+                    placeholder={t.login.emailPlaceholder}
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     className="pl-10 bg-background/50"
@@ -137,14 +143,14 @@ export default function StaffLoginPage() {
               
               <div className="space-y-2">
                 <Label htmlFor="password" className="text-sm font-medium">
-                  Password
+                  {t.login.passwordLabel}
                 </Label>
                 <div className="relative">
                   <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
                     id="password"
                     type="password"
-                    placeholder="Enter your password"
+                    placeholder={t.login.passwordPlaceholder}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     className="pl-10 bg-background/50"
@@ -158,16 +164,20 @@ export default function StaffLoginPage() {
                 className="w-full mt-6"
                 disabled={isLoading}
               >
-                {isLoading ? "Signing in..." : "Sign In"}
+                {isLoading ? t.login.signingIn : t.login.signIn}
               </Button>
             </form>
-            
-            <p className="text-center text-xs text-muted-foreground mt-6">
-              Protected area. Authorized personnel only.
-            </p>
           </CardContent>
         </Card>
       </div>
     </div>
+  );
+}
+
+export default function StaffLoginPage() {
+  return (
+    <LanguageProvider>
+      <LoginForm />
+    </LanguageProvider>
   );
 }
