@@ -214,13 +214,13 @@ export default function iKingdomDiagnosisPage() {
   // Success screen
   if (leadCode) {
     return (
-      <div className="min-h-screen flex items-center justify-center p-4" style={{ backgroundColor: "#0B0F19" }}>
-        <Card className="w-full max-w-md" style={{ backgroundColor: "#0B0F19", borderColor: "#21D1AC" }}>
+      <div className="min-h-screen flex items-center justify-center p-4" style={{ backgroundColor: "#0F172A" }}>
+        <Card className="w-full max-w-md" style={{ backgroundColor: "#0F172A", borderColor: "#D4AF37" }}>
           <CardHeader className="text-center">
             <div className="flex justify-center mb-4">
-              <CheckCircle2 size={64} style={{ color: "#21D1AC" }} />
+              <CheckCircle2 size={64} style={{ color: "#D4AF37" }} />
             </div>
-            <CardTitle style={{ color: "#21D1AC" }}>¡Gracias!</CardTitle>
+            <CardTitle style={{ color: "#D4AF37" }}>¡Gracias!</CardTitle>
             <CardDescription style={{ color: "#A0AEC0" }}>Tu diagnóstico ha sido recibido</CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
@@ -230,7 +230,7 @@ export default function iKingdomDiagnosisPage() {
               </p>
               <div
                 className="p-4 rounded-lg text-center font-mono text-lg font-bold"
-                style={{ backgroundColor: "rgba(33, 209, 172, 0.1)", color: "#21D1AC" }}
+                style={{ backgroundColor: "rgba(212, 175, 55, 0.1)", color: "#D4AF37" }}
               >
                 {leadCode}
               </div>
@@ -247,20 +247,43 @@ export default function iKingdomDiagnosisPage() {
 
             <div className="space-y-2 pt-4">
               <Link href="/app/crm">
-                <Button
-                  className="w-full"
-                  style={{ backgroundColor: "#21D1AC", color: "#0B0F19" }}
-                >
-                  Volver al CRM
-                </Button>
+            <Button
+              onClick={handleBack}
+              variant="outline"
+              className="flex-1"
+              style={{ borderColor: "rgba(212, 175, 55, 0.3)", color: "#D4AF37" }}
+            >
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Anterior
+            </Button>
+            <Button
+              onClick={step === STEPS.length ? handleSubmit : handleNext}
+              disabled={isSubmitting}
+              className="flex-1"
+              style={{ backgroundColor: "#D4AF37", color: "#0F172A" }}
+            >
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Enviando...
+                </>
+              ) : step === STEPS.length ? (
+                "Enviar Diagnóstico"
+              ) : (
+                <>
+                  Siguiente
+                  <ArrowRight className="w-4 h-4 ml-2" />
+                </>
+              )}
+            </Button>
               </Link>
               <button
                 onClick={() => window.location.reload()}
                 className="w-full px-4 py-2 rounded-lg text-sm font-medium"
                 style={{
-                  backgroundColor: "rgba(33, 209, 172, 0.1)",
-                  color: "#21D1AC",
-                  border: "1px solid #21D1AC",
+                  backgroundColor: "rgba(212, 175, 55, 0.1)",
+                  color: "#D4AF37",
+                  border: "1px solid #D4AF37",
                 }}
               >
                 Nuevo Diagnóstico
@@ -274,24 +297,24 @@ export default function iKingdomDiagnosisPage() {
 
   if (!isLoaded) {
     return (
-      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: "#0B0F19" }}>
-        <Loader2 className="animate-spin" style={{ color: "#21D1AC" }} size={48} />
+      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: "#0F172A" }}>
+        <Loader2 className="animate-spin" style={{ color: "#D4AF37" }} size={48} />
       </div>
     );
   }
 
   return (
-    <div style={{ backgroundColor: "#0A0E17", minHeight: "100vh" }} className="p-8">
+    <div style={{ backgroundColor: "#0F172A", minHeight: "100vh" }} className="p-8">
       <div className="max-w-2xl mx-auto">
         {/* Header */}
         <div className="mb-8">
           <Link href="/" className="inline-flex items-center gap-2 mb-6 hover:opacity-80 transition-opacity">
-            <ArrowLeft className="w-5 h-5" style={{ color: "#10D981" }} />
-            <span style={{ color: "#F3F4F6" }} className="text-sm font-medium">Volver</span>
+            <ArrowLeft className="w-5 h-5" style={{ color: "#D4AF37" }} />
+            <span style={{ color: "#E5E7EB" }} className="text-sm font-medium">Volver</span>
           </Link>
           <div className="flex items-center gap-3 mb-4">
-            <Crown className="w-8 h-8" style={{ color: "#10D981" }} />
-            <h1 style={{ color: "#F3F4F6" }} className="text-3xl font-bold">Diagnóstico Estratégico</h1>
+            <Crown className="w-8 h-8" style={{ color: "#D4AF37" }} />
+            <h1 style={{ color: "#FFFFFF" }} className="text-3xl font-bold">Diagnóstico Estratégico</h1>
           </div>
           <p style={{ color: "#9CA3AF" }} className="text-lg">
             Análisis de tu arquitectura digital y posicionamiento
@@ -310,7 +333,7 @@ export default function iKingdomDiagnosisPage() {
                   s.id <= step ? "opacity-100" : "opacity-30"
                 }`}
                 style={{
-                  backgroundColor: s.id <= step ? "#21D1AC" : "rgba(33, 209, 172, 0.2)",
+                  backgroundColor: s.id <= step ? "#D4AF37" : "rgba(212, 175, 55, 0.2)",
                 }}
               />
             ))}
@@ -321,7 +344,7 @@ export default function iKingdomDiagnosisPage() {
         </div>
 
         {/* Form Card */}
-        <Card style={{ backgroundColor: "#111827", borderColor: "rgba(33, 209, 172, 0.2)" }}>
+        <Card style={{ backgroundColor: "#111827", borderColor: "rgba(212, 175, 55, 0.2)" }}>
           <CardHeader>
             <CardTitle style={{ color: "#E2E8F0" }}>{STEPS[step - 1].title}</CardTitle>
             <CardDescription style={{ color: "#A0AEC0" }}>
@@ -345,8 +368,8 @@ export default function iKingdomDiagnosisPage() {
                       onChange={(e) => handleInputChange("full_name", e.target.value)}
                       required
                       style={{
-                        backgroundColor: "rgba(33, 209, 172, 0.05)",
-                        borderColor: "rgba(33, 209, 172, 0.3)",
+                        backgroundColor: "rgba(212, 175, 55, 0.05)",
+                        borderColor: "rgba(212, 175, 55, 0.3)",
                         color: "#E2E8F0",
                       }}
                       className="placeholder:text-gray-600"
@@ -363,8 +386,8 @@ export default function iKingdomDiagnosisPage() {
                       value={formData.company_name}
                       onChange={(e) => handleInputChange("company_name", e.target.value)}
                       style={{
-                        backgroundColor: "rgba(33, 209, 172, 0.05)",
-                        borderColor: "rgba(33, 209, 172, 0.3)",
+                        backgroundColor: "rgba(212, 175, 55, 0.05)",
+                        borderColor: "rgba(212, 175, 55, 0.3)",
                         color: "#E2E8F0",
                       }}
                       className="placeholder:text-gray-600"
@@ -382,8 +405,8 @@ export default function iKingdomDiagnosisPage() {
                       value={formData.email}
                       onChange={(e) => handleInputChange("email", e.target.value)}
                       style={{
-                        backgroundColor: "rgba(33, 209, 172, 0.05)",
-                        borderColor: "rgba(33, 209, 172, 0.3)",
+                        backgroundColor: "rgba(212, 175, 55, 0.05)",
+                        borderColor: "rgba(212, 175, 55, 0.3)",
                         color: "#E2E8F0",
                       }}
                       className="placeholder:text-gray-600"
@@ -400,8 +423,8 @@ export default function iKingdomDiagnosisPage() {
                       value={formData.whatsapp}
                       onChange={(e) => handleInputChange("whatsapp", e.target.value)}
                       style={{
-                        backgroundColor: "rgba(33, 209, 172, 0.05)",
-                        borderColor: "rgba(33, 209, 172, 0.3)",
+                        backgroundColor: "rgba(212, 175, 55, 0.05)",
+                        borderColor: "rgba(212, 175, 55, 0.3)",
                         color: "#E2E8F0",
                       }}
                       className="placeholder:text-gray-600"
@@ -454,8 +477,8 @@ export default function iKingdomDiagnosisPage() {
                     <Label style={{ color: "#E2E8F0" }}>Tipo de Organización *</Label>
                     <Select value={formData.organization_type} onValueChange={(value) => handleInputChange("organization_type", value)}>
                       <SelectTrigger style={{
-                        backgroundColor: "rgba(33, 209, 172, 0.05)",
-                        borderColor: "rgba(33, 209, 172, 0.3)",
+                        backgroundColor: "rgba(212, 175, 55, 0.05)",
+                        borderColor: "rgba(212, 175, 55, 0.3)",
                         color: "#E2E8F0",
                       }}>
                         <SelectValue placeholder="Selecciona tu tipo de organización" />
@@ -475,8 +498,8 @@ export default function iKingdomDiagnosisPage() {
                     <Label style={{ color: "#E2E8F0" }}>Servicio Principal *</Label>
                     <Select value={formData.main_service} onValueChange={(value) => handleInputChange("main_service", value)}>
                       <SelectTrigger style={{
-                        backgroundColor: "rgba(33, 209, 172, 0.05)",
-                        borderColor: "rgba(33, 209, 172, 0.3)",
+                        backgroundColor: "rgba(212, 175, 55, 0.05)",
+                        borderColor: "rgba(212, 175, 55, 0.3)",
                         color: "#E2E8F0",
                       }}>
                         <SelectValue placeholder="¿Qué servicio ofreces?" />
@@ -503,8 +526,8 @@ export default function iKingdomDiagnosisPage() {
                       value={formData.website_url}
                       onChange={(e) => handleInputChange("website_url", e.target.value)}
                       style={{
-                        backgroundColor: "rgba(33, 209, 172, 0.05)",
-                        borderColor: "rgba(33, 209, 172, 0.3)",
+                        backgroundColor: "rgba(212, 175, 55, 0.05)",
+                        borderColor: "rgba(212, 175, 55, 0.3)",
                         color: "#E2E8F0",
                       }}
                       className="placeholder:text-gray-600"
@@ -521,8 +544,8 @@ export default function iKingdomDiagnosisPage() {
                       value={formData.social_links}
                       onChange={(e) => handleInputChange("social_links", e.target.value)}
                       style={{
-                        backgroundColor: "rgba(33, 209, 172, 0.05)",
-                        borderColor: "rgba(33, 209, 172, 0.3)",
+                        backgroundColor: "rgba(212, 175, 55, 0.05)",
+                        borderColor: "rgba(212, 175, 55, 0.3)",
                         color: "#E2E8F0",
                       }}
                       className="placeholder:text-gray-600"
@@ -545,8 +568,8 @@ export default function iKingdomDiagnosisPage() {
                       onChange={(e) => handleInputChange("ideal_client", e.target.value)}
                       className="h-24"
                       style={{
-                        backgroundColor: "rgba(33, 209, 172, 0.05)",
-                        borderColor: "rgba(33, 209, 172, 0.3)",
+                        backgroundColor: "rgba(212, 175, 55, 0.05)",
+                        borderColor: "rgba(212, 175, 55, 0.3)",
                         color: "#E2E8F0",
                       }}
                     />
@@ -556,8 +579,8 @@ export default function iKingdomDiagnosisPage() {
                     <Label style={{ color: "#E2E8F0" }}>Objetivo Principal *</Label>
                     <Select value={formData.main_goal} onValueChange={(value) => handleInputChange("main_goal", value)}>
                       <SelectTrigger style={{
-                        backgroundColor: "rgba(33, 209, 172, 0.05)",
-                        borderColor: "rgba(33, 209, 172, 0.3)",
+                        backgroundColor: "rgba(212, 175, 55, 0.05)",
+                        borderColor: "rgba(212, 175, 55, 0.3)",
                         color: "#E2E8F0",
                       }}>
                         <SelectValue placeholder="¿Cuál es tu objetivo principal?" />
@@ -584,8 +607,8 @@ export default function iKingdomDiagnosisPage() {
                       onChange={(e) => handleInputChange("expected_result", e.target.value)}
                       className="h-24"
                       style={{
-                        backgroundColor: "rgba(33, 209, 172, 0.05)",
-                        borderColor: "rgba(33, 209, 172, 0.3)",
+                        backgroundColor: "rgba(212, 175, 55, 0.05)",
+                        borderColor: "rgba(212, 175, 55, 0.3)",
                         color: "#E2E8F0",
                       }}
                     />
@@ -649,8 +672,8 @@ export default function iKingdomDiagnosisPage() {
                       onChange={(e) => handleInputChange("visual_style", e.target.value)}
                       className="h-20"
                       style={{
-                        backgroundColor: "rgba(33, 209, 172, 0.05)",
-                        borderColor: "rgba(33, 209, 172, 0.3)",
+                        backgroundColor: "rgba(212, 175, 55, 0.05)",
+                        borderColor: "rgba(212, 175, 55, 0.3)",
                         color: "#E2E8F0",
                       }}
                     />
@@ -672,8 +695,8 @@ export default function iKingdomDiagnosisPage() {
                       onChange={(e) => handleInputChange("available_content", e.target.value)}
                       className="h-24"
                       style={{
-                        backgroundColor: "rgba(33, 209, 172, 0.05)",
-                        borderColor: "rgba(33, 209, 172, 0.3)",
+                        backgroundColor: "rgba(212, 175, 55, 0.05)",
+                        borderColor: "rgba(212, 175, 55, 0.3)",
                         color: "#E2E8F0",
                       }}
                     />
@@ -690,8 +713,8 @@ export default function iKingdomDiagnosisPage() {
                       onChange={(e) => handleInputChange("reference_websites", e.target.value)}
                       className="h-24"
                       style={{
-                        backgroundColor: "rgba(33, 209, 172, 0.05)",
-                        borderColor: "rgba(33, 209, 172, 0.3)",
+                        backgroundColor: "rgba(212, 175, 55, 0.05)",
+                        borderColor: "rgba(212, 175, 55, 0.3)",
                         color: "#E2E8F0",
                       }}
                     />
@@ -727,8 +750,8 @@ export default function iKingdomDiagnosisPage() {
                     <Label style={{ color: "#E2E8F0" }}>Plazo del Proyecto *</Label>
                     <Select value={formData.timeline} onValueChange={(value) => handleInputChange("timeline", value)}>
                       <SelectTrigger style={{
-                        backgroundColor: "rgba(33, 209, 172, 0.05)",
-                        borderColor: "rgba(33, 209, 172, 0.3)",
+                        backgroundColor: "rgba(212, 175, 55, 0.05)",
+                        borderColor: "rgba(212, 175, 55, 0.3)",
                         color: "#E2E8F0",
                       }}>
                         <SelectValue placeholder="¿Cuál es tu plazo?" />
@@ -746,8 +769,8 @@ export default function iKingdomDiagnosisPage() {
                     <Label style={{ color: "#E2E8F0" }}>Rango de Presupuesto *</Label>
                     <Select value={formData.budget_range} onValueChange={(value) => handleInputChange("budget_range", value)}>
                       <SelectTrigger style={{
-                        backgroundColor: "rgba(33, 209, 172, 0.05)",
-                        borderColor: "rgba(33, 209, 172, 0.3)",
+                        backgroundColor: "rgba(212, 175, 55, 0.05)",
+                        borderColor: "rgba(212, 175, 55, 0.3)",
                         color: "#E2E8F0",
                       }}>
                         <SelectValue placeholder="¿Cuál es tu presupuesto?" />
@@ -773,8 +796,8 @@ export default function iKingdomDiagnosisPage() {
                     <Label style={{ color: "#E2E8F0" }}>Tipo de Proyecto *</Label>
                     <Select value={formData.project_type} onValueChange={(value) => handleInputChange("project_type", value)}>
                       <SelectTrigger style={{
-                        backgroundColor: "rgba(33, 209, 172, 0.05)",
-                        borderColor: "rgba(33, 209, 172, 0.3)",
+                        backgroundColor: "rgba(212, 175, 55, 0.05)",
+                        borderColor: "rgba(212, 175, 55, 0.3)",
                         color: "#E2E8F0",
                       }}>
                         <SelectValue placeholder="¿Qué tipo de proyecto es?" />
@@ -793,8 +816,8 @@ export default function iKingdomDiagnosisPage() {
                     <Label style={{ color: "#E2E8F0" }}>Método de Contacto Preferido *</Label>
                     <Select value={formData.preferred_contact_method} onValueChange={(value) => handleInputChange("preferred_contact_method", value)}>
                       <SelectTrigger style={{
-                        backgroundColor: "rgba(33, 209, 172, 0.05)",
-                        borderColor: "rgba(33, 209, 172, 0.3)",
+                        backgroundColor: "rgba(212, 175, 55, 0.05)",
+                        borderColor: "rgba(212, 175, 55, 0.3)",
                         color: "#E2E8F0",
                       }}>
                         <SelectValue placeholder="¿Cómo prefieres que te contactemos?" />
