@@ -158,31 +158,6 @@ export async function middleware(request: NextRequest) {
     return supabaseResponse;
   }
 
-  // Brand domain routing
-  const brandSlug = BRAND_DOMAINS[hostname];
-
-  if (brandSlug) {
-    // Special handling for iKingdom - redirect /apply to the diagnosis form
-    if (brandSlug === "ikingdom") {
-      if (pathname === "/apply") {
-        const url = request.nextUrl.clone();
-        url.pathname = "/apply/ikingdom-diagnosis";
-        return NextResponse.redirect(url);
-      }
-      // Allow /apply routes for iKingdom
-      if (pathname.startsWith("/apply")) {
-        return NextResponse.next();
-      }
-    } else {
-      // For other brands, allow /apply routes without auth
-      if (pathname === "/apply" || pathname.startsWith("/apply")) {
-        return NextResponse.next();
-      }
-    }
-    // All other routes redirect to hub for now
-    return NextResponse.redirect("https://hub.hebelingimperium.com/login");
-  }
-
   // Root domain -> redirect to hub
   if (hostname === "hebelingimperium.com" || hostname === "www.hebelingimperium.com") {
     return NextResponse.redirect("https://hub.hebelingimperium.com/login");
