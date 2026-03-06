@@ -19,6 +19,7 @@ export const translations = {
       websites: "Sitios Web",
       documents: "Documentos",
       managementHub: "Centro de Gestión",
+      applyForm: "Formulario de Aplicación",
     },
     // Deal stages
     stages: {
@@ -138,6 +139,7 @@ export const translations = {
       websites: "Websites",
       documents: "Documents",
       managementHub: "Management Hub",
+      applyForm: "Application Form",
     },
     // Deal stages
     stages: {
