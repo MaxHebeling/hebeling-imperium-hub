@@ -63,13 +63,14 @@ export async function POST(request: NextRequest) {
 
     const leadStageId = stages?.[0]?.id || null;
 
-    // 3. Create deal related to the contact
+    // 3. Create deal related to the contact with contact_id link
     const { data: deal, error: dealError } = await supabaseAdmin
       .from("deals")
       .insert({
         org_id: ORG_ID,
         stage_id: leadStageId,
-        title: `Lead: ${body.full_name}`,
+        contact_id: contact.id,
+        title: `${body.full_name} — Landing Lead`,
         value: 0,
         currency: "USD",
         source: source,
