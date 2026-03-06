@@ -33,15 +33,21 @@ export async function POST(request: NextRequest) {
       form_type: lead.form_type,
     });
 
-    // 4. Send notification emails (non-blocking)
-    Promise.all([
+    // 4. Send notification emails
+    console.log("[v0] Sending emails for lead:", lead.lead_code);
+    
+    const [internalResult, confirmationResult] = await Promise.all([
       sendLeadNotificationEmail(lead).catch((err) => {
-        console.error("Internal notification email error:", err);
+        console.error("[v0] Internal notification email error:", err);
+        return false;
       }),
       sendLeadConfirmationEmail(lead).catch((err) => {
-        console.error("Confirmation email error:", err);
+        console.error("[v0] Confirmation email error:", err);
+        return false;
       })
     ]);
+    
+    console.log("[v0] Email results - Internal:", internalResult, "Confirmation:", confirmationResult);
 
     return NextResponse.json({
       success: true,

@@ -409,8 +409,11 @@ export async function sendLeadConfirmationEmail(lead: Lead): Promise<boolean> {
   `.trim();
 
   try {
-    const { error } = await resend.emails.send({
-      from: process.env.RESEND_FROM_EMAIL || "iKingdom <noreply@hebeling.io>",
+    const fromEmail = process.env.RESEND_FROM_EMAIL || "iKingdom <onboarding@resend.dev>";
+    console.log("[v0] Sending confirmation email from:", fromEmail, "to: executive@ikingdom.org");
+    
+    const { data, error } = await resend.emails.send({
+      from: fromEmail,
       to: "executive@ikingdom.org",
       subject,
       html: confirmationHtml,
@@ -418,14 +421,14 @@ export async function sendLeadConfirmationEmail(lead: Lead): Promise<boolean> {
     });
 
     if (error) {
-      console.error("Resend error sending confirmation:", error);
+      console.error("[v0] Resend API error:", JSON.stringify(error));
       return false;
     }
 
-    console.log(`Confirmation email sent to executive@ikingdom.org for lead ${lead.lead_code}`);
+    console.log("[v0] Confirmation email sent successfully! ID:", data?.id);
     return true;
   } catch (err) {
-    console.error("Failed to send confirmation email:", err);
+    console.error("[v0] Failed to send confirmation email:", err);
     return false;
   }
 }
