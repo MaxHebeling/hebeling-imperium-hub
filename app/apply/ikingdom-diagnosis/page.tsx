@@ -246,36 +246,13 @@ export default function iKingdomDiagnosisPage() {
             </div>
 
             <div className="space-y-2 pt-4">
-              <Link href="/app/crm">
-            <Button
-              onClick={handleBack}
-              variant="outline"
-              className="flex-1"
-              style={{ borderColor: "rgba(212, 175, 55, 0.3)", color: "#D4AF37" }}
-            >
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Anterior
-            </Button>
-            <Button
-              onClick={step === STEPS.length ? handleSubmit : handleNext}
-              disabled={isSubmitting}
-              className="flex-1"
-              style={{ backgroundColor: "#D4AF37", color: "#0F172A" }}
-            >
-              {isSubmitting ? (
-                <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Enviando...
-                </>
-              ) : step === STEPS.length ? (
-                "Enviar Diagnóstico"
-              ) : (
-                <>
-                  Siguiente
-                  <ArrowRight className="w-4 h-4 ml-2" />
-                </>
-              )}
-            </Button>
+              <Link href="/">
+                <Button
+                  className="w-full"
+                  style={{ backgroundColor: "#D4AF37", color: "#0F172A" }}
+                >
+                  Volver al Inicio
+                </Button>
               </Link>
               <button
                 onClick={() => window.location.reload()}
@@ -872,9 +849,9 @@ export default function iKingdomDiagnosisPage() {
             disabled={step === 1}
             className="flex items-center gap-2 px-6 py-2 rounded-lg font-medium transition disabled:opacity-50"
             style={{
-              backgroundColor: step === 1 ? "rgba(33, 209, 172, 0.1)" : "rgba(33, 209, 172, 0.2)",
-              color: "#21D1AC",
-              border: "1px solid rgba(33, 209, 172, 0.3)",
+              backgroundColor: step === 1 ? "rgba(212, 175, 55, 0.1)" : "rgba(212, 175, 55, 0.2)",
+              color: "#D4AF37",
+              border: "1px solid rgba(212, 175, 55, 0.3)",
             }}
           >
             <ArrowLeft size={18} />
@@ -887,8 +864,8 @@ export default function iKingdomDiagnosisPage() {
               disabled={isSubmitting || !formData.full_name}
               className="flex-1 flex items-center justify-center gap-2 px-6 py-2 rounded-lg font-medium transition disabled:opacity-50"
               style={{
-                backgroundColor: "#21D1AC",
-                color: "#0B0F19",
+                backgroundColor: "#D4AF37",
+                color: "#0F172A",
               }}
             >
               {isSubmitting ? (
@@ -908,8 +885,8 @@ export default function iKingdomDiagnosisPage() {
               onClick={handleNext}
               className="flex-1 flex items-center justify-center gap-2 px-6 py-2 rounded-lg font-medium transition"
               style={{
-                backgroundColor: "#21D1AC",
-                color: "#0B0F19",
+                backgroundColor: "#D4AF37",
+                color: "#0F172A",
               }}
             >
               Siguiente
