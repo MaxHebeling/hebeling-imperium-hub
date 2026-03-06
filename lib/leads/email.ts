@@ -266,6 +266,171 @@ Hebeling Imperium Group
 }
 
 /**
+ * Send confirmation email to executive@ikingdom.org
+ */
+export async function sendLeadConfirmationEmail(lead: Lead): Promise<boolean> {
+  const resend = getResendClient();
+  
+  if (!resend) {
+    console.log("Confirmation email skipped - Resend not configured");
+    return false;
+  }
+
+  const subject = `Nuevo Diagnóstico iKingdom — ${lead.full_name} (${lead.lead_code})`;
+
+  const confirmationHtml = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Nuevo Diagnóstico iKingdom</title>
+</head>
+<body style="margin: 0; padding: 0; background-color: #0F172A; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #0F172A; padding: 40px 20px;">
+    <tr>
+      <td align="center">
+        <table width="600" cellpadding="0" cellspacing="0" style="background-color: #111827; border-radius: 8px; overflow: hidden; border: 1px solid rgba(212, 175, 55, 0.2);">
+          
+          <!-- Header -->
+          <tr>
+            <td style="background: linear-gradient(135deg, #0F172A 0%, #111827 100%); padding: 40px 32px; text-align: center;">
+              <h1 style="margin: 0; color: #D4AF37; font-size: 28px; font-weight: 600;">
+                Nuevo Diagnóstico Recibido
+              </h1>
+              <p style="margin: 12px 0 0; color: #9CA3AF; font-size: 16px;">
+                ${lead.full_name} ha completado el formulario
+              </p>
+            </td>
+          </tr>
+          
+          <!-- Lead Code Badge -->
+          <tr>
+            <td style="padding: 32px; text-align: center;">
+              <p style="margin: 0 0 12px; color: #9CA3AF; font-size: 13px; text-transform: uppercase; letter-spacing: 1px;">
+                Código de referencia
+              </p>
+              <div style="background-color: rgba(212, 175, 55, 0.1); border: 2px solid #D4AF37; border-radius: 8px; padding: 24px; margin-bottom: 24px;">
+                <p style="margin: 0; color: #D4AF37; font-size: 32px; font-weight: 600; font-family: 'SF Mono', Monaco, monospace; letter-spacing: 2px;">
+                  ${lead.lead_code}
+                </p>
+              </div>
+            </td>
+          </tr>
+          
+          <!-- Contact Info -->
+          <tr>
+            <td style="padding: 0 32px 32px;">
+              <h2 style="margin: 0 0 16px; color: #FFFFFF; font-size: 18px; font-weight: 600;">
+                Información de Contacto
+              </h2>
+              <table width="100%" style="margin-bottom: 16px;">
+                <tr>
+                  <td style="color: #9CA3AF; font-size: 13px; padding: 8px 0; width: 120px;">Nombre:</td>
+                  <td style="color: #E2E8F0; font-size: 13px; padding: 8px 0; font-weight: 500;">${lead.full_name}</td>
+                </tr>
+                <tr>
+                  <td style="color: #9CA3AF; font-size: 13px; padding: 8px 0;">Empresa:</td>
+                  <td style="color: #E2E8F0; font-size: 13px; padding: 8px 0; font-weight: 500;">${lead.company_name || "No especificada"}</td>
+                </tr>
+                <tr>
+                  <td style="color: #9CA3AF; font-size: 13px; padding: 8px 0;">Email:</td>
+                  <td style="color: #D4AF37; font-size: 13px; padding: 8px 0; font-weight: 500;">
+                    <a href="mailto:${lead.email}" style="color: #D4AF37; text-decoration: none;">
+                      ${lead.email}
+                    </a>
+                  </td>
+                </tr>
+                <tr>
+                  <td style="color: #9CA3AF; font-size: 13px; padding: 8px 0;">WhatsApp:</td>
+                  <td style="color: #E2E8F0; font-size: 13px; padding: 8px 0; font-weight: 500;">${lead.whatsapp || "No proporcionado"}</td>
+                </tr>
+                <tr>
+                  <td style="color: #9CA3AF; font-size: 13px; padding: 8px 0;">Ubicación:</td>
+                  <td style="color: #E2E8F0; font-size: 13px; padding: 8px 0; font-weight: 500;">${lead.city}, ${lead.country}</td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- Project Details -->
+          <tr>
+            <td style="padding: 0 32px 32px; border-top: 1px solid rgba(212, 175, 55, 0.1); padding-top: 32px;">
+              <h2 style="margin: 0 0 16px; color: #FFFFFF; font-size: 18px; font-weight: 600;">
+                Detalles del Proyecto
+              </h2>
+              <table width="100%">
+                <tr>
+                  <td style="color: #9CA3AF; font-size: 13px; padding: 8px 0; width: 120px;">Tipo:</td>
+                  <td style="color: #E2E8F0; font-size: 13px; padding: 8px 0; font-weight: 500;">${lead.organization_type || "No especificado"}</td>
+                </tr>
+                <tr>
+                  <td style="color: #9CA3AF; font-size: 13px; padding: 8px 0;">Timeline:</td>
+                  <td style="color: #E2E8F0; font-size: 13px; padding: 8px 0; font-weight: 500;">${lead.timeline || "No especificado"}</td>
+                </tr>
+                <tr>
+                  <td style="color: #9CA3AF; font-size: 13px; padding: 8px 0;">Budget:</td>
+                  <td style="color: #D4AF37; font-size: 13px; padding: 8px 0; font-weight: 600;">${lead.budget_range || "No especificado"}</td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- Action Button -->
+          <tr>
+            <td style="padding: 32px; text-align: center; border-top: 1px solid rgba(212, 175, 55, 0.1);">
+              <a href="https://hub.hebelingimperium.com/app/crm" style="display: inline-block; background-color: #D4AF37; color: #0F172A; padding: 14px 32px; text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 14px;">
+                Ver en el CRM
+              </a>
+            </td>
+          </tr>
+          
+          <!-- Footer -->
+          <tr>
+            <td style="background-color: #0A0E17; padding: 24px 32px; text-align: center; border-top: 1px solid rgba(212, 175, 55, 0.1);">
+              <p style="margin: 0 0 8px; color: #D4AF37; font-size: 14px; font-weight: 600;">
+                iKingdom
+              </p>
+              <p style="margin: 0; color: #71717a; font-size: 12px;">
+                Arquitectura Digital Estratégica
+              </p>
+              <p style="margin: 8px 0 0; color: #52525b; font-size: 11px;">
+                © ${new Date().getFullYear()} Hebeling Imperium Group. Todos los derechos reservados.
+              </p>
+            </td>
+          </tr>
+          
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
+  `.trim();
+
+  try {
+    const { error } = await resend.emails.send({
+      from: process.env.RESEND_FROM_EMAIL || "iKingdom <noreply@hebeling.io>",
+      to: "executive@ikingdom.org",
+      subject,
+      html: confirmationHtml,
+      text: `Nuevo Diagnóstico iKingdom\n\nCliente: ${lead.full_name}\nEmail: ${lead.email}\nCódigo: ${lead.lead_code}\n\nVer en el CRM: https://hub.hebelingimperium.com/app/crm`,
+    });
+
+    if (error) {
+      console.error("Resend error sending confirmation:", error);
+      return false;
+    }
+
+    console.log(`Confirmation email sent to executive@ikingdom.org for lead ${lead.lead_code}`);
+    return true;
+  } catch (err) {
+    console.error("Failed to send confirmation email:", err);
+    return false;
+  }
+}
+
+/**
  * Send internal notification email for new lead
  */
 export async function sendLeadNotificationEmail(lead: Lead): Promise<boolean> {

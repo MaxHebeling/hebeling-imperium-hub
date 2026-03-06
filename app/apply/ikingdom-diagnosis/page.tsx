@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { CheckCircle2, Loader2, AlertCircle, ArrowLeft, ArrowRight, Crown } from "lucide-react";
+import { CheckCircle2, Loader2, AlertCircle, ArrowLeft, ArrowRight } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 
@@ -156,6 +156,27 @@ export default function iKingdomDiagnosisPage() {
     setIsSubmitting(true);
     setSubmitError("");
 
+    // Validate required fields
+    if (!formData.full_name || !formData.full_name.trim()) {
+      setSubmitError("El nombre completo es requerido");
+      setIsSubmitting(false);
+      return;
+    }
+
+    if (!formData.email || !formData.email.trim()) {
+      setSubmitError("El email es requerido para poder contactarte");
+      setIsSubmitting(false);
+      return;
+    }
+
+    // Basic email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(formData.email)) {
+      setSubmitError("Por favor, ingresa un email válido");
+      setIsSubmitting(false);
+      return;
+    }
+
     try {
       const payload = {
         full_name: formData.full_name,
@@ -195,16 +216,18 @@ export default function iKingdomDiagnosisPage() {
         body: JSON.stringify(payload),
       });
 
+      const data = await response.json();
+
       if (!response.ok) {
-        throw new Error("Error al enviar el formulario");
+        throw new Error(data.error || "Error al enviar el formulario");
       }
 
-      const data = await response.json();
       setLeadCode(data.leadCode);
       localStorage.removeItem(STORAGE_KEY); // Clear form after successful submission
     } catch (error) {
+      console.error("[v0] Submit error:", error);
       setSubmitError(
-        error instanceof Error ? error.message : "Error desconocido"
+        error instanceof Error ? error.message : "Error al enviar el formulario. Intenta de nuevo."
       );
     } finally {
       setIsSubmitting(false);
@@ -290,7 +313,7 @@ export default function iKingdomDiagnosisPage() {
             <span style={{ color: "#E5E7EB" }} className="text-sm font-medium">Volver</span>
           </Link>
           <div className="flex items-center gap-3 mb-4">
-            <Crown className="w-8 h-8" style={{ color: "#D4AF37" }} />
+            <Image src="/ikingdom-logo.png" alt="iKingdom" width={40} height={40} />
             <h1 style={{ color: "#FFFFFF" }} className="text-3xl font-bold">Diagnóstico Estratégico</h1>
           </div>
           <p style={{ color: "#9CA3AF" }} className="text-lg">

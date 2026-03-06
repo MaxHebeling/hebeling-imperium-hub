@@ -5,7 +5,7 @@ import {
   logActivity,
   LeadPayload 
 } from "@/lib/leads/helpers";
-import { sendLeadNotificationEmail } from "@/lib/leads/email";
+import { sendLeadNotificationEmail, sendLeadConfirmationEmail } from "@/lib/leads/email";
 
 export async function POST(request: NextRequest) {
   try {
@@ -33,10 +33,15 @@ export async function POST(request: NextRequest) {
       form_type: lead.form_type,
     });
 
-    // 4. Send internal notification email (non-blocking)
-    sendLeadNotificationEmail(lead).catch((err) => {
-      console.error("Email notification error:", err);
-    });
+    // 4. Send notification emails (non-blocking)
+    Promise.all([
+      sendLeadNotificationEmail(lead).catch((err) => {
+        console.error("Internal notification email error:", err);
+      }),
+      sendLeadConfirmationEmail(lead).catch((err) => {
+        console.error("Confirmation email error:", err);
+      })
+    ]);
 
     return NextResponse.json({
       success: true,
