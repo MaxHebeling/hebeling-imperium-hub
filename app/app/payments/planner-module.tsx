@@ -505,7 +505,7 @@ export function FinancePlannerModule({ isUnlocked }: FinancePlannerModuleProps) 
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Lock className="h-5 w-5" />
-              Módulo de Finanzas protegido
+              Finance Vault protegido
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -555,10 +555,10 @@ export function FinancePlannerModule({ isUnlocked }: FinancePlannerModuleProps) 
       <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">
-            Planificador Financiero (Personal / Empresarial)
+            Finance Vault
           </h1>
           <p className="text-muted-foreground">
-            Control mensual por semanas para ingresos, pagos y deudas.
+            Nivel B — Vista protegida
           </p>
         </div>
         <div className="flex gap-2">
