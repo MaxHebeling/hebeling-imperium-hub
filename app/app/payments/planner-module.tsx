@@ -528,7 +528,7 @@ export function FinancePlannerModule({ isUnlocked }: FinancePlannerModuleProps) 
               )}
 
               <Button type="submit" className="w-full" disabled={unlocking}>
-                {unlocking ? "Validando..." : "Desbloquear Finanzas"}
+                {unlocking ? "Validando..." : "Desbloquear Finance Vault"}
               </Button>
 
               <p className="text-xs text-muted-foreground">
