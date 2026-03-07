@@ -21,6 +21,7 @@ export const translations = {
       managementHub: "Centro de Gestión",
       applyForm: "Formulario de Aplicación",
       leads: "Leads",
+      financePlanner: "Planificador Financiero",
     },
     // Deal stages
     stages: {
@@ -142,6 +143,7 @@ export const translations = {
       managementHub: "Management Hub",
       applyForm: "Application Form",
       leads: "Leads",
+      financePlanner: "Finance Planner",
     },
     // Deal stages
     stages: {
