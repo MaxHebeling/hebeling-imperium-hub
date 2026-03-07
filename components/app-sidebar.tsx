@@ -55,7 +55,7 @@ const navSections = [
   {
     title: "Finance",
     items: [
-      { href: "/app/payments", label: "Payments", labelKey: "payments", icon: CreditCard },
+      { href: "/app/finance-vault", label: "Finance Vault", labelKey: "financeVault", icon: CreditCard },
     ],
   },
   {
