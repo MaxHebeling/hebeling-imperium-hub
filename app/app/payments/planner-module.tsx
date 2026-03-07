@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -79,6 +79,13 @@ interface FinancePlannerModuleProps {
 }
 
 const STORAGE_KEY = "hebeling-finance-planner-v1";
+const FINANCE_INACTIVITY_TIMEOUT_MS = 5 * 60 * 1000;
+const USER_ACTIVITY_EVENTS: Array<keyof WindowEventMap> = [
+  "mousemove",
+  "keydown",
+  "click",
+  "touchstart",
+];
 
 const WEEK_OPTIONS: Array<{ value: WeekKey; label: string }> = [
   { value: "w1", label: "Semana 1 (días 1-7)" },
@@ -138,6 +145,8 @@ export function FinancePlannerModule({ isUnlocked }: FinancePlannerModuleProps) 
   const [unlocking, setUnlocking] = useState(false);
   const [lockError, setLockError] = useState("");
   const [password, setPassword] = useState("");
+  const inactivityTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const lockInProgressRef = useRef(false);
 
   const [planner, setPlanner] = useState<PlannerState>(getDefaultPlannerState());
   const [isLoaded, setIsLoaded] = useState(false);
@@ -168,6 +177,77 @@ export function FinancePlannerModule({ isUnlocked }: FinancePlannerModuleProps) 
     priority: "media" as DebtPriority,
   });
 
+  const showBrowserNotification = useCallback((title: string, body: string) => {
+    if (typeof window === "undefined" || !("Notification" in window)) return;
+    if (Notification.permission !== "granted") return;
+
+    new Notification(title, {
+      body,
+      tag: "finance-vault-security",
+    });
+  }, []);
+
+  const requestNotificationPermission = useCallback(async () => {
+    if (typeof window === "undefined" || !("Notification" in window)) return;
+    if (Notification.permission !== "default") return;
+
+    try {
+      await Notification.requestPermission();
+    } catch {
+      // Ignore permission errors to avoid blocking auth flow.
+    }
+  }, []);
+
+  const clearInactivityTimer = useCallback(() => {
+    if (!inactivityTimerRef.current) return;
+    clearTimeout(inactivityTimerRef.current);
+    inactivityTimerRef.current = null;
+  }, []);
+
+  const lockModule = useCallback(
+    async (reason: "manual" | "inactivity") => {
+      if (lockInProgressRef.current) return;
+      lockInProgressRef.current = true;
+      clearInactivityTimer();
+
+      try {
+        await fetch("/api/finance/lock", { method: "POST" });
+      } finally {
+        setUnlocked(false);
+        setPassword("");
+        setLockError(
+          reason === "inactivity"
+            ? "Sesión bloqueada por inactividad (5 minutos)."
+            : ""
+        );
+
+        if (reason === "inactivity") {
+          showBrowserNotification(
+            "Finance Vault bloqueado",
+            "Se bloqueó automáticamente tras 5 minutos de inactividad."
+          );
+        } else {
+          showBrowserNotification(
+            "Finance Vault bloqueado",
+            "El módulo fue bloqueado manualmente."
+          );
+        }
+
+        router.refresh();
+        lockInProgressRef.current = false;
+      }
+    },
+    [clearInactivityTimer, router, showBrowserNotification]
+  );
+
+  const resetInactivityTimer = useCallback(() => {
+    if (!unlocked) return;
+    clearInactivityTimer();
+    inactivityTimerRef.current = setTimeout(() => {
+      void lockModule("inactivity");
+    }, FINANCE_INACTIVITY_TIMEOUT_MS);
+  }, [clearInactivityTimer, lockModule, unlocked]);
+
   useEffect(() => {
     if (!unlocked) {
       setIsLoaded(true);
@@ -188,9 +268,37 @@ export function FinancePlannerModule({ isUnlocked }: FinancePlannerModuleProps) 
   }, [unlocked]);
 
   useEffect(() => {
+    // localStorage stores planner content only (not auth/session state).
     if (!unlocked || !isLoaded) return;
     localStorage.setItem(STORAGE_KEY, JSON.stringify(planner));
   }, [planner, unlocked, isLoaded]);
+
+  useEffect(() => {
+    if (!unlocked || !isLoaded) {
+      clearInactivityTimer();
+      return;
+    }
+
+    // Security behavior:
+    // - Any user interaction resets the inactivity timer.
+    // - No interaction for 5 minutes triggers server-side lock endpoint.
+    const handleUserActivity = () => {
+      resetInactivityTimer();
+    };
+
+    USER_ACTIVITY_EVENTS.forEach((eventName) => {
+      window.addEventListener(eventName, handleUserActivity);
+    });
+
+    resetInactivityTimer();
+
+    return () => {
+      USER_ACTIVITY_EVENTS.forEach((eventName) => {
+        window.removeEventListener(eventName, handleUserActivity);
+      });
+      clearInactivityTimer();
+    };
+  }, [clearInactivityTimer, isLoaded, resetInactivityTimer, unlocked]);
 
   const financialSummary = useMemo(() => {
     const plannedIncome = planner.incomes.reduce((sum, item) => sum + item.amount, 0);
@@ -275,8 +383,14 @@ export function FinancePlannerModule({ isUnlocked }: FinancePlannerModuleProps) 
         return;
       }
 
+      await requestNotificationPermission();
       setUnlocked(true);
       setPassword("");
+      setLockError("");
+      showBrowserNotification(
+        "Finance Vault desbloqueado",
+        "Acceso concedido al módulo financiero."
+      );
       router.refresh();
     } catch {
       setLockError("Error de conexión. Intenta nuevamente.");
@@ -286,11 +400,7 @@ export function FinancePlannerModule({ isUnlocked }: FinancePlannerModuleProps) 
   }
 
   async function handleLockModule() {
-    await fetch("/api/finance/lock", { method: "POST" });
-    setUnlocked(false);
-    setPassword("");
-    setLockError("");
-    router.refresh();
+    await lockModule("manual");
   }
 
   function addIncome() {
