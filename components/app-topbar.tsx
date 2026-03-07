@@ -45,6 +45,12 @@ const pathLabels: Record<string, string> = {
   websites: "Websites",
   documents: "Documents",
   settings: "Settings",
+  organizations: "Organizations",
+  team: "Team",
+  roles: "Roles & Permissions",
+  analytics: "Analytics",
+  payments: "Payments",
+  automations: "Automations",
 };
 
 export function AppTopbar({ organizationName, userName, userRole = "admin" }: AppTopbarProps) {
@@ -186,9 +192,11 @@ export function AppTopbar({ organizationName, userName, userRole = "admin" }: Ap
               <Badge variant="secondary" className="ml-auto text-xs">Current</Badge>
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem className="text-muted-foreground cursor-pointer">
-              <Settings className="h-4 w-4 mr-2" />
-              Manage Organizations
+            <DropdownMenuItem asChild>
+              <Link href="/app/organizations" className="text-muted-foreground cursor-pointer">
+                <Settings className="h-4 w-4 mr-2" />
+                Manage Organizations
+              </Link>
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
