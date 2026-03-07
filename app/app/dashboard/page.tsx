@@ -120,7 +120,7 @@ export default async function DashboardPage() {
     <div className="p-6 lg:p-8 space-y-8">
       {/* Header */}
       <div>
-        <h1 className="text-4xl font-bold tracking-tight text-foreground mb-2">Business Operating System (BOS)</h1>
+        <h1 className="text-4xl font-bold tracking-tight text-foreground mb-2">Hebeling Business Operating System</h1>
         <h2 className="text-2xl font-semibold tracking-tight text-muted-foreground">Dashboard</h2>
         <p className="text-muted-foreground mt-1">
           Welcome back. Here&apos;s an overview of your operations.
