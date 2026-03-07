@@ -4,7 +4,7 @@ import { NextResponse } from "next/server";
 const FINANCE_COOKIE_NAME = "finance_module_unlocked";
 
 // This path maps to the current Finance Vault module route.
-const FINANCE_VAULT_PATH = "/app/payments";
+const FINANCE_VAULT_PATH = "/app/finance-vault";
 
 // Security baseline: session cookie expires after 5 minutes.
 // This is the base required for auto-lock by inactivity.
