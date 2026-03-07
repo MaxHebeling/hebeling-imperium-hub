@@ -31,8 +31,16 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
   Card,
   CardContent,
+  CardDescription,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
@@ -49,6 +57,16 @@ import {
   FileEdit,
   Eye,
   RefreshCw,
+  Link2,
+  GitBranch,
+  AlertTriangle,
+  CheckCircle2,
+  Rocket,
+  MoreHorizontal,
+  Settings,
+  Trash2,
+  Copy,
+  Zap,
 } from "lucide-react";
 import Link from "next/link";
 
@@ -89,12 +107,37 @@ interface VercelProject {
   last_synced_at: string | null;
 }
 
-const STATUS_CONFIG: Record<WebsiteStatus, { label: string; color: string; icon: React.ReactNode }> = {
-  draft: { label: "Draft", color: "bg-muted text-muted-foreground", icon: <FileEdit className="h-3 w-3" /> },
-  in_progress: { label: "In Progress", color: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400", icon: <Activity className="h-3 w-3" /> },
-  live: { label: "Live", color: "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400", icon: <Globe className="h-3 w-3" /> },
-  paused: { label: "Paused", color: "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400", icon: <Pause className="h-3 w-3" /> },
-  archived: { label: "Archived", color: "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400", icon: <Archive className="h-3 w-3" /> },
+const STATUS_CONFIG: Record<WebsiteStatus, { label: string; color: string; icon: React.ReactNode; bgClass: string }> = {
+  draft: { 
+    label: "Draft", 
+    color: "text-muted-foreground", 
+    icon: <FileEdit className="h-3 w-3" />,
+    bgClass: "bg-muted/50 border-muted-foreground/20"
+  },
+  in_progress: { 
+    label: "Building", 
+    color: "text-blue-400", 
+    icon: <Activity className="h-3 w-3 animate-pulse" />,
+    bgClass: "bg-blue-500/10 border-blue-500/30"
+  },
+  live: { 
+    label: "Live", 
+    color: "text-emerald-400", 
+    icon: <CheckCircle2 className="h-3 w-3" />,
+    bgClass: "bg-emerald-500/10 border-emerald-500/30"
+  },
+  paused: { 
+    label: "Paused", 
+    color: "text-amber-400", 
+    icon: <Pause className="h-3 w-3" />,
+    bgClass: "bg-amber-500/10 border-amber-500/30"
+  },
+  archived: { 
+    label: "Archived", 
+    color: "text-red-400", 
+    icon: <Archive className="h-3 w-3" />,
+    bgClass: "bg-red-500/10 border-red-500/30"
+  },
 };
 
 export default function WebsitesPage() {
@@ -279,24 +322,32 @@ export default function WebsitesPage() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Websites</h1>
-          <p className="text-sm text-muted-foreground">
-            Manage all web properties across your organization
+      {/* Premium Header Section */}
+      <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-4">
+        <div className="space-y-2">
+          <div className="flex items-center gap-2">
+            <div className="h-2 w-2 bg-emerald-500 rounded-full animate-pulse" />
+            <span className="text-xs font-medium text-emerald-400 uppercase tracking-wider">
+              System Online
+            </span>
+          </div>
+          <h1 className="text-3xl lg:text-4xl font-bold tracking-tight text-foreground">
+            Websites Command Center
+          </h1>
+          <p className="text-muted-foreground max-w-2xl">
+            Manage brands, client sites, domains, deployments, integrations, and digital operations.
           </p>
         </div>
-        <div className="flex gap-2">
-          <Button variant="outline" onClick={handleSyncVercel} disabled={isSyncing}>
-            <RefreshCw className={`mr-2 h-4 w-4 ${isSyncing ? "animate-spin" : ""}`} />
-            {isSyncing ? "Syncing..." : "Sync Vercel"}
+        <div className="flex flex-wrap items-center gap-2">
+          <Button variant="outline" size="sm" onClick={handleSyncVercel} disabled={isSyncing} className="gap-2">
+            <RefreshCw className={`h-4 w-4 ${isSyncing ? "animate-spin" : ""}`} />
+            <span className="hidden sm:inline">{isSyncing ? "Syncing..." : "Sync Vercel"}</span>
           </Button>
           <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
             <DialogTrigger asChild>
-              <Button>
-                <Plus className="mr-2 h-4 w-4" />
-                Add Website
+              <Button size="sm" className="gap-2">
+                <Plus className="h-4 w-4" />
+                New Website
               </Button>
             </DialogTrigger>
           <DialogContent className="sm:max-w-[500px]">
@@ -444,188 +495,312 @@ export default function WebsitesPage() {
         </div>
       )}
 
-      {/* Stats */}
-      <div className="grid gap-4 md:grid-cols-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Sites</CardTitle>
-            <Globe className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.total}</div>
+      {/* Quick Actions Panel */}
+      <Card className="bg-card/30 border-border/40 backdrop-blur-sm">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base font-medium flex items-center gap-2">
+            <Zap className="h-4 w-4 text-amber-400" />
+            Quick Actions
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <button 
+              onClick={() => setIsModalOpen(true)}
+              className="flex flex-col items-center gap-2 p-4 rounded-xl border border-blue-500/20 bg-blue-500/10 hover:bg-blue-500/20 transition-all duration-200 cursor-pointer"
+            >
+              <Plus className="h-5 w-5 text-foreground/80" />
+              <span className="text-xs font-medium text-foreground/90">New Website</span>
+            </button>
+            <button className="flex flex-col items-center gap-2 p-4 rounded-xl border border-purple-500/20 bg-purple-500/10 hover:bg-purple-500/20 transition-all duration-200 cursor-pointer">
+              <GitBranch className="h-5 w-5 text-foreground/80" />
+              <span className="text-xs font-medium text-foreground/90">Connect Repo</span>
+            </button>
+            <button className="flex flex-col items-center gap-2 p-4 rounded-xl border border-emerald-500/20 bg-emerald-500/10 hover:bg-emerald-500/20 transition-all duration-200 cursor-pointer">
+              <Link2 className="h-5 w-5 text-foreground/80" />
+              <span className="text-xs font-medium text-foreground/90">Add Domain</span>
+            </button>
+            <button className="flex flex-col items-center gap-2 p-4 rounded-xl border border-amber-500/20 bg-amber-500/10 hover:bg-amber-500/20 transition-all duration-200 cursor-pointer">
+              <Rocket className="h-5 w-5 text-foreground/80" />
+              <span className="text-xs font-medium text-foreground/90">View Deployments</span>
+            </button>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* KPI Cards Row */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+        <Card className="bg-card/40 border-border/40 hover:bg-card/60 transition-all duration-200">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between mb-2">
+              <Globe className="h-4 w-4 text-cyan-400" />
+            </div>
+            <p className="text-2xl font-bold text-foreground">{stats.total}</p>
+            <p className="text-[10px] text-muted-foreground uppercase tracking-wider mt-1">Total Sites</p>
           </CardContent>
         </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Live</CardTitle>
-            <Activity className="h-4 w-4 text-green-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-green-600">{stats.live}</div>
+        <Card className="bg-card/40 border-border/40 hover:bg-card/60 transition-all duration-200">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between mb-2">
+              <CheckCircle2 className="h-4 w-4 text-emerald-400" />
+            </div>
+            <p className="text-2xl font-bold text-emerald-400">{stats.live}</p>
+            <p className="text-[10px] text-muted-foreground uppercase tracking-wider mt-1">Live</p>
           </CardContent>
         </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">In Progress</CardTitle>
-            <Server className="h-4 w-4 text-blue-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-blue-600">{stats.inProgress}</div>
+        <Card className="bg-card/40 border-border/40 hover:bg-card/60 transition-all duration-200">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between mb-2">
+              <Activity className="h-4 w-4 text-blue-400" />
+            </div>
+            <p className="text-2xl font-bold text-blue-400">{stats.inProgress}</p>
+            <p className="text-[10px] text-muted-foreground uppercase tracking-wider mt-1">Building</p>
           </CardContent>
         </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Drafts</CardTitle>
-            <FileEdit className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.draft}</div>
+        <Card className="bg-card/40 border-border/40 hover:bg-card/60 transition-all duration-200">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between mb-2">
+              <FileEdit className="h-4 w-4 text-muted-foreground" />
+            </div>
+            <p className="text-2xl font-bold text-foreground">{stats.draft}</p>
+            <p className="text-[10px] text-muted-foreground uppercase tracking-wider mt-1">Drafts</p>
+          </CardContent>
+        </Card>
+        <Card className="bg-card/40 border-border/40 hover:bg-card/60 transition-all duration-200">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between mb-2">
+              <Link2 className="h-4 w-4 text-purple-400" />
+            </div>
+            <p className="text-2xl font-bold text-purple-400">{vercelProjects.length}</p>
+            <p className="text-[10px] text-muted-foreground uppercase tracking-wider mt-1">Vercel Projects</p>
+          </CardContent>
+        </Card>
+        <Card className="bg-card/40 border-border/40 hover:bg-card/60 transition-all duration-200">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between mb-2">
+              <AlertTriangle className="h-4 w-4 text-amber-400" />
+            </div>
+            <p className="text-2xl font-bold text-amber-400">
+              {websites.filter(w => w.status === "paused" || w.status === "archived").length}
+            </p>
+            <p className="text-[10px] text-muted-foreground uppercase tracking-wider mt-1">Needs Attention</p>
           </CardContent>
         </Card>
       </div>
 
-      {/* Filters */}
-      <div className="flex flex-col gap-4 sm:flex-row">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            placeholder="Search websites..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="pl-9"
-          />
-        </div>
-        <Select value={brandFilter} onValueChange={setBrandFilter}>
-          <SelectTrigger className="w-full sm:w-[180px]">
-            <SelectValue placeholder="All Brands" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Brands</SelectItem>
-            {brands.map((brand) => (
-              <SelectItem key={brand.id} value={brand.id}>
-                {brand.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        <Select value={tenantFilter} onValueChange={setTenantFilter}>
-          <SelectTrigger className="w-full sm:w-[180px]">
-            <SelectValue placeholder="All Clients" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Clients</SelectItem>
-            {tenants.map((tenant) => (
-              <SelectItem key={tenant.id} value={tenant.id}>
-                {tenant.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="w-full sm:w-[150px]">
-            <SelectValue placeholder="All Status" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Status</SelectItem>
-            <SelectItem value="draft">Draft</SelectItem>
-            <SelectItem value="in_progress">In Progress</SelectItem>
-            <SelectItem value="live">Live</SelectItem>
-            <SelectItem value="paused">Paused</SelectItem>
-            <SelectItem value="archived">Archived</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
+      {/* Advanced Filters */}
+      <Card className="bg-card/30 border-border/40">
+        <CardContent className="p-4">
+          <div className="flex flex-col lg:flex-row gap-4">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                placeholder="Search websites, domains..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="pl-9 bg-background/50 border-border/50"
+              />
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <Select value={brandFilter} onValueChange={setBrandFilter}>
+                <SelectTrigger className="w-[140px] bg-background/50 border-border/50">
+                  <SelectValue placeholder="All Brands" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Brands</SelectItem>
+                  {brands.map((brand) => (
+                    <SelectItem key={brand.id} value={brand.id}>
+                      {brand.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Select value={tenantFilter} onValueChange={setTenantFilter}>
+                <SelectTrigger className="w-[140px] bg-background/50 border-border/50">
+                  <SelectValue placeholder="All Clients" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Clients</SelectItem>
+                  {tenants.map((tenant) => (
+                    <SelectItem key={tenant.id} value={tenant.id}>
+                      {tenant.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger className="w-[130px] bg-background/50 border-border/50">
+                  <SelectValue placeholder="All Status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Status</SelectItem>
+                  <SelectItem value="draft">Draft</SelectItem>
+                  <SelectItem value="in_progress">Building</SelectItem>
+                  <SelectItem value="live">Live</SelectItem>
+                  <SelectItem value="paused">Paused</SelectItem>
+                  <SelectItem value="archived">Archived</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
-      {/* Table */}
+      {/* Premium Data Table */}
       {filteredWebsites.length === 0 ? (
-        <Card>
+        <Card className="bg-card/40 border-border/40">
           <CardContent className="flex flex-col items-center justify-center py-16">
-            <Globe className="h-12 w-12 text-muted-foreground/50 mb-4" />
-            <h3 className="text-lg font-medium mb-1">No websites found</h3>
-            <p className="text-sm text-muted-foreground mb-4">
+            <div className="h-16 w-16 rounded-xl bg-muted/30 flex items-center justify-center mb-4">
+              <Globe className="h-8 w-8 text-muted-foreground/50" />
+            </div>
+            <h3 className="text-lg font-semibold mb-1 text-foreground">No websites found</h3>
+            <p className="text-sm text-muted-foreground mb-4 text-center max-w-sm">
               {websites.length === 0
-                ? "Get started by adding your first website"
-                : "Try adjusting your filters"}
+                ? "Get started by adding your first website to the command center"
+                : "Try adjusting your filters to find what you're looking for"}
             </p>
             {websites.length === 0 && (
-              <Button onClick={() => setIsModalOpen(true)}>
-                <Plus className="mr-2 h-4 w-4" />
+              <Button onClick={() => setIsModalOpen(true)} className="gap-2">
+                <Plus className="h-4 w-4" />
                 Add Website
               </Button>
             )}
           </CardContent>
         </Card>
       ) : (
-        <Card>
+        <Card className="bg-card/40 border-border/40 overflow-hidden">
           <Table>
             <TableHeader>
-              <TableRow>
-                <TableHead>Website</TableHead>
-                <TableHead>Domain</TableHead>
-                <TableHead>Brand</TableHead>
-                <TableHead>Client</TableHead>
-                <TableHead>Environment</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
+              <TableRow className="hover:bg-transparent border-border/40">
+                <TableHead className="text-muted-foreground font-medium">Website</TableHead>
+                <TableHead className="text-muted-foreground font-medium">Domain</TableHead>
+                <TableHead className="text-muted-foreground font-medium">Brand</TableHead>
+                <TableHead className="text-muted-foreground font-medium">Client</TableHead>
+                <TableHead className="text-muted-foreground font-medium">Environment</TableHead>
+                <TableHead className="text-muted-foreground font-medium">Status</TableHead>
+                <TableHead className="text-right text-muted-foreground font-medium">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {filteredWebsites.map((website) => {
                 const statusConfig = STATUS_CONFIG[website.status];
                 return (
-                  <TableRow key={website.id}>
-                    <TableCell className="font-medium">{website.name}</TableCell>
+                  <TableRow 
+                    key={website.id} 
+                    className="hover:bg-muted/20 border-border/30 transition-colors group"
+                  >
+                    <TableCell className="font-medium text-foreground">
+                      <Link 
+                        href={`/app/websites/${website.id}`}
+                        className="hover:text-primary transition-colors"
+                      >
+                        {website.name}
+                      </Link>
+                    </TableCell>
                     <TableCell>
                       {website.primary_domain ? (
                         <a
                           href={`https://${website.primary_domain}`}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="flex items-center gap-1 text-blue-600 hover:underline"
+                          className="flex items-center gap-1.5 text-cyan-400 hover:text-cyan-300 transition-colors group/link"
                         >
-                          {website.primary_domain}
-                          <ExternalLink className="h-3 w-3" />
+                          <span className="truncate max-w-[180px]">{website.primary_domain}</span>
+                          <ExternalLink className="h-3 w-3 opacity-0 group-hover/link:opacity-100 transition-opacity" />
                         </a>
                       ) : (
-                        <span className="text-muted-foreground">—</span>
+                        <span className="text-muted-foreground/50">—</span>
                       )}
                     </TableCell>
                     <TableCell>
                       {website.brand ? (
-                        <Badge variant="outline">{website.brand.name}</Badge>
+                        <Badge variant="outline" className="border-border/50 bg-background/30">
+                          {website.brand.name}
+                        </Badge>
                       ) : (
-                        <span className="text-muted-foreground">—</span>
+                        <span className="text-muted-foreground/50">—</span>
                       )}
                     </TableCell>
                     <TableCell>
                       {website.tenant ? (
                         <Link
                           href={`/app/crm/${website.tenant.id}`}
-                          className="text-blue-600 hover:underline"
+                          className="text-foreground hover:text-primary transition-colors"
                         >
                           {website.tenant.name}
                         </Link>
                       ) : (
-                        <span className="text-muted-foreground">Internal</span>
+                        <Badge variant="secondary" className="bg-muted/30 text-muted-foreground text-xs">
+                          Internal
+                        </Badge>
                       )}
                     </TableCell>
                     <TableCell>
-                      <Badge variant="secondary" className="capitalize">
+                      <Badge 
+                        variant="outline" 
+                        className="capitalize border-border/50 bg-background/30 text-xs"
+                      >
                         {website.environment}
                       </Badge>
                     </TableCell>
                     <TableCell>
-                      <Badge className={`${statusConfig.color} gap-1`}>
+                      <Badge 
+                        variant="outline"
+                        className={`gap-1.5 ${statusConfig.bgClass} ${statusConfig.color} border`}
+                      >
                         {statusConfig.icon}
                         {statusConfig.label}
                       </Badge>
                     </TableCell>
                     <TableCell className="text-right">
-                      <Link href={`/app/websites/${website.id}`}>
-                        <Button variant="ghost" size="sm">
-                          <Eye className="h-4 w-4" />
-                        </Button>
-                      </Link>
+                      <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <Link href={`/app/websites/${website.id}`}>
+                          <Button variant="ghost" size="icon" className="h-8 w-8">
+                            <Eye className="h-4 w-4" />
+                          </Button>
+                        </Link>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon" className="h-8 w-8">
+                              <MoreHorizontal className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end" className="w-48">
+                            <DropdownMenuItem asChild>
+                              <Link href={`/app/websites/${website.id}`} className="cursor-pointer">
+                                <Eye className="h-4 w-4 mr-2" />
+                                View Details
+                              </Link>
+                            </DropdownMenuItem>
+                            <DropdownMenuItem className="cursor-pointer">
+                              <Settings className="h-4 w-4 mr-2" />
+                              Settings
+                            </DropdownMenuItem>
+                            <DropdownMenuItem className="cursor-pointer">
+                              <Rocket className="h-4 w-4 mr-2" />
+                              Deployments
+                            </DropdownMenuItem>
+                            <DropdownMenuItem className="cursor-pointer">
+                              <Link2 className="h-4 w-4 mr-2" />
+                              Manage Domains
+                            </DropdownMenuItem>
+                            {website.primary_domain && (
+                              <DropdownMenuItem 
+                                className="cursor-pointer"
+                                onClick={() => navigator.clipboard.writeText(`https://${website.primary_domain}`)}
+                              >
+                                <Copy className="h-4 w-4 mr-2" />
+                                Copy URL
+                              </DropdownMenuItem>
+                            )}
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem className="cursor-pointer text-destructive focus:text-destructive">
+                              <Trash2 className="h-4 w-4 mr-2" />
+                              Delete
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </div>
                     </TableCell>
                   </TableRow>
                 );
@@ -638,76 +813,95 @@ export default function WebsitesPage() {
       {/* Vercel Projects Section */}
       {vercelProjects.length > 0 && (
         <div className="space-y-4 mt-8">
-          <div className="flex items-center gap-2">
-            <Server className="h-5 w-5 text-muted-foreground" />
-            <h2 className="text-lg font-semibold">Vercel Projects</h2>
-            <Badge variant="secondary">{vercelProjects.length}</Badge>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-white to-gray-300 flex items-center justify-center">
+                <svg viewBox="0 0 24 24" className="h-4 w-4 fill-black">
+                  <path d="M24 22.525H0l12-21.05 12 21.05z" />
+                </svg>
+              </div>
+              <div>
+                <h2 className="text-lg font-semibold text-foreground">Vercel Projects</h2>
+                <p className="text-xs text-muted-foreground">Synced from your Vercel account</p>
+              </div>
+            </div>
+            <Badge variant="outline" className="border-border/50">{vercelProjects.length} projects</Badge>
           </div>
-          <Card>
+          <Card className="bg-card/40 border-border/40 overflow-hidden">
             <Table>
               <TableHeader>
-                <TableRow>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Production Domain</TableHead>
-                  <TableHead>Framework</TableHead>
-                  <TableHead>Repository</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Last Synced</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
+                <TableRow className="hover:bg-transparent border-border/40">
+                  <TableHead className="text-muted-foreground font-medium">Name</TableHead>
+                  <TableHead className="text-muted-foreground font-medium">Production Domain</TableHead>
+                  <TableHead className="text-muted-foreground font-medium">Framework</TableHead>
+                  <TableHead className="text-muted-foreground font-medium">Repository</TableHead>
+                  <TableHead className="text-muted-foreground font-medium">Status</TableHead>
+                  <TableHead className="text-muted-foreground font-medium">Last Synced</TableHead>
+                  <TableHead className="text-right text-muted-foreground font-medium">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {vercelProjects.map((project) => (
-                  <TableRow key={project.id}>
-                    <TableCell className="font-medium">{project.name}</TableCell>
+                  <TableRow key={project.id} className="hover:bg-muted/20 border-border/30 transition-colors group">
+                    <TableCell className="font-medium text-foreground">{project.name}</TableCell>
                     <TableCell>
                       {project.production_domain ? (
                         <a
                           href={`https://${project.production_domain}`}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="text-blue-600 hover:underline flex items-center gap-1"
+                          className="flex items-center gap-1.5 text-cyan-400 hover:text-cyan-300 transition-colors group/link"
                         >
-                          {project.production_domain}
-                          <ExternalLink className="h-3 w-3" />
+                          <span className="truncate max-w-[180px]">{project.production_domain}</span>
+                          <ExternalLink className="h-3 w-3 opacity-0 group-hover/link:opacity-100 transition-opacity" />
                         </a>
                       ) : (
-                        <span className="text-muted-foreground">-</span>
+                        <span className="text-muted-foreground/50">—</span>
                       )}
                     </TableCell>
                     <TableCell>
                       {project.framework ? (
-                        <Badge variant="outline" className="capitalize">
+                        <Badge variant="outline" className="capitalize border-border/50 bg-background/30 text-xs">
                           {project.framework}
                         </Badge>
                       ) : (
-                        <span className="text-muted-foreground">-</span>
+                        <span className="text-muted-foreground/50">—</span>
                       )}
                     </TableCell>
                     <TableCell>
-                      {project.repo_name || <span className="text-muted-foreground">-</span>}
+                      {project.repo_name ? (
+                        <span className="flex items-center gap-1.5 text-muted-foreground">
+                          <GitBranch className="h-3 w-3" />
+                          {project.repo_name}
+                        </span>
+                      ) : (
+                        <span className="text-muted-foreground/50">—</span>
+                      )}
                     </TableCell>
                     <TableCell>
                       {project.deployment_status ? (
                         <Badge 
+                          variant="outline"
                           className={
                             project.deployment_status === "READY" 
-                              ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400" 
+                              ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-400" 
                               : project.deployment_status === "ERROR"
-                              ? "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"
-                              : "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400"
+                              ? "bg-red-500/10 border-red-500/30 text-red-400"
+                              : "bg-amber-500/10 border-amber-500/30 text-amber-400"
                           }
                         >
+                          {project.deployment_status === "READY" && <CheckCircle2 className="h-3 w-3 mr-1" />}
+                          {project.deployment_status === "ERROR" && <AlertTriangle className="h-3 w-3 mr-1" />}
                           {project.deployment_status}
                         </Badge>
                       ) : (
-                        <span className="text-muted-foreground">-</span>
+                        <span className="text-muted-foreground/50">—</span>
                       )}
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="text-muted-foreground text-sm">
                       {project.last_synced_at 
                         ? new Date(project.last_synced_at).toLocaleDateString()
-                        : "-"}
+                        : "—"}
                     </TableCell>
                     <TableCell className="text-right">
                       {project.vercel_url && (
@@ -716,7 +910,7 @@ export default function WebsitesPage() {
                           target="_blank"
                           rel="noopener noreferrer"
                         >
-                          <Button variant="ghost" size="sm">
+                          <Button variant="ghost" size="icon" className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity">
                             <ExternalLink className="h-4 w-4" />
                           </Button>
                         </a>
