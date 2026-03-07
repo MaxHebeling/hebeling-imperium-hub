@@ -505,8 +505,11 @@ export function FinancePlannerModule({ isUnlocked }: FinancePlannerModuleProps) 
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Lock className="h-5 w-5" />
-              Finance Vault protegido
+              Finance Vault
             </CardTitle>
+            <p className="text-sm text-muted-foreground">
+              Nivel B — Vista protegida
+            </p>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleUnlockSubmit} className="space-y-4">
