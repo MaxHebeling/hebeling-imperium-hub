@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { useLanguage } from "@/lib/i18n";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -104,6 +105,7 @@ function getStatusColor(status: string | null) {
 }
 
 export default function DocumentsPage() {
+  const { t } = useLanguage();
   const [documents, setDocuments] = useState<Document[]>([]);
   const [tenants, setTenants] = useState<Tenant[]>([]);
   const [brands, setBrands] = useState<Brand[]>([]);
@@ -233,28 +235,28 @@ export default function DocumentsPage() {
       {/* Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Documents</h1>
+          <h1 className="text-2xl font-semibold tracking-tight">{t.documents.title}</h1>
           <p className="text-muted-foreground">
-            Manage contracts, proposals, invoices and briefs
+            {t.documents.subtitle}
           </p>
         </div>
         <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
           <DialogTrigger asChild>
             <Button>
               <Plus className="mr-2 h-4 w-4" />
-              New Document
+              {t.documents.newDocument}
             </Button>
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Create Document</DialogTitle>
+              <DialogTitle>{t.documents.createDocument}</DialogTitle>
               <DialogDescription>
-                Add a new document to the library
+                {t.documents.addNewDocument}
               </DialogDescription>
             </DialogHeader>
             <div className="grid gap-4 py-4">
               <div className="grid gap-2">
-                <Label>Type</Label>
+                <Label>{t.documents.type}</Label>
                 <Select value={formType} onValueChange={setFormType}>
                   <SelectTrigger>
                     <SelectValue />
@@ -269,7 +271,7 @@ export default function DocumentsPage() {
                 </Select>
               </div>
               <div className="grid gap-2">
-                <Label>Status</Label>
+                <Label>{t.documents.status}</Label>
                 <Select value={formStatus} onValueChange={setFormStatus}>
                   <SelectTrigger>
                     <SelectValue />
@@ -284,13 +286,13 @@ export default function DocumentsPage() {
                 </Select>
               </div>
               <div className="grid gap-2">
-                <Label>Client (optional)</Label>
+                <Label>{t.crm.clients} ({t.common.optional})</Label>
                 <Select value={formTenant} onValueChange={setFormTenant}>
                   <SelectTrigger>
-                    <SelectValue placeholder="Select client" />
+                    <SelectValue placeholder={t.documents.selectClient} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="none">None</SelectItem>
+                    <SelectItem value="none">{t.common.none}</SelectItem>
                     {tenants.map((tenant) => (
                       <SelectItem key={tenant.id} value={tenant.id}>
                         {tenant.name}
@@ -300,13 +302,13 @@ export default function DocumentsPage() {
                 </Select>
               </div>
               <div className="grid gap-2">
-                <Label>Brand (optional)</Label>
+                <Label>{t.projects.brand} ({t.common.optional})</Label>
                 <Select value={formBrand} onValueChange={setFormBrand}>
                   <SelectTrigger>
-                    <SelectValue placeholder="Select brand" />
+                    <SelectValue placeholder={t.documents.selectBrand} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="none">None</SelectItem>
+                    <SelectItem value="none">{t.common.none}</SelectItem>
                     {brands.map((brand) => (
                       <SelectItem key={brand.id} value={brand.id}>
                         {brand.name}
@@ -316,7 +318,7 @@ export default function DocumentsPage() {
                 </Select>
               </div>
               <div className="grid gap-2">
-                <Label>File URL (optional)</Label>
+                <Label>{t.documents.fileUrl} ({t.common.optional})</Label>
                 <Input
                   placeholder="https://..."
                   value={formFileUrl}
@@ -326,10 +328,10 @@ export default function DocumentsPage() {
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setIsCreateOpen(false)}>
-                Cancel
+                {t.common.cancel}
               </Button>
               <Button onClick={handleCreate} disabled={creating}>
-                {creating ? "Creating..." : "Create Document"}
+                {creating ? t.documents.creating : t.documents.createDocument}
               </Button>
             </DialogFooter>
           </DialogContent>
@@ -371,7 +373,7 @@ export default function DocumentsPage() {
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
-            placeholder="Search documents..."
+            placeholder={t.documents.searchDocuments}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="pl-9"
@@ -379,10 +381,10 @@ export default function DocumentsPage() {
         </div>
         <Select value={statusFilter} onValueChange={setStatusFilter}>
           <SelectTrigger className="w-full sm:w-[150px]">
-            <SelectValue placeholder="Status" />
+            <SelectValue placeholder={t.documents.status} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All Statuses</SelectItem>
+            <SelectItem value="all">{t.documents.allStatuses}</SelectItem>
             {DOCUMENT_STATUSES.map((status) => (
               <SelectItem key={status.value} value={status.value}>
                 {status.label}
@@ -392,10 +394,10 @@ export default function DocumentsPage() {
         </Select>
         <Select value={tenantFilter} onValueChange={setTenantFilter}>
           <SelectTrigger className="w-full sm:w-[180px]">
-            <SelectValue placeholder="Client" />
+            <SelectValue placeholder={t.crm.clients} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All Clients</SelectItem>
+            <SelectItem value="all">{t.crm.allClients}</SelectItem>
             {tenants.map((tenant) => (
               <SelectItem key={tenant.id} value={tenant.id}>
                 {tenant.name}
@@ -408,7 +410,7 @@ export default function DocumentsPage() {
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList>
-          <TabsTrigger value="all">All</TabsTrigger>
+          <TabsTrigger value="all">{t.common.all}</TabsTrigger>
           {DOCUMENT_TYPES.map((type) => (
             <TabsTrigger key={type.value} value={type.value}>
               {type.label}s
@@ -423,15 +425,15 @@ export default function DocumentsPage() {
                 <div className="rounded-full bg-muted p-4 mb-4">
                   <FolderOpen className="h-8 w-8 text-muted-foreground" />
                 </div>
-                <h3 className="text-lg font-medium mb-1">No documents found</h3>
+                <h3 className="text-lg font-medium mb-1">{t.documents.noDocumentsFound}</h3>
                 <p className="text-muted-foreground text-center mb-4">
                   {activeTab === "all"
-                    ? "Get started by creating your first document"
-                    : `No ${activeTab}s found. Create one to get started.`}
+                    ? t.documents.createFirst
+                    : t.documents.noneOfType}
                 </p>
                 <Button onClick={() => setIsCreateOpen(true)}>
                   <Plus className="mr-2 h-4 w-4" />
-                  New Document
+                  {t.documents.newDocument}
                 </Button>
               </CardContent>
             </Card>
@@ -440,12 +442,12 @@ export default function DocumentsPage() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Type</TableHead>
-                    <TableHead>Client</TableHead>
-                    <TableHead>Brand</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Created</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
+                    <TableHead>{t.documents.type}</TableHead>
+                    <TableHead>{t.crm.clients}</TableHead>
+                    <TableHead>{t.projects.brand}</TableHead>
+                    <TableHead>{t.documents.status}</TableHead>
+                    <TableHead>{t.common.created}</TableHead>
+                    <TableHead className="text-right">{t.common.actions}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>

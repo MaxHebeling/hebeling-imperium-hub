@@ -23,6 +23,7 @@ import {
 } from "@/components/ui/select";
 import { Plus, FolderKanban, Calendar, Building2, Search, LayoutGrid, List } from "lucide-react";
 import Link from "next/link";
+import { useLanguage } from "@/lib/i18n";
 
 type ProjectPhase = "discovery" | "copy" | "design" | "development" | "qa" | "deploy" | "support";
 type ProjectStatus = "pending" | "in_progress" | "waiting_client" | "completed" | "cancelled";
@@ -85,6 +86,7 @@ function getStatusBadge(status: ProjectStatus) {
 }
 
 export default function ProjectsPage() {
+  const { t } = useLanguage();
   const [projects, setProjects] = useState<Project[]>([]);
   const [tenants, setTenants] = useState<Tenant[]>([]);
   const [brands, setBrands] = useState<Brand[]>([]);
@@ -235,23 +237,23 @@ export default function ProjectsPage() {
       {/* Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Projects</h1>
-          <p className="text-muted-foreground">Manage client projects across all phases</p>
+          <h1 className="text-2xl font-semibold tracking-tight">{t.projects.title}</h1>
+          <p className="text-muted-foreground">{t.projects.subtitle}</p>
         </div>
         <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
           <DialogTrigger asChild>
             <Button>
               <Plus className="mr-2 h-4 w-4" />
-              New Project
+              {t.projects.newProject}
             </Button>
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Create New Project</DialogTitle>
+              <DialogTitle>{t.projects.createNewProject}</DialogTitle>
             </DialogHeader>
             <div className="space-y-4 pt-4">
               <div className="space-y-2">
-                <Label htmlFor="name">Project Name</Label>
+                <Label htmlFor="name">{t.projects.projectName}</Label>
                 <Input
                   id="name"
                   placeholder="Website Redesign"
@@ -260,10 +262,10 @@ export default function ProjectsPage() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="tenant">Client</Label>
+                <Label htmlFor="tenant">{t.crm.clients}</Label>
                 <Select value={formTenantId} onValueChange={setFormTenantId}>
                   <SelectTrigger>
-                    <SelectValue placeholder="Select client" />
+                    <SelectValue placeholder={t.projects.selectClient} />
                   </SelectTrigger>
                   <SelectContent>
                     {tenants.map((t) => (
@@ -275,10 +277,10 @@ export default function ProjectsPage() {
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="brand">Brand (optional)</Label>
+                <Label htmlFor="brand">{t.projects.brand} ({t.common.optional})</Label>
                 <Select value={formBrandId} onValueChange={setFormBrandId}>
                   <SelectTrigger>
-                    <SelectValue placeholder="Select brand" />
+                    <SelectValue placeholder={t.projects.selectBrand} />
                   </SelectTrigger>
                   <SelectContent>
                     {brands.map((b) => (
@@ -291,7 +293,7 @@ export default function ProjectsPage() {
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="phase">Phase</Label>
+                  <Label htmlFor="phase">{t.projects.phase}</Label>
                   <Select value={formPhase} onValueChange={(v) => setFormPhase(v as ProjectPhase)}>
                     <SelectTrigger>
                       <SelectValue />
@@ -306,7 +308,7 @@ export default function ProjectsPage() {
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="status">Status</Label>
+                  <Label htmlFor="status">{t.projects.status}</Label>
                   <Select value={formStatus} onValueChange={(v) => setFormStatus(v as ProjectStatus)}>
                     <SelectTrigger>
                       <SelectValue />
@@ -322,7 +324,7 @@ export default function ProjectsPage() {
                 </div>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="due_date">Due Date (optional)</Label>
+                <Label htmlFor="due_date">{t.projects.dueDate} ({t.common.optional})</Label>
                 <Input
                   id="due_date"
                   type="date"
@@ -335,7 +337,7 @@ export default function ProjectsPage() {
                 disabled={!formName.trim() || !formTenantId || isPending}
                 className="w-full"
               >
-                {isPending ? "Creating..." : "Create Project"}
+                {isPending ? t.projects.creating : t.projects.createProject}
               </Button>
             </div>
           </DialogContent>
@@ -347,25 +349,25 @@ export default function ProjectsPage() {
         <Card>
           <CardContent className="pt-6">
             <div className="text-2xl font-bold">{projects.length}</div>
-            <p className="text-xs text-muted-foreground">Total Projects</p>
+            <p className="text-xs text-muted-foreground">{t.projects.totalProjects}</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="pt-6">
             <div className="text-2xl font-bold text-blue-600">{activeProjects}</div>
-            <p className="text-xs text-muted-foreground">In Progress</p>
+            <p className="text-xs text-muted-foreground">{t.projects.inProgress}</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="pt-6">
             <div className="text-2xl font-bold text-amber-600">{waitingProjects}</div>
-            <p className="text-xs text-muted-foreground">Waiting Client</p>
+            <p className="text-xs text-muted-foreground">{t.projects.waitingClient}</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="pt-6">
             <div className="text-2xl font-bold text-emerald-600">{completedProjects}</div>
-            <p className="text-xs text-muted-foreground">Completed</p>
+            <p className="text-xs text-muted-foreground">{t.projects.completed}</p>
           </CardContent>
         </Card>
       </div>
@@ -375,7 +377,7 @@ export default function ProjectsPage() {
         <div className="relative flex-1 max-w-sm">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
-            placeholder="Search projects..."
+            placeholder={t.projects.searchProjects}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="pl-9"
@@ -383,10 +385,10 @@ export default function ProjectsPage() {
         </div>
         <Select value={filterTenant} onValueChange={setFilterTenant}>
           <SelectTrigger className="w-[180px]">
-            <SelectValue placeholder="All Clients" />
+            <SelectValue placeholder={t.crm.allClients} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All Clients</SelectItem>
+            <SelectItem value="all">{t.crm.allClients}</SelectItem>
             {tenants.map((t) => (
               <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>
             ))}
@@ -394,10 +396,10 @@ export default function ProjectsPage() {
         </Select>
         <Select value={filterStatus} onValueChange={setFilterStatus}>
           <SelectTrigger className="w-[180px]">
-            <SelectValue placeholder="All Status" />
+            <SelectValue placeholder={t.crm.allStatuses} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All Status</SelectItem>
+            <SelectItem value="all">{t.crm.allStatuses}</SelectItem>
             {STATUS_OPTIONS.map((s) => (
               <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>
             ))}
@@ -447,7 +449,7 @@ export default function ProjectsPage() {
               <div className="bg-muted/50 rounded-b-lg p-2 min-h-[400px] space-y-2">
                 {projectsByPhase[phase.value].length === 0 ? (
                   <div className="text-center py-8 text-muted-foreground text-sm">
-                    No projects
+                    {t.projects.noProjects}
                   </div>
                 ) : (
                   projectsByPhase[phase.value].map((project) => (
@@ -463,7 +465,7 @@ export default function ProjectsPage() {
                           <div className="font-medium text-sm line-clamp-2">{project.name}</div>
                           <div className="flex items-center gap-2 text-xs text-muted-foreground">
                             <Building2 className="h-3 w-3" />
-                            {project.tenant?.name || "No client"}
+                            {project.tenant?.name || t.projects.noClient}
                           </div>
                           <div className="flex items-center justify-between">
                             {getStatusBadge(project.status)}
@@ -494,11 +496,11 @@ export default function ProjectsPage() {
                 <div className="rounded-full bg-muted p-4 mb-4">
                   <FolderKanban className="h-8 w-8 text-muted-foreground" />
                 </div>
-                <h3 className="font-medium mb-1">No projects found</h3>
+                <h3 className="font-medium mb-1">{t.projects.noProjectsFound}</h3>
                 <p className="text-sm text-muted-foreground mb-4">
                   {projects.length === 0
-                    ? "Create your first project to get started"
-                    : "Try adjusting your filters"}
+                    ? t.projects.createFirst
+                    : t.projects.tryAdjusting}
                 </p>
               </div>
             ) : (
@@ -512,7 +514,7 @@ export default function ProjectsPage() {
                     <div className="space-y-1">
                       <div className="font-medium">{project.name}</div>
                       <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                        <span>{project.tenant?.name || "No client"}</span>
+                        <span>{project.tenant?.name || t.projects.noClient}</span>
                         {project.brand && <span>{project.brand.name}</span>}
                       </div>
                     </div>

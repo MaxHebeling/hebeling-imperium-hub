@@ -117,7 +117,7 @@ export function AppTopbar({ organizationName, userName, userRole = "admin" }: Ap
         <div className="relative w-full">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Search leads, deals, projects..."
+            placeholder={t.topbar.search}
             className="pl-9 h-9 bg-background/50 border-border/50 focus:border-primary/50 focus:ring-primary/20"
           />
           <kbd className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none hidden sm:inline-flex h-5 select-none items-center gap-1 rounded border border-border/50 bg-muted/50 px-1.5 font-mono text-[10px] font-medium text-muted-foreground">
@@ -142,27 +142,27 @@ export function AppTopbar({ organizationName, userName, userRole = "admin" }: Ap
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-80">
             <DropdownMenuLabel className="flex items-center justify-between">
-              <span>Notifications</span>
-              <Badge variant="secondary" className="text-xs">3 new</Badge>
+              <span>{t.topbar.notifications}</span>
+              <Badge variant="secondary" className="text-xs">3 {t.topbar.new}</Badge>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <div className="max-h-64 overflow-y-auto">
               <DropdownMenuItem className="flex flex-col items-start gap-1 cursor-pointer">
-                <span className="font-medium text-sm">New lead assigned</span>
+                <span className="font-medium text-sm">{t.topbar.newLeadAssigned}</span>
                 <span className="text-xs text-muted-foreground">John Doe - 2 minutes ago</span>
               </DropdownMenuItem>
               <DropdownMenuItem className="flex flex-col items-start gap-1 cursor-pointer">
-                <span className="font-medium text-sm">Deal updated to Negotiation</span>
+                <span className="font-medium text-sm">{t.topbar.dealUpdated}</span>
                 <span className="text-xs text-muted-foreground">Acme Corp - 15 minutes ago</span>
               </DropdownMenuItem>
               <DropdownMenuItem className="flex flex-col items-start gap-1 cursor-pointer">
-                <span className="font-medium text-sm">Project milestone completed</span>
+                <span className="font-medium text-sm">{t.topbar.projectMilestone}</span>
                 <span className="text-xs text-muted-foreground">Website Redesign - 1 hour ago</span>
               </DropdownMenuItem>
             </div>
             <DropdownMenuSeparator />
             <DropdownMenuItem className="justify-center text-primary cursor-pointer">
-              View all notifications
+              {t.topbar.viewAllNotifications}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
@@ -182,20 +182,20 @@ export function AppTopbar({ organizationName, userName, userRole = "admin" }: Ap
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-56">
-            <DropdownMenuLabel>Organizations</DropdownMenuLabel>
+            <DropdownMenuLabel>{t.topbar.organizations}</DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuItem className="flex items-center gap-2 cursor-pointer">
               <div className="h-6 w-6 rounded bg-primary/10 flex items-center justify-center">
                 <Building2 className="h-3.5 w-3.5 text-primary" />
               </div>
               <span className="font-medium">{organizationName}</span>
-              <Badge variant="secondary" className="ml-auto text-xs">Current</Badge>
+              <Badge variant="secondary" className="ml-auto text-xs">{t.topbar.current}</Badge>
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem asChild>
               <Link href="/app/organizations" className="text-muted-foreground cursor-pointer">
                 <Settings className="h-4 w-4 mr-2" />
-                Manage Organizations
+                {t.topbar.manageOrganizations}
               </Link>
             </DropdownMenuItem>
           </DropdownMenuContent>
@@ -239,19 +239,19 @@ export function AppTopbar({ organizationName, userName, userRole = "admin" }: Ap
             <DropdownMenuItem asChild>
               <Link href="/app/settings" className="cursor-pointer">
                 <User className="h-4 w-4 mr-2" />
-                Profile
+                {t.topbar.profile}
               </Link>
             </DropdownMenuItem>
             <DropdownMenuItem asChild>
               <Link href="/app/settings" className="cursor-pointer">
                 <Settings className="h-4 w-4 mr-2" />
-                Settings
+                {t.nav.settings}
               </Link>
             </DropdownMenuItem>
             <DropdownMenuItem asChild>
               <Link href="/app/settings" className="cursor-pointer">
                 <CreditCard className="h-4 w-4 mr-2" />
-                Billing
+                {t.topbar.billing}
               </Link>
             </DropdownMenuItem>
             <DropdownMenuSeparator />
