@@ -23,6 +23,7 @@ import {
 } from "@/components/ui/select";
 import { Plus, FolderKanban, Calendar, Building2, Search, LayoutGrid, List } from "lucide-react";
 import Link from "next/link";
+import { useLanguage } from "@/lib/i18n";
 
 type ProjectPhase = "discovery" | "copy" | "design" | "development" | "qa" | "deploy" | "support";
 type ProjectStatus = "pending" | "in_progress" | "waiting_client" | "completed" | "cancelled";
@@ -85,6 +86,7 @@ function getStatusBadge(status: ProjectStatus) {
 }
 
 export default function ProjectsPage() {
+  const { t } = useLanguage();
   const [projects, setProjects] = useState<Project[]>([]);
   const [tenants, setTenants] = useState<Tenant[]>([]);
   const [brands, setBrands] = useState<Brand[]>([]);
@@ -235,19 +237,19 @@ export default function ProjectsPage() {
       {/* Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Projects</h1>
-          <p className="text-muted-foreground">Manage client projects across all phases</p>
+          <h1 className="text-2xl font-semibold tracking-tight">{t.projects.title}</h1>
+          <p className="text-muted-foreground">{t.projects.subtitle}</p>
         </div>
         <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
           <DialogTrigger asChild>
             <Button>
               <Plus className="mr-2 h-4 w-4" />
-              New Project
+              {t.projects.newProject}
             </Button>
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Create New Project</DialogTitle>
+              <DialogTitle>{t.projects.createNewProject}</DialogTitle>
             </DialogHeader>
             <div className="space-y-4 pt-4">
               <div className="space-y-2">

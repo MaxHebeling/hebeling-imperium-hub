@@ -69,6 +69,7 @@ import {
   Check,
 } from "lucide-react";
 import Link from "next/link";
+import { useLanguage } from "@/lib/i18n";
 
 type TenantStatus = "lead" | "active" | "paused" | "archived";
 
@@ -145,6 +146,7 @@ const leadStatusColors: Record<LeadStatus, string> = {
 const ITEMS_PER_PAGE = 10;
 
 export default function CRMPage() {
+  const { t } = useLanguage();
   const [activeTab, setActiveTab] = useState("leads");
   const [tenants, setTenants] = useState<Tenant[]>([]);
   const [contacts, setContacts] = useState<ContactRecord[]>([]);
@@ -397,14 +399,14 @@ export default function CRMPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight text-foreground">CRM</h1>
+          <h1 className="text-2xl font-semibold tracking-tight text-foreground">{t.crm.title}</h1>
           <p className="text-muted-foreground mt-1">
-            Manage your clients, contacts, and relationships.
+            {t.crm.subtitle}
           </p>
         </div>
         <Button onClick={() => handleOpenModal()} className="gap-2 shrink-0">
           <UserPlus className="h-4 w-4" />
-          New Client
+          {t.crm.newClient}
         </Button>
       </div>
 
@@ -413,15 +415,15 @@ export default function CRMPage() {
         <TabsList>
           <TabsTrigger value="leads" className="gap-2">
             <ClipboardList className="h-4 w-4" />
-            Leads
+            {t.crm.leads}
           </TabsTrigger>
           <TabsTrigger value="contacts" className="gap-2">
             <Contact className="h-4 w-4" />
-            Contacts
+            {t.crm.contacts}
           </TabsTrigger>
           <TabsTrigger value="clients" className="gap-2">
             <Users className="h-4 w-4" />
-            Clients
+            {t.crm.clients}
           </TabsTrigger>
         </TabsList>
 
@@ -432,10 +434,10 @@ export default function CRMPage() {
             <CardHeader className="pb-3">
               <CardTitle className="text-sm font-medium flex items-center gap-2">
                 <ExternalLink className="h-4 w-4" />
-                Links de Formularios por Marca
+                {t.crm.formLinks}
               </CardTitle>
               <CardDescription className="text-xs">
-                Copia y comparte estos links con tus clientes
+                {t.crm.formLinksDesc}
               </CardDescription>
             </CardHeader>
             <CardContent className="pt-0">
@@ -475,7 +477,7 @@ export default function CRMPage() {
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
-                  placeholder="Buscar leads por nombre, email o codigo..."
+                  placeholder={t.crm.searchLeads}
                   value={leadSearch}
                   onChange={(e) => setLeadSearch(e.target.value)}
                   className="pl-9 bg-background/50"
@@ -496,16 +498,16 @@ export default function CRMPage() {
                   <div className="h-16 w-16 rounded-2xl bg-muted/50 flex items-center justify-center mb-4">
                     <ClipboardList className="h-8 w-8 text-muted-foreground" />
                   </div>
-                  <p className="text-lg font-medium text-foreground">No hay leads aun</p>
+                  <p className="text-lg font-medium text-foreground">{t.crm.noLeadsYet}</p>
                   <p className="text-sm text-muted-foreground mt-1 max-w-[300px]">
                     {leadSearch
-                      ? "Intenta ajustar tu busqueda."
-                      : "Los leads del formulario de aplicacion apareceran aqui."}
+                      ? t.crm.adjustSearch
+                      : t.crm.leadsWillAppear}
                   </p>
                   <Link href="/apply" className="mt-4">
                     <Button variant="outline" className="gap-2">
                       <ClipboardList className="h-4 w-4" />
-                      Ver Formulario
+                      {t.crm.viewForm}
                     </Button>
                   </Link>
                 </div>
@@ -514,14 +516,14 @@ export default function CRMPage() {
               <Table>
                 <TableHeader>
                   <TableRow className="hover:bg-transparent border-border/50">
-                    <TableHead>Codigo</TableHead>
-                    <TableHead>Origen</TableHead>
-                    <TableHead>Nombre</TableHead>
-                    <TableHead>Contacto</TableHead>
-                    <TableHead>Ubicacion</TableHead>
-                    <TableHead>Proyecto</TableHead>
-                    <TableHead>Estado</TableHead>
-                    <TableHead>Fecha</TableHead>
+                    <TableHead>{t.crm.code}</TableHead>
+                    <TableHead>{t.crm.origin}</TableHead>
+                    <TableHead>{t.crm.name}</TableHead>
+                    <TableHead>{t.crm.contactInfo}</TableHead>
+                    <TableHead>{t.crm.location}</TableHead>
+                    <TableHead>{t.crm.project}</TableHead>
+                    <TableHead>{t.crm.status}</TableHead>
+                    <TableHead>{t.crm.date}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -596,7 +598,7 @@ export default function CRMPage() {
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
-                  placeholder="Search contacts..."
+                  placeholder={t.crm.searchContacts}
                   value={contactSearch}
                   onChange={(e) => setContactSearch(e.target.value)}
                   className="pl-9 bg-background/50"
@@ -617,11 +619,11 @@ export default function CRMPage() {
                   <div className="h-16 w-16 rounded-2xl bg-muted/50 flex items-center justify-center mb-4">
                     <Contact className="h-8 w-8 text-muted-foreground" />
                   </div>
-                  <p className="text-lg font-medium text-foreground">No contacts yet</p>
+                  <p className="text-lg font-medium text-foreground">{t.crm.noContactsYet}</p>
                   <p className="text-sm text-muted-foreground mt-1 max-w-[300px]">
                     {contactSearch
-                      ? "Try adjusting your search."
-                      : "Contacts captured from landing pages will appear here."}
+                      ? t.crm.adjustSearch
+                      : t.crm.addFirstContact}
                   </p>
                 </div>
               </CardContent>
@@ -629,11 +631,11 @@ export default function CRMPage() {
               <Table>
                 <TableHeader>
                   <TableRow className="hover:bg-transparent border-border/50">
-                    <TableHead>Full Name</TableHead>
-                    <TableHead>Email</TableHead>
-                    <TableHead>Phone</TableHead>
-                    <TableHead>Source</TableHead>
-                    <TableHead>Created</TableHead>
+                    <TableHead>{t.crm.fullName}</TableHead>
+                    <TableHead>{t.crm.email}</TableHead>
+                    <TableHead>{t.crm.phone}</TableHead>
+                    <TableHead>{t.crm.source}</TableHead>
+                    <TableHead>{t.common.created}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -678,7 +680,7 @@ export default function CRMPage() {
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="Search clients..."
+                placeholder={t.crm.searchClients}
                 value={search}
                 onChange={(e) => {
                   setSearch(e.target.value);
@@ -700,11 +702,11 @@ export default function CRMPage() {
                   <SelectValue placeholder="Status" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All Status</SelectItem>
-                  <SelectItem value="lead">Lead</SelectItem>
-                  <SelectItem value="active">Active</SelectItem>
-                  <SelectItem value="paused">Paused</SelectItem>
-                  <SelectItem value="archived">Archived</SelectItem>
+                  <SelectItem value="all">{t.crm.allStatuses}</SelectItem>
+                  <SelectItem value="lead">{t.stages.lead}</SelectItem>
+                  <SelectItem value="active">{t.common.active}</SelectItem>
+                  <SelectItem value="paused">{t.websites.paused}</SelectItem>
+                  <SelectItem value="archived">{t.common.archived}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -724,16 +726,16 @@ export default function CRMPage() {
               <div className="h-16 w-16 rounded-2xl bg-muted/50 flex items-center justify-center mb-4">
                 <Users className="h-8 w-8 text-muted-foreground" />
               </div>
-              <p className="text-lg font-medium text-foreground">No clients found</p>
+              <p className="text-lg font-medium text-foreground">{t.crm.noClientsFound}</p>
               <p className="text-sm text-muted-foreground mt-1 max-w-[300px]">
                 {search || statusFilter !== "all"
-                  ? "Try adjusting your search or filters."
-                  : "Add your first client to start managing relationships."}
+                  ? t.crm.adjustSearch
+                  : t.crm.addFirstClient}
               </p>
               {!search && statusFilter === "all" && (
                 <Button onClick={() => handleOpenModal()} className="mt-6 gap-2">
                   <UserPlus className="h-4 w-4" />
-                  Add Your First Client
+                  {t.crm.newClient}
                 </Button>
               )}
             </div>
@@ -748,19 +750,19 @@ export default function CRMPage() {
                     onClick={() => handleSort("name")}
                   >
                     <div className="flex items-center gap-2">
-                      Client Name
+                      {t.crm.clientName}
                       <ArrowUpDown className="h-3.5 w-3.5 text-muted-foreground" />
                     </div>
                   </TableHead>
-                  <TableHead>Contact</TableHead>
-                  <TableHead>Email</TableHead>
-                  <TableHead>Status</TableHead>
+                  <TableHead>{t.crm.primaryContact}</TableHead>
+                  <TableHead>{t.crm.email}</TableHead>
+                  <TableHead>{t.crm.status}</TableHead>
                   <TableHead
                     className="cursor-pointer select-none"
                     onClick={() => handleSort("created_at")}
                   >
                     <div className="flex items-center gap-2">
-                      Created
+                      {t.common.created}
                       <ArrowUpDown className="h-3.5 w-3.5 text-muted-foreground" />
                     </div>
                   </TableHead>
@@ -802,12 +804,12 @@ export default function CRMPage() {
                           <DropdownMenuItem asChild>
                             <Link href={`/app/crm/${tenant.id}`}>
                               <Eye className="h-4 w-4 mr-2" />
-                              View
+                              {t.crm.view}
                             </Link>
                           </DropdownMenuItem>
                           <DropdownMenuItem onClick={() => handleOpenModal(tenant)}>
                             <Pencil className="h-4 w-4 mr-2" />
-                            Edit
+                            {t.crm.edit}
                           </DropdownMenuItem>
                           {tenant.status !== "archived" && (
                             <DropdownMenuItem
@@ -815,7 +817,7 @@ export default function CRMPage() {
                               className="text-destructive focus:text-destructive"
                             >
                               <Archive className="h-4 w-4 mr-2" />
-                              Archive
+                              {t.crm.archive}
                             </DropdownMenuItem>
                           )}
                         </DropdownMenuContent>
@@ -868,17 +870,17 @@ export default function CRMPage() {
         <DialogContent className="sm:max-w-[480px]">
           <DialogHeader>
             <DialogTitle>
-              {editingTenant ? "Edit Client" : "New Client"}
+              {editingTenant ? t.crm.editClient : t.crm.newClient}
             </DialogTitle>
             <DialogDescription>
               {editingTenant
-                ? "Update the client information below."
-                : "Fill in the details to create a new client."}
+                ? t.crm.editClient
+                : t.crm.createClient}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label htmlFor="name">Client Name *</Label>
+              <Label htmlFor="name">{t.crm.clientName} *</Label>
               <Input
                 id="name"
                 placeholder="Acme Corporation"
@@ -889,7 +891,7 @@ export default function CRMPage() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="contact_name">Primary Contact Name</Label>
+              <Label htmlFor="contact_name">{t.crm.primaryContact}</Label>
               <Input
                 id="contact_name"
                 placeholder="John Doe"
@@ -900,7 +902,7 @@ export default function CRMPage() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="contact_email">Primary Contact Email</Label>
+              <Label htmlFor="contact_email">{t.crm.email}</Label>
               <Input
                 id="contact_email"
                 type="email"
@@ -912,7 +914,7 @@ export default function CRMPage() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="status">Status</Label>
+              <Label htmlFor="status">{t.crm.status}</Label>
               <Select
                 value={formData.status}
                 onValueChange={(value) =>
@@ -937,14 +939,14 @@ export default function CRMPage() {
               onClick={() => setIsModalOpen(false)}
               disabled={saving}
             >
-              Cancel
+              {t.common.cancel}
             </Button>
             <Button
               onClick={handleSave}
               disabled={!formData.name.trim() || saving}
             >
               {saving && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-              {editingTenant ? "Save Changes" : "Create Client"}
+              {editingTenant ? t.crm.save : t.crm.createClient}
             </Button>
           </DialogFooter>
         </DialogContent>

@@ -37,46 +37,46 @@ import {
 // Navigation sections with items
 const navSections = [
   {
-    title: "Operations",
+    titleKey: "operations" as const,
     items: [
-      { href: "/app/dashboard", label: "Dashboard", labelKey: "dashboard", icon: LayoutDashboard },
-      { href: "/app/crm", label: "CRM", labelKey: "crm", icon: Users },
-      { href: "/app/deals", label: "Deals", labelKey: "deals", icon: Handshake },
+      { href: "/app/dashboard", labelKey: "dashboard", icon: LayoutDashboard },
+      { href: "/app/crm", labelKey: "crm", icon: Users },
+      { href: "/app/deals", labelKey: "deals", icon: Handshake },
     ],
   },
   {
-    title: "Assets",
+    titleKey: "assets" as const,
     items: [
-      { href: "/app/projects", label: "Projects", labelKey: "projects", icon: FolderKanban },
-      { href: "/app/websites", label: "Websites", labelKey: "websites", icon: Globe },
-      { href: "/app/documents", label: "Documents", labelKey: "documents", icon: FileText },
+      { href: "/app/projects", labelKey: "projects", icon: FolderKanban },
+      { href: "/app/websites", labelKey: "websites", icon: Globe },
+      { href: "/app/documents", labelKey: "documents", icon: FileText },
     ],
   },
   {
-    title: "Finance",
+    titleKey: "finance" as const,
     items: [
-      { href: "/app/finance-vault", label: "Finance Vault", labelKey: "financeVault", icon: CreditCard },
+      { href: "/app/finance-vault", labelKey: "financeVault", icon: CreditCard },
     ],
   },
   {
-    title: "Automation",
+    titleKey: "automation" as const,
     items: [
-      { href: "/app/automations", label: "Automations", labelKey: "automations", icon: Zap },
+      { href: "/app/automations", labelKey: "automations", icon: Zap },
     ],
   },
   {
-    title: "Intelligence",
+    titleKey: "intelligence" as const,
     items: [
-      { href: "/app/analytics", label: "Analytics", labelKey: "analytics", icon: BarChart3 },
+      { href: "/app/analytics", labelKey: "analytics", icon: BarChart3 },
     ],
   },
   {
-    title: "System",
+    titleKey: "system" as const,
     items: [
-      { href: "/app/organizations", label: "Organizations", labelKey: "organizations", icon: Building2 },
-      { href: "/app/team", label: "Team", labelKey: "team", icon: UserCog },
-      { href: "/app/roles", label: "Roles & Permissions", labelKey: "roles", icon: Shield },
-      { href: "/app/settings", label: "Settings", labelKey: "settings", icon: Settings },
+      { href: "/app/organizations", labelKey: "organizations", icon: Building2 },
+      { href: "/app/team", labelKey: "team", icon: UserCog },
+      { href: "/app/roles", labelKey: "roles", icon: Shield },
+      { href: "/app/settings", labelKey: "settings", icon: Settings },
     ],
   },
 ];
@@ -85,7 +85,6 @@ const navSections = [
 const externalLinks = [
   {
     href: "https://ikingdom.org/apply?brand=ikingdom",
-    label: "Apply Form",
     labelKey: "applyForm",
     icon: ClipboardList,
   },
@@ -116,9 +115,14 @@ export function AppSidebar({ userName, userRole }: AppSidebarProps) {
     }
   };
 
-  const getTranslatedLabel = (labelKey: string, fallback: string) => {
+  const getTranslatedNavLabel = (labelKey: string) => {
     const navTranslations = t.nav as Record<string, string>;
-    return navTranslations[labelKey] || fallback;
+    return navTranslations[labelKey] || labelKey;
+  };
+
+  const getTranslatedSectionTitle = (titleKey: string) => {
+    const sidebarTranslations = t.sidebar as Record<string, string>;
+    return sidebarTranslations[titleKey] || titleKey;
   };
 
   return (
@@ -163,11 +167,11 @@ export function AppSidebar({ userName, userRole }: AppSidebarProps) {
         {/* Navigation */}
         <nav className="flex-1 overflow-y-auto p-2 space-y-4">
           {navSections.map((section) => (
-            <div key={section.title}>
+            <div key={section.titleKey}>
               {!isCollapsed && (
                 <div className="px-3 py-2">
                   <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/70">
-                    {section.title}
+                    {getTranslatedSectionTitle(section.titleKey)}
                   </span>
                 </div>
               )}
@@ -198,7 +202,7 @@ export function AppSidebar({ userName, userRole }: AppSidebarProps) {
                       {!isCollapsed && (
                         <>
                           <span className="truncate">
-                            {getTranslatedLabel(item.labelKey, item.label)}
+                            {getTranslatedNavLabel(item.labelKey)}
                           </span>
                           {isActive && (
                             <ChevronRight className="h-3 w-3 ml-auto opacity-50" />
@@ -213,7 +217,7 @@ export function AppSidebar({ userName, userRole }: AppSidebarProps) {
                       <Tooltip key={item.href}>
                         <TooltipTrigger asChild>{linkContent}</TooltipTrigger>
                         <TooltipContent side="right" className="font-medium">
-                          {getTranslatedLabel(item.labelKey, item.label)}
+                          {getTranslatedNavLabel(item.labelKey)}
                         </TooltipContent>
                       </Tooltip>
                     );
@@ -230,7 +234,7 @@ export function AppSidebar({ userName, userRole }: AppSidebarProps) {
             <div className="pt-2 border-t border-sidebar-border/50">
               <div className="px-3 py-2">
                 <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/70">
-                  External
+                  {t.sidebar.external}
                 </span>
               </div>
               {externalLinks.map((item) => (
@@ -243,7 +247,7 @@ export function AppSidebar({ userName, userRole }: AppSidebarProps) {
                 >
                   <item.icon className="h-4 w-4 shrink-0" />
                   <span className="truncate">
-                    {getTranslatedLabel(item.labelKey, item.label)}
+                    {getTranslatedNavLabel(item.labelKey)}
                   </span>
                 </a>
               ))}
@@ -269,7 +273,7 @@ export function AppSidebar({ userName, userRole }: AppSidebarProps) {
               ) : (
                 <>
                   <PanelLeftClose className="h-4 w-4" />
-                  <span>Collapse</span>
+                  <span>{t.sidebar.collapse}</span>
                 </>
               )}
             </Button>

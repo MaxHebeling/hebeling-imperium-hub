@@ -289,7 +289,7 @@ export default function DealsPage() {
         <div>
           <h1 className="text-2xl font-bold tracking-tight">{t.deals.title}</h1>
           <p className="text-muted-foreground">
-            {t.deals.searchPlaceholder}
+            {t.deals.subtitle}
           </p>
         </div>
         <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
@@ -301,15 +301,15 @@ export default function DealsPage() {
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Add New Deal</DialogTitle>
+              <DialogTitle>{t.deals.addNewDeal}</DialogTitle>
               <DialogDescription>
-                Create a new deal in your sales pipeline.
+                {t.deals.createNewDeal}
               </DialogDescription>
             </DialogHeader>
             <form onSubmit={handleAddDeal}>
               <div className="grid gap-4 py-4">
                 <div className="grid gap-2">
-                  <Label htmlFor="title">Deal Title *</Label>
+                  <Label htmlFor="title">{t.deals.dealTitle} *</Label>
                   <Input
                     id="title"
                     value={newDeal.title}
@@ -322,7 +322,7 @@ export default function DealsPage() {
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="grid gap-2">
-                    <Label htmlFor="value">Value</Label>
+                    <Label htmlFor="value">{t.deals.value}</Label>
                     <Input
                       id="value"
                       type="number"
@@ -334,7 +334,7 @@ export default function DealsPage() {
                     />
                   </div>
                   <div className="grid gap-2">
-                    <Label htmlFor="currency">Currency</Label>
+                    <Label htmlFor="currency">{t.deals.currency}</Label>
                     <Select
                       value={newDeal.currency}
                       onValueChange={(v) =>
@@ -353,7 +353,7 @@ export default function DealsPage() {
                   </div>
                 </div>
                 <div className="grid gap-2">
-                  <Label htmlFor="stage">Stage *</Label>
+                  <Label htmlFor="stage">{t.deals.stage} *</Label>
                   <Select
                     value={newDeal.stage_id}
                     onValueChange={(v) =>
@@ -361,7 +361,7 @@ export default function DealsPage() {
                     }
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder="Select stage" />
+                      <SelectValue placeholder={t.deals.selectStage} />
                     </SelectTrigger>
                     <SelectContent>
                       {stages.map((stage) => (
@@ -373,7 +373,7 @@ export default function DealsPage() {
                   </Select>
                 </div>
                 <div className="grid gap-2">
-                  <Label htmlFor="tenant">Client</Label>
+                  <Label htmlFor="tenant">{t.deals.client}</Label>
                   <Select
                     value={newDeal.tenant_id}
                     onValueChange={(v) =>
@@ -381,7 +381,7 @@ export default function DealsPage() {
                     }
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder="Select client (optional)" />
+                      <SelectValue placeholder={t.deals.selectClient} />
                     </SelectTrigger>
                     <SelectContent>
                       {tenants.map((tenant) => (
@@ -393,7 +393,7 @@ export default function DealsPage() {
                   </Select>
                 </div>
                 <div className="grid gap-2">
-                  <Label htmlFor="brand">Brand</Label>
+                  <Label htmlFor="brand">{t.deals.brand}</Label>
                   <Select
                     value={newDeal.brand_id}
                     onValueChange={(v) =>
@@ -401,7 +401,7 @@ export default function DealsPage() {
                     }
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder="Select brand (optional)" />
+                      <SelectValue placeholder={t.deals.selectBrand} />
                     </SelectTrigger>
                     <SelectContent>
                       {brands.map((brand) => (
@@ -419,10 +419,10 @@ export default function DealsPage() {
                   variant="outline"
                   onClick={() => setIsAddOpen(false)}
                 >
-                  Cancel
+                  {t.common.cancel}
                 </Button>
                 <Button type="submit" disabled={isSubmitting}>
-                  {isSubmitting ? "Creating..." : "Create Deal"}
+                  {isSubmitting ? t.deals.creating : t.deals.createDeal}
                 </Button>
               </DialogFooter>
             </form>
@@ -435,7 +435,7 @@ export default function DealsPage() {
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">
-              Total Deals
+              {t.deals.totalDeals}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -445,7 +445,7 @@ export default function DealsPage() {
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">
-              Pipeline Value
+              {t.deals.pipelineValue}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -465,7 +465,7 @@ export default function DealsPage() {
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">
-              Won Value
+              {t.deals.wonValue}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -485,7 +485,7 @@ export default function DealsPage() {
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">
-              Lost Value
+              {t.deals.lostValue}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -585,9 +585,9 @@ export default function DealsPage() {
         <Card className="border-dashed">
           <CardContent className="flex flex-col items-center justify-center py-12">
             <DollarSign className="h-12 w-12 text-muted-foreground mb-4" />
-            <h3 className="text-lg font-semibold mb-2">No Pipeline Configured</h3>
+            <h3 className="text-lg font-semibold mb-2">{t.deals.noPipeline}</h3>
             <p className="text-muted-foreground text-center mb-4">
-              Contact your administrator to set up the sales pipeline.
+              {t.deals.contactAdmin}
             </p>
           </CardContent>
         </Card>
