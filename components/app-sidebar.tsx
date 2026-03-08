@@ -144,7 +144,7 @@ export function AppSidebar({ userName, userRole }: AppSidebarProps) {
           >
             <div className="h-10 w-10 rounded-lg overflow-hidden flex items-center justify-center bg-sidebar-accent/50">
               <Image
-                src="/logo.png"
+                src="/logo-imperium.png"
                 alt="Hebeling Imperium"
                 width={40}
                 height={40}
