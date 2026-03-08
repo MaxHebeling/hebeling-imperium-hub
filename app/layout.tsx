@@ -56,18 +56,4 @@ export default function RootLayout({
       </body>
     </html>
   )
-}}
-
-export default function RootLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode
-}>) {
-  return (
-    <html lang="en" className="dark">
-      <body className={`${poppins.variable} font-sans antialiased`}>
-        {children}
-        <Analytics />
-      </body>
-    </html>
-  )
+}
