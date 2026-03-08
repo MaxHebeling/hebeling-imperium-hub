@@ -56,3 +56,25 @@ export default function RootLayout({
       </body>
     </html>
   )
+}    apple: '/apple-touch-icon.png',
+  },
+  manifest: '/site.webmanifest',
+}
+
+export const viewport: Viewport = {
+  themeColor: '#182433',
+}
+
+export default function RootLayout({
+  children,
+}: Readonly<{
+  children: React.ReactNode
+}>) {
+  return (
+    <html lang="en" className="dark">
+      <body className={`${poppins.variable} font-sans antialiased`}>
+        {children}
+        <Analytics />
+      </body>
+    </html>
+  )
