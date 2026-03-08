@@ -46,7 +46,7 @@ export async function middleware(request: NextRequest) {
       }
     }
     // All other routes redirect to hub for now
-    return NextResponse.redirect("https://hub.hebelingimperium.com/login");
+    return NextResponse.redirect("https://www.hebeling.io/login");
   }
 
   // Public routes - no authentication required
