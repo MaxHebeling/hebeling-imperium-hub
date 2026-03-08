@@ -144,7 +144,13 @@ export async function middleware(request: NextRequest) {
     
     return supabaseResponse;
   }
+return supabaseResponse;
+  }
 
+  return NextResponse.next();
+}
+
+export const config = {
 export const config = {
   matcher: ["/((?!_next/static|_next/image|favicon.ico).*)"],
 };
