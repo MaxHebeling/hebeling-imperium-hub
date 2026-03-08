@@ -69,6 +69,7 @@ import {
   Zap,
 } from "lucide-react";
 import Link from "next/link";
+import { useLanguage } from "@/lib/i18n";
 
 type WebsiteStatus = "draft" | "in_progress" | "live" | "paused" | "archived";
 
@@ -141,6 +142,7 @@ const STATUS_CONFIG: Record<WebsiteStatus, { label: string; color: string; icon:
 };
 
 export default function WebsitesPage() {
+  const { t } = useLanguage();
   const [websites, setWebsites] = useState<Website[]>([]);
   const [vercelProjects, setVercelProjects] = useState<VercelProject[]>([]);
   const [brands, setBrands] = useState<Brand[]>([]);

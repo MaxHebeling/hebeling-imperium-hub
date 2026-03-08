@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from "react";
 import Link from "next/link";
+import { useLanguage } from "@/lib/i18n";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -257,6 +258,7 @@ function formatRelativeTime(dateString: string | null): string {
 }
 
 export default function AutomationsPage() {
+  const { t } = useLanguage();
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [moduleFilter, setModuleFilter] = useState<string>("all");
@@ -306,14 +308,14 @@ export default function AutomationsPage() {
           <div className="flex items-center gap-2">
             <div className="h-2 w-2 bg-emerald-500 rounded-full animate-pulse" />
             <span className="text-xs font-medium text-emerald-400 uppercase tracking-wider">
-              Engine Online
+              {t.automations.engineOnline}
             </span>
           </div>
           <h1 className="text-3xl lg:text-4xl font-bold tracking-tight text-foreground">
-            Automation Engine
+            {t.automations.title}
           </h1>
           <p className="text-muted-foreground max-w-2xl">
-            Monitor and orchestrate operational workflows across CRM, Deals, Clients, Projects, Websites, Documents, Payments, and Investors.
+            {t.automations.subtitle}
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
