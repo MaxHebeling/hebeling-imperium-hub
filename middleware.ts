@@ -104,7 +104,7 @@ export async function middleware(request: NextRequest) {
         return NextResponse.redirect(url);
       }
     }
-    
+
     return supabaseResponse;
   }
 
@@ -137,20 +137,19 @@ export async function middleware(request: NextRequest) {
       pathname === "/" ||
       isAsset;
 
-    if (!allowed)
+    if (!allowed) {
       return NextResponse.redirect(new URL("/client-login", request.url));
-    if (pathname === "/")
+    }
+    if (pathname === "/") {
       return NextResponse.redirect(new URL("/client-login", request.url));
-    
+    }
+
     return supabaseResponse;
-  }
-return supabaseResponse;
   }
 
   return NextResponse.next();
 }
 
-export const config = {
 export const config = {
   matcher: ["/((?!_next/static|_next/image|favicon.ico).*)"],
 };
