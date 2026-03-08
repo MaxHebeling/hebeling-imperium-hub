@@ -145,15 +145,6 @@ export async function middleware(request: NextRequest) {
     return supabaseResponse;
   }
 
-  // Root domain -> redirect to hub
-  if (hostname === "hebelingimperium.com" || hostname === "www.hebelingimperium.com") {
-    return NextResponse.redirect("https://hub.hebelingimperium.com/login");
-  }
-
-  // Other hosts: redirect to hub for safety
-  return NextResponse.redirect("https://hub.hebelingimperium.com/login");
-}
-
 export const config = {
   matcher: ["/((?!_next/static|_next/image|favicon.ico).*)"],
 };
