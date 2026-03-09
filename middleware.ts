@@ -9,6 +9,13 @@ function normalizeHost(host: string) {
 const STAFF_ROLES = ["superadmin", "admin", "sales", "ops"];
 
 export async function middleware(request: NextRequest) {
+  if (request.nextUrl.pathname.startsWith("/external/ikingdom-intake")) {
+    return NextResponse.next();
+  }
+  if (request.nextUrl.pathname.startsWith("/api/external/ikingdom-intake")) {
+    return NextResponse.next();
+  }
+
   const hostHeader = request.headers.get("host") || "";
   const hostname = normalizeHost(hostHeader);
   const pathname = request.nextUrl.pathname;
@@ -55,7 +62,14 @@ export async function middleware(request: NextRequest) {
   }
 
   // Update Supabase session and get user + profile
-  const { supabaseResponse, user, profile } = await updateSession(request);
+  const session = await updateSession(request);
+  if (session.configError) {
+    return new NextResponse(
+      "Server misconfiguration: Supabase URL and Anon Key are required. Set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY in .env.local (as a file, not a directory).",
+      { status: 503, headers: { "Content-Type": "text/plain; charset=utf-8" } }
+    );
+  }
+  const { supabaseResponse, user, profile } = session;
 
   const isStaff = profile && STAFF_ROLES.includes(profile.role);
   const isClient = profile && profile.role === "client";

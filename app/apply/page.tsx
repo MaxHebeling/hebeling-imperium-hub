@@ -12,7 +12,6 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { CheckCircle2, Loader2, AlertCircle, ArrowLeft, ArrowRight, Crown } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
-
 // Configuracion de marcas disponibles
 const BRAND_CONFIG: Record<string, { name: string; logo: string; color: string }> = {
   ikingdom: { name: "iKingdom", logo: "/logo-ikingdom.png", color: "amber" },
@@ -33,7 +32,7 @@ interface FormData {
   // Project details
   project_description: string;
   organization_type: string;
-  website_url: string;
+  website_url?: string;
   social_links: string;
   main_goal: string;
   expected_result: string;
@@ -265,8 +264,8 @@ function ApplyPageContent() {
                 <CardDescription>{STEPS[currentStep - 1].description}</CardDescription>
               </CardHeader>
               <CardContent>
-                <form onSubmit={handleSubmit}>
-                  {status === "error" && (
+              <form onSubmit={handleSubmit} noValidate>
+                                  {status === "error" && (
                     <div className="flex items-center gap-2 p-3 text-sm text-destructive bg-destructive/10 rounded-md border border-destructive/20 mb-6">
                       <AlertCircle className="h-4 w-4 flex-shrink-0" />
                       <span>{errorMessage}</span>
@@ -612,10 +611,10 @@ function ApplyPageContent() {
                           </SelectTrigger>
                           <SelectContent>
                             <SelectItem value="menos_500">Menos de $500 USD</SelectItem>
-                            <SelectItem value="500_1000">$500 - $1,000 USD</SelectItem>
-                            <SelectItem value="1000_2500">$1,000 - $2,500 USD</SelectItem>
-                            <SelectItem value="2500_5000">$2,500 - $5,000 USD</SelectItem>
-                            <SelectItem value="5000_10000">$5,000 - $10,000 USD</SelectItem>
+                            <SelectItem value="500_1000">$500 _ $1,000 USD</SelectItem>
+                            <SelectItem value="1000_2500">$1,000 _ $2,500 USD</SelectItem>
+                            <SelectItem value="2500_5000">$2,500 _ $5,000 USD</SelectItem>
+                            <SelectItem value="5000_10000">$5,000 _ $10,000 USD</SelectItem>
                             <SelectItem value="mas_10000">Mas de $10,000 USD</SelectItem>
                             <SelectItem value="por_definir">Por definir</SelectItem>
                           </SelectContent>

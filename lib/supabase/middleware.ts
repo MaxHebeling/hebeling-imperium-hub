@@ -12,14 +12,27 @@ export interface UserProfile {
   email: string | null
 }
 
-export async function updateSession(request: NextRequest) {
+export type UpdateSessionResult = {
+  supabaseResponse: NextResponse
+  user: { id: string } | null
+  profile: UserProfile | null
+  configError?: boolean
+}
+
+export async function updateSession(request: NextRequest): Promise<UpdateSessionResult> {
   let supabaseResponse = NextResponse.next({
     request,
   })
 
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  if (!supabaseUrl?.trim() || !supabaseAnonKey?.trim()) {
+    return { supabaseResponse, user: null, profile: null, configError: true }
+  }
+
   const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    supabaseUrl,
+    supabaseAnonKey,
     {
       cookies: {
         getAll() {
@@ -68,5 +81,5 @@ export async function updateSession(request: NextRequest) {
     }
   }
 
-  return { supabaseResponse, user, profile, supabase }
+  return { supabaseResponse, user, profile }
 }

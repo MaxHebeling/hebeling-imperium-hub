@@ -58,12 +58,19 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     console.error("Lead API error:", error);
+    const message = error instanceof Error ? error.message : "Internal server error";
+    const isConfigError =
+      !process.env.SUPABASE_SERVICE_ROLE_KEY?.trim() ||
+      !process.env.NEXT_PUBLIC_SUPABASE_URL?.trim() ||
+      /required|createClient|SUPABASE|service.role/i.test(message);
     return NextResponse.json(
-      { 
-        success: false, 
-        error: error instanceof Error ? error.message : "Internal server error" 
+      {
+        success: false,
+        error: isConfigError
+          ? "Server configuration error. Check SUPABASE_SERVICE_ROLE_KEY and database migrations (scripts 001, 006, 007)."
+          : message,
       },
-      { status: 500 }
+      { status: isConfigError ? 503 : 500 }
     );
   }
 }
