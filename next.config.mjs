@@ -6,6 +6,14 @@ const nextConfig = {
   images: {
     unoptimized: true,
   },
+  async rewrites() {
+    return [
+      {
+        source: "/apply",
+        destination: "/external/ikingdom-intake",
+      },
+    ]
+  },
 }
 
 export default nextConfig
