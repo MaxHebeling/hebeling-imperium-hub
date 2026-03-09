@@ -10,9 +10,7 @@ export interface UploadManuscriptResult {
 
 export async function uploadManuscript(
   projectId: string,
-  file: File,
-  // uploadedBy is accepted for API symmetry; callers should record it via registerManuscriptFile
-  _uploadedBy?: string
+  file: File
 ): Promise<UploadManuscriptResult> {
   const supabase = getAdminClient();
   const ext = file.name.split(".").pop() ?? "bin";
