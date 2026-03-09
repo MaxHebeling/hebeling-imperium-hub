@@ -6,15 +6,26 @@ export interface UploadManuscriptResult {
   publicUrl: string | null;
   sizeBytes: number;
   mimeType: string;
+  version: number;
 }
 
+/**
+ * Upload a manuscript file to Supabase Storage.
+ * Each version is stored under its own path so previous versions are preserved.
+ *
+ * @param projectId  UUID of the editorial project.
+ * @param file       The file to upload.
+ * @param version    The version number to use in the storage path (default 1).
+ */
 export async function uploadManuscript(
   projectId: string,
-  file: File
+  file: File,
+  version = 1
 ): Promise<UploadManuscriptResult> {
   const supabase = getAdminClient();
   const ext = file.name.split(".").pop() ?? "bin";
-  const storagePath = `${projectId}/manuscript_original_v1.${ext}`;
+  // Each version lives at its own path – no upsert/overwrite needed.
+  const storagePath = `${projectId}/manuscripts/v${version}.${ext}`;
 
   const bytes = await file.arrayBuffer();
   const buffer = Buffer.from(bytes);
@@ -23,7 +34,7 @@ export async function uploadManuscript(
     .from(EDITORIAL_BUCKETS.manuscripts)
     .upload(storagePath, buffer, {
       contentType: file.type,
-      upsert: true,
+      upsert: false, // never overwrite – each version has a unique path
     });
 
   if (error) throw new Error(`Upload failed: ${error.message}`);
@@ -33,5 +44,6 @@ export async function uploadManuscript(
     publicUrl: null,
     sizeBytes: file.size,
     mimeType: file.type,
+    version,
   };
 }

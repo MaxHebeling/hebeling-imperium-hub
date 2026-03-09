@@ -1,3 +1,5 @@
+export type EditorialFileVisibility = "internal" | "client" | "public";
+
 export type EditorialStageKey =
   | "ingesta"
   | "estructura"
@@ -60,6 +62,7 @@ export interface EditorialFile {
   mime_type: string | null;
   size_bytes: number | null;
   uploaded_by: string | null;
+  visibility: EditorialFileVisibility;
   created_at: string;
 }
 
