@@ -16,7 +16,7 @@ export default function CommandPage() {
             fill
             className="object-cover"
             priority
-            quality={100}
+            quality={75}
           />
         </div>
 
