@@ -11,7 +11,8 @@ export interface UploadManuscriptResult {
 export async function uploadManuscript(
   projectId: string,
   file: File,
-  uploadedBy?: string
+  // uploadedBy is accepted for API symmetry; callers should record it via registerManuscriptFile
+  _uploadedBy?: string
 ): Promise<UploadManuscriptResult> {
   const supabase = getAdminClient();
   const ext = file.name.split(".").pop() ?? "bin";
@@ -28,9 +29,6 @@ export async function uploadManuscript(
     });
 
   if (error) throw new Error(`Upload failed: ${error.message}`);
-
-  // uploadedBy is available for future use (e.g. logging after upload)
-  void uploadedBy;
 
   return {
     storagePath,
