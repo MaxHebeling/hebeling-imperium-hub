@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, Suspense } from "react";
+import { useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -724,13 +724,5 @@ function ApplyPageContent() {
 }
 
 export default function ApplyPage() {
-  return (
-    <Suspense fallback={
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    }>
-      <ApplyPageContent />
-    </Suspense>
-  );
+  return <ApplyPageContent />;
 }

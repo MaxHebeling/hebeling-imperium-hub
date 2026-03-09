@@ -1,12 +1,11 @@
 "use client"
 
-import { useState, useMemo } from "react"
+import { useState, useMemo, useEffect } from "react"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 import { Checkbox } from "@/components/ui/checkbox"
 import dynamic from "next/dynamic"
-// @ts-expect-error — optional deps: run npm install react-phone-number-input country-state-city
 import { Country, State } from "country-state-city"
 import "react-phone-number-input/style.css"
 
@@ -24,10 +23,10 @@ const PhoneInput = dynamic<PhoneInputProps>(
       .then((mod) => mod.default)
       .catch(
         () =>
-          function FallbackPhone({ value, onChange }: PhoneInputProps) {
+          function FallbackPhone({ value, onChange, placeholder }: PhoneInputProps) {
             return (
               <Input
-                placeholder="Phone / WhatsApp"
+                placeholder={placeholder ?? "Phone / WhatsApp"}
                 value={value ?? ""}
                 onChange={(e) => onChange?.(e.target.value)}
                 className="h-12 rounded-xl border border-[#e5e3e0] bg-white text-[#1a1a1a] px-4 w-full"
@@ -66,44 +65,294 @@ const theme = {
   checkboxWrap: "flex items-center gap-3 rounded-xl border border-[#e5e3e0] dark:!border-[#e5e3e0] bg-[#fafaf8] dark:!bg-[#fafaf8] px-4 py-3 hover:border-[#1a1a1a]/20 transition-colors",
 }
 
-const PAGE_TYPES = [
-  "Landing page for a service",
-  "Landing page for a product",
-  "Sales page",
-  "Lead generation page",
-  "I'm not sure, I need guidance",
-]
+type Language = "en" | "es"
 
-const GOALS = [
-  "Get contacted by clients",
-  "Book appointments",
-  "Sell a product",
-  "Capture leads",
-  "Present my company or service",
-]
-
-const MATERIALS = [
-  { value: "Logo", label: "Logo" },
-  { value: "Text content", label: "Text content" },
-  { value: "Images", label: "Images" },
-  { value: "Videos", label: "Videos" },
-  { value: "None yet", label: "None yet" },
-]
-
-const BUDGETS = [
-  "$500 – $1,000",
-  "$1,000 – $3,000",
-  "$3,000 – $7,000",
-  "$7,000+",
-  "Prefer to discuss first",
-]
-
-const TIMELINES = [
-  "As soon as possible",
-  "2–4 weeks",
-  "1–2 months",
-  "Flexible",
-]
+const COPY: Record<Language, {
+  languageLabel: string
+  languageShort: { en: string; es: string }
+  title: string
+  intro: string
+  introSecondary: string
+  sections: {
+    contact: string
+    location: string
+    project: string
+    materials: string
+    presence: string
+    budgetTimeline: string
+    additional: string
+  }
+  fields: {
+    fullName: string
+    email: string
+    phone: string
+    phonePlaceholder: string
+    company: string
+    country: string
+    countrySelect: string
+    stateRegion: string
+    stateRegionSelect: string
+    city: string
+    postalCode: string
+    postalCodePlaceholder: string
+    address1: string
+    address1Placeholder: string
+    address2: string
+    address2Placeholder: string
+    pageType: string
+    pageTypeSelect: string
+    businessDescription: string
+    goal: string
+    goalSelect: string
+    materialsPrompt: string
+    hasWebsite: string
+    yes: string
+    no: string
+    websiteUrl: string
+    referenceSites: string
+    referenceSitesPlaceholder: string
+    budget: string
+    budgetSelect: string
+    timeline: string
+    timelineSelect: string
+    additionalInfo: string
+    additionalInfoPlaceholder: string
+  }
+  button: { submit: string; sending: string }
+  footerSmall: string
+  confirmation: { title: string; line1: string; line2: string }
+  validation: {
+    fullNameEmailRequired: string
+    companyRequired: string
+    projectFieldsRequired: string
+    invalidEmail: string
+    invalidWebsiteUrl: string
+    submitError: string
+    connectionError: string
+  }
+  options: {
+    pageTypes: Array<{ value: string; label: string }>
+    goals: Array<{ value: string; label: string }>
+    materials: Array<{ value: string; label: string }>
+    budgets: Array<{ value: string; label: string }>
+    timelines: Array<{ value: string; label: string }>
+  }
+}> = {
+  en: {
+    languageLabel: "Language",
+    languageShort: { en: "EN", es: "ES" },
+    title: "Start Your Landing Page Project",
+    intro:
+      "Tell us a little about your project and our team will contact you to discuss the best solution for your business.",
+    introSecondary:
+      "This short form helps our team understand your project and prepare the best strategy for your landing page.",
+    sections: {
+      contact: "Contact",
+      location: "Location",
+      project: "Project",
+      materials: "Available Materials",
+      presence: "Current Presence",
+      budgetTimeline: "Budget & Timeline",
+      additional: "Additional Details",
+    },
+    fields: {
+      fullName: "Full Name",
+      email: "Email",
+      phone: "Phone / WhatsApp",
+      phonePlaceholder: "Phone number",
+      company: "Company or Brand Name",
+      country: "Country",
+      countrySelect: "Select country",
+      stateRegion: "State / Province / Region",
+      stateRegionSelect: "Select state / region",
+      city: "City",
+      postalCode: "Postal Code",
+      postalCodePlaceholder: "Postal code",
+      address1: "Address Line 1",
+      address1Placeholder: "Address line 1",
+      address2: "Address Line 2 (optional)",
+      address2Placeholder: "Address line 2",
+      pageType: "What type of page do you need?",
+      pageTypeSelect: "Select an option",
+      businessDescription: "Briefly describe your business",
+      goal: "What is the main goal of your landing page?",
+      goalSelect: "Select an option",
+      materialsPrompt: "What materials do you already have?",
+      hasWebsite: "Do you already have a website?",
+      yes: "Yes",
+      no: "No",
+      websiteUrl: "Website URL (only if applicable)",
+      referenceSites: "Share 1 or 2 websites you like (optional)",
+      referenceSitesPlaceholder: "URLs or names of sites you like",
+      budget: "Estimated budget",
+      budgetSelect: "Select an option",
+      timeline: "Desired timeline",
+      timelineSelect: "Select an option",
+      additionalInfo: "Additional information",
+      additionalInfoPlaceholder: "Anything else you'd like us to know",
+    },
+    button: { submit: "Submit Project Request", sending: "Sending…" },
+    footerSmall: "Our team will review your request and contact you within 24–48 hours.",
+    confirmation: {
+      title: "Thank you for your request",
+      line1: "Your project information has been successfully submitted.",
+      line2: "Our team will review your request and contact you shortly to schedule a discovery conversation.",
+    },
+    validation: {
+      fullNameEmailRequired: "Full Name and Email are required.",
+      companyRequired: "Company or Brand Name is required.",
+      projectFieldsRequired:
+        "Please complete all Project fields: page type, business description, and main goal.",
+      invalidEmail: "Please enter a valid email address.",
+      invalidWebsiteUrl: "Please enter a valid website URL or leave it empty.",
+      submitError: "Error submitting. Please try again.",
+      connectionError: "Connection error. Please try again.",
+    },
+    options: {
+      pageTypes: [
+        { value: "Landing page for a service", label: "Landing page for a service" },
+        { value: "Landing page for a product", label: "Landing page for a product" },
+        { value: "Sales page", label: "Sales page" },
+        { value: "Lead generation page", label: "Lead generation page" },
+        { value: "I'm not sure, I need guidance", label: "I'm not sure, I need guidance" },
+      ],
+      goals: [
+        { value: "Get contacted by clients", label: "Get contacted by clients" },
+        { value: "Book appointments", label: "Book appointments" },
+        { value: "Sell a product", label: "Sell a product" },
+        { value: "Capture leads", label: "Capture leads" },
+        { value: "Present my company or service", label: "Present my company or service" },
+      ],
+      materials: [
+        { value: "Logo", label: "Logo" },
+        { value: "Text content", label: "Text content" },
+        { value: "Images", label: "Images" },
+        { value: "Videos", label: "Videos" },
+        { value: "None yet", label: "None yet" },
+      ],
+      budgets: [
+        { value: "$500 – $1,000", label: "$500 – $1,000" },
+        { value: "$1,000 – $3,000", label: "$1,000 – $3,000" },
+        { value: "$3,000 – $7,000", label: "$3,000 – $7,000" },
+        { value: "$7,000+", label: "$7,000+" },
+        { value: "Prefer to discuss first", label: "Prefer to discuss first" },
+      ],
+      timelines: [
+        { value: "As soon as possible", label: "As soon as possible" },
+        { value: "2–4 weeks", label: "2–4 weeks" },
+        { value: "1–2 months", label: "1–2 months" },
+        { value: "Flexible", label: "Flexible" },
+      ],
+    },
+  },
+  es: {
+    languageLabel: "Idioma",
+    languageShort: { en: "EN", es: "ES" },
+    title: "Comienza tu Proyecto de Landing Page",
+    intro:
+      "Cuéntanos un poco sobre tu proyecto y nuestro equipo te contactará para conversar sobre la mejor solución para tu negocio.",
+    introSecondary:
+      "Este breve formulario nos ayuda a entender tu proyecto y preparar la mejor estrategia para tu landing page.",
+    sections: {
+      contact: "Contacto",
+      location: "Ubicación",
+      project: "Proyecto",
+      materials: "Materiales disponibles",
+      presence: "Presencia actual",
+      budgetTimeline: "Presupuesto y tiempos",
+      additional: "Detalles adicionales",
+    },
+    fields: {
+      fullName: "Nombre completo",
+      email: "Correo electrónico",
+      phone: "Teléfono / WhatsApp",
+      phonePlaceholder: "Número de teléfono",
+      company: "Nombre de la empresa o marca",
+      country: "País",
+      countrySelect: "Selecciona un país",
+      stateRegion: "Estado / Provincia / Región",
+      stateRegionSelect: "Selecciona estado / región",
+      city: "Ciudad",
+      postalCode: "Código postal",
+      postalCodePlaceholder: "Código postal",
+      address1: "Dirección línea 1",
+      address1Placeholder: "Dirección línea 1",
+      address2: "Dirección línea 2 (opcional)",
+      address2Placeholder: "Dirección línea 2",
+      pageType: "¿Qué tipo de página necesitas?",
+      pageTypeSelect: "Selecciona una opción",
+      businessDescription: "Cuéntanos brevemente a qué se dedica tu negocio",
+      goal: "¿Cuál es el objetivo principal de tu landing page?",
+      goalSelect: "Selecciona una opción",
+      materialsPrompt: "¿Qué materiales ya tienes disponibles?",
+      hasWebsite: "¿Ya tienes un sitio web?",
+      yes: "Sí",
+      no: "No",
+      websiteUrl: "URL del sitio web (si aplica)",
+      referenceSites: "Comparte 1 o 2 sitios web que te gusten (opcional)",
+      referenceSitesPlaceholder: "URLs o nombres de sitios que te gusten",
+      budget: "Presupuesto estimado",
+      budgetSelect: "Selecciona una opción",
+      timeline: "Tiempo estimado",
+      timelineSelect: "Selecciona una opción",
+      additionalInfo: "Información adicional",
+      additionalInfoPlaceholder: "Cualquier cosa más que quieras contarnos",
+    },
+    button: { submit: "Enviar solicitud de proyecto", sending: "Enviando…" },
+    footerSmall: "Nuestro equipo revisará tu solicitud y te contactará dentro de 24–48 horas.",
+    confirmation: {
+      title: "Gracias por tu solicitud",
+      line1: "La información de tu proyecto fue enviada correctamente.",
+      line2: "Nuestro equipo revisará tu solicitud y te contactará pronto para agendar una conversación inicial.",
+    },
+    validation: {
+      fullNameEmailRequired: "Nombre completo y correo electrónico son requeridos.",
+      companyRequired: "El nombre de la empresa o marca es requerido.",
+      projectFieldsRequired:
+        "Por favor completa todos los campos de Proyecto: tipo de página, descripción del negocio y objetivo principal.",
+      invalidEmail: "Por favor ingresa un correo electrónico válido.",
+      invalidWebsiteUrl: "Por favor ingresa una URL válida o déjala vacía.",
+      submitError: "Error al enviar. Por favor intenta de nuevo.",
+      connectionError: "Error de conexión. Por favor intenta de nuevo.",
+    },
+    options: {
+      pageTypes: [
+        { value: "Landing page for a service", label: "Landing page para un servicio" },
+        { value: "Landing page for a product", label: "Landing page para un producto" },
+        { value: "Sales page", label: "Página de ventas" },
+        { value: "Lead generation page", label: "Página para captación de leads" },
+        { value: "I'm not sure, I need guidance", label: "No estoy seguro, necesito asesoría" },
+      ],
+      goals: [
+        { value: "Get contacted by clients", label: "Recibir contactos de clientes" },
+        { value: "Book appointments", label: "Reservar citas" },
+        { value: "Sell a product", label: "Vender un producto" },
+        { value: "Capture leads", label: "Captar leads" },
+        { value: "Present my company or service", label: "Presentar mi empresa o servicio" },
+      ],
+      materials: [
+        { value: "Logo", label: "Logo" },
+        { value: "Text content", label: "Textos" },
+        { value: "Images", label: "Imágenes" },
+        { value: "Videos", label: "Videos" },
+        { value: "None yet", label: "Todavía no tengo nada" },
+      ],
+      budgets: [
+        { value: "$500 – $1,000", label: "$500 – $1,000" },
+        { value: "$1,000 – $3,000", label: "$1,000 – $3,000" },
+        { value: "$3,000 – $7,000", label: "$3,000 – $7,000" },
+        { value: "$7,000+", label: "$7,000+" },
+        { value: "Prefer to discuss first", label: "Prefiero conversarlo primero" },
+      ],
+      timelines: [
+        { value: "As soon as possible", label: "Lo antes posible" },
+        { value: "2–4 weeks", label: "2–4 semanas" },
+        { value: "1–2 months", label: "1–2 meses" },
+        { value: "Flexible", label: "Flexible" },
+      ],
+    },
+  },
+}
 
 function LogoBlock({ className }: { className?: string }) {
   return (
@@ -181,15 +430,25 @@ function buildProjectDescription(formData: FormData, whatsappValue?: string): st
 }
 
 export default function Page() {
+  const [mounted, setMounted] = useState(false)
+  const [language, setLanguage] = useState<Language>("en")
   const [loading, setLoading] = useState(false)
   const [success, setSuccess] = useState(false)
   const [phoneValue, setPhoneValue] = useState<string | undefined>(undefined)
   const [selectedCountryCode, setSelectedCountryCode] = useState<string>("")
+  const t = COPY[language]
 
   const states = useMemo((): StateItem[] => {
     if (!selectedCountryCode) return []
     return State.getStatesOfCountry(selectedCountryCode) as StateItem[]
   }, [selectedCountryCode])
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+  if (!mounted) {
+    return null
+  }
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
@@ -204,31 +463,31 @@ export default function Page() {
     const goal = String(formData.get("goal") ?? "").trim()
 
     if (!full_name || !email) {
-      alert("Full Name and Email are required.")
+      alert(t.validation.fullNameEmailRequired)
       setLoading(false)
       return
     }
     if (!company) {
-      alert("Company or Brand Name is required.")
+      alert(t.validation.companyRequired)
       setLoading(false)
       return
     }
     if (!page_type || !business_description || !goal) {
-      alert("Please complete all Project fields: page type, business description, and main goal.")
+      alert(t.validation.projectFieldsRequired)
       setLoading(false)
       return
     }
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
     if (!emailRegex.test(email)) {
-      alert("Please enter a valid email address.")
+      alert(t.validation.invalidEmail)
       setLoading(false)
       return
     }
 
     const website_url = String(formData.get("website_url") ?? "").trim()
     if (website_url && !/^https?:\/\/.+\..+/.test(website_url)) {
-      alert("Please enter a valid website URL or leave it empty.")
+      alert(t.validation.invalidWebsiteUrl)
       setLoading(false)
       return
     }
@@ -258,13 +517,13 @@ export default function Page() {
       })
       if (!res.ok) {
         const json = await res.json().catch(() => ({}))
-        alert(json?.error ?? "Error submitting. Please try again.")
+        alert(json?.error ?? t.validation.submitError)
         return
       }
       setSuccess(true)
     } catch (error) {
       console.error(error)
-      alert("Connection error. Please try again.")
+      alert(t.validation.connectionError)
     } finally {
       setLoading(false)
     }
@@ -280,14 +539,12 @@ export default function Page() {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
             </svg>
           </div>
-          <h1 className={`text-2xl font-light tracking-tight ${theme.label}`}>
-            Thank you for your request
-          </h1>
+          <h1 className={`text-2xl font-light tracking-tight ${theme.label}`}>{t.confirmation.title}</h1>
           <p className={`mt-4 text-[15px] leading-relaxed ${theme.muted}`}>
-            Your project information has been successfully submitted.
+            {t.confirmation.line1}
           </p>
           <p className={`mt-4 text-[15px] leading-relaxed ${theme.muted}`}>
-            Our team will review your request and contact you shortly to schedule a discovery conversation.
+            {t.confirmation.line2}
           </p>
           <p className={`mt-14 text-[11px] uppercase tracking-[0.2em] ${theme.muted}`}>
             ikingdom.org
@@ -300,15 +557,39 @@ export default function Page() {
   return (
     <div className={`min-h-screen ${theme.bg} flex flex-col`}>
       <header className="shrink-0 pt-14 pb-8 px-5 flex flex-col items-center text-center">
+        <div className="w-full max-w-[540px] flex items-center justify-end mb-4">
+          <div className="inline-flex items-center rounded-full border border-[#e5e3e0] bg-white px-1 py-1 shadow-sm">
+            <button
+              type="button"
+              onClick={() => setLanguage("en")}
+              className={`px-3 py-1.5 text-xs font-semibold tracking-wide rounded-full transition-colors ${
+                language === "en" ? "bg-[#1a1a1a] text-white" : "text-[#1a1a1a] hover:bg-[#1a1a1a]/5"
+              }`}
+              aria-label="Switch language to English"
+            >
+              {t.languageShort.en}
+            </button>
+            <button
+              type="button"
+              onClick={() => setLanguage("es")}
+              className={`px-3 py-1.5 text-xs font-semibold tracking-wide rounded-full transition-colors ${
+                language === "es" ? "bg-[#1a1a1a] text-white" : "text-[#1a1a1a] hover:bg-[#1a1a1a]/5"
+              }`}
+              aria-label="Cambiar idioma a Español"
+            >
+              {t.languageShort.es}
+            </button>
+          </div>
+        </div>
         <LogoBlock className="mb-8" />
         <h1 className={`text-[28px] sm:text-3xl font-light tracking-tight ${theme.label} max-w-md leading-tight`}>
-          Start Your Landing Page Project
+          {t.title}
         </h1>
         <p className={`mt-4 text-base leading-relaxed ${theme.muted} max-w-lg`}>
-          Tell us a little about your project and our team will contact you to discuss the best solution for your business.
+          {t.intro}
         </p>
         <p className={`mt-3 text-sm ${theme.muted} max-w-lg`}>
-          This short form helps our team understand your project and prepare the best strategy for your landing page.
+          {t.introSecondary}
         </p>
       </header>
 
@@ -318,40 +599,40 @@ export default function Page() {
             <form onSubmit={handleSubmit} className="p-8 sm:p-12 space-y-10">
               {/* Section 1 — Contact */}
               <div className="space-y-5">
-                <h2 className={theme.sectionTitle}>Contact</h2>
+                <h2 className={theme.sectionTitle}>{t.sections.contact}</h2>
                 <div className="grid gap-4">
                   <div>
-                    <Label htmlFor="full_name" className={theme.label}>Full Name</Label>
-                    <Input id="full_name" name="full_name" placeholder="Full Name" required className={`mt-1.5 ${theme.input}`} />
+                    <Label htmlFor="full_name" className={theme.label}>{t.fields.fullName}</Label>
+                    <Input id="full_name" name="full_name" placeholder={t.fields.fullName} required className={`mt-1.5 ${theme.input}`} />
                   </div>
                   <div>
-                    <Label htmlFor="email" className={theme.label}>Email</Label>
-                    <Input id="email" name="email" type="email" placeholder="Email" required className={`mt-1.5 ${theme.input}`} />
+                    <Label htmlFor="email" className={theme.label}>{t.fields.email}</Label>
+                    <Input id="email" name="email" type="email" placeholder={t.fields.email} required className={`mt-1.5 ${theme.input}`} />
                   </div>
                   <div>
-                    <Label className={theme.label}>Phone / WhatsApp</Label>
+                    <Label className={theme.label}>{t.fields.phone}</Label>
                     <div className="mt-1.5 [&_.PhoneInputInput]:h-12 [&_.PhoneInputInput]:rounded-xl [&_.PhoneInputInput]:border [&_.PhoneInputInput]:border-[#e5e3e0] [&_.PhoneInputInput]:px-4 [&_.PhoneInputInput]:text-[#1a1a1a] [&_.PhoneInputInput]:bg-white [&_.PhoneInputCountrySelect]:rounded-l-xl [&_.PhoneInput]:flex [&_.PhoneInput]:rounded-xl [&_.PhoneInput]:border [&_.PhoneInput]:border-[#e5e3e0] dark:[&_.PhoneInputInput]:!bg-white dark:[&_.PhoneInputInput]:!border-[#e5e3e0]">
                       <PhoneInput
                         value={phoneValue}
                         onChange={setPhoneValue}
-                        placeholder="Phone number"
+                        placeholder={t.fields.phonePlaceholder}
                         defaultCountry="US"
                         className="w-full"
                       />
                     </div>
                   </div>
                   <div>
-                    <Label htmlFor="company" className={theme.label}>Company or Brand Name</Label>
-                    <Input id="company" name="company" placeholder="Company or Brand Name" required className={`mt-1.5 ${theme.input}`} />
+                    <Label htmlFor="company" className={theme.label}>{t.fields.company}</Label>
+                    <Input id="company" name="company" placeholder={t.fields.company} required className={`mt-1.5 ${theme.input}`} />
                   </div>
                 </div>
               </div>
 
               {/* Section 2 — Location */}
               <div className={`space-y-5 pt-8 ${theme.sectionBorder}`}>
-                <h2 className={theme.sectionTitle}>Location</h2>
+                <h2 className={theme.sectionTitle}>{t.sections.location}</h2>
                 <div>
-                  <Label htmlFor="country" className={theme.label}>Country</Label>
+                  <Label htmlFor="country" className={theme.label}>{t.fields.country}</Label>
                   <input
                     type="hidden"
                     name="country"
@@ -364,67 +645,67 @@ export default function Page() {
                     value={selectedCountryCode}
                     onChange={(e) => setSelectedCountryCode(e.target.value)}
                   >
-                    <option value="">Select country</option>
+                    <option value="">{t.fields.countrySelect}</option>
                     {COUNTRIES.map((c) => (
                       <option key={c.isoCode} value={c.isoCode}>{c.name}</option>
                     ))}
                   </select>
                 </div>
                 <div>
-                  <Label htmlFor="state_region" className={theme.label}>State / Province / Region</Label>
+                  <Label htmlFor="state_region" className={theme.label}>{t.fields.stateRegion}</Label>
                   {states.length > 0 ? (
                     <select id="state_region" name="state_region" className={`mt-1.5 ${theme.select}`}>
-                      <option value="">Select state / region</option>
+                      <option value="">{t.fields.stateRegionSelect}</option>
                       {states.map((s) => (
                         <option key={s.isoCode} value={s.name}>{s.name}</option>
                       ))}
                     </select>
                   ) : (
-                    <Input id="state_region" name="state_region" placeholder="State / Province / Region" className={`mt-1.5 ${theme.input}`} />
+                    <Input id="state_region" name="state_region" placeholder={t.fields.stateRegion} className={`mt-1.5 ${theme.input}`} />
                   )}
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <Label htmlFor="city" className={theme.label}>City</Label>
-                    <Input id="city" name="city" placeholder="City" className={`mt-1.5 ${theme.input}`} />
+                    <Label htmlFor="city" className={theme.label}>{t.fields.city}</Label>
+                    <Input id="city" name="city" placeholder={t.fields.city} className={`mt-1.5 ${theme.input}`} />
                   </div>
                   <div>
-                    <Label htmlFor="postal_code" className={theme.label}>Postal Code</Label>
-                    <Input id="postal_code" name="postal_code" placeholder="Postal code" className={`mt-1.5 ${theme.input}`} />
+                    <Label htmlFor="postal_code" className={theme.label}>{t.fields.postalCode}</Label>
+                    <Input id="postal_code" name="postal_code" placeholder={t.fields.postalCodePlaceholder} className={`mt-1.5 ${theme.input}`} />
                   </div>
                 </div>
                 <div>
-                  <Label htmlFor="address_line_1" className={theme.label}>Address Line 1</Label>
-                  <Input id="address_line_1" name="address_line_1" placeholder="Address line 1" className={`mt-1.5 ${theme.input}`} />
+                  <Label htmlFor="address_line_1" className={theme.label}>{t.fields.address1}</Label>
+                  <Input id="address_line_1" name="address_line_1" placeholder={t.fields.address1Placeholder} className={`mt-1.5 ${theme.input}`} />
                 </div>
                 <div>
-                  <Label htmlFor="address_line_2" className={theme.label}>Address Line 2 (optional)</Label>
-                  <Input id="address_line_2" name="address_line_2" placeholder="Address line 2" className={`mt-1.5 ${theme.input}`} />
+                  <Label htmlFor="address_line_2" className={theme.label}>{t.fields.address2}</Label>
+                  <Input id="address_line_2" name="address_line_2" placeholder={t.fields.address2Placeholder} className={`mt-1.5 ${theme.input}`} />
                 </div>
               </div>
 
               {/* Section 3 — Project */}
               <div className={`space-y-5 pt-8 ${theme.sectionBorder}`}>
-                <h2 className={theme.sectionTitle}>Project</h2>
+                <h2 className={theme.sectionTitle}>{t.sections.project}</h2>
                 <div>
-                  <Label htmlFor="page_type" className={theme.label}>What type of page do you need?</Label>
+                  <Label htmlFor="page_type" className={theme.label}>{t.fields.pageType}</Label>
                   <select id="page_type" name="page_type" required className={`mt-1.5 ${theme.select}`}>
-                    <option value="">Select an option</option>
-                    {PAGE_TYPES.map((opt) => (
-                      <option key={opt} value={opt}>{opt}</option>
+                    <option value="">{t.fields.pageTypeSelect}</option>
+                    {t.options.pageTypes.map((opt) => (
+                      <option key={opt.value} value={opt.value}>{opt.label}</option>
                     ))}
                   </select>
                 </div>
                 <div>
-                  <Label htmlFor="business_description" className={theme.label}>Briefly describe your business</Label>
-                  <Textarea id="business_description" name="business_description" placeholder="Briefly describe your business" required rows={3} className={`mt-1.5 min-h-[80px] rounded-xl resize-none ${theme.input}`} />
+                  <Label htmlFor="business_description" className={theme.label}>{t.fields.businessDescription}</Label>
+                  <Textarea id="business_description" name="business_description" placeholder={t.fields.businessDescription} required rows={3} className={`mt-1.5 min-h-[80px] rounded-xl resize-none ${theme.input}`} />
                 </div>
                 <div>
-                  <Label htmlFor="goal" className={theme.label}>What is the main goal of your landing page?</Label>
+                  <Label htmlFor="goal" className={theme.label}>{t.fields.goal}</Label>
                   <select id="goal" name="goal" required className={`mt-1.5 ${theme.select}`}>
-                    <option value="">Select an option</option>
-                    {GOALS.map((opt) => (
-                      <option key={opt} value={opt}>{opt}</option>
+                    <option value="">{t.fields.goalSelect}</option>
+                    {t.options.goals.map((opt) => (
+                      <option key={opt.value} value={opt.value}>{opt.label}</option>
                     ))}
                   </select>
                 </div>
@@ -432,10 +713,10 @@ export default function Page() {
 
               {/* Section 3 — Available Materials */}
               <div className={`space-y-5 pt-8 ${theme.sectionBorder}`}>
-                <h2 className={theme.sectionTitle}>Available Materials</h2>
-                <p className={`text-sm ${theme.muted}`}>What materials do you already have?</p>
+                <h2 className={theme.sectionTitle}>{t.sections.materials}</h2>
+                <p className={`text-sm ${theme.muted}`}>{t.fields.materialsPrompt}</p>
                 <div className="flex flex-wrap gap-2">
-                  {MATERIALS.map((m) => (
+                  {t.options.materials.map((m) => (
                     <label key={m.value} className={theme.checkboxWrap}>
                       <Checkbox name="materials" value={m.value} className="dark:!border-[#eae8e5] dark:data-[state=checked]:!bg-[#1c1c1c]" />
                       <span className={theme.radioLabel}>{m.label}</span>
@@ -446,48 +727,48 @@ export default function Page() {
 
               {/* Section 4 — Current Presence */}
               <div className={`space-y-5 pt-8 ${theme.sectionBorder}`}>
-                <h2 className={theme.sectionTitle}>Current Presence</h2>
+                <h2 className={theme.sectionTitle}>{t.sections.presence}</h2>
                 <div>
-                  <Label className={theme.label}>Do you already have a website?</Label>
+                  <Label className={theme.label}>{t.fields.hasWebsite}</Label>
                   <div className="flex gap-6 mt-2">
                     <label className="flex items-center gap-2 cursor-pointer">
                       <input type="radio" name="has_website" value="Yes" className="w-4 h-4 border-[#eae8e5] text-[#1c1c1c] focus:ring-[#1c1c1c]/20" />
-                      <span className={theme.radioLabel}>Yes</span>
+                      <span className={theme.radioLabel}>{t.fields.yes}</span>
                     </label>
                     <label className="flex items-center gap-2 cursor-pointer">
                       <input type="radio" name="has_website" value="No" className="w-4 h-4 border-[#eae8e5] text-[#1c1c1c] focus:ring-[#1c1c1c]/20" />
-                      <span className={theme.radioLabel}>No</span>
+                      <span className={theme.radioLabel}>{t.fields.no}</span>
                     </label>
                   </div>
                 </div>
                 <div>
-                  <Label htmlFor="website_url" className={theme.label}>Website URL (only if applicable)</Label>
+                  <Label htmlFor="website_url" className={theme.label}>{t.fields.websiteUrl}</Label>
                   <Input id="website_url" name="website_url" type="url" placeholder="https://" className={`mt-1.5 ${theme.input}`} />
                 </div>
                 <div>
-                  <Label htmlFor="reference_sites" className={theme.label}>Share 1 or 2 websites you like (optional)</Label>
-                  <Textarea id="reference_sites" name="reference_sites" placeholder="URLs or names of sites you like" rows={2} className={`mt-1.5 min-h-[60px] rounded-xl resize-none ${theme.input}`} />
+                  <Label htmlFor="reference_sites" className={theme.label}>{t.fields.referenceSites}</Label>
+                  <Textarea id="reference_sites" name="reference_sites" placeholder={t.fields.referenceSitesPlaceholder} rows={2} className={`mt-1.5 min-h-[60px] rounded-xl resize-none ${theme.input}`} />
                 </div>
               </div>
 
               {/* Section 5 — Budget & Timeline */}
               <div className={`space-y-5 pt-8 ${theme.sectionBorder}`}>
-                <h2 className={theme.sectionTitle}>Budget & Timeline</h2>
+                <h2 className={theme.sectionTitle}>{t.sections.budgetTimeline}</h2>
                 <div>
-                  <Label htmlFor="budget" className={theme.label}>Estimated budget</Label>
+                  <Label htmlFor="budget" className={theme.label}>{t.fields.budget}</Label>
                   <select id="budget" name="budget" className={`mt-1.5 ${theme.select}`}>
-                    <option value="">Select an option</option>
-                    {BUDGETS.map((opt) => (
-                      <option key={opt} value={opt}>{opt}</option>
+                    <option value="">{t.fields.budgetSelect}</option>
+                    {t.options.budgets.map((opt) => (
+                      <option key={opt.value} value={opt.value}>{opt.label}</option>
                     ))}
                   </select>
                 </div>
                 <div>
-                  <Label htmlFor="timeline" className={theme.label}>Desired timeline</Label>
+                  <Label htmlFor="timeline" className={theme.label}>{t.fields.timeline}</Label>
                   <select id="timeline" name="timeline" className={`mt-1.5 ${theme.select}`}>
-                    <option value="">Select an option</option>
-                    {TIMELINES.map((opt) => (
-                      <option key={opt} value={opt}>{opt}</option>
+                    <option value="">{t.fields.timelineSelect}</option>
+                    {t.options.timelines.map((opt) => (
+                      <option key={opt.value} value={opt.value}>{opt.label}</option>
                     ))}
                   </select>
                 </div>
@@ -495,19 +776,19 @@ export default function Page() {
 
               {/* Section 6 — Additional Details */}
               <div className={`space-y-5 pt-8 ${theme.sectionBorder}`}>
-                <h2 className={theme.sectionTitle}>Additional Details</h2>
+                <h2 className={theme.sectionTitle}>{t.sections.additional}</h2>
                 <div>
-                  <Label htmlFor="additional_info" className={theme.label}>Additional information</Label>
-                  <Textarea id="additional_info" name="additional_info" placeholder="Anything else you'd like us to know" rows={3} className={`mt-1.5 min-h-[80px] rounded-xl resize-none ${theme.input}`} />
+                  <Label htmlFor="additional_info" className={theme.label}>{t.fields.additionalInfo}</Label>
+                  <Textarea id="additional_info" name="additional_info" placeholder={t.fields.additionalInfoPlaceholder} rows={3} className={`mt-1.5 min-h-[80px] rounded-xl resize-none ${theme.input}`} />
                 </div>
               </div>
 
               <div className={`pt-8 ${theme.sectionBorder}`}>
                 <p className={`text-sm ${theme.muted} mb-6`}>
-                  Our team will review your request and contact you within 24–48 hours.
+                  {t.footerSmall}
                 </p>
                   <button type="submit" disabled={loading} className={theme.btn}>
-                  {loading ? "Sending…" : "Submit Project Request"}
+                  {loading ? t.button.sending : t.button.submit}
                 </button>
               </div>
             </form>

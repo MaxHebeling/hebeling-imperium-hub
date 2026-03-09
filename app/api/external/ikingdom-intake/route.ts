@@ -75,6 +75,7 @@ export async function POST(request: Request) {
       try {
         const resend = new Resend(resendApiKey)
         const from = process.env.RESEND_FROM?.trim() || "Hebeling <onboarding@resend.dev>"
+        console.info("[ikingdom-intake] Resend attempting send", { to: resendTo, from })
         const projectDescHtml = escapeHtml(project_description).replace(/\n/g, "<br />")
         const htmlParts = [
           "<h2>Nuevo formulario iKingdom Intake</h2>",
@@ -101,10 +102,17 @@ export async function POST(request: Request) {
         })
         if (sendError) {
           console.error("[ikingdom-intake] Resend send failed:", JSON.stringify(sendError, null, 2))
+        } else {
+          console.info("[ikingdom-intake] Resend send succeeded")
         }
       } catch (err) {
         console.error("[ikingdom-intake] Resend exception (email not sent):", err)
       }
+    } else {
+      const missing: string[] = []
+      if (!resendApiKey) missing.push("RESEND_API_KEY")
+      if (!resendTo) missing.push("RESEND_IKINGDOM_TO")
+      console.warn("[ikingdom-intake] Resend skipped (missing env)", { missing })
     }
 
     return NextResponse.json({ ok: true, data })
