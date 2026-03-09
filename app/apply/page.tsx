@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -724,5 +724,9 @@ function ApplyPageContent() {
 }
 
 export default function ApplyPage() {
-  return <ApplyPageContent />;
+  return (
+    <Suspense fallback={null}>
+      <ApplyPageContent />
+    </Suspense>
+  );
 }
