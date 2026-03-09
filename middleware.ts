@@ -96,6 +96,26 @@ export async function middleware(request: NextRequest) {
     (isLocal && appHint === "clients") ||
     (isPreview && appHint === "clients");
 
+  /**
+   * Apply author portal rules (/author/*) that are identical across all host
+   * contexts. Returns a redirect Response when action is needed, otherwise null.
+   */
+  function applyAuthorPortalRules(): NextResponse | null {
+    if (pathname.startsWith("/author") && !pathname.startsWith("/author/login")) {
+      if (!user) {
+        const url = request.nextUrl.clone();
+        url.pathname = "/author/login";
+        return NextResponse.redirect(url);
+      }
+    }
+    if (pathname === "/author/login" && user) {
+      const url = request.nextUrl.clone();
+      url.pathname = "/author/projects";
+      return NextResponse.redirect(url);
+    }
+    return null;
+  }
+
   // HUB (staff)
   if (isHubHost) {
     // If staff user is logged in and visits /login, redirect to dashboard
@@ -119,6 +139,11 @@ export async function middleware(request: NextRequest) {
       }
     }
 
+    // Author portal: /author/* requires any authenticated user.
+    // /author/login is public (no auth needed).
+    const authorRedirect = applyAuthorPortalRules();
+    if (authorRedirect) return authorRedirect;
+
     return supabaseResponse;
   }
 
@@ -138,6 +163,11 @@ export async function middleware(request: NextRequest) {
       }
     }
 
+    // Author portal: /author/* requires any authenticated user.
+    // /author/login is public.
+    const authorRedirect = applyAuthorPortalRules();
+    if (authorRedirect) return authorRedirect;
+
     // If client user is logged in and visits /client-login, redirect to portal
     if (pathname === "/client-login" && user && isClient) {
       const url = request.nextUrl.clone();
@@ -148,6 +178,7 @@ export async function middleware(request: NextRequest) {
     const allowed =
       pathname === "/client-login" ||
       pathname.startsWith("/portal") ||
+      pathname.startsWith("/author") ||
       pathname === "/" ||
       isAsset;
 
