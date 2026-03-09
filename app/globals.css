@@ -126,6 +126,57 @@
   }
 }
 
+/* iKingdom Form Styles */
+.ikingdom-form input,
+.ikingdom-form textarea,
+.ikingdom-form [data-slot="select-trigger"] {
+  background-color: #000000 !important;
+  color: #D9D9D9 !important;
+  border-color: #C89A0F !important;
+}
+
+.ikingdom-form input::placeholder,
+.ikingdom-form textarea::placeholder {
+  color: rgba(217, 217, 217, 0.6) !important;
+}
+
+.ikingdom-form input:focus,
+.ikingdom-form textarea:focus,
+.ikingdom-form [data-slot="select-trigger"]:focus {
+  border-color: #F2F500 !important;
+  --tw-ring-color: #F2F500 !important;
+}
+
+.ikingdom-form label {
+  color: #D9D9D9 !important;
+}
+
+.ikingdom-form [data-slot="select-content"] {
+  background-color: #000000 !important;
+  border-color: #C89A0F !important;
+}
+
+.ikingdom-form [data-slot="select-item"] {
+  color: #D9D9D9 !important;
+}
+
+.ikingdom-form [data-slot="select-item"]:hover,
+.ikingdom-form [data-slot="select-item"][data-highlighted] {
+  background-color: #C89A0F !important;
+  color: #000000 !important;
+}
+
+.ikingdom-form [role="checkbox"],
+.ikingdom-form [role="radio"] {
+  border-color: #C89A0F !important;
+}
+
+.ikingdom-form [role="checkbox"][data-state="checked"],
+.ikingdom-form [role="radio"][data-state="checked"] {
+  background-color: #E1B61A !important;
+  border-color: #E1B61A !important;
+}
+
 /* Premium animations */
 @layer components {
   @keyframes fade-up {

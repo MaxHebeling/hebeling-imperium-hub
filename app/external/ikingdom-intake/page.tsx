@@ -265,12 +265,12 @@ export default function IKingdomIntakePage() {
 
   if (submitted) {
     return (
-      <div className="min-h-screen bg-neutral-50 flex items-center justify-center p-4">
-        <Card className="max-w-md w-full">
+      <div className="min-h-screen bg-black flex items-center justify-center p-4">
+        <Card className="max-w-md w-full bg-black border-[#C89A0F]">
           <CardContent className="pt-8 pb-8 text-center">
-            <CheckCircle2 className="w-16 h-16 text-green-500 mx-auto mb-4" />
-            <h2 className="text-2xl font-semibold mb-2">{t.successTitle}</h2>
-            <p className="text-neutral-600">{t.successMessage}</p>
+            <CheckCircle2 className="w-16 h-16 text-[#E1B61A] mx-auto mb-4" />
+            <h2 className="text-2xl font-semibold mb-2 text-[#E1B61A]">{t.successTitle}</h2>
+            <p className="text-[#D9D9D9]">{t.successMessage}</p>
           </CardContent>
         </Card>
       </div>
@@ -278,7 +278,7 @@ export default function IKingdomIntakePage() {
   }
 
   return (
-    <div className="min-h-screen bg-neutral-50 py-12 px-4">
+    <div className="min-h-screen bg-black py-12 px-4">
       <div className="max-w-2xl mx-auto">
         {/* Logo */}
         <div className="flex justify-center mb-6">
@@ -287,41 +287,40 @@ export default function IKingdomIntakePage() {
             alt="Imperium Group"
             width={48}
             height={48}
-            className="opacity-80"
           />
         </div>
 
         {/* Title */}
         <div className="text-center mb-4">
-          <h1 className="text-3xl font-semibold text-neutral-900 mb-3">
+          <h1 className="text-3xl font-semibold text-[#E1B61A] mb-3">
             {t.title}
           </h1>
-          <p className="text-neutral-600 mb-2">{t.subtitle}</p>
-          <p className="text-sm text-neutral-500">{t.description}</p>
+          <p className="text-[#D9D9D9] mb-2">{t.subtitle}</p>
+          <p className="text-sm text-[#D9D9D9]/70">{t.description}</p>
         </div>
 
         {/* Language Toggle */}
         <div className="flex justify-center mb-8">
-          <div className="inline-flex rounded-full border border-neutral-300 bg-white p-1 shadow-sm">
+          <div className="inline-flex rounded-full border border-[#C89A0F] bg-black p-1">
             <button
               type="button"
-className={`px-4 py-2 text-sm font-medium rounded-full transition ${
-                    language === "en"
-                      ? "bg-amber-600 text-white"
-                      : "text-neutral-700 hover:bg-amber-50"
-                  }`}
-                  onClick={() => setLanguage("en")}
+              className={`px-4 py-2 text-sm font-medium rounded-full transition ${
+                language === "en"
+                  ? "bg-[#E1B61A] text-black"
+                  : "text-[#D9D9D9] hover:bg-[#C89A0F]/20"
+              }`}
+              onClick={() => setLanguage("en")}
             >
               EN
             </button>
             <button
               type="button"
-className={`px-4 py-2 text-sm font-medium rounded-full transition ${
-                    language === "es"
-                      ? "bg-amber-600 text-white"
-                      : "text-neutral-700 hover:bg-amber-50"
-                  }`}
-                  onClick={() => setLanguage("es")}
+              className={`px-4 py-2 text-sm font-medium rounded-full transition ${
+                language === "es"
+                  ? "bg-[#E1B61A] text-black"
+                  : "text-[#D9D9D9] hover:bg-[#C89A0F]/20"
+              }`}
+              onClick={() => setLanguage("es")}
             >
               ES
             </button>
@@ -329,13 +328,13 @@ className={`px-4 py-2 text-sm font-medium rounded-full transition ${
         </div>
 
         {/* Form */}
-        <Card className="shadow-sm border-neutral-200">
+        <Card className="bg-black border-[#C89A0F]">
           <CardContent className="pt-8 pb-8">
-            <form onSubmit={handleSubmit} className="space-y-8">
+            <form onSubmit={handleSubmit} className="ikingdom-form space-y-8">
               
               {/* Contact Section */}
               <div className="space-y-4">
-                <h2 className="text-xs font-semibold text-neutral-500 uppercase tracking-wider">
+                <h2 className="text-xs font-semibold text-[#E1B61A] uppercase tracking-wider">
                   {t.contact}
                 </h2>
                 
@@ -390,8 +389,8 @@ className={`px-4 py-2 text-sm font-medium rounded-full transition ${
 
               {/* Location Section */}
               <div className="space-y-4">
-                <div className="border-t border-neutral-200 pt-6">
-                  <h2 className="text-xs font-semibold text-neutral-500 uppercase tracking-wider">
+                <div className="border-t border-[#C89A0F]/30 pt-6">
+                  <h2 className="text-xs font-semibold text-[#E1B61A] uppercase tracking-wider">
                     {t.location}
                   </h2>
                 </div>
@@ -473,8 +472,8 @@ className={`px-4 py-2 text-sm font-medium rounded-full transition ${
 
               {/* Project Section */}
               <div className="space-y-4">
-                <div className="border-t border-neutral-200 pt-6">
-                  <h2 className="text-xs font-semibold text-neutral-500 uppercase tracking-wider">
+                <div className="border-t border-[#C89A0F]/30 pt-6">
+                  <h2 className="text-xs font-semibold text-[#E1B61A] uppercase tracking-wider">
                     {t.project}
                   </h2>
                 </div>
@@ -532,8 +531,8 @@ className={`px-4 py-2 text-sm font-medium rounded-full transition ${
 
               {/* Materials Section */}
               <div className="space-y-4">
-                <div className="border-t border-neutral-200 pt-6">
-                  <h2 className="text-xs font-semibold text-neutral-500 uppercase tracking-wider">
+                <div className="border-t border-[#C89A0F]/30 pt-6">
+                  <h2 className="text-xs font-semibold text-[#E1B61A] uppercase tracking-wider">
                     {t.materials}
                   </h2>
                 </div>
@@ -559,8 +558,8 @@ className={`px-4 py-2 text-sm font-medium rounded-full transition ${
 
               {/* Current Presence Section */}
               <div className="space-y-4">
-                <div className="border-t border-neutral-200 pt-6">
-                  <h2 className="text-xs font-semibold text-neutral-500 uppercase tracking-wider">
+                <div className="border-t border-[#C89A0F]/30 pt-6">
+                  <h2 className="text-xs font-semibold text-[#E1B61A] uppercase tracking-wider">
                     {t.presence}
                   </h2>
                 </div>
@@ -611,8 +610,8 @@ className={`px-4 py-2 text-sm font-medium rounded-full transition ${
 
               {/* Budget & Timeline Section */}
               <div className="space-y-4">
-                <div className="border-t border-neutral-200 pt-6">
-                  <h2 className="text-xs font-semibold text-neutral-500 uppercase tracking-wider">
+                <div className="border-t border-[#C89A0F]/30 pt-6">
+                  <h2 className="text-xs font-semibold text-[#E1B61A] uppercase tracking-wider">
                     {t.budgetTimeline}
                   </h2>
                 </div>
@@ -657,8 +656,8 @@ className={`px-4 py-2 text-sm font-medium rounded-full transition ${
 
               {/* Additional Details Section */}
               <div className="space-y-4">
-                <div className="border-t border-neutral-200 pt-6">
-                  <h2 className="text-xs font-semibold text-neutral-500 uppercase tracking-wider">
+                <div className="border-t border-[#C89A0F]/30 pt-6">
+                  <h2 className="text-xs font-semibold text-[#E1B61A] uppercase tracking-wider">
                     {t.additionalDetails}
                   </h2>
                 </div>
@@ -678,7 +677,7 @@ className={`px-4 py-2 text-sm font-medium rounded-full transition ${
 
               {/* Note & Submit */}
               <div className="pt-4">
-                <p className="text-sm text-neutral-500 mb-6 text-center">
+                <p className="text-sm text-[#D9D9D9]/70 mb-6 text-center">
                   {t.reviewNote}
                 </p>
 
@@ -689,7 +688,7 @@ className={`px-4 py-2 text-sm font-medium rounded-full transition ${
                 <Button
                   type="submit"
                   disabled={isSubmitting}
-                  className="w-full bg-amber-600 hover:bg-amber-700 text-white"
+                  className="w-full bg-[#E1B61A] hover:bg-[#C89A0F] text-black font-semibold focus:ring-[#F2F500]"
                 >
                   {isSubmitting ? (
                     <>
