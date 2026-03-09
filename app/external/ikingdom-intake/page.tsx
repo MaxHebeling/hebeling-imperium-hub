@@ -556,7 +556,10 @@ export default function Page() {
 
   return (
     <div className={`min-h-screen ${theme.bg} flex flex-col`}>
-      <header className="shrink-0 pt-14 pb-8 px-5 flex flex-col items-center text-center">
+      <header className="shrink-0 pt-14 pb-8 px-5 flex flex-col items-center text-center relative">
+        <div className="absolute top-4 right-5 text-[10px] tracking-[0.18em] uppercase text-[#9ca3af]">
+          BUILD CHECK 2026-03-09
+        </div>
         <div className="w-full max-w-[540px] flex items-center justify-end mb-4">
           <div className="inline-flex items-center rounded-full border border-[#e5e3e0] bg-white px-1 py-1 shadow-sm">
             <button
