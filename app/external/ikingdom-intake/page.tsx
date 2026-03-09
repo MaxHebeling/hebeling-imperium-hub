@@ -383,33 +383,33 @@ export default function IKingdomIntakePage() {
           </p>
         </div>
 
-        {/* Language Toggle - Centered above the form card */}
-        <div className="flex justify-center mt-6 mb-8">
-          <div className="flex rounded-full border border-neutral-300 bg-white shadow-sm overflow-hidden">
-            <button
-              type="button"
-              onClick={() => setLanguage("en")}
-              className={`px-4 py-2 text-sm font-medium transition-colors ${
-                language === "en"
-                  ? "bg-neutral-900 text-white"
-                  : "bg-white text-neutral-700 hover:bg-neutral-100"
-              }`}
-            >
-              EN
-            </button>
-            <button
-              type="button"
-              onClick={() => setLanguage("es")}
-              className={`px-4 py-2 text-sm font-medium transition-colors ${
-                language === "es"
-                  ? "bg-neutral-900 text-white"
-                  : "bg-white text-neutral-700 hover:bg-neutral-100"
-              }`}
-            >
-              ES
-            </button>
-          </div>
-        </div>
+{/* Language Toggle - Centered above the form card */}
+            <div className="mt-6 mb-8 flex justify-center">
+              <div className="inline-flex rounded-full border border-neutral-300 bg-white p-1 shadow-sm">
+                <button
+                  type="button"
+                  className={`px-4 py-2 text-sm font-medium rounded-full transition ${
+                    language === "en"
+                      ? "bg-black text-white"
+                      : "text-neutral-700 hover:bg-neutral-100"
+                  }`}
+                  onClick={() => setLanguage("en")}
+                >
+                  EN
+                </button>
+                <button
+                  type="button"
+                  className={`px-4 py-2 text-sm font-medium rounded-full transition ${
+                    language === "es"
+                      ? "bg-black text-white"
+                      : "text-neutral-700 hover:bg-neutral-100"
+                  }`}
+                  onClick={() => setLanguage("es")}
+                >
+                  ES
+                </button>
+              </div>
+            </div>
 
         {/* Form Card */}
         <Card style={{ backgroundColor: "#111827", borderColor: "rgba(212, 175, 55, 0.2)" }}>
