@@ -1,5 +1,5 @@
 import { getAdminClient, ORG_ID } from "@/lib/leads/helpers";
-import type { EditorialProject, EditorialFile, EditorialStageKey } from "../types/editorial";
+import type { EditorialProject, EditorialFile, EditorialFileVisibility, EditorialStageKey } from "../types/editorial";
 import { EDITORIAL_STAGE_KEYS } from "../pipeline/constants";
 import { calculateProgressPercent } from "../pipeline/progress";
 
@@ -65,7 +65,9 @@ export async function registerManuscriptFile(
   storagePath: string,
   mimeType: string,
   sizeBytes: number,
-  uploadedBy?: string
+  uploadedBy?: string,
+  version = 1,
+  visibility: EditorialFileVisibility = "client"
 ): Promise<EditorialFile> {
   const supabase = getAdminClient();
 
@@ -75,11 +77,12 @@ export async function registerManuscriptFile(
       project_id: projectId,
       stage_key: "ingesta",
       file_type: "manuscript_original",
-      version: 1,
+      version,
       storage_path: storagePath,
       mime_type: mimeType,
       size_bytes: sizeBytes,
       uploaded_by: uploadedBy ?? null,
+      visibility,
     })
     .select()
     .single();
