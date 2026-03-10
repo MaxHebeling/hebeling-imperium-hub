@@ -1,6 +1,6 @@
 // =============================================================================
 // Editorial — TypeScript Types
-// Reino Editorial AI Engine · Phases 4A, 4B, 5, 6, 7, 8, 9, 10, 11 & 12
+// Reino Editorial AI Engine · Phases 4A, 4B, 5, 6, 7, 8, 9, 10, 11, 12, 13 & Audit Fixes
 // =============================================================================
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -2762,4 +2762,549 @@ export interface ClientAccountBillingSummary {
   overdue_invoices_count: number;
   pending_renewals_count: number;
   last_payment_at: string | null;
+}
+
+// =============================================================================
+// Phase 13 — Analytics, Forecasting & Executive Intelligence
+// =============================================================================
+
+// ── Enums ────────────────────────────────────────────────────────────────────
+
+export const METRIC_CATEGORIES = [
+  "operations",
+  "sales",
+  "finance",
+  "distribution",
+  "quality",
+  "customer_success",
+  "executive",
+  "forecasting",
+] as const;
+export type MetricCategory = (typeof METRIC_CATEGORIES)[number];
+
+export const METRIC_UNIT_TYPES = [
+  "count",
+  "currency",
+  "percentage",
+  "hours",
+  "days",
+  "score",
+  "ratio",
+  "text",
+  "other",
+] as const;
+export type MetricUnitType = (typeof METRIC_UNIT_TYPES)[number];
+
+export const METRIC_AGGREGATION_TYPES = [
+  "sum",
+  "avg",
+  "min",
+  "max",
+  "latest",
+  "count",
+  "ratio",
+  "custom",
+] as const;
+export type MetricAggregationType = (typeof METRIC_AGGREGATION_TYPES)[number];
+
+export const METRIC_PERIOD_TYPES = [
+  "daily",
+  "weekly",
+  "monthly",
+  "quarterly",
+  "yearly",
+  "point_in_time",
+] as const;
+export type MetricPeriodType = (typeof METRIC_PERIOD_TYPES)[number];
+
+export const METRIC_SCOPE_TYPES = [
+  "global",
+  "department",
+  "staff",
+  "project",
+  "client_account",
+  "opportunity",
+  "channel",
+  "format",
+  "other",
+] as const;
+export type MetricScopeType = (typeof METRIC_SCOPE_TYPES)[number];
+
+export const FORECAST_DOMAINS = [
+  "sales",
+  "revenue",
+  "collections",
+  "project_volume",
+  "delivery_capacity",
+  "distribution",
+  "staffing",
+  "quality",
+  "executive",
+] as const;
+export type ForecastDomain = (typeof FORECAST_DOMAINS)[number];
+
+export const FORECAST_METHOD_TYPES = [
+  "manual",
+  "moving_average",
+  "weighted_pipeline",
+  "regression",
+  "scenario",
+  "ai_generated",
+  "hybrid",
+] as const;
+export type ForecastMethodType = (typeof FORECAST_METHOD_TYPES)[number];
+
+export const FORECAST_RUN_STATUSES = [
+  "draft",
+  "completed",
+  "superseded",
+  "cancelled",
+] as const;
+export type ForecastRunStatus = (typeof FORECAST_RUN_STATUSES)[number];
+
+export const FORECAST_SCOPE_TYPES = [
+  "global",
+  "department",
+  "staff",
+  "project",
+  "client_account",
+  "sales_pipeline",
+  "distribution",
+  "other",
+] as const;
+export type ForecastScopeType = (typeof FORECAST_SCOPE_TYPES)[number];
+
+export const SCORECARD_TYPES = [
+  "executive",
+  "department",
+  "staff",
+  "project_portfolio",
+  "sales",
+  "finance",
+  "operations",
+  "distribution",
+  "custom",
+] as const;
+export type ScorecardType = (typeof SCORECARD_TYPES)[number];
+
+export const SCORECARD_RESULT_STATUSES = [
+  "excellent",
+  "good",
+  "normal",
+  "warning",
+  "critical",
+] as const;
+export type ScorecardResultStatus = (typeof SCORECARD_RESULT_STATUSES)[number];
+
+export const TREND_DIRECTIONS = [
+  "up",
+  "down",
+  "flat",
+  "volatile",
+  "seasonal",
+  "insufficient_data",
+] as const;
+export type TrendDirection = (typeof TREND_DIRECTIONS)[number];
+
+export const TREND_SCOPE_TYPES = [
+  "global",
+  "department",
+  "staff",
+  "project",
+  "client_account",
+  "channel",
+  "other",
+] as const;
+export type TrendScopeType = (typeof TREND_SCOPE_TYPES)[number];
+
+export const ANOMALY_STATUSES = [
+  "open",
+  "acknowledged",
+  "resolved",
+  "ignored",
+] as const;
+export type AnomalyStatus = (typeof ANOMALY_STATUSES)[number];
+
+export const EXECUTIVE_REPORT_TYPES = [
+  "weekly_exec",
+  "monthly_exec",
+  "quarterly_exec",
+  "sales_review",
+  "finance_review",
+  "operations_review",
+  "distribution_review",
+  "custom",
+] as const;
+export type ExecutiveReportType = (typeof EXECUTIVE_REPORT_TYPES)[number];
+
+export const EXECUTIVE_REPORT_STATUSES = [
+  "draft",
+  "published",
+  "archived",
+] as const;
+export type ExecutiveReportStatus = (typeof EXECUTIVE_REPORT_STATUSES)[number];
+
+export const RECOMMENDATION_SOURCE_TYPES = [
+  "rule_based",
+  "ai_generated",
+  "hybrid",
+  "manual",
+] as const;
+export type RecommendationSourceType =
+  (typeof RECOMMENDATION_SOURCE_TYPES)[number];
+
+export const RECOMMENDATION_STATUSES = [
+  "open",
+  "reviewing",
+  "accepted",
+  "rejected",
+  "implemented",
+  "archived",
+] as const;
+export type RecommendationStatus = (typeof RECOMMENDATION_STATUSES)[number];
+
+// ── Entity interfaces ─────────────────────────────────────────────────────────
+
+export interface EditorialMetricDefinition {
+  id: string;
+  code: string;
+  name: string;
+  description: string | null;
+  metric_category: MetricCategory;
+  unit_type: MetricUnitType;
+  aggregation_type: MetricAggregationType;
+  active: boolean;
+  owner_department_code: string | null;
+  metadata: Json;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface EditorialMetricSnapshot {
+  id: string;
+  metric_definition_id: string;
+  snapshot_date: string;
+  period_type: MetricPeriodType;
+  scope_type: MetricScopeType;
+  scope_id: string | null;
+  numeric_value: number | null;
+  text_value: string | null;
+  json_value: Json | null;
+  source_table: string | null;
+  source_record_id: string | null;
+  created_at: string;
+}
+
+export interface EditorialForecastModel {
+  id: string;
+  code: string;
+  name: string;
+  description: string | null;
+  forecast_domain: ForecastDomain;
+  method_type: ForecastMethodType;
+  active: boolean;
+  version_label: string | null;
+  configuration: Json;
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface EditorialForecastRun {
+  id: string;
+  model_id: string;
+  forecast_period_start: string;
+  forecast_period_end: string;
+  run_date: string;
+  scope_type: ForecastScopeType;
+  scope_id: string | null;
+  status: ForecastRunStatus;
+  input_payload: Json | null;
+  assumptions: Json | null;
+  summary: string | null;
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface EditorialForecastValue {
+  id: string;
+  forecast_run_id: string;
+  metric_code: string;
+  dimension_key: string | null;
+  period_date: string;
+  predicted_value: number | null;
+  low_estimate: number | null;
+  high_estimate: number | null;
+  confidence_score: number | null;
+  notes: string | null;
+  created_at: string;
+}
+
+export interface ScorecardComponent {
+  metric_code: string;
+  weight: number;
+  display_name: string;
+  threshold_warning?: number;
+  threshold_critical?: number;
+  invert_direction?: boolean;
+}
+
+export interface EditorialScorecard {
+  id: string;
+  code: string;
+  name: string;
+  description: string | null;
+  scorecard_type: ScorecardType;
+  scope_type: MetricScopeType;
+  active: boolean;
+  configuration: { components: ScorecardComponent[] } & Json;
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ScorecardComponentResult {
+  metric_code: string;
+  raw_value: number | null;
+  normalized_score: number | null;
+  status: ScorecardResultStatus;
+  weight: number;
+}
+
+export interface EditorialScorecardResult {
+  id: string;
+  scorecard_id: string;
+  result_date: string;
+  scope_id: string | null;
+  overall_score: number | null;
+  status: ScorecardResultStatus;
+  summary: string | null;
+  component_scores: ScorecardComponentResult[] | null;
+  recommendations: Json | null;
+  created_at: string;
+}
+
+export interface EditorialTrendAnalysis {
+  id: string;
+  metric_definition_id: string | null;
+  analysis_date: string;
+  scope_type: TrendScopeType;
+  scope_id: string | null;
+  trend_direction: TrendDirection;
+  change_percent: number | null;
+  baseline_value: number | null;
+  current_value: number | null;
+  summary: string | null;
+  details: Json | null;
+  created_at: string;
+}
+
+export interface EditorialAnomalySignal {
+  id: string;
+  metric_definition_id: string | null;
+  related_project_id: string | null;
+  signal_date: string;
+  scope_type: TrendScopeType;
+  scope_id: string | null;
+  severity: AlertSeverity;
+  signal_type: string;
+  expected_value: number | null;
+  actual_value: number | null;
+  deviation_percent: number | null;
+  title: string;
+  description: string | null;
+  recommended_action: string | null;
+  status: AnomalyStatus;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ExecutiveReportHighlight {
+  title: string;
+  metric_code: string;
+  value: number | string;
+  change_percent?: number;
+  status: ScorecardResultStatus;
+}
+
+export interface ExecutiveReportRisk {
+  title: string;
+  description: string;
+  severity: AlertSeverity;
+  related_anomaly_id?: string;
+}
+
+export interface ExecutiveReportOpportunity {
+  title: string;
+  description: string;
+  estimated_value?: number;
+  domain: MetricCategory;
+}
+
+export interface EditorialExecutiveReport {
+  id: string;
+  report_code: string;
+  title: string;
+  report_type: ExecutiveReportType;
+  reporting_period_start: string;
+  reporting_period_end: string;
+  scope_type: string;
+  scope_id: string | null;
+  status: ExecutiveReportStatus;
+  summary: string | null;
+  highlights: ExecutiveReportHighlight[] | null;
+  risks: ExecutiveReportRisk[] | null;
+  opportunities: ExecutiveReportOpportunity[] | null;
+  recommendations: Json | null;
+  generated_by: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface EditorialRecommendationSignal {
+  id: string;
+  recommendation_type: string;
+  domain: MetricCategory;
+  related_project_id: string | null;
+  related_opportunity_id: string | null;
+  related_client_account_id: string | null;
+  priority: TaskPriority;
+  status: RecommendationStatus;
+  title: string;
+  description: string;
+  expected_impact: string | null;
+  recommended_action: string | null;
+  confidence_score: number | null;
+  source_type: RecommendationSourceType;
+  supporting_data: Json | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface EditorialIntelligenceEvent {
+  id: string;
+  event_type: string;
+  entity_type: string;
+  entity_id: string | null;
+  actor_user_id: string | null;
+  summary: string;
+  payload: Json | null;
+  created_at: string;
+}
+
+// ── Input types ───────────────────────────────────────────────────────────────
+
+export type CreateForecastRunInput = Pick<
+  EditorialForecastRun,
+  "model_id" | "forecast_period_start" | "forecast_period_end" | "run_date"
+> &
+  Partial<
+    Pick<
+      EditorialForecastRun,
+      "scope_type" | "scope_id" | "input_payload" | "assumptions" | "summary"
+    >
+  >;
+
+export type CreateRecommendationInput = Pick<
+  EditorialRecommendationSignal,
+  "recommendation_type" | "domain" | "title" | "description"
+> &
+  Partial<
+    Pick<
+      EditorialRecommendationSignal,
+      | "related_project_id"
+      | "related_opportunity_id"
+      | "related_client_account_id"
+      | "priority"
+      | "expected_impact"
+      | "recommended_action"
+      | "confidence_score"
+      | "source_type"
+      | "supporting_data"
+    >
+  >;
+
+// ── View models ───────────────────────────────────────────────────────────────
+
+/** Forecast run enriched with its model info and output summary. */
+export interface ForecastRunWithModel extends EditorialForecastRun {
+  model: Pick<
+    EditorialForecastModel,
+    "id" | "code" | "name" | "forecast_domain" | "method_type"
+  >;
+  values_count: number;
+}
+
+/** Scorecard result enriched with the scorecard definition. */
+export interface ScorecardResultWithDefinition extends EditorialScorecardResult {
+  scorecard: Pick<EditorialScorecard, "id" | "code" | "name" | "scorecard_type">;
+}
+
+/** Intelligence dashboard summary for the executive view. */
+export interface ExecutiveDashboardSummary {
+  latest_executive_scorecard: EditorialScorecardResult | null;
+  open_anomalies_count: number;
+  critical_anomalies_count: number;
+  open_recommendations_count: number;
+  latest_report: Pick<
+    EditorialExecutiveReport,
+    "id" | "report_code" | "title" | "report_type" | "status" | "reporting_period_end"
+  > | null;
+  key_metrics: Array<{
+    metric: Pick<EditorialMetricDefinition, "id" | "code" | "name" | "unit_type">;
+    latest_snapshot: EditorialMetricSnapshot | null;
+    trend: Pick<EditorialTrendAnalysis, "trend_direction" | "change_percent"> | null;
+  }>;
+}
+
+// =============================================================================
+// Phase 020 — Architecture Audit Fixes
+// =============================================================================
+
+// ── editorial_project_members ─────────────────────────────────────────────────
+
+export const PROJECT_MEMBER_ROLES = [
+  "owner",
+  "editor",
+  "reviewer",
+  "viewer",
+] as const;
+export type ProjectMemberRole = (typeof PROJECT_MEMBER_ROLES)[number];
+
+export interface EditorialProjectMember {
+  id: string;
+  project_id: string;
+  user_id: string;
+  role: ProjectMemberRole;
+  added_by: string | null;
+  created_at: string;
+}
+
+export type AddProjectMemberInput = Pick<
+  EditorialProjectMember,
+  "project_id" | "user_id"
+> &
+  Partial<Pick<EditorialProjectMember, "role">>;
+
+// ── Augmented entities (new bridge columns added by audit fixes) ──────────────
+// The Phase 10 interfaces EditorialFinancialLedgerEntry and EditorialAlert
+// already exist above.  The audit (020) adds new nullable columns to those
+// tables; the base interfaces are extended here via declaration merging.
+
+// New columns on editorial_financial_ledger (020_architecture_audit_fixes):
+//   project_reference_code TEXT    — preserves project identity after deletion
+//   received_payment_id    UUID    — bridges to Phase 12 received_payments
+// New column on editorial_alerts (020_architecture_audit_fixes):
+//   anomaly_signal_id UUID         — links to Phase 13 anomaly_signals
+
+/** Bridge columns added to EditorialFinancialLedgerEntry by the audit fix migration. */
+export interface EditorialFinancialLedgerAuditExtension {
+  project_reference_code: string | null;
+  received_payment_id: string | null;
+}
+
+/** Bridge column added to EditorialAlert by the audit fix migration. */
+export interface EditorialAlertAuditExtension {
+  anomaly_signal_id: string | null;
 }
