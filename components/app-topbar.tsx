@@ -35,20 +35,37 @@ interface AppTopbarProps {
   userRole?: string;
 }
 
-// Breadcrumb mapping
+// Breadcrumb mapping (company-first + shared infra)
 const pathLabels: Record<string, string> = {
-  app: "BOS",
-  dashboard: "Dashboard",
+  app: "Hebeling OS",
+  dashboard: "Dashboard Global",
+  companies: "Empresas",
+  "reino-editorial": "Reino Editorial",
+  ikingdom: "iKingdom",
+  imperium: "Imperium",
+  "max-hebeling": "Max Hebeling",
+  overview: "Overview",
+  projects: "Projects",
+  pipeline: "Pipeline",
+  ai: "AI Review",
+  authors: "Authors",
+  staff: "Staff",
+  marketplace: "Marketplace",
+  distribution: "Distribution",
+  operations: "Operations",
+  reports: "Reports",
+  applications: "Applications",
   crm: "CRM",
   deals: "Deals",
-  projects: "Projects",
+  clients: "Clients",
+  "finance-vault": "Billing",
+  documents: "Files",
   websites: "Websites",
-  documents: "Documents",
   settings: "Settings",
   organizations: "Organizations",
   team: "Team",
   roles: "Roles & Permissions",
-  analytics: "Analytics",
+  analytics: "Intelligence",
   payments: "Payments",
   automations: "Automations",
 };

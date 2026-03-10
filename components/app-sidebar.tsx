@@ -8,9 +8,6 @@ import { cn } from "@/lib/utils";
 import {
   LayoutDashboard,
   Users,
-  Handshake,
-  FolderKanban,
-  Globe,
   FileText,
   Settings,
   ClipboardList,
@@ -18,11 +15,11 @@ import {
   Zap,
   BarChart3,
   Building2,
-  UserCog,
-  Shield,
   PanelLeftClose,
   PanelLeft,
   ChevronRight,
+  FolderOpen,
+  UserCircle,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -34,48 +31,34 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 
-// Navigation sections with items
+// Company-first navigation (official Hebeling OS architecture)
 const navSections = [
   {
-    titleKey: "operations" as const,
+    titleKey: null as string | null,
     items: [
       { href: "/app/dashboard", labelKey: "dashboard", icon: LayoutDashboard },
+    ],
+  },
+  {
+    titleKey: "empresas" as const,
+    items: [
+      { href: "/app/companies", labelKey: "companies", icon: Building2 },
+    ],
+  },
+  {
+    titleKey: "infraestructuraCompartida" as const,
+    items: [
       { href: "/app/crm", labelKey: "crm", icon: Users },
-      { href: "/app/deals", labelKey: "deals", icon: Handshake },
-    ],
-  },
-  {
-    titleKey: "assets" as const,
-    items: [
-      { href: "/app/projects", labelKey: "projects", icon: FolderKanban },
-      { href: "/app/websites", labelKey: "websites", icon: Globe },
-      { href: "/app/documents", labelKey: "documents", icon: FileText },
-    ],
-  },
-  {
-    titleKey: "finance" as const,
-    items: [
-      { href: "/app/finance-vault", labelKey: "financeVault", icon: CreditCard },
-    ],
-  },
-  {
-    titleKey: "automation" as const,
-    items: [
+      { href: "/app/clients", labelKey: "clients", icon: UserCircle },
+      { href: "/app/finance-vault", labelKey: "billing", icon: CreditCard },
+      { href: "/app/documents", labelKey: "files", icon: FolderOpen },
+      { href: "/app/analytics", labelKey: "intelligence", icon: BarChart3 },
       { href: "/app/automations", labelKey: "automations", icon: Zap },
     ],
   },
   {
-    titleKey: "intelligence" as const,
+    titleKey: null as string | null,
     items: [
-      { href: "/app/analytics", labelKey: "analytics", icon: BarChart3 },
-    ],
-  },
-  {
-    titleKey: "system" as const,
-    items: [
-      { href: "/app/organizations", labelKey: "organizations", icon: Building2 },
-      { href: "/app/team", labelKey: "team", icon: UserCog },
-      { href: "/app/roles", labelKey: "roles", icon: Shield },
       { href: "/app/settings", labelKey: "settings", icon: Settings },
     ],
   },
@@ -154,10 +137,10 @@ export function AppSidebar({ userName, userRole }: AppSidebarProps) {
             {!isCollapsed && (
               <div className="overflow-hidden">
                 <h2 className="font-semibold text-sidebar-foreground text-sm tracking-tight truncate">
-                  Hebeling BOS
+                  Hebeling OS
                 </h2>
                 <p className="text-xs text-muted-foreground truncate">
-                  Business Operating System
+                  Operating System
                 </p>
               </div>
             )}
@@ -166,9 +149,9 @@ export function AppSidebar({ userName, userRole }: AppSidebarProps) {
 
         {/* Navigation */}
         <nav className="flex-1 overflow-y-auto p-2 space-y-4">
-          {navSections.map((section) => (
-            <div key={section.titleKey}>
-              {!isCollapsed && (
+          {navSections.map((section, sectionIndex) => (
+            <div key={section.titleKey ?? `section-${sectionIndex}`}>
+              {!isCollapsed && section.titleKey && (
                 <div className="px-3 py-2">
                   <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/70">
                     {getTranslatedSectionTitle(section.titleKey)}

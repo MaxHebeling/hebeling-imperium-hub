@@ -1,5 +1,6 @@
 import { getAdminClient } from "@/lib/leads/helpers";
 import { EDITORIAL_BUCKETS } from "./buckets";
+import type { EditorialBucketKey } from "./buckets";
 
 export interface UploadManuscriptResult {
   storagePath: string;
@@ -7,6 +8,15 @@ export interface UploadManuscriptResult {
   sizeBytes: number;
   mimeType: string;
   version: number;
+}
+
+export interface UploadEditorialFileResult {
+  storagePath: string;
+  publicUrl: string | null;
+  sizeBytes: number;
+  mimeType: string;
+  version: number;
+  bucket: string;
 }
 
 /**
@@ -45,5 +55,59 @@ export async function uploadManuscript(
     sizeBytes: file.size,
     mimeType: file.type,
     version,
+  };
+}
+
+function bucketForFileType(fileType: string): string {
+  if (fileType.startsWith("manuscript")) return EDITORIAL_BUCKETS.manuscripts;
+  if (fileType.startsWith("export")) return EDITORIAL_BUCKETS.exports;
+  if (fileType.startsWith("cover")) return EDITORIAL_BUCKETS.covers;
+  if (fileType.startsWith("asset")) return EDITORIAL_BUCKETS.assets;
+  return EDITORIAL_BUCKETS.working;
+}
+
+export function bucketKeyForFileType(fileType: string): EditorialBucketKey {
+  if (fileType.startsWith("manuscript")) return "manuscripts";
+  if (fileType.startsWith("export")) return "exports";
+  if (fileType.startsWith("cover")) return "covers";
+  if (fileType.startsWith("asset")) return "assets";
+  return "working";
+}
+
+/**
+ * Upload an editorial file (generic) to Supabase Storage.
+ * Bucket is inferred from fileType. Each version uses a unique path (no overwrite).
+ */
+export async function uploadEditorialFile(
+  projectId: string,
+  file: File,
+  options: {
+    fileType: string;
+    stageKey?: string | null;
+    version: number;
+  }
+): Promise<UploadEditorialFileResult> {
+  const supabase = getAdminClient();
+  const bucket = bucketForFileType(options.fileType);
+  const ext = file.name.split(".").pop() ?? "bin";
+  const stageSegment = options.stageKey ? `/${options.stageKey}` : "";
+  const storagePath = `${projectId}${stageSegment}/${options.fileType}/v${options.version}.${ext}`;
+
+  const bytes = await file.arrayBuffer();
+  const buffer = Buffer.from(bytes);
+
+  const { error } = await supabase.storage.from(bucket).upload(storagePath, buffer, {
+    contentType: file.type,
+    upsert: false,
+  });
+  if (error) throw new Error(`Upload failed: ${error.message}`);
+
+  return {
+    storagePath,
+    publicUrl: null,
+    sizeBytes: file.size,
+    mimeType: file.type,
+    version: options.version,
+    bucket,
   };
 }
