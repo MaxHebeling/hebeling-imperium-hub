@@ -12,6 +12,11 @@ import type {
   EditorialAlertSeverity,
 } from "@/types/editorial";
 
+/** Map a blocking flag to an alert severity level. */
+function severityFor(isBlocking: boolean): EditorialAlertSeverity {
+  return isBlocking ? "critical" : "warning";
+}
+
 /**
  * Evaluate all active rules for a given stage on a given book.
  * Returns a StageValidationResult describing violations and warnings.
@@ -92,7 +97,7 @@ async function evaluateRequireAssignee(
       rule_label: rule.rule_label,
       message: `La etapa "${stage}" no tiene responsable asignado. Asigna un responsable antes de avanzar.`,
       is_blocking: rule.is_blocking,
-      severity: rule.is_blocking ? "critical" : ("warning" as EditorialAlertSeverity),
+      severity: severityFor(rule.is_blocking),
     };
   }
   return null;
@@ -117,7 +122,7 @@ async function evaluateRequireChecklistComplete(
       rule_label: rule.rule_label,
       message: `No existe checklist para la etapa "${stage}". Crea el checklist antes de avanzar.`,
       is_blocking: rule.is_blocking,
-      severity: rule.is_blocking ? "critical" : ("warning" as EditorialAlertSeverity),
+      severity: severityFor(rule.is_blocking),
     };
   }
 
@@ -135,7 +140,7 @@ async function evaluateRequireChecklistComplete(
       rule_label: rule.rule_label,
       message: `Quedan ${incomplete.length} ítem(s) requerido(s) sin completar en la etapa "${stage}".`,
       is_blocking: rule.is_blocking,
-      severity: rule.is_blocking ? "critical" : ("warning" as EditorialAlertSeverity),
+      severity: severityFor(rule.is_blocking),
     };
   }
 
@@ -173,7 +178,7 @@ async function evaluateRequireSupervisorApproval(
         rule_label: rule.rule_label,
         message: `La etapa "${stage}" requiere aprobación del editor jefe antes de completarse.`,
         is_blocking: rule.is_blocking,
-        severity: rule.is_blocking ? "critical" : ("warning" as EditorialAlertSeverity),
+        severity: severityFor(rule.is_blocking),
       };
     }
   }

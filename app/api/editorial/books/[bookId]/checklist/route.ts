@@ -139,7 +139,8 @@ export async function POST(request: NextRequest, { params }: Params) {
   }
 
   if (body.action === "assign") {
-    if (!canManageChecklist) {
+    const assignPermitted = await canManageChecklist(permCtx, bookId, body.stage);
+    if (!assignPermitted) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
     if (!body.assignee_id) {

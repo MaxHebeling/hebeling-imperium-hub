@@ -207,11 +207,11 @@ export async function detectAndCreateAlerts(
   }
 
   // 3. Check for incomplete required checklist items
-  if (checklist) {
+  if (checklist?.id) {
     const { data: items } = await supabase
       .from("editorial_book_stage_checklist_items")
       .select("id, is_required, is_checked")
-      .eq("checklist_id", checklist.id ?? "")
+      .eq("checklist_id", checklist.id)
       .eq("is_required", true);
 
     const pendingRequired = (items ?? []).filter((i) => !i.is_checked);

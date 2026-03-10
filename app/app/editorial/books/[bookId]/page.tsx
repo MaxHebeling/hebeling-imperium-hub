@@ -52,15 +52,6 @@ import {
   EDITORIAL_STATUS_LABELS,
 } from "@/types/editorial";
 
-const STAGE_DOT_COLORS: Record<EditorialStage, string> = {
-  ingesta: "bg-slate-500",
-  estructura: "bg-amber-500",
-  estilo: "bg-pink-500",
-  ortotipografia: "bg-purple-500",
-  maquetacion: "bg-blue-500",
-  revision_final: "bg-emerald-500",
-};
-
 const STATUS_BADGE: Record<EditorialStageStatus, string> = {
   pending: "bg-slate-100 text-slate-700",
   in_progress: "bg-blue-100 text-blue-700",
@@ -308,7 +299,7 @@ export default function BookDetailPage() {
                         isCompleted_
                           ? "bg-emerald-500 border-emerald-500 text-white"
                           : isCurrent
-                          ? cn(STAGE_DOT_COLORS[stage], "border-current text-white")
+                          ? cn(EDITORIAL_STAGE_COLORS[stage], "border-current text-white")
                           : "bg-muted border-muted-foreground/30 text-muted-foreground"
                       )}
                     >
@@ -542,7 +533,7 @@ export default function BookDetailPage() {
                     <div
                       className={cn(
                         "h-2.5 w-2.5 rounded-full",
-                        STAGE_DOT_COLORS[book.current_stage]
+                        EDITORIAL_STAGE_COLORS[book.current_stage]
                       )}
                     />
                   </div>
@@ -580,7 +571,7 @@ export default function BookDetailPage() {
                           <div
                             className={cn(
                               "h-2.5 w-2.5 rounded-full",
-                              STAGE_DOT_COLORS[stage]
+                              EDITORIAL_STAGE_COLORS[stage]
                             )}
                           />
                           {EDITORIAL_STAGE_LABELS[stage]}

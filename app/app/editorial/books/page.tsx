@@ -125,15 +125,6 @@ export default function EditorialBooksPage() {
     return matchSearch && matchStage;
   });
 
-  const stageColorDot: Record<EditorialStage, string> = {
-    ingesta: "bg-slate-500",
-    estructura: "bg-amber-500",
-    estilo: "bg-pink-500",
-    ortotipografia: "bg-purple-500",
-    maquetacion: "bg-blue-500",
-    revision_final: "bg-emerald-500",
-  };
-
   return (
     <div className="p-6 lg:p-8 space-y-6">
       {/* Header */}
@@ -250,7 +241,7 @@ export default function EditorialBooksPage() {
               <span
                 className={cn(
                   "h-2 w-2 rounded-full mr-1.5",
-                  stageColorDot[stage]
+                  EDITORIAL_STAGE_COLORS[stage]
                 )}
               />
               {EDITORIAL_STAGE_LABELS[stage]}
@@ -304,7 +295,7 @@ export default function EditorialBooksPage() {
                       <div
                         className={cn(
                           "h-9 w-9 rounded-lg flex items-center justify-center shrink-0",
-                          stageColorDot[book.current_stage],
+                          EDITORIAL_STAGE_COLORS[book.current_stage],
                           "bg-opacity-15"
                         )}
                       >
@@ -351,7 +342,7 @@ export default function EditorialBooksPage() {
                             <div
                               className={cn(
                                 "h-2 w-2 rounded-full",
-                                stageColorDot[book.current_stage]
+                                EDITORIAL_STAGE_COLORS[book.current_stage]
                               )}
                             />
                             {EDITORIAL_STAGE_LABELS[book.current_stage]}
@@ -383,7 +374,7 @@ export default function EditorialBooksPage() {
                           <div
                             className={cn(
                               "h-1 rounded-full transition-all",
-                              stageColorDot[book.current_stage]
+                              EDITORIAL_STAGE_COLORS[book.current_stage]
                             )}
                             style={{ width: `${progressPct}%` }}
                           />

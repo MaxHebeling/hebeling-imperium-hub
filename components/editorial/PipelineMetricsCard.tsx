@@ -6,7 +6,6 @@ import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import type {
   EditorialMetrics,
-  EditorialStage,
 } from "@/types/editorial";
 import { EDITORIAL_STAGES, EDITORIAL_STAGE_LABELS, EDITORIAL_STAGE_COLORS } from "@/types/editorial";
 
@@ -15,15 +14,6 @@ interface PipelineMetricsCardProps {
 }
 
 export function PipelineMetricsCard({ metrics }: PipelineMetricsCardProps) {
-  const stageColors: Record<EditorialStage, string> = {
-    ingesta: "bg-slate-500",
-    estructura: "bg-amber-500",
-    estilo: "bg-pink-500",
-    ortotipografia: "bg-purple-500",
-    maquetacion: "bg-blue-500",
-    revision_final: "bg-emerald-500",
-  };
-
   return (
     <div className="space-y-4">
       {/* Summary stats */}
@@ -98,7 +88,7 @@ export function PipelineMetricsCard({ metrics }: PipelineMetricsCardProps) {
                 <div className="flex items-center justify-between text-sm">
                   <div className="flex items-center gap-2">
                     <div
-                      className={cn("h-2.5 w-2.5 rounded-full", stageColors[stage])}
+                      className={cn("h-2.5 w-2.5 rounded-full", EDITORIAL_STAGE_COLORS[stage])}
                     />
                     <span className="font-medium">{EDITORIAL_STAGE_LABELS[stage]}</span>
                   </div>
@@ -113,7 +103,7 @@ export function PipelineMetricsCard({ metrics }: PipelineMetricsCardProps) {
                 </div>
                 <div className="w-full bg-muted rounded-full h-1.5">
                   <div
-                    className={cn("h-1.5 rounded-full transition-all duration-500", stageColors[stage])}
+                    className={cn("h-1.5 rounded-full transition-all duration-500", EDITORIAL_STAGE_COLORS[stage])}
                     style={{ width: `${pct}%` }}
                   />
                 </div>
