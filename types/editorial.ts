@@ -1,6 +1,6 @@
 // =============================================================================
 // Editorial — TypeScript Types
-// Reino Editorial AI Engine · Phases 4A, 4B, 5, 6, 7, 8 & 9
+// Reino Editorial AI Engine · Phases 4A, 4B, 5, 6, 7, 8, 9, 10 & 11
 // =============================================================================
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -1467,4 +1467,790 @@ export interface DistributionSubmissionWithChannel
   >;
   identifiers: EditorialDistributionIdentifier[];
   open_issues_count: number;
+}
+
+// =============================================================================
+// Phase 10 — Reino Editorial OS / Unified Operating System
+// =============================================================================
+
+// ── Enums ────────────────────────────────────────────────────────────────────
+
+export const ASSIGNMENT_ROLES = [
+  "project_manager",
+  "developmental_editor",
+  "line_editor",
+  "copy_editor",
+  "proofreader",
+  "designer",
+  "formatter",
+  "qa_reviewer",
+  "distribution_manager",
+  "customer_success_manager",
+  "operations_lead",
+  "other",
+] as const;
+export type AssignmentRole = (typeof ASSIGNMENT_ROLES)[number];
+
+export const TASK_PRIORITIES = ["low", "medium", "high", "urgent"] as const;
+export type TaskPriority = (typeof TASK_PRIORITIES)[number];
+
+export const TASK_STATUSES = [
+  "open",
+  "queued",
+  "in_progress",
+  "blocked",
+  "review",
+  "completed",
+  "cancelled",
+] as const;
+export type TaskStatus = (typeof TASK_STATUSES)[number];
+
+export const SLA_SCOPE_TYPES = [
+  "project_stage",
+  "task_type",
+  "marketplace_order",
+  "distribution_submission",
+  "qa_review",
+  "support_case",
+] as const;
+export type SlaScopeType = (typeof SLA_SCOPE_TYPES)[number];
+
+export const SLA_TRACKER_STATUSES = [
+  "active",
+  "completed",
+  "breached",
+  "cancelled",
+] as const;
+export type SlaTrackerStatus = (typeof SLA_TRACKER_STATUSES)[number];
+
+export const SLA_BREACH_LEVELS = ["none", "warning", "critical"] as const;
+export type SlaBreachLevel = (typeof SLA_BREACH_LEVELS)[number];
+
+export const LEDGER_DIRECTIONS = ["income", "expense"] as const;
+export type LedgerDirection = (typeof LEDGER_DIRECTIONS)[number];
+
+export const LEDGER_ENTRY_TYPES = [
+  "project_sale",
+  "marketplace_purchase",
+  "contractor_payout",
+  "refund",
+  "distribution_cost",
+  "design_cost",
+  "editing_cost",
+  "qa_cost",
+  "platform_fee",
+  "manual_adjustment",
+  "other",
+] as const;
+export type LedgerEntryType = (typeof LEDGER_ENTRY_TYPES)[number];
+
+export const ALERT_SEVERITIES = [
+  "info",
+  "warning",
+  "error",
+  "critical",
+] as const;
+export type AlertSeverity = (typeof ALERT_SEVERITIES)[number];
+
+export const ALERT_STATUSES = [
+  "open",
+  "acknowledged",
+  "resolved",
+  "dismissed",
+] as const;
+export type AlertStatus = (typeof ALERT_STATUSES)[number];
+
+export const KPI_SCOPE_TYPES = [
+  "global",
+  "department",
+  "staff",
+  "project",
+] as const;
+export type KpiScopeType = (typeof KPI_SCOPE_TYPES)[number];
+
+// ── Entity interfaces ─────────────────────────────────────────────────────────
+
+export interface EditorialDepartment {
+  id: string;
+  code: string;
+  name: string;
+  description: string | null;
+  active: boolean;
+  created_at: string;
+}
+
+export interface EditorialStaffProfile {
+  id: string;
+  user_id: string;
+  department_id: string | null;
+  display_name: string;
+  role_title: string | null;
+  active: boolean;
+  capacity_points: number;
+  timezone: string | null;
+  skills: string[] | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface EditorialProjectAssignment {
+  id: string;
+  project_id: string;
+  staff_profile_id: string;
+  assignment_role: AssignmentRole;
+  allocation_percent: number;
+  starts_at: string | null;
+  ends_at: string | null;
+  active: boolean;
+  created_at: string;
+}
+
+export interface EditorialOperationalTask {
+  id: string;
+  project_id: string | null;
+  assignment_id: string | null;
+  created_by: string | null;
+  owner_user_id: string | null;
+  task_type: string;
+  title: string;
+  description: string | null;
+  priority: TaskPriority;
+  status: TaskStatus;
+  department_id: string | null;
+  due_at: string | null;
+  started_at: string | null;
+  completed_at: string | null;
+  metadata: Json;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface EditorialSlaPolicy {
+  id: string;
+  code: string;
+  name: string;
+  description: string | null;
+  scope_type: SlaScopeType;
+  target_hours: number;
+  warning_threshold_percent: number;
+  critical_threshold_percent: number;
+  active: boolean;
+  created_at: string;
+}
+
+export interface EditorialSlaTracker {
+  id: string;
+  sla_policy_id: string;
+  project_id: string | null;
+  task_id: string | null;
+  order_id: string | null;
+  submission_id: string | null;
+  starts_at: string;
+  due_at: string;
+  completed_at: string | null;
+  status: SlaTrackerStatus;
+  breach_level: SlaBreachLevel;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface EditorialWorkloadSnapshot {
+  id: string;
+  staff_profile_id: string;
+  snapshot_date: string;
+  active_assignments_count: number;
+  open_tasks_count: number;
+  in_progress_tasks_count: number;
+  urgent_tasks_count: number;
+  allocated_percent_total: number;
+  capacity_points: number;
+  utilization_percent: number;
+  created_at: string;
+}
+
+export interface EditorialFinancialLedgerEntry {
+  id: string;
+  project_id: string | null;
+  order_id: string | null;
+  entry_type: LedgerEntryType;
+  category: string;
+  amount: number;
+  currency: string;
+  direction: LedgerDirection;
+  reference_code: string | null;
+  notes: string | null;
+  recorded_by: string | null;
+  entry_date: string;
+  created_at: string;
+}
+
+export interface EditorialAlert {
+  id: string;
+  project_id: string | null;
+  task_id: string | null;
+  order_id: string | null;
+  submission_id: string | null;
+  alert_type: string;
+  severity: AlertSeverity;
+  title: string;
+  message: string | null;
+  status: AlertStatus;
+  assigned_user_id: string | null;
+  acknowledged_by: string | null;
+  acknowledged_at: string | null;
+  resolved_at: string | null;
+  payload: Json | null;
+  created_at: string;
+}
+
+export interface EditorialKpiSnapshot {
+  id: string;
+  snapshot_date: string;
+  scope_type: KpiScopeType;
+  scope_id: string | null;
+  total_active_projects: number;
+  total_overdue_tasks: number;
+  total_sla_breaches: number;
+  total_open_alerts: number;
+  total_marketplace_orders: number;
+  total_distribution_submissions: number;
+  gross_income: number;
+  gross_expense: number;
+  net_value: number;
+  created_at: string;
+}
+
+export interface EditorialOsEvent {
+  id: string;
+  project_id: string | null;
+  actor_user_id: string | null;
+  event_type: string;
+  entity_type: string;
+  entity_id: string | null;
+  summary: string | null;
+  payload: Json | null;
+  created_at: string;
+}
+
+// ── Input types ───────────────────────────────────────────────────────────────
+
+export type CreateStaffProfileInput = Pick<
+  EditorialStaffProfile,
+  "user_id" | "display_name"
+> &
+  Partial<
+    Pick<
+      EditorialStaffProfile,
+      "department_id" | "role_title" | "capacity_points" | "timezone" | "skills"
+    >
+  >;
+
+export type CreateProjectAssignmentInput = Pick<
+  EditorialProjectAssignment,
+  "project_id" | "staff_profile_id" | "assignment_role"
+> &
+  Partial<
+    Pick<
+      EditorialProjectAssignment,
+      "allocation_percent" | "starts_at" | "ends_at"
+    >
+  >;
+
+export type CreateOperationalTaskInput = Pick<
+  EditorialOperationalTask,
+  "task_type" | "title"
+> &
+  Partial<
+    Pick<
+      EditorialOperationalTask,
+      | "project_id"
+      | "assignment_id"
+      | "owner_user_id"
+      | "description"
+      | "priority"
+      | "department_id"
+      | "due_at"
+      | "metadata"
+    >
+  >;
+
+export type CreateLedgerEntryInput = Pick<
+  EditorialFinancialLedgerEntry,
+  "entry_type" | "category" | "amount" | "direction" | "entry_date"
+> &
+  Partial<
+    Pick<
+      EditorialFinancialLedgerEntry,
+      "project_id" | "order_id" | "currency" | "reference_code" | "notes"
+    >
+  >;
+
+export type CreateAlertInput = Pick<
+  EditorialAlert,
+  "alert_type" | "severity" | "title"
+> &
+  Partial<
+    Pick<
+      EditorialAlert,
+      | "project_id"
+      | "task_id"
+      | "order_id"
+      | "submission_id"
+      | "message"
+      | "assigned_user_id"
+      | "payload"
+    >
+  >;
+
+// ── View models ───────────────────────────────────────────────────────────────
+
+/** Staff profile enriched with department info and current workload. */
+export interface StaffProfileWithWorkload extends EditorialStaffProfile {
+  department: Pick<EditorialDepartment, "id" | "code" | "name"> | null;
+  latest_snapshot: EditorialWorkloadSnapshot | null;
+}
+
+/** Project assignments enriched with staff profile info. */
+export interface ProjectAssignmentWithStaff extends EditorialProjectAssignment {
+  staff: Pick<
+    EditorialStaffProfile,
+    "id" | "display_name" | "role_title" | "department_id"
+  >;
+}
+
+/** SLA tracker enriched with the policy definition and computed time metrics. */
+export interface SlaTrackerWithPolicy extends EditorialSlaTracker {
+  policy: Pick<
+    EditorialSlaPolicy,
+    | "id"
+    | "code"
+    | "name"
+    | "scope_type"
+    | "target_hours"
+    | "warning_threshold_percent"
+    | "critical_threshold_percent"
+  >;
+  elapsed_hours: number;
+  remaining_hours: number;
+  percent_elapsed: number;
+}
+
+/** Financial summary for a project. */
+export interface ProjectFinancialSummary {
+  project_id: string;
+  gross_income: number;
+  gross_expense: number;
+  net_value: number;
+  currency: string;
+  entries_count: number;
+}
+
+// =============================================================================
+// Phase 11 — CRM / Sales Pipeline Editorial
+// =============================================================================
+
+// ── Enums ────────────────────────────────────────────────────────────────────
+
+export const CRM_ORGANIZATION_TYPES = [
+  "client",
+  "ministry",
+  "school",
+  "university",
+  "church",
+  "nonprofit",
+  "business",
+  "agency",
+  "partner",
+  "vendor",
+  "other",
+] as const;
+export type CrmOrganizationType = (typeof CRM_ORGANIZATION_TYPES)[number];
+
+export const CRM_LEAD_STATUSES = [
+  "new",
+  "contacted",
+  "qualified",
+  "unqualified",
+  "converted",
+  "archived",
+] as const;
+export type CrmLeadStatus = (typeof CRM_LEAD_STATUSES)[number];
+
+export const CRM_PIPELINE_STAGES = [
+  "discovery",
+  "qualification",
+  "proposal",
+  "negotiation",
+  "verbal_commitment",
+  "won",
+  "lost",
+] as const;
+export type CrmPipelineStage = (typeof CRM_PIPELINE_STAGES)[number];
+
+export const CRM_OPPORTUNITY_STATUSES = [
+  "open",
+  "won",
+  "lost",
+  "stalled",
+  "cancelled",
+] as const;
+export type CrmOpportunityStatus = (typeof CRM_OPPORTUNITY_STATUSES)[number];
+
+export const CRM_PACKAGE_TYPES = [
+  "editing",
+  "design",
+  "formatting",
+  "distribution",
+  "full_publishing",
+  "coaching",
+  "consulting",
+  "marketing",
+  "custom",
+] as const;
+export type CrmPackageType = (typeof CRM_PACKAGE_TYPES)[number];
+
+export const CRM_QUOTE_STATUSES = [
+  "draft",
+  "sent",
+  "viewed",
+  "accepted",
+  "rejected",
+  "expired",
+  "cancelled",
+] as const;
+export type CrmQuoteStatus = (typeof CRM_QUOTE_STATUSES)[number];
+
+export const CRM_QUOTE_ITEM_TYPES = [
+  "service",
+  "discount",
+  "fee",
+  "custom",
+] as const;
+export type CrmQuoteItemType = (typeof CRM_QUOTE_ITEM_TYPES)[number];
+
+export const CRM_ACTIVITY_TYPES = [
+  "note",
+  "call",
+  "email",
+  "meeting",
+  "whatsapp",
+  "task",
+  "proposal_sent",
+  "proposal_viewed",
+  "follow_up",
+  "status_change",
+  "other",
+] as const;
+export type CrmActivityType = (typeof CRM_ACTIVITY_TYPES)[number];
+
+export const CRM_FOLLOWUP_STATUSES = [
+  "open",
+  "completed",
+  "cancelled",
+  "overdue",
+] as const;
+export type CrmFollowupStatus = (typeof CRM_FOLLOWUP_STATUSES)[number];
+
+// ── Entity interfaces ─────────────────────────────────────────────────────────
+
+export interface EditorialCrmOrganization {
+  id: string;
+  name: string;
+  legal_name: string | null;
+  organization_type: CrmOrganizationType;
+  website_url: string | null;
+  email: string | null;
+  phone: string | null;
+  country: string | null;
+  city: string | null;
+  notes: string | null;
+  owner_user_id: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface EditorialCrmContact {
+  id: string;
+  organization_id: string | null;
+  first_name: string;
+  last_name: string | null;
+  display_name: string | null;
+  email: string | null;
+  phone: string | null;
+  job_title: string | null;
+  preferred_language: string | null;
+  country: string | null;
+  city: string | null;
+  notes: string | null;
+  owner_user_id: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface EditorialCrmLead {
+  id: string;
+  source: string;
+  organization_id: string | null;
+  contact_id: string | null;
+  lead_status: CrmLeadStatus;
+  lead_score: number;
+  interest_type: string | null;
+  service_interest: string[] | null;
+  budget_range: string | null;
+  timeline_expectation: string | null;
+  owner_user_id: string | null;
+  captured_by: string | null;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface EditorialCrmOpportunity {
+  id: string;
+  organization_id: string | null;
+  primary_contact_id: string | null;
+  lead_id: string | null;
+  title: string;
+  description: string | null;
+  pipeline_stage: CrmPipelineStage;
+  status: CrmOpportunityStatus;
+  estimated_value: number;
+  currency: string;
+  probability_percent: number;
+  expected_close_date: string | null;
+  owner_user_id: string | null;
+  created_by: string | null;
+  won_project_id: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface EditorialCrmServicePackage {
+  id: string;
+  code: string;
+  name: string;
+  description: string | null;
+  package_type: CrmPackageType;
+  base_price: number;
+  currency: string;
+  active: boolean;
+  metadata: Json;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface EditorialCrmQuote {
+  id: string;
+  opportunity_id: string;
+  quote_number: string;
+  title: string;
+  description: string | null;
+  subtotal_amount: number;
+  discount_amount: number;
+  tax_amount: number;
+  total_amount: number;
+  currency: string;
+  status: CrmQuoteStatus;
+  valid_until: string | null;
+  sent_at: string | null;
+  accepted_at: string | null;
+  rejected_at: string | null;
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface EditorialCrmQuoteItem {
+  id: string;
+  quote_id: string;
+  package_id: string | null;
+  item_type: CrmQuoteItemType;
+  title: string;
+  description: string | null;
+  quantity: number;
+  unit_price: number;
+  line_total: number;
+  sort_order: number;
+  created_at: string;
+}
+
+export interface EditorialCrmActivity {
+  id: string;
+  organization_id: string | null;
+  contact_id: string | null;
+  lead_id: string | null;
+  opportunity_id: string | null;
+  quote_id: string | null;
+  activity_type: CrmActivityType;
+  subject: string;
+  description: string | null;
+  performed_by: string | null;
+  scheduled_for: string | null;
+  completed_at: string | null;
+  outcome: string | null;
+  metadata: Json | null;
+  created_at: string;
+}
+
+export interface EditorialCrmFollowup {
+  id: string;
+  opportunity_id: string | null;
+  contact_id: string | null;
+  title: string;
+  description: string | null;
+  due_at: string;
+  status: CrmFollowupStatus;
+  priority: TaskPriority;
+  assigned_user_id: string | null;
+  completed_at: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface EditorialCrmStageHistory {
+  id: string;
+  opportunity_id: string;
+  old_stage: string | null;
+  new_stage: string;
+  changed_by: string | null;
+  change_reason: string | null;
+  created_at: string;
+}
+
+export interface EditorialCrmProjectConversion {
+  id: string;
+  opportunity_id: string;
+  project_id: string;
+  converted_by: string | null;
+  conversion_notes: string | null;
+  created_at: string;
+}
+
+export interface EditorialCrmPipelineSnapshot {
+  id: string;
+  snapshot_date: string;
+  owner_user_id: string | null;
+  total_open_opportunities: number;
+  total_won_opportunities: number;
+  total_lost_opportunities: number;
+  pipeline_value: number;
+  weighted_pipeline_value: number;
+  quotes_sent_count: number;
+  quotes_accepted_count: number;
+  conversion_count: number;
+  created_at: string;
+}
+
+// ── Input types ───────────────────────────────────────────────────────────────
+
+export type CreateCrmOrganizationInput = Pick<
+  EditorialCrmOrganization,
+  "name" | "organization_type"
+> &
+  Partial<
+    Pick<
+      EditorialCrmOrganization,
+      | "legal_name"
+      | "website_url"
+      | "email"
+      | "phone"
+      | "country"
+      | "city"
+      | "notes"
+      | "owner_user_id"
+    >
+  >;
+
+export type CreateCrmContactInput = Pick<EditorialCrmContact, "first_name"> &
+  Partial<
+    Pick<
+      EditorialCrmContact,
+      | "organization_id"
+      | "last_name"
+      | "display_name"
+      | "email"
+      | "phone"
+      | "job_title"
+      | "preferred_language"
+      | "country"
+      | "city"
+      | "notes"
+      | "owner_user_id"
+    >
+  >;
+
+export type CreateCrmLeadInput = Pick<EditorialCrmLead, "source"> &
+  Partial<
+    Pick<
+      EditorialCrmLead,
+      | "organization_id"
+      | "contact_id"
+      | "lead_score"
+      | "interest_type"
+      | "service_interest"
+      | "budget_range"
+      | "timeline_expectation"
+      | "owner_user_id"
+      | "notes"
+    >
+  >;
+
+export type CreateCrmOpportunityInput = Pick<
+  EditorialCrmOpportunity,
+  "title"
+> &
+  Partial<
+    Pick<
+      EditorialCrmOpportunity,
+      | "organization_id"
+      | "primary_contact_id"
+      | "lead_id"
+      | "description"
+      | "pipeline_stage"
+      | "estimated_value"
+      | "currency"
+      | "probability_percent"
+      | "expected_close_date"
+      | "owner_user_id"
+    >
+  >;
+
+export type CreateCrmQuoteInput = Pick<
+  EditorialCrmQuote,
+  "opportunity_id" | "quote_number" | "title"
+> &
+  Partial<
+    Pick<
+      EditorialCrmQuote,
+      | "description"
+      | "subtotal_amount"
+      | "discount_amount"
+      | "tax_amount"
+      | "total_amount"
+      | "currency"
+      | "valid_until"
+    >
+  >;
+
+// ── View models ───────────────────────────────────────────────────────────────
+
+/** Opportunity enriched with org, contact, and latest quote info. */
+export interface CrmOpportunityWithDetails extends EditorialCrmOpportunity {
+  organization: Pick<EditorialCrmOrganization, "id" | "name" | "organization_type"> | null;
+  primary_contact: Pick<EditorialCrmContact, "id" | "first_name" | "last_name" | "email"> | null;
+  latest_quote: Pick<EditorialCrmQuote, "id" | "quote_number" | "total_amount" | "status"> | null;
+  open_followups_count: number;
+  weighted_value: number;
+}
+
+/** Quote enriched with its line items and related opportunity context. */
+export interface CrmQuoteWithItems extends EditorialCrmQuote {
+  items: EditorialCrmQuoteItem[];
+  opportunity: Pick<EditorialCrmOpportunity, "id" | "title" | "pipeline_stage">;
+}
+
+/** Lead enriched with contact and organization info. */
+export interface CrmLeadWithContext extends EditorialCrmLead {
+  organization: Pick<EditorialCrmOrganization, "id" | "name"> | null;
+  contact: Pick<EditorialCrmContact, "id" | "first_name" | "last_name" | "email"> | null;
 }
