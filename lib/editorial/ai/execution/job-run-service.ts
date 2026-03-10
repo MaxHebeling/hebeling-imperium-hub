@@ -212,7 +212,7 @@ export async function failAiJobRun(
 
   const completedAt = new Date().toISOString();
 
-  const { data, dbError } = await db
+  const { data, error: dbError } = await db
     .from("editorial_ai_job_runs")
     .update({
       status: "failed",
@@ -225,8 +225,8 @@ export async function failAiJobRun(
     .single()
     .then((res) => ({ data: res.data, error: res.error }));
 
-  if (error) {
-    throw new Error(`[job-run-service] failAiJobRun(${runId}) failed: ${error.message}`);
+  if (dbError) {
+    throw new Error(`[job-run-service] failAiJobRun(${runId}) failed: ${dbError.message}`);
   }
 
   return data as EditorialAiJobRun;

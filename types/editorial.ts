@@ -1,6 +1,6 @@
 // =============================================================================
 // Editorial — TypeScript Types
-// Reino Editorial AI Engine · Phases 4A, 4B, 5, 6 & 7
+// Reino Editorial AI Engine · Phases 4A, 4B, 5, 6, 7 & 8
 // =============================================================================
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -934,4 +934,207 @@ export interface PublishingReadinessResult {
     has_approved_version: boolean;
   };
   blockers: string[];
+}
+
+// =============================================================================
+// Phase 8 — Editorial Platform / Marketplace
+// =============================================================================
+
+// ── Enums ────────────────────────────────────────────────────────────────────
+
+export const MARKETPLACE_ORDER_STATUSES = [
+  "pending",
+  "accepted",
+  "in_progress",
+  "delivered",
+  "revision_requested",
+  "completed",
+  "cancelled",
+] as const;
+export type MarketplaceOrderStatus = (typeof MARKETPLACE_ORDER_STATUSES)[number];
+
+export const PAYMENT_STATUSES = [
+  "pending",
+  "escrow",
+  "released",
+  "refunded",
+] as const;
+export type PaymentStatus = (typeof PAYMENT_STATUSES)[number];
+
+// ── Attachment shape used in order messages ───────────────────────────────────
+
+export interface OrderMessageAttachment {
+  name: string;
+  url: string;
+  type: string;
+  size_bytes?: number;
+}
+
+// ── Entity interfaces ─────────────────────────────────────────────────────────
+
+export interface EditorialProfessional {
+  id: string;
+  user_id: string;
+  display_name: string;
+  bio: string | null;
+  country: string | null;
+  languages: string[] | null;
+  specialties: string[] | null;
+  portfolio_url: string | null;
+  verified: boolean;
+  rating: number;
+  total_projects: number;
+  created_at: string;
+}
+
+export interface EditorialServiceListing {
+  id: string;
+  professional_id: string;
+  title: string;
+  description: string | null;
+  category: string;
+  price: number | null;
+  currency: string;
+  delivery_days: number | null;
+  active: boolean;
+  rating: number;
+  orders_count: number;
+  created_at: string;
+}
+
+export interface EditorialMarketplaceOrder {
+  id: string;
+  project_id: string;
+  service_id: string;
+  buyer_id: string;
+  provider_id: string;
+  status: MarketplaceOrderStatus;
+  price: number | null;
+  currency: string;
+  delivery_date: string | null;
+  created_at: string;
+}
+
+export interface EditorialOrderMessage {
+  id: string;
+  order_id: string;
+  sender_id: string;
+  message: string | null;
+  attachments: OrderMessageAttachment[];
+  created_at: string;
+}
+
+export interface EditorialOrderDeliverable {
+  id: string;
+  order_id: string;
+  file_id: string | null;
+  version: number;
+  notes: string | null;
+  created_at: string;
+}
+
+export interface EditorialReview {
+  id: string;
+  order_id: string;
+  reviewer_id: string;
+  provider_id: string;
+  rating: number;
+  comment: string | null;
+  created_at: string;
+}
+
+export interface EditorialPayment {
+  id: string;
+  order_id: string;
+  amount: number | null;
+  currency: string;
+  payment_provider: string | null;
+  transaction_id: string | null;
+  status: PaymentStatus;
+  released_at: string | null;
+  created_at: string;
+}
+
+export interface EditorialAiMatch {
+  id: string;
+  project_id: string;
+  professional_id: string;
+  match_score: number;
+  reason: string | null;
+  created_at: string;
+}
+
+// ── Input types ───────────────────────────────────────────────────────────────
+
+export type CreateProfessionalInput = Pick<
+  EditorialProfessional,
+  "user_id" | "display_name"
+> &
+  Partial<
+    Pick<
+      EditorialProfessional,
+      "bio" | "country" | "languages" | "specialties" | "portfolio_url"
+    >
+  >;
+
+export type CreateServiceListingInput = Pick<
+  EditorialServiceListing,
+  "professional_id" | "title" | "category"
+> &
+  Partial<
+    Pick<
+      EditorialServiceListing,
+      "description" | "price" | "currency" | "delivery_days"
+    >
+  >;
+
+export type CreateMarketplaceOrderInput = Pick<
+  EditorialMarketplaceOrder,
+  "project_id" | "service_id" | "buyer_id" | "provider_id"
+> &
+  Partial<
+    Pick<EditorialMarketplaceOrder, "price" | "currency" | "delivery_date">
+  >;
+
+export type CreateOrderMessageInput = Pick<
+  EditorialOrderMessage,
+  "order_id" | "sender_id"
+> & {
+  message?: string;
+  attachments?: OrderMessageAttachment[];
+};
+
+export type CreateOrderDeliverableInput = Pick<
+  EditorialOrderDeliverable,
+  "order_id"
+> &
+  Partial<Pick<EditorialOrderDeliverable, "file_id" | "version" | "notes">>;
+
+export type CreateReviewInput = Pick<
+  EditorialReview,
+  "order_id" | "reviewer_id" | "provider_id" | "rating"
+> & Partial<Pick<EditorialReview, "comment">>;
+
+// ── View models ───────────────────────────────────────────────────────────────
+
+/** A service listing enriched with the professional's public info. */
+export interface ServiceListingWithProfessional extends EditorialServiceListing {
+  professional: Pick<
+    EditorialProfessional,
+    "id" | "display_name" | "country" | "rating" | "verified" | "specialties"
+  >;
+}
+
+/** An order enriched with service and basic user info. */
+export interface OrderWithDetails extends EditorialMarketplaceOrder {
+  service: Pick<EditorialServiceListing, "id" | "title" | "category">;
+  payment: EditorialPayment | null;
+  deliverables_count: number;
+  messages_count: number;
+}
+
+/** AI match enriched with the professional's public listing info. */
+export interface AiMatchWithProfessional extends EditorialAiMatch {
+  professional: EditorialProfessional;
+  top_listing: EditorialServiceListing | null;
 }
