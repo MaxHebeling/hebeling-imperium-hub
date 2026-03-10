@@ -1,6 +1,6 @@
 // =============================================================================
 // Editorial — TypeScript Types
-// Reino Editorial AI Engine · Phases 4A, 4B, 5, 6, 7 & 8
+// Reino Editorial AI Engine · Phases 4A, 4B, 5, 6, 7, 8 & 9
 // =============================================================================
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -1137,4 +1137,334 @@ export interface OrderWithDetails extends EditorialMarketplaceOrder {
 export interface AiMatchWithProfessional extends EditorialAiMatch {
   professional: EditorialProfessional;
   top_listing: EditorialServiceListing | null;
+}
+
+// =============================================================================
+// Phase 9 — Global Book Distribution Engine
+// =============================================================================
+
+// ── Enums ────────────────────────────────────────────────────────────────────
+
+export const DISTRIBUTION_CHANNEL_TYPES = [
+  "retail",
+  "pod",
+  "wholesale",
+  "direct",
+  "aggregator",
+] as const;
+export type DistributionChannelType = (typeof DISTRIBUTION_CHANNEL_TYPES)[number];
+
+export const DISTRIBUTION_FORMAT_TYPES = [
+  "paperback",
+  "hardcover",
+  "ebook",
+  "audiobook",
+] as const;
+export type DistributionFormatType = (typeof DISTRIBUTION_FORMAT_TYPES)[number];
+
+export const DISTRIBUTION_SUBMISSION_STATUSES = [
+  "draft",
+  "queued",
+  "validating",
+  "submitted",
+  "processing",
+  "action_required",
+  "approved",
+  "published",
+  "rejected",
+  "failed",
+  "paused",
+  "unpublished",
+] as const;
+export type DistributionSubmissionStatus =
+  (typeof DISTRIBUTION_SUBMISSION_STATUSES)[number];
+
+export const DISTRIBUTION_IDENTIFIER_TYPES = [
+  "external_book_id",
+  "asin",
+  "apple_id",
+  "google_id",
+  "kobo_id",
+  "bn_id",
+  "ingram_id",
+  "sku",
+  "listing_url",
+  "other",
+] as const;
+export type DistributionIdentifierType =
+  (typeof DISTRIBUTION_IDENTIFIER_TYPES)[number];
+
+export const DISTRIBUTION_ARTIFACT_TYPES = [
+  "metadata_export",
+  "interior_pdf",
+  "cover_pdf",
+  "epub",
+  "mobi",
+  "kpf",
+  "thumbnail",
+  "marketing_image",
+  "pod_package",
+  "compliance_report",
+  "submission_receipt",
+  "other",
+] as const;
+export type DistributionArtifactType =
+  (typeof DISTRIBUTION_ARTIFACT_TYPES)[number];
+
+export const DISTRIBUTION_ISSUE_SEVERITIES = [
+  "info",
+  "warning",
+  "error",
+  "critical",
+] as const;
+export type DistributionIssueSeverity =
+  (typeof DISTRIBUTION_ISSUE_SEVERITIES)[number];
+
+export const DISTRIBUTION_ISSUE_STATUSES = [
+  "open",
+  "acknowledged",
+  "resolved",
+  "ignored",
+] as const;
+export type DistributionIssueStatus =
+  (typeof DISTRIBUTION_ISSUE_STATUSES)[number];
+
+export const DISTRIBUTION_JOB_TYPES = [
+  "prepare_metadata",
+  "validate_package",
+  "generate_export",
+  "submit_to_channel",
+  "sync_status",
+  "pull_identifiers",
+  "publish",
+  "unpublish",
+  "retry_failed_submission",
+] as const;
+export type DistributionJobType = (typeof DISTRIBUTION_JOB_TYPES)[number];
+
+export const DISTRIBUTION_JOB_STATUSES = [
+  "queued",
+  "running",
+  "succeeded",
+  "failed",
+  "cancelled",
+] as const;
+export type DistributionJobStatus = (typeof DISTRIBUTION_JOB_STATUSES)[number];
+
+// ── Entity interfaces ─────────────────────────────────────────────────────────
+
+export interface EditorialDistributionChannel {
+  id: string;
+  code: string;
+  name: string;
+  channel_type: DistributionChannelType;
+  active: boolean;
+  supports_print: boolean;
+  supports_ebook: boolean;
+  supports_audiobook: boolean;
+  metadata_schema: Json | null;
+  created_at: string;
+}
+
+export interface BookContributor {
+  name: string;
+  role: string;
+}
+
+export interface EditorialBookMetadata {
+  id: string;
+  project_id: string;
+  title: string;
+  subtitle: string | null;
+  series_name: string | null;
+  series_number: string | null;
+  author_display_name: string;
+  contributors: BookContributor[];
+  description_short: string | null;
+  description_long: string | null;
+  language_code: string | null;
+  publication_date: string | null;
+  edition_label: string | null;
+  isbn_print: string | null;
+  isbn_ebook: string | null;
+  isbn_hardcover: string | null;
+  bisac_codes: string[] | null;
+  keywords: string[] | null;
+  territory_rights: string[] | null;
+  age_range: string | null;
+  audience: string | null;
+  copyright_holder: string | null;
+  publisher_name: string | null;
+  imprint_name: string | null;
+  created_by: string | null;
+  updated_by: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface EditorialDistributionFormat {
+  id: string;
+  project_id: string;
+  format_type: DistributionFormatType;
+  enabled: boolean;
+  interior_file_id: string | null;
+  cover_file_id: string | null;
+  preview_file_id: string | null;
+  page_count: number | null;
+  trim_size: string | null;
+  paper_type: string | null;
+  binding_type: string | null;
+  created_at: string;
+}
+
+export interface EditorialDistributionSubmission {
+  id: string;
+  project_id: string;
+  channel_id: string;
+  format_id: string | null;
+  submitted_by: string | null;
+  status: DistributionSubmissionStatus;
+  submission_payload: Json | null;
+  channel_response: Json | null;
+  submitted_at: string | null;
+  last_synced_at: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface EditorialDistributionIdentifier {
+  id: string;
+  submission_id: string;
+  identifier_type: DistributionIdentifierType;
+  identifier_value: string;
+  created_at: string;
+}
+
+export interface EditorialDistributionArtifact {
+  id: string;
+  submission_id: string;
+  artifact_type: DistributionArtifactType;
+  file_id: string | null;
+  storage_path: string | null;
+  version: number;
+  notes: string | null;
+  created_at: string;
+}
+
+export interface EditorialDistributionIssue {
+  id: string;
+  submission_id: string;
+  severity: DistributionIssueSeverity;
+  issue_code: string | null;
+  title: string;
+  description: string | null;
+  field_path: string | null;
+  status: DistributionIssueStatus;
+  resolved_by: string | null;
+  resolved_at: string | null;
+  created_at: string;
+}
+
+export interface EditorialDistributionEvent {
+  id: string;
+  submission_id: string;
+  event_type: string;
+  actor_user_id: string | null;
+  old_status: string | null;
+  new_status: string | null;
+  payload: Json | null;
+  created_at: string;
+}
+
+export interface EditorialDistributionJob {
+  id: string;
+  submission_id: string | null;
+  project_id: string | null;
+  channel_id: string | null;
+  job_type: DistributionJobType;
+  status: DistributionJobStatus;
+  attempt_count: number;
+  scheduled_at: string | null;
+  started_at: string | null;
+  finished_at: string | null;
+  input_payload: Json | null;
+  output_payload: Json | null;
+  error_message: string | null;
+  created_at: string;
+}
+
+// ── Input types ───────────────────────────────────────────────────────────────
+
+export type UpsertBookMetadataInput = Pick<
+  EditorialBookMetadata,
+  "project_id" | "title" | "author_display_name"
+> &
+  Partial<
+    Omit<EditorialBookMetadata, "id" | "created_at" | "updated_at">
+  >;
+
+export type CreateDistributionFormatInput = Pick<
+  EditorialDistributionFormat,
+  "project_id" | "format_type"
+> &
+  Partial<
+    Pick<
+      EditorialDistributionFormat,
+      | "enabled"
+      | "interior_file_id"
+      | "cover_file_id"
+      | "preview_file_id"
+      | "page_count"
+      | "trim_size"
+      | "paper_type"
+      | "binding_type"
+    >
+  >;
+
+export type CreateDistributionSubmissionInput = Pick<
+  EditorialDistributionSubmission,
+  "project_id" | "channel_id"
+> &
+  Partial<
+    Pick<
+      EditorialDistributionSubmission,
+      "format_id" | "submitted_by" | "submission_payload"
+    >
+  >;
+
+export type CreateDistributionJobInput = Pick<
+  EditorialDistributionJob,
+  "job_type"
+> & {
+  project_id?: string;
+  submission_id?: string;
+  channel_id?: string;
+} & Partial<
+    Pick<
+      EditorialDistributionJob,
+      "input_payload" | "scheduled_at"
+    >
+  >;
+
+// ── View models ───────────────────────────────────────────────────────────────
+
+/** Full distribution context for a single project. */
+export interface ProjectDistributionContext {
+  project: EditorialProject;
+  metadata: EditorialBookMetadata | null;
+  formats: EditorialDistributionFormat[];
+  submissions: DistributionSubmissionWithChannel[];
+  openIssuesCount: number;
+  pendingJobsCount: number;
+}
+
+/** A submission enriched with the channel's display info. */
+export interface DistributionSubmissionWithChannel
+  extends EditorialDistributionSubmission {
+  channel: Pick<
+    EditorialDistributionChannel,
+    "id" | "code" | "name" | "channel_type" | "supports_print" | "supports_ebook"
+  >;
+  identifiers: EditorialDistributionIdentifier[];
+  open_issues_count: number;
 }
