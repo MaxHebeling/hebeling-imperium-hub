@@ -136,6 +136,9 @@ export async function saveQualityScore(
   return data as EditorialAiQualityScore;
 }
 
+// Multiplier used for rounding: dividing by 100 yields 2 decimal places (e.g. 87.43).
+const SCORE_PRECISION = 100;
+
 /**
  * Computes and saves a weighted overall quality score for a project
  * by aggregating existing stage-level score rows of the given type.
@@ -172,7 +175,10 @@ export async function computeAndSaveOverallScore(
     totalWeight += row.weight;
   }
 
-  const overall = totalWeight > 0 ? Math.round((weightedSum / totalWeight) * 100) / 100 : 0;
+  const overall =
+    totalWeight > 0
+      ? Math.round((weightedSum / totalWeight) * SCORE_PRECISION) / SCORE_PRECISION
+      : 0;
 
   return saveQualityScore(projectId, scoreType, overall, {
     metadata: { component_count: seen.size, total_weight: totalWeight },

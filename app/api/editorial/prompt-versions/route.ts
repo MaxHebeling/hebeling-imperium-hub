@@ -132,6 +132,22 @@ export async function PATCH(request: NextRequest) {
       );
     }
 
+    // Fetch the version once — used for both audit logging and action execution
+    const { data: currentVersion, error: fetchErr } = await supabase
+      .from("editorial_ai_prompt_versions")
+      .select("status, prompt_template_id")
+      .eq("id", body.version_id)
+      .single();
+
+    if (fetchErr || !currentVersion) {
+      return NextResponse.json(
+        { success: false, error: "Prompt version not found" },
+        { status: 404 }
+      );
+    }
+
+    const previousStatus = currentVersion.status;
+
     if (body.action === "approve") {
       const approved = await approvePromptVersion({
         version_id: body.version_id,
@@ -143,7 +159,7 @@ export async function PATCH(request: NextRequest) {
         profile.org_id,
         "prompt_version",
         body.version_id,
-        { status: "pending_approval" },
+        { status: previousStatus },
         { status: "approved", reviewed_by: user.id },
         user.id
       );
@@ -171,7 +187,7 @@ export async function PATCH(request: NextRequest) {
         profile.org_id,
         "prompt_version",
         body.version_id,
-        { status: "pending_approval" },
+        { status: previousStatus },
         { status: "rejected", reviewed_by: user.id },
         user.id
       );
