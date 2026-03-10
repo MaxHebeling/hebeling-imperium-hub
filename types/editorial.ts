@@ -1,6 +1,6 @@
 // =============================================================================
 // Editorial — TypeScript Types
-// Reino Editorial AI Engine · Phases 4A, 4B, 5, 6, 7, 8, 9, 10 & 11
+// Reino Editorial AI Engine · Phases 4A, 4B, 5, 6, 7, 8, 9, 10, 11 & 12
 // =============================================================================
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -2253,4 +2253,513 @@ export interface CrmQuoteWithItems extends EditorialCrmQuote {
 export interface CrmLeadWithContext extends EditorialCrmLead {
   organization: Pick<EditorialCrmOrganization, "id" | "name"> | null;
   contact: Pick<EditorialCrmContact, "id" | "first_name" | "last_name" | "email"> | null;
+}
+
+// =============================================================================
+// Phase 12 — Client Billing, Contracts & Renewals
+// =============================================================================
+
+// ── Enums ────────────────────────────────────────────────────────────────────
+
+export const CONTRACT_TYPES = [
+  "publishing",
+  "editing",
+  "design",
+  "distribution",
+  "service_agreement",
+  "nda",
+  "consulting",
+  "custom",
+] as const;
+export type ContractType = (typeof CONTRACT_TYPES)[number];
+
+export const CONTRACT_STATUSES = [
+  "draft",
+  "sent",
+  "under_review",
+  "signed",
+  "active",
+  "expired",
+  "terminated",
+  "cancelled",
+  "renewed",
+] as const;
+export type ContractStatus = (typeof CONTRACT_STATUSES)[number];
+
+export const CONTRACT_VERSION_STATUSES = [
+  "draft",
+  "sent",
+  "signed",
+  "superseded",
+  "cancelled",
+] as const;
+export type ContractVersionStatus = (typeof CONTRACT_VERSION_STATUSES)[number];
+
+export const SIGNER_TYPES = [
+  "client",
+  "internal",
+  "witness",
+  "legal",
+  "other",
+] as const;
+export type SignerType = (typeof SIGNER_TYPES)[number];
+
+export const SIGNATURE_STATUSES = [
+  "pending",
+  "sent",
+  "viewed",
+  "signed",
+  "declined",
+  "expired",
+  "revoked",
+] as const;
+export type SignatureStatus = (typeof SIGNATURE_STATUSES)[number];
+
+export const INVOICE_TYPES = [
+  "standard",
+  "deposit",
+  "milestone",
+  "recurring",
+  "final",
+  "adjustment",
+  "refund",
+] as const;
+export type InvoiceType = (typeof INVOICE_TYPES)[number];
+
+export const INVOICE_STATUSES = [
+  "draft",
+  "issued",
+  "sent",
+  "partially_paid",
+  "paid",
+  "overdue",
+  "void",
+  "cancelled",
+  "refunded",
+] as const;
+export type InvoiceStatus = (typeof INVOICE_STATUSES)[number];
+
+export const INVOICE_ITEM_TYPES = [
+  "service",
+  "discount",
+  "fee",
+  "tax",
+  "adjustment",
+  "refund",
+  "custom",
+] as const;
+export type InvoiceItemType = (typeof INVOICE_ITEM_TYPES)[number];
+
+export const PAYMENT_SCHEDULE_TYPES = [
+  "deposit",
+  "milestone",
+  "recurring",
+  "final_balance",
+  "renewal",
+  "manual",
+] as const;
+export type PaymentScheduleType = (typeof PAYMENT_SCHEDULE_TYPES)[number];
+
+export const PAYMENT_SCHEDULE_STATUSES = [
+  "scheduled",
+  "partially_paid",
+  "paid",
+  "overdue",
+  "cancelled",
+] as const;
+export type PaymentScheduleStatus =
+  (typeof PAYMENT_SCHEDULE_STATUSES)[number];
+
+export const PAYMENT_METHODS = [
+  "cash",
+  "bank_transfer",
+  "credit_card",
+  "debit_card",
+  "stripe",
+  "paypal",
+  "check",
+  "wire",
+  "other",
+] as const;
+export type PaymentMethod = (typeof PAYMENT_METHODS)[number];
+
+export const RECEIVED_PAYMENT_STATUSES = [
+  "received",
+  "pending",
+  "allocated",
+  "partially_allocated",
+  "failed",
+  "reversed",
+  "refunded",
+] as const;
+export type ReceivedPaymentStatus =
+  (typeof RECEIVED_PAYMENT_STATUSES)[number];
+
+export const RENEWAL_STATUSES = [
+  "pending",
+  "in_review",
+  "approved",
+  "renewed",
+  "declined",
+  "expired",
+  "cancelled",
+] as const;
+export type RenewalStatus = (typeof RENEWAL_STATUSES)[number];
+
+export const RENEWAL_TYPES = [
+  "manual",
+  "auto",
+  "upsell",
+  "extension",
+  "renegotiation",
+] as const;
+export type RenewalType = (typeof RENEWAL_TYPES)[number];
+
+// ── Entity interfaces ─────────────────────────────────────────────────────────
+
+export interface EditorialClientAccount {
+  id: string;
+  organization_id: string | null;
+  primary_contact_id: string | null;
+  account_code: string;
+  display_name: string;
+  legal_name: string | null;
+  tax_id: string | null;
+  billing_email: string | null;
+  billing_phone: string | null;
+  billing_country: string | null;
+  billing_state: string | null;
+  billing_city: string | null;
+  billing_address_line1: string | null;
+  billing_address_line2: string | null;
+  postal_code: string | null;
+  preferred_currency: string;
+  payment_terms_days: number;
+  active: boolean;
+  owner_user_id: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface EditorialContractTemplate {
+  id: string;
+  code: string;
+  name: string;
+  description: string | null;
+  contract_type: ContractType;
+  template_body: string;
+  default_currency: string;
+  active: boolean;
+  version_label: string | null;
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface EditorialClientContract {
+  id: string;
+  client_account_id: string;
+  project_id: string | null;
+  opportunity_id: string | null;
+  quote_id: string | null;
+  template_id: string | null;
+  contract_number: string;
+  title: string;
+  contract_type: ContractType;
+  status: ContractStatus;
+  currency: string;
+  contract_value: number;
+  effective_date: string | null;
+  start_date: string | null;
+  end_date: string | null;
+  renewal_date: string | null;
+  termination_date: string | null;
+  auto_renew: boolean;
+  renewal_term_months: number | null;
+  signed_at: string | null;
+  cancelled_at: string | null;
+  created_by: string | null;
+  owner_user_id: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface EditorialContractVersion {
+  id: string;
+  contract_id: string;
+  version_number: number;
+  version_label: string | null;
+  document_file_id: string | null;
+  body_text: string | null;
+  change_summary: string | null;
+  status: ContractVersionStatus;
+  created_by: string | null;
+  created_at: string;
+}
+
+export interface EditorialContractSignature {
+  id: string;
+  contract_id: string;
+  contract_version_id: string | null;
+  signer_name: string;
+  signer_email: string | null;
+  signer_role: string | null;
+  signer_type: SignerType;
+  signature_status: SignatureStatus;
+  signed_at: string | null;
+  signature_provider: string | null;
+  signature_reference: string | null;
+  ip_address: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface EditorialInvoice {
+  id: string;
+  client_account_id: string;
+  contract_id: string | null;
+  project_id: string | null;
+  quote_id: string | null;
+  invoice_number: string;
+  title: string;
+  description: string | null;
+  invoice_type: InvoiceType;
+  status: InvoiceStatus;
+  subtotal_amount: number;
+  discount_amount: number;
+  tax_amount: number;
+  total_amount: number;
+  amount_paid: number;
+  balance_due: number;
+  currency: string;
+  issue_date: string;
+  due_date: string | null;
+  paid_at: string | null;
+  voided_at: string | null;
+  billing_period_start: string | null;
+  billing_period_end: string | null;
+  created_by: string | null;
+  owner_user_id: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface EditorialInvoiceItem {
+  id: string;
+  invoice_id: string;
+  item_type: InvoiceItemType;
+  title: string;
+  description: string | null;
+  quantity: number;
+  unit_price: number;
+  line_total: number;
+  sort_order: number;
+  created_at: string;
+}
+
+export interface EditorialPaymentSchedule {
+  id: string;
+  client_account_id: string;
+  contract_id: string | null;
+  invoice_id: string | null;
+  project_id: string | null;
+  schedule_type: PaymentScheduleType;
+  status: PaymentScheduleStatus;
+  title: string;
+  description: string | null;
+  due_date: string;
+  expected_amount: number;
+  currency: string;
+  paid_amount: number;
+  remaining_amount: number;
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface EditorialReceivedPayment {
+  id: string;
+  client_account_id: string;
+  payment_reference: string | null;
+  payment_method: PaymentMethod;
+  payment_provider: string | null;
+  provider_transaction_id: string | null;
+  status: ReceivedPaymentStatus;
+  amount: number;
+  currency: string;
+  received_at: string;
+  recorded_by: string | null;
+  notes: string | null;
+  created_at: string;
+}
+
+export interface EditorialPaymentAllocation {
+  id: string;
+  payment_id: string;
+  invoice_id: string | null;
+  payment_schedule_id: string | null;
+  project_id: string | null;
+  allocated_amount: number;
+  allocated_at: string;
+  allocated_by: string | null;
+  notes: string | null;
+  created_at: string;
+}
+
+export interface EditorialContractRenewal {
+  id: string;
+  contract_id: string;
+  previous_contract_id: string | null;
+  renewal_status: RenewalStatus;
+  renewal_type: RenewalType;
+  proposed_start_date: string | null;
+  proposed_end_date: string | null;
+  proposed_value: number | null;
+  currency: string;
+  renewed_contract_id: string | null;
+  notes: string | null;
+  managed_by: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface EditorialBillingEvent {
+  id: string;
+  client_account_id: string | null;
+  contract_id: string | null;
+  invoice_id: string | null;
+  payment_id: string | null;
+  renewal_id: string | null;
+  event_type: string;
+  actor_user_id: string | null;
+  summary: string;
+  payload: Json | null;
+  created_at: string;
+}
+
+export interface EditorialBillingSnapshot {
+  id: string;
+  snapshot_date: string;
+  client_account_id: string | null;
+  total_contract_value: number;
+  total_invoiced: number;
+  total_collected: number;
+  total_outstanding: number;
+  overdue_invoices_count: number;
+  active_contracts_count: number;
+  pending_renewals_count: number;
+  created_at: string;
+}
+
+// ── Input types ───────────────────────────────────────────────────────────────
+
+export type CreateClientAccountInput = Pick<
+  EditorialClientAccount,
+  "account_code" | "display_name"
+> &
+  Partial<
+    Pick<
+      EditorialClientAccount,
+      | "organization_id"
+      | "primary_contact_id"
+      | "legal_name"
+      | "tax_id"
+      | "billing_email"
+      | "billing_phone"
+      | "billing_country"
+      | "billing_city"
+      | "preferred_currency"
+      | "payment_terms_days"
+      | "owner_user_id"
+    >
+  >;
+
+export type CreateClientContractInput = Pick<
+  EditorialClientContract,
+  "client_account_id" | "contract_number" | "title" | "contract_type"
+> &
+  Partial<
+    Pick<
+      EditorialClientContract,
+      | "project_id"
+      | "opportunity_id"
+      | "quote_id"
+      | "template_id"
+      | "currency"
+      | "contract_value"
+      | "start_date"
+      | "end_date"
+      | "auto_renew"
+      | "renewal_term_months"
+      | "owner_user_id"
+    >
+  >;
+
+export type CreateInvoiceInput = Pick<
+  EditorialInvoice,
+  "client_account_id" | "invoice_number" | "title" | "invoice_type" | "issue_date"
+> &
+  Partial<
+    Pick<
+      EditorialInvoice,
+      | "contract_id"
+      | "project_id"
+      | "quote_id"
+      | "description"
+      | "currency"
+      | "due_date"
+      | "billing_period_start"
+      | "billing_period_end"
+      | "owner_user_id"
+    >
+  >;
+
+export type RecordPaymentInput = Pick<
+  EditorialReceivedPayment,
+  "client_account_id" | "payment_method" | "amount"
+> &
+  Partial<
+    Pick<
+      EditorialReceivedPayment,
+      | "payment_reference"
+      | "payment_provider"
+      | "provider_transaction_id"
+      | "currency"
+      | "received_at"
+      | "notes"
+    >
+  >;
+
+// ── View models ───────────────────────────────────────────────────────────────
+
+/** Contract enriched with signer status and latest version info. */
+export interface ClientContractWithStatus extends EditorialClientContract {
+  latest_version: Pick<
+    EditorialContractVersion,
+    "id" | "version_number" | "status"
+  > | null;
+  pending_signatures_count: number;
+  total_signatures_count: number;
+  active_renewal: Pick<
+    EditorialContractRenewal,
+    "id" | "renewal_status" | "renewal_type"
+  > | null;
+}
+
+/** Invoice enriched with line items and allocation summary. */
+export interface InvoiceWithItems extends EditorialInvoice {
+  items: EditorialInvoiceItem[];
+  allocations_count: number;
+}
+
+/** Client account financial summary for the billing dashboard. */
+export interface ClientAccountBillingSummary {
+  account: EditorialClientAccount;
+  total_contract_value: number;
+  total_invoiced: number;
+  total_collected: number;
+  balance_due: number;
+  overdue_invoices_count: number;
+  pending_renewals_count: number;
+  last_payment_at: string | null;
 }
