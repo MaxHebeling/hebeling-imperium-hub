@@ -51,6 +51,26 @@ const pathLabels: Record<string, string> = {
   analytics: "Analytics",
   payments: "Payments",
   automations: "Automations",
+  // Company-first architecture (Hebeling OS)
+  companies: "Empresas",
+  "reino-editorial": "Reino Editorial",
+  ikingdom: "iKingdom",
+  imperium: "Imperium",
+  "max-hebeling": "Max Hebeling",
+  overview: "Overview",
+  pipeline: "Pipeline",
+  ai: "AI Review",
+  authors: "Autores",
+  staff: "Staff",
+  marketplace: "Marketplace",
+  distribution: "Distribución",
+  operations: "Operaciones",
+  reports: "Reportes",
+  // Shared infrastructure
+  billing: "Billing",
+  intelligence: "Intelligence",
+  files: "Files",
+  clients: "Clients",
 };
 
 export function AppTopbar({ organizationName, userName, userRole = "admin" }: AppTopbarProps) {
