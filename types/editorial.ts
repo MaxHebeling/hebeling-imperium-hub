@@ -553,6 +553,148 @@ export type CreateQueueItemInput = Pick<
     >
   >;
 
+// =============================================================================
+// Phase 6 — Editorial AI Workspace
+// =============================================================================
+
+// ── Enums ────────────────────────────────────────────────────────────────────
+
+export const DOCUMENT_CHANGE_SOURCES = [
+  "manual",
+  "ai_accepted",
+  "ai_edited",
+] as const;
+export type DocumentChangeSource = (typeof DOCUMENT_CHANGE_SOURCES)[number];
+
+export const DOCUMENT_VERSION_SOURCES = [
+  "manual",
+  "ai_applied",
+  "import",
+  "restore",
+] as const;
+export type DocumentVersionSource = (typeof DOCUMENT_VERSION_SOURCES)[number];
+
+/** Available inline AI actions the editor can request on a selected fragment. */
+export const INLINE_AI_ACTIONS = [
+  "improve_clarity",
+  "rewrite_paragraph",
+  "correct_grammar",
+  "summarize",
+  "expand",
+  "adjust_tone",
+  "smooth_transition",
+] as const;
+export type InlineAiAction = (typeof INLINE_AI_ACTIONS)[number];
+
+// ── Entity interfaces ─────────────────────────────────────────────────────────
+
+/** An editor's working session on a project+stage. */
+export interface EditorialEditSession {
+  id: string;
+  project_id: string;
+  stage: EditorialStage;
+  editor_id: string;
+  started_at: string;
+  last_active_at: string;
+  ended_at: string | null;
+  metadata: Json;
+}
+
+/** Immutable snapshot of the manuscript content at a point in time. */
+export interface EditorialDocumentVersion {
+  id: string;
+  project_id: string;
+  stage: EditorialStage;
+  version_number: number;
+  content: string;
+  source: DocumentVersionSource;
+  job_run_id: string | null;
+  created_by: string | null;
+  created_at: string;
+}
+
+/** One granular change record (AI-accepted or manual). */
+export interface EditorialDocumentChange {
+  id: string;
+  project_id: string;
+  stage: EditorialStage;
+  from_version_id: string | null;
+  to_version_id: string | null;
+  location_ref: string | null;
+  original_text: string | null;
+  revised_text: string | null;
+  change_source: DocumentChangeSource;
+  finding_id: string | null;
+  decision_id: string | null;
+  session_id: string | null;
+  applied_by: string | null;
+  applied_at: string;
+}
+
+// ── Input types ───────────────────────────────────────────────────────────────
+
+export type CreateEditSessionInput = Pick<
+  EditorialEditSession,
+  "project_id" | "stage" | "editor_id"
+> & Partial<Pick<EditorialEditSession, "metadata">>;
+
+export type CreateDocumentVersionInput = Pick<
+  EditorialDocumentVersion,
+  "project_id" | "stage" | "content" | "source"
+> &
+  Partial<
+    Pick<EditorialDocumentVersion, "job_run_id" | "created_by">
+  >;
+
+export type CreateDocumentChangeInput = Pick<
+  EditorialDocumentChange,
+  "project_id" | "stage" | "change_source"
+> &
+  Partial<
+    Pick<
+      EditorialDocumentChange,
+      | "from_version_id"
+      | "to_version_id"
+      | "location_ref"
+      | "original_text"
+      | "revised_text"
+      | "finding_id"
+      | "decision_id"
+      | "session_id"
+      | "applied_by"
+    >
+  >;
+
+// ── Workspace view models ─────────────────────────────────────────────────────
+
+/** Full workspace context loaded by the workspace-service. */
+export interface WorkspaceContext {
+  project: EditorialProject;
+  stage: EditorialStage;
+  currentVersion: EditorialDocumentVersion | null;
+  activeSession: EditorialEditSession | null;
+}
+
+/**
+ * A finding enriched with its decision for display in the workspace sidebar.
+ * Extends EditorialAiFinding with the resolved decision if any.
+ */
+export interface WorkspaceFinding extends EditorialAiFinding {
+  decision: EditorialAiFindingDecision | null;
+  qualityScore: number | null;
+}
+
+/** Result of an inline AI action call. */
+export interface InlineAiResult {
+  action: InlineAiAction;
+  original_text: string;
+  suggested_text: string;
+  /** Confidence in [0, 1]; null when not reported by the model. */
+  confidence: number | null;
+  /** Reference to the job run that produced this result. */
+  job_run_id: string | null;
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Dashboard / aggregation helpers
 // ─────────────────────────────────────────────────────────────────────────────
