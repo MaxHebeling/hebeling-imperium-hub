@@ -26,6 +26,8 @@ export const translations = {
       organizations: "Organizaciones",
       team: "Equipo",
       roles: "Roles y Permisos",
+      editorialDashboard: "Dashboard Editorial",
+      editorialBooks: "Libros",
     },
     // Sidebar sections
     sidebar: {
@@ -34,6 +36,7 @@ export const translations = {
       finance: "Finanzas",
       automation: "Automatización",
       intelligence: "Inteligencia",
+      editorial: "Editorial Reino",
       system: "Sistema",
       external: "Externo",
       collapse: "Colapsar",
@@ -688,6 +691,8 @@ export const translations = {
       organizations: "Organizations",
       team: "Team",
       roles: "Roles & Permissions",
+      editorialDashboard: "Editorial Dashboard",
+      editorialBooks: "Books",
     },
     // Sidebar sections
     sidebar: {
@@ -696,6 +701,7 @@ export const translations = {
       finance: "Finance",
       automation: "Automation",
       intelligence: "Intelligence",
+      editorial: "Editorial Reino",
       system: "System",
       external: "External",
       collapse: "Collapse",

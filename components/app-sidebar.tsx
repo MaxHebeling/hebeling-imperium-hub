@@ -23,6 +23,8 @@ import {
   PanelLeftClose,
   PanelLeft,
   ChevronRight,
+  BookOpen,
+  Gauge,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -68,6 +70,13 @@ const navSections = [
     titleKey: "intelligence" as const,
     items: [
       { href: "/app/analytics", labelKey: "analytics", icon: BarChart3 },
+    ],
+  },
+  {
+    titleKey: "editorial" as const,
+    items: [
+      { href: "/app/editorial", labelKey: "editorialDashboard", icon: Gauge },
+      { href: "/app/editorial/books", labelKey: "editorialBooks", icon: BookOpen },
     ],
   },
   {
