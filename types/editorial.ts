@@ -1,6 +1,6 @@
 // =============================================================================
 // Editorial — TypeScript Types
-// Reino Editorial AI Engine · Phases 4A, 4B & 5
+// Reino Editorial AI Engine · Phases 4A, 4B, 5, 6 & 7
 // =============================================================================
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -721,4 +721,217 @@ export interface GovernanceSummary {
   pending_prompt_approvals: number;
   open_queue_items: number;
   audit_events_last_24h: number;
+}
+
+// =============================================================================
+// Phase 7 — Publishing Engine
+// =============================================================================
+
+// ── Enums ────────────────────────────────────────────────────────────────────
+
+export const PUBLICATION_VERSION_STATUSES = [
+  "draft",
+  "ready",
+  "exported",
+  "archived",
+] as const;
+export type PublicationVersionStatus = (typeof PUBLICATION_VERSION_STATUSES)[number];
+
+export const EXPORT_FORMATS = [
+  "pdf_print",
+  "epub",
+  "kindle_mobi",
+  "kindle_kpf",
+  "html",
+] as const;
+export type ExportFormat = (typeof EXPORT_FORMATS)[number];
+
+export const EXPORT_RUN_STATUSES = [
+  "queued",
+  "running",
+  "completed",
+  "failed",
+  "cancelled",
+] as const;
+export type ExportRunStatus = (typeof EXPORT_RUN_STATUSES)[number];
+
+export const DISTRIBUTION_CHANNELS = [
+  "amazon_kdp",
+  "apple_books",
+  "google_play_books",
+  "ingram_spark",
+  "smashwords",
+  "internal",
+] as const;
+export type DistributionChannel = (typeof DISTRIBUTION_CHANNELS)[number];
+
+export const DISTRIBUTION_PACKAGE_STATUSES = [
+  "pending",
+  "ready",
+  "submitted",
+  "accepted",
+  "rejected",
+] as const;
+export type DistributionPackageStatus =
+  (typeof DISTRIBUTION_PACKAGE_STATUSES)[number];
+
+// ── Contributor shape stored in metadata.contributors ────────────────────────
+
+export interface PublicationContributor {
+  name: string;
+  role: "editor" | "translator" | "illustrator" | "foreword" | "other";
+}
+
+// ── Entity interfaces ─────────────────────────────────────────────────────────
+
+export interface EditorialPublicationVersion {
+  id: string;
+  project_id: string;
+  label: string;
+  version_tag: string;
+  status: PublicationVersionStatus;
+  source_document_version_id: string | null;
+  source_stage: EditorialStage | null;
+  source_file_id: string | null;
+  editorial_notes: string | null;
+  approved_by: string | null;
+  approved_at: string | null;
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface EditorialPublicationMetadata {
+  id: string;
+  publication_version_id: string;
+  project_id: string;
+  title: string;
+  subtitle: string | null;
+  author_name: string | null;
+  contributors: PublicationContributor[];
+  publisher_name: string | null;
+  imprint: string | null;
+  publication_date: string | null;
+  edition_number: number;
+  isbn_13: string | null;
+  isbn_10: string | null;
+  asin: string | null;
+  doi: string | null;
+  language: string;
+  description: string | null;
+  keywords: string[] | null;
+  bisac_codes: string[] | null;
+  thema_codes: string[] | null;
+  rights: string | null;
+  territories: string[] | null;
+  cover_image_url: string | null;
+  cover_storage_path: string | null;
+  extra_metadata: Json;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface EditorialExportRun {
+  id: string;
+  project_id: string;
+  publication_version_id: string;
+  format: ExportFormat;
+  status: ExportRunStatus;
+  output_file_url: string | null;
+  output_storage_path: string | null;
+  output_size_bytes: number | null;
+  engine: string | null;
+  engine_version: string | null;
+  export_config: Json;
+  error_message: string | null;
+  error_details: Json | null;
+  started_at: string | null;
+  finished_at: string | null;
+  duration_ms: number | null;
+  initiated_by: string | null;
+  created_at: string;
+}
+
+export interface EditorialDistributionPackage {
+  id: string;
+  project_id: string;
+  publication_version_id: string;
+  channel: DistributionChannel;
+  status: DistributionPackageStatus;
+  export_run_ids: string[];
+  manifest: Json;
+  submission_id: string | null;
+  submitted_at: string | null;
+  submitted_by: string | null;
+  channel_response: Json | null;
+  response_at: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+// ── Input types ───────────────────────────────────────────────────────────────
+
+export type CreatePublicationVersionInput = Pick<
+  EditorialPublicationVersion,
+  "project_id" | "label" | "version_tag"
+> &
+  Partial<
+    Pick<
+      EditorialPublicationVersion,
+      | "source_document_version_id"
+      | "source_stage"
+      | "source_file_id"
+      | "editorial_notes"
+      | "created_by"
+    >
+  >;
+
+export type UpsertPublicationMetadataInput = Pick<
+  EditorialPublicationMetadata,
+  "publication_version_id" | "project_id" | "title"
+> &
+  Partial<
+    Omit<EditorialPublicationMetadata, "id" | "created_at" | "updated_at">
+  >;
+
+export type CreateExportRunInput = Pick<
+  EditorialExportRun,
+  "project_id" | "publication_version_id" | "format"
+> &
+  Partial<
+    Pick<EditorialExportRun, "engine" | "engine_version" | "export_config" | "initiated_by">
+  >;
+
+export type CreateDistributionPackageInput = Pick<
+  EditorialDistributionPackage,
+  "project_id" | "publication_version_id" | "channel"
+> &
+  Partial<
+    Pick<EditorialDistributionPackage, "export_run_ids" | "manifest">
+  >;
+
+// ── View models ───────────────────────────────────────────────────────────────
+
+/** Full publishing context loaded for the PublishingDashboard page. */
+export interface ProjectPublishingContext {
+  project: EditorialProject;
+  publicationVersions: EditorialPublicationVersion[];
+  latestVersion: EditorialPublicationVersion | null;
+  latestMetadata: EditorialPublicationMetadata | null;
+  recentExports: EditorialExportRun[];
+  distributionPackages: EditorialDistributionPackage[];
+  /** Pre-export readiness gate result. */
+  readinessCheck: PublishingReadinessResult;
+}
+
+/** Result of the pre-export validation gate. */
+export interface PublishingReadinessResult {
+  ready: boolean;
+  checks: {
+    stage_is_final: boolean;
+    no_open_critical_findings: boolean;
+    metadata_complete: boolean;
+    has_approved_version: boolean;
+  };
+  blockers: string[];
 }

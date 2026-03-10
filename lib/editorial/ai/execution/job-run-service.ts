@@ -223,10 +223,10 @@ export async function failAiJobRun(
     .eq("id", runId)
     .select()
     .single()
-    .then((res) => ({ data: res.data, dbError: res.error }));
+    .then((res) => ({ data: res.data, error: res.error }));
 
-  if (dbError) {
-    throw new Error(`[job-run-service] failAiJobRun(${runId}) failed: ${dbError.message}`);
+  if (error) {
+    throw new Error(`[job-run-service] failAiJobRun(${runId}) failed: ${error.message}`);
   }
 
   return data as EditorialAiJobRun;
