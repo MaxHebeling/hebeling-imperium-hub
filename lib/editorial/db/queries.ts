@@ -20,27 +20,21 @@ export interface ProfileRow {
 // ---------------------------------------------------------------------------
 
 export async function getEditorialProject(projectId: string): Promise<EditorialProject | null> {
-  const cleanId = String(projectId ?? "").trim();
-  const uuidRegex =
-    /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-
-  // Supabase/Postgres expects a valid uuid in `editorial_projects.id`.
-  // Treat invalid input as "not found" (avoid Postgres 22P02).
-  if (!uuidRegex.test(cleanId)) {
-    console.warn("[editorial] getEditorialProject: invalid uuid", { projectId: cleanId });
-    return null;
-  }
-
   const supabase = getAdminClient();
   const { data, error } = await supabase
     .from("editorial_projects")
     .select("*")
-    .eq("id", cleanId)
+    .eq("id", String(projectId ?? "").trim())
     .maybeSingle();
   if (error) {
-    // Don't silently hide unexpected Supabase errors; "not found" should only mean 0 rows.
-    throw new Error(`Failed to fetch editorial project: ${error.message}`);
+    console.error("[editorial] getEditorialProject error", {
+      projectId,
+      code: (error as any).code,
+      message: error.message,
+    });
+    return null;
   }
+  if (!data) return null;
   return data as EditorialProject;
 }
 
