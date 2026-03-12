@@ -25,6 +25,37 @@ export default async function ReinoEditorialProjectDetailPage({
   noStore();
 
   const { projectId } = params;
+  const isUuid =
+    typeof projectId === "string" &&
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(projectId);
+
+  if (!isUuid) {
+    console.warn("[reino-editorial] Invalid projectId param", { projectId });
+    return (
+      <div className="space-y-6 pb-6 px-6 pt-4">
+        <header className="space-y-2">
+          <h1 className="text-2xl font-semibold tracking-tight text-foreground">Proyecto</h1>
+          <p className="text-sm text-muted-foreground">
+            El identificador del proyecto no es válido.
+          </p>
+        </header>
+
+        <Card>
+          <CardContent className="py-10">
+            <StaffEmptyState
+              icon={BookOpen}
+              title="Proyecto no encontrado"
+              description="El enlace parece estar dañado o incompleto."
+            >
+              <Button asChild variant="outline" className="gap-2">
+                <Link href="/app/companies/reino-editorial/projects">Volver a proyectos</Link>
+              </Button>
+            </StaffEmptyState>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   const [detail, alerts] = await Promise.all([
     getStaffProject(projectId),

@@ -20,6 +20,16 @@ export interface ProfileRow {
 // ---------------------------------------------------------------------------
 
 export async function getEditorialProject(projectId: string): Promise<EditorialProject | null> {
+  // Supabase/Postgres expects a valid uuid in `editorial_projects.id`.
+  // If an invalid id hits this function (e.g. bad routing), treat as "not found" (not 500).
+  const isUuid =
+    typeof projectId === "string" &&
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(projectId);
+  if (!isUuid) {
+    console.warn("[editorial] getEditorialProject: invalid uuid", { projectId });
+    return null;
+  }
+
   const supabase = getAdminClient();
   const { data, error } = await supabase
     .from("editorial_projects")
