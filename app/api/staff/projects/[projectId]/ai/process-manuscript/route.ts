@@ -129,7 +129,7 @@ export async function GET(
     console.info("[editorial-ai][read] GET state start", {
       projectId,
       staffUserId: staff.userId,
-      staffRoles: staff.roles,
+      staffRole: staff.role,
     });
 
     const project = await getEditorialProject(projectId);

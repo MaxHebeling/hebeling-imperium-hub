@@ -47,7 +47,7 @@ export function StaffManuscriptAiCta({
       </div>
       <Button
         type="button"
-        size="xs"
+        size="sm"
         className="mt-1 sm:mt-0 gap-1.5"
         disabled={disabled}
         onClick={handleClick}

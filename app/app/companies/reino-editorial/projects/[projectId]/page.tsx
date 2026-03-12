@@ -6,6 +6,9 @@ import { StaffProjectTabs } from "@/components/editorial/staff/staff-project-tab
 import { getProjectAlertsWithRecalc } from "@/lib/editorial/alerts/detection";
 import { getProjectExports } from "@/lib/editorial/export/services";
 import { getProjectDistributions } from "@/lib/editorial/distribution/services";
+import type { EditorialProjectAlert } from "@/lib/editorial/alerts/types";
+import type { EditorialExportJob } from "@/lib/editorial/export/types";
+import type { ProjectDistribution } from "@/lib/editorial/distribution/types";
 import { StaffAlertsPanel } from "@/components/editorial/staff/staff-alerts-panel";
 import { StaffEmptyState } from "@/components/editorial/staff/staff-empty-state";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -62,15 +65,15 @@ export default async function ReinoEditorialProjectDetailPage({
     }
 
     // Load additional data independently to avoid one failure breaking the whole page
-    const [alerts, exports, distributions] = await Promise.allSettled([
+    const [alerts, exports, distributions] = (await Promise.allSettled([
       getProjectAlertsWithRecalc(projectId),
       getProjectExports(projectId),
       getProjectDistributions(projectId),
     ]).then((results) => [
-      results[0]?.status === "fulfilled" ? results[0].value : [],
-      results[1]?.status === "fulfilled" ? results[1].value : [],
-      results[2]?.status === "fulfilled" ? results[2].value : [],
-    ]);
+      (results[0]?.status === "fulfilled" ? results[0].value : []) as EditorialProjectAlert[],
+      (results[1]?.status === "fulfilled" ? results[1].value : []) as EditorialExportJob[],
+      (results[2]?.status === "fulfilled" ? results[2].value : []) as ProjectDistribution[],
+    ])) as [EditorialProjectAlert[], EditorialExportJob[], ProjectDistribution[]];
 
     const { project, created_by_name, created_by_email, files } = detail;
     const manuscriptFiles = files

@@ -212,7 +212,7 @@ export function StageMaquetacionPanel({
                   <FileText className="h-5 w-5 text-orange-500 shrink-0" />
                   <div className="min-w-0">
                     <p className="text-sm font-medium truncate">
-                      Maquetacion v{file.version_number}
+                      Maquetacion v{file.version}
                     </p>
                     <p className="text-xs text-muted-foreground">
                       {file.size_bytes 

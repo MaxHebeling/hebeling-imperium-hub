@@ -20,6 +20,22 @@ import {
   Play,
 } from "lucide-react";
 
+interface AnalysisIssue {
+  type: string;
+  description: string;
+  location?: string | null;
+  suggestion?: string | null;
+}
+
+interface AnalysisResult {
+  summary?: string;
+  strengths?: string[];
+  improvements?: string[];
+  issues?: AnalysisIssue[];
+  recommendations?: string[];
+  score?: number;
+}
+
 interface AiJob {
   id: string;
   projectId: string;
@@ -28,17 +44,8 @@ interface AiJob {
   status: string;
   createdAt: string;
   finishedAt: string | null;
-  outputRef: Record<string, any> | null;
-  errorMessage: string | null;
-}
-
-interface AnalysisResult {
-  summary: string;
-  strengths: string[];
-  improvements: string[];
-  issues: Array<{ type: string; description: string }>;
-  recommendations: string[];
-  score?: number;
+  result?: AnalysisResult | null;
+  errorLog?: string | null;
 }
 
 interface AiResultsPanelProps {
@@ -69,8 +76,8 @@ const STATUS_CONFIG = {
   cancelled: { label: "Cancelado", variant: "outline" as const, icon: XCircle },
 };
 
-function IssueItem({ issue }: { issue: AnalysisResult["issues"][0] }) {
-  const iconMap = {
+function IssueItem({ issue }: { issue: AnalysisIssue }) {
+  const iconMap: Record<string, React.ReactNode> = {
     error: <XCircle className="h-4 w-4 text-destructive shrink-0" />,
     warning: <AlertTriangle className="h-4 w-4 text-amber-500 shrink-0" />,
     suggestion: <Lightbulb className="h-4 w-4 text-blue-500 shrink-0" />,
@@ -78,7 +85,7 @@ function IssueItem({ issue }: { issue: AnalysisResult["issues"][0] }) {
 
   return (
     <div className="flex gap-2 p-2 rounded-lg bg-muted/30 text-sm">
-      {iconMap[issue.type]}
+      {iconMap[issue.type] ?? <AlertTriangle className="h-4 w-4 text-muted-foreground shrink-0" />}
       <div className="flex-1 min-w-0">
         <p className="font-medium">{issue.description}</p>
         {issue.location && (
@@ -190,7 +197,7 @@ function JobResultCard({ job, onRetry }: { job: AiJob; onRetry: () => void }) {
                       Fortalezas
                     </h4>
                     <ul className="space-y-1">
-                      {job.result.strengths.map((s, i) => (
+                      {job.result.strengths?.map((s: string, i: number) => (
                         <li key={i} className="text-sm text-muted-foreground flex gap-2">
                           <span className="text-emerald-500 shrink-0">+</span>
                           {s}
@@ -208,7 +215,7 @@ function JobResultCard({ job, onRetry }: { job: AiJob; onRetry: () => void }) {
                       Areas de Mejora
                     </h4>
                     <ul className="space-y-1">
-                      {job.result.improvements.map((s, i) => (
+                      {job.result.improvements?.map((s: string, i: number) => (
                         <li key={i} className="text-sm text-muted-foreground flex gap-2">
                           <span className="text-amber-500 shrink-0">-</span>
                           {s}
@@ -222,16 +229,16 @@ function JobResultCard({ job, onRetry }: { job: AiJob; onRetry: () => void }) {
                 {job.result.issues?.length > 0 && (
                   <div>
                     <h4 className="text-sm font-semibold mb-2">
-                      Problemas Detectados ({job.result.issues.length})
+                      Problemas Detectados ({job.result.issues?.length ?? 0})
                     </h4>
                     <ScrollArea className="max-h-60">
                       <div className="space-y-2">
-                        {job.result.issues.slice(0, 20).map((issue, i) => (
+                        {job.result.issues?.slice(0, 20).map((issue: AnalysisIssue, i: number) => (
                           <IssueItem key={i} issue={issue} />
                         ))}
-                        {job.result.issues.length > 20 && (
+                        {(job.result.issues?.length ?? 0) > 20 && (
                           <p className="text-xs text-muted-foreground text-center py-2">
-                            ... y {job.result.issues.length - 20} problemas mas
+                            ... y {(job.result.issues?.length ?? 0) - 20} problemas mas
                           </p>
                         )}
                       </div>
@@ -247,7 +254,7 @@ function JobResultCard({ job, onRetry }: { job: AiJob; onRetry: () => void }) {
                       Recomendaciones
                     </h4>
                     <ul className="space-y-1">
-                      {job.result.recommendations.map((r, i) => (
+                      {job.result.recommendations?.map((r: string, i: number) => (
                         <li key={i} className="text-sm text-muted-foreground flex gap-2">
                           <span className="text-blue-500 shrink-0">{i + 1}.</span>
                           {r}

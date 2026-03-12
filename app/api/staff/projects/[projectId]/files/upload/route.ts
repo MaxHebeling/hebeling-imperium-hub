@@ -75,14 +75,14 @@ export async function POST(
     const staff = await requireStaff();
     console.info("[upload-debug] staff resolved", {
       userId: staff.userId,
-      roles: staff.roles,
+      role: staff.role,
     });
 
     const { projectId } = await params;
     console.info("[upload-debug] request context", {
       projectId,
       staffUserId: staff.userId,
-      staffRoles: staff.roles,
+      staffRole: staff.role,
       method: request.method,
       contentType: request.headers.get("content-type"),
     });

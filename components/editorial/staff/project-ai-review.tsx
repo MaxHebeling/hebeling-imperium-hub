@@ -35,6 +35,9 @@ interface StateResponse {
   latestJob: ManuscriptJobSummary | null;
   latestAnalysis: EditorialManuscriptAnalysis | null;
   recentJobs: ManuscriptJobSummary[];
+  latestManuscriptVersion?: number | null;
+  analyzedFileVersion?: number | null;
+  isOutdated?: boolean;
   error?: string;
 }
 

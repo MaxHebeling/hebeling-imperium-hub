@@ -288,11 +288,13 @@ export type EditorialWorkflowEventType =
   | "stage_started"
   | "stage_completed"
   | "stage_reopened"
+  | "stage_rejected"
   | "checklist_item_completed"
   | "checklist_completed"
   | "assignment_changed"
   | "rule_override_applied"
-  | "manuscript_submitted";
+  | "manuscript_submitted"
+  | "ai_task_queued";
 
 export interface EditorialWorkflowEvent {
   id: string;

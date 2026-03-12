@@ -199,7 +199,7 @@ export function AiStageAssistPanel({
                 )}
                 <div className="mt-2 flex flex-wrap gap-2">
                   <Button
-                    size="xs"
+                    size="sm"
                     variant="outline"
                     className="h-7 px-2 text-xs"
                     onClick={() => decide(f.id, "accepted")}
@@ -208,7 +208,7 @@ export function AiStageAssistPanel({
                     Aceptar
                   </Button>
                   <Button
-                    size="xs"
+                    size="sm"
                     variant="outline"
                     className="h-7 px-2 text-xs"
                     onClick={() => decide(f.id, "rejected")}
@@ -217,7 +217,7 @@ export function AiStageAssistPanel({
                     Rechazar
                   </Button>
                   <Button
-                    size="xs"
+                    size="sm"
                     variant="outline"
                     className="h-7 px-2 text-xs"
                     onClick={() => decide(f.id, "resolved")}
@@ -226,7 +226,7 @@ export function AiStageAssistPanel({
                     Marcar resuelto
                   </Button>
                   <Button
-                    size="xs"
+                    size="sm"
                     variant="outline"
                     className="h-7 px-2 text-xs"
                     onClick={() => decide(f.id, "applied_manually")}
