@@ -7,9 +7,11 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Check, Circle, Loader2, Clock, CheckCircle2 } from "lucide-react";
 import { EDITORIAL_STAGE_LABELS } from "@/lib/editorial/pipeline/constants";
+import { getNextStage } from "@/lib/editorial/pipeline/stage-utils";
 import type { EditorialFile, EditorialStageKey, StageWithApprover } from "@/lib/editorial/types/editorial";
 import type { EditorialAiTaskKey } from "@/lib/editorial/types/ai";
 import { AiStageAssistPanel } from "@/components/editorial/staff/ai-stage-assist-panel";
+import { StageReviewPanel } from "@/components/editorial/staff/stage-review-panel";
 
 const STAGE_ORDER: EditorialStageKey[] = [
   "ingesta",
@@ -73,6 +75,10 @@ export function StaffPipelineTab({ stages, currentStage, projectId, files }: Sta
     stage: byKey.get(key),
   }));
 
+  // Get current stage data for the review panel
+  const currentStageData = byKey.get(currentStage as EditorialStageKey);
+  const nextStageKey = getNextStage(currentStage as EditorialStageKey);
+
   const hasManuscript =
     files.some((f) => f.file_type === "manuscript_original") ||
     files.some((f) => f.file_type === "manuscript_edited");
@@ -125,6 +131,17 @@ export function StaffPipelineTab({ stages, currentStage, projectId, files }: Sta
 
   return (
     <div className="space-y-4 pt-2">
+      {/* Stage Review Panel - Main focus for current stage */}
+      {currentStageData && (
+        <StageReviewPanel
+          projectId={projectId}
+          stage={currentStageData}
+          nextStageKey={nextStageKey}
+          files={files}
+          onApproved={() => router.refresh()}
+        />
+      )}
+
       <Card>
         <CardHeader>
           <CardTitle className="text-base">Etapas editoriales</CardTitle>

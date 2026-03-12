@@ -6,6 +6,7 @@ import { isValidStageKey, getNextStage } from "@/lib/editorial/pipeline/stage-ut
 import { requireEditorialCapability } from "@/lib/editorial/permissions";
 import { logWorkflowEvent } from "@/lib/editorial/workflow-events";
 import { evaluateStageCanComplete } from "@/lib/editorial/workflow";
+import { initializeNextStage } from "@/lib/editorial/pipeline/stage-transitions";
 
 /**
  * POST /api/staff/projects/[projectId]/stages/[stageKey]/approve
@@ -69,11 +70,24 @@ export async function POST(
     if (project.current_stage === stageKey) {
       const next = getNextStage(stageKey);
       if (next) {
+        // Advance project to next stage
         await advanceProjectStage(projectId, next);
         advancedTo = next;
+        
+        // Initialize the next stage (set started_at, status to pending/processing)
+        await initializeNextStage({
+          projectId,
+          stageKey: next,
+          actorId: staff.userId,
+        });
       } else {
-        // Last stage approved → project can be considered completed.
-        // (Project status update is left as TODO to avoid business assumptions.)
+        // Last stage approved → mark project as completed
+        const { getAdminClient } = await import("@/lib/leads/helpers");
+        const supabase = getAdminClient();
+        await supabase
+          .from("editorial_projects")
+          .update({ status: "completed", progress_percent: 100 })
+          .eq("id", projectId);
       }
     }
 
