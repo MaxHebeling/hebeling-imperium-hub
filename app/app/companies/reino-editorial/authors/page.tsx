@@ -2,10 +2,10 @@ import { CompanyBridgeCard } from "@/components/company-bridge-card";
 
 export default function ReinoEditorialAuthorsPage() {
   return (
-    <div className="space-y-6 p-6 min-h-full" style={{ backgroundColor: "var(--re-bg)" }}>
+    <div className="space-y-6 p-6 min-h-full">
       <div>
-        <h1 className="text-2xl font-semibold tracking-tight" style={{ color: "var(--re-text)" }}>Authors</h1>
-        <p className="text-sm mt-1" style={{ color: "var(--re-text-muted)" }}>
+        <h1 className="text-2xl font-semibold tracking-tight">Authors</h1>
+        <p className="text-sm mt-1 text-muted-foreground">
           Portal de autores: proyectos, entregas y visibilidad.
         </p>
       </div>

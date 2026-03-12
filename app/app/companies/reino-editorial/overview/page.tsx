@@ -1,11 +1,10 @@
-import { ReinoEditorialPlaceholderPage } from "@/components/editorial/reino-editorial-placeholder-page";
+import { CompanyPlaceholderPage } from "@/components/company-placeholder-page";
 
 export default function ReinoEditorialOverviewPage() {
   return (
-    <ReinoEditorialPlaceholderPage
-      title="Overview"
-      description="Vista general del dashboard editorial de Reino Editorial"
+    <CompanyPlaceholderPage
       moduleName="overview"
+      companyName="Reino Editorial"
     />
   );
 }
