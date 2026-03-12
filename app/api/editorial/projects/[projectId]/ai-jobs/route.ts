@@ -4,9 +4,38 @@ import { STAGE_AI_TASKS, requestStageAiAssist } from "@/lib/editorial/ai/stage-a
 import type { EditorialStageKey } from "@/lib/editorial/types/editorial";
 import type { EditorialAiTaskKey } from "@/lib/editorial/types/ai";
 
+const INGEST_STAGE_KEY: EditorialStageKey = "ingesta";
+
+const INGEST_REVIEW_TASKS: EditorialAiTaskKey[] = [
+  "issue_detection",
+  "manuscript_analysis",
+  "quality_scoring",
+];
+
+function parseOutputRefSafe(value: unknown): Record<string, any> | null {
+  if (!value) return null;
+  if (typeof value === "object") return value as Record<string, any>;
+  if (typeof value === "string") {
+    try {
+      return JSON.parse(value) as Record<string, any>;
+    } catch (error) {
+      console.error("[editorial-ai][jobs] output_ref JSON parse error", {
+        message: (error as Error).message,
+        preview: value.slice(0, 200),
+      });
+      return null;
+    }
+  }
+  return null;
+}
+
 /**
  * GET /api/editorial/projects/[projectId]/ai-jobs
- * Get all AI jobs for a project
+ * Get AI jobs for a project (optionally scoped to a stage).
+ *
+ * For the ingesta stage we additionally:
+ * - Filter to the main review tasks (issue_detection, manuscript_analysis, quality_scoring)
+ * - Group by task_key (job_type) and return only the latest job per task in latestByTask
  */
 export async function GET(
   req: NextRequest,
@@ -21,9 +50,10 @@ export async function GET(
 
   let query = supabase
     .from("editorial_jobs")
-    .select("*")
-    .eq("project_id", projectId)
-    .order("created_at", { ascending: false });
+    .select(
+      "id, project_id, stage_key, job_type, status, input_ref, output_ref, error_log, started_at, finished_at, created_at"
+    )
+    .eq("project_id", projectId);
 
   if (stageKey) {
     query = query.eq("stage_key", stageKey);
@@ -33,34 +63,63 @@ export async function GET(
     query = query.eq("status", status);
   }
 
-  const { data: jobs, error } = await query;
+  // For ingesta stage, limit to the core review tasks.
+  const effectiveStageKey = (stageKey as EditorialStageKey | null) ?? null;
+  if (!effectiveStageKey || effectiveStageKey === INGEST_STAGE_KEY) {
+    query = query
+      .eq("stage_key", INGEST_STAGE_KEY)
+      .in("job_type", INGEST_REVIEW_TASKS as string[]);
+  }
+
+  // Order by finished_at DESC (nulls last), then created_at DESC
+  query = query
+    .order("finished_at", { ascending: false, nullsFirst: false })
+    .order("created_at", { ascending: false });
+
+  const { data: rows, error } = await query;
 
   if (error) {
+    console.error("[editorial-ai][jobs] error loading editorial_jobs", {
+      projectId,
+      stageKey,
+      status,
+      code: error.code,
+      message: error.message,
+      details: error.details,
+    });
     return NextResponse.json(
       { success: false, error: "Error obteniendo jobs" },
       { status: 500 }
     );
   }
 
-  // Parse output_ref for completed jobs
-  const parsedJobs = jobs?.map(job => ({
-    id: job.id,
-    projectId: job.project_id,
-    stageKey: job.stage_key,
-    jobType: job.job_type,
-    status: job.status,
-    createdAt: job.created_at,
-    startedAt: job.started_at,
-    finishedAt: job.finished_at,
-    errorLog: job.error_log,
-    result: job.status === "completed" && job.output_ref
-      ? (typeof job.output_ref === "string" ? JSON.parse(job.output_ref) : job.output_ref)
-      : null,
-  })) ?? [];
+  const parsedJobs =
+    rows?.map((job) => ({
+      id: job.id as string,
+      projectId: job.project_id as string,
+      stageKey: job.stage_key as string | null,
+      jobType: job.job_type as string,
+      status: job.status as string,
+      createdAt: job.created_at as string,
+      startedAt: job.started_at as string | null,
+      finishedAt: job.finished_at as string | null,
+      errorLog: job.error_log as string | null,
+      result: parseOutputRefSafe(job.output_ref),
+    })) ?? [];
+
+  // Build latestByTask: keep the first occurrence per jobType (list is already ordered)
+  const latestByTask: Record<string, (typeof parsedJobs)[number]> = {};
+  for (const job of parsedJobs) {
+    if (!latestByTask[job.jobType]) {
+      latestByTask[job.jobType] = job;
+    }
+  }
 
   return NextResponse.json({
     success: true,
-    jobs: parsedJobs,
+    latestByTask,
+    recentJobs: parsedJobs,
+    jobs: Object.values(latestByTask),
   });
 }
 

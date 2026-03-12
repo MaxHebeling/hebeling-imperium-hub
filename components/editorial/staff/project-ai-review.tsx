@@ -58,6 +58,18 @@ export function StaffProjectAiReview({ projectId }: { projectId: string }) {
     return "idle";
   }
 
+  function getFriendlyError(raw: string | null): string | null {
+    if (!raw) return null;
+    const lower = raw.toLowerCase();
+    if (lower.includes("no se encontró ningún manuscrito") || lower.includes("no manuscript")) {
+      return "No se encontró ningún manuscrito para este proyecto. Sube un manuscrito antes de ejecutar el análisis de AI.";
+    }
+    if (lower.includes("prompt") || lower.includes("editorial_ai_prompt_templates")) {
+      return "No hay un prompt de AI configurado para esta etapa o tarea. Contacta con el equipo técnico para revisarlo.";
+    }
+    return raw;
+  }
+
   async function loadState() {
     setLoadingState(true);
     setError(null);
@@ -199,16 +211,36 @@ export function StaffProjectAiReview({ projectId }: { projectId: string }) {
             className="gap-2"
           >
             {status === "processing" && <Loader2 className="h-3 w-3 animate-spin" />}
-            Procesar manuscrito
+            {status === "failed"
+              ? "Reintentar análisis"
+              : analysis
+                ? "Reprocesar manuscrito"
+                : "Procesar manuscrito"}
           </Button>
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
         {error && (
           <p className="text-xs text-destructive">
-            {error}
+            {getFriendlyError(error)}
           </p>
         )}
+
+        {!error && !loadingState && latestManuscriptVersion == null && status !== "processing" && (
+          <p className="text-xs text-muted-foreground">
+            Aún no se ha subido ningún manuscrito para este proyecto. Sube un manuscrito original y luego ejecuta el análisis de AI.
+          </p>
+        )}
+
+        {!error &&
+          !loadingState &&
+          latestManuscriptVersion != null &&
+          !analysis &&
+          status === "idle" && (
+            <p className="text-xs text-muted-foreground">
+              Hay un manuscrito disponible, pero todavía no se ha ejecutado ningún análisis editorial automático.
+            </p>
+          )}
 
         {latestManuscriptVersion != null && (
           <p className="text-xs text-muted-foreground">
@@ -246,6 +278,23 @@ export function StaffProjectAiReview({ projectId }: { projectId: string }) {
 
         {analysis && (
           <div className="space-y-3 text-sm">
+            <div className="text-xs text-muted-foreground">
+              {(() => {
+                const totalIssues =
+                  (analysis.structural_issues?.length ?? 0) +
+                  (analysis.style_issues?.length ?? 0) +
+                  (analysis.grammar_issues?.length ?? 0);
+                return (
+                  <>
+                    <span className="font-medium text-foreground">
+                      Resumen del análisis:
+                    </span>{" "}
+                    {`readiness_score ${analysis.readiness_score}/100 · ${totalIssues} incidencias detectadas en estructura, estilo y ortotipografía.`}
+                  </>
+                );
+              })()}
+            </div>
+
             <div>
               <h3 className="font-medium">Resumen editorial</h3>
               <p className="mt-1 text-muted-foreground whitespace-pre-line">

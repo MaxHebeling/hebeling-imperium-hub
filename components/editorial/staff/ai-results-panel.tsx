@@ -280,10 +280,14 @@ export function AiResultsPanel({ projectId, stageKey }: AiResultsPanelProps) {
       );
       const json = await res.json();
       if (json.success) {
-        setJobs(json.jobs);
+        const mainJobs: AiJob[] =
+          (json.latestByTask ? Object.values(json.latestByTask) : json.jobs) ?? [];
+        setJobs(mainJobs);
         
         // Check if we need to start/stop polling
-        const hasRunning = json.jobs.some((j: AiJob) => j.status === "queued" || j.status === "processing");
+        const hasRunning = mainJobs.some(
+          (j: AiJob) => j.status === "queued" || j.status === "processing"
+        );
         
         if (hasRunning && !pollingRef.current) {
           // Start polling

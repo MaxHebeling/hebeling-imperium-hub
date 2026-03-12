@@ -12,7 +12,11 @@ export type EditorialAiTaskKey =
   | "typography_check"
   | "page_flow_review"
   | "export_validation"
-  | "metadata_generation";
+  | "metadata_generation"
+  // Modo B v1 – correctores editoriales:
+  | "line_editing"
+  | "copyediting"
+  | "concept_review";
 
 export type EditorialAiJobStatus = "queued" | "running" | "succeeded" | "failed" | "cancelled";
 

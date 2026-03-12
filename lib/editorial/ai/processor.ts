@@ -5,6 +5,9 @@ import { markAiJobStatus } from "./jobs";
 import { getDefaultPrompt, buildPromptFromDefault } from "./default-prompts";
 import type { EditorialAiTaskKey, EditorialAiJobContext } from "@/lib/editorial/types/ai";
 import type { EditorialStageKey } from "@/lib/editorial/types/editorial";
+import { runLineEditingAgent } from "./line-editing";
+import { runCopyeditingAgent } from "./copyediting";
+import { saveSuggestionsFromLineEditing, saveSuggestionsFromCopyediting } from "./suggestions";
 
 // Schema for structured AI output
 const AnalysisResultSchema = z.object({
@@ -41,7 +44,7 @@ async function fetchManuscriptContent(projectId: string, fileId?: string | null)
   // Get the file record
   let fileQuery = supabase
     .from("editorial_files")
-    .select("storage_path, file_name")
+    .select("storage_path")
     .eq("project_id", projectId);
 
   if (fileId) {
@@ -65,8 +68,8 @@ async function fetchManuscriptContent(projectId: string, fileId?: string | null)
     throw new Error(`Error al descargar el manuscrito: ${downloadError?.message}`);
   }
 
-  // Convert to text - handle different file types
-  const fileName = fileRecord.file_name.toLowerCase();
+  // Convert to text - handle different file types based on storage path
+  const fileName = fileRecord.storage_path.toLowerCase();
   
   if (fileName.endsWith(".txt")) {
     return await fileData.text();
@@ -125,14 +128,76 @@ async function extractTextFromDocx(arrayBuffer: ArrayBuffer): Promise<string> {
 /**
  * Process a single AI job
  */
-export async function processAiJob(options: ProcessJobOptions): Promise<AnalysisResult> {
+export async function processAiJob(options: ProcessJobOptions): Promise<AnalysisResult | null> {
   const supabase = getAdminClient();
 
   try {
     // Mark job as running
     await markAiJobStatus({ jobId: options.jobId, status: "running" });
 
-    // Get default prompt for this task
+    // Para los nuevos agentes de corrector editorial (Modo B v1) delegamos en
+    // implementaciones especializadas y normalizamos sugerencias en otra tabla.
+    if (options.taskKey === "line_editing") {
+      const result = await runLineEditingAgent({
+        projectId: options.projectId,
+        stageKey: options.stageKey,
+        context: options.context,
+      });
+
+      await saveSuggestionsFromLineEditing(
+        {
+          projectId: options.projectId,
+          jobId: options.jobId,
+          fileId: options.context.source_file_id ?? "",
+          fileVersion: options.context.source_file_version ?? 1,
+          taskKey: options.taskKey,
+        },
+        result
+      );
+
+      await markAiJobStatus({ jobId: options.jobId, status: "succeeded" });
+
+      await supabase
+        .from("editorial_jobs")
+        .update({
+          output_ref: JSON.stringify(result),
+        })
+        .eq("id", options.jobId);
+
+      return null;
+    }
+
+    if (options.taskKey === "copyediting") {
+      const result = await runCopyeditingAgent({
+        projectId: options.projectId,
+        stageKey: options.stageKey,
+        context: options.context,
+      });
+
+      await saveSuggestionsFromCopyediting(
+        {
+          projectId: options.projectId,
+          jobId: options.jobId,
+          fileId: options.context.source_file_id ?? "",
+          fileVersion: options.context.source_file_version ?? 1,
+          taskKey: options.taskKey,
+        },
+        result
+      );
+
+      await markAiJobStatus({ jobId: options.jobId, status: "succeeded" });
+
+      await supabase
+        .from("editorial_jobs")
+        .update({
+          output_ref: JSON.stringify(result),
+        })
+        .eq("id", options.jobId);
+
+      return null;
+    }
+
+    // Get default prompt for classic manuscript_analysis and similar tasks
     const defaultPrompt = getDefaultPrompt(options.stageKey, options.taskKey);
     
     if (!defaultPrompt) {
