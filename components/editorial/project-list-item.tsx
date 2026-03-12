@@ -45,30 +45,27 @@ export function ProjectListItem({ book }: ProjectListItemProps) {
   const router = useRouter();
 
   const handleDelete = async () => {
-    console.log("[v0] handleDelete called for projectId:", book.id);
     setIsDeleting(true);
     try {
-      console.log("[v0] Sending DELETE request to:", `/api/staff/projects/${book.id}/delete`);
-      const response = await fetch(
-        `/api/staff/projects/${book.id}/delete`,
-        {
-          method: "DELETE",
+      const response = await fetch(`/api/editorial/projects/${book.id}`, { method: "DELETE" });
+      const text = await response.text();
+      const data = (() => {
+        try {
+          return text ? JSON.parse(text) : {};
+        } catch {
+          return {};
         }
-      );
+      })();
 
-      console.log("[v0] Response status:", response.status);
-      const data = await response.json();
-      console.log("[v0] Response data:", data);
-
-      if (!response.ok) {
-        throw new Error(data.error || "Failed to delete project");
+      if (!response.ok || !data?.success) {
+        const msg = data?.error ?? (text ? `HTTP ${response.status}: ${text}` : `HTTP ${response.status}`);
+        throw new Error(msg);
       }
 
       toast.success("Proyecto eliminado correctamente");
       setIsOpen(false);
       router.refresh();
     } catch (error) {
-      console.error("[v0] Error deleting project:", error);
       toast.error(error instanceof Error ? error.message : "Error al eliminar el proyecto");
     } finally {
       setIsDeleting(false);

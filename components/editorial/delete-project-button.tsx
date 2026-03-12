@@ -29,23 +29,21 @@ export function DeleteProjectButton({
   const router = useRouter();
 
   const handleDelete = async () => {
-    console.log("[v0] handleDelete called for projectId:", projectId);
     setIsDeleting(true);
     try {
-      console.log("[v0] Sending DELETE request to:", `/api/staff/projects/${projectId}/delete`);
-      const response = await fetch(
-        `/api/staff/projects/${projectId}/delete`,
-        {
-          method: "DELETE",
+      const response = await fetch(`/api/editorial/projects/${projectId}`, { method: "DELETE" });
+      const text = await response.text();
+      const data = (() => {
+        try {
+          return text ? JSON.parse(text) : {};
+        } catch {
+          return {};
         }
-      );
+      })();
 
-      console.log("[v0] Response status:", response.status);
-      const data = await response.json();
-      console.log("[v0] Response data:", data);
-
-      if (!response.ok) {
-        throw new Error(data.error || "Failed to delete project");
+      if (!response.ok || !data?.success) {
+        const msg = data?.error ?? (text ? `HTTP ${response.status}: ${text}` : `HTTP ${response.status}`);
+        throw new Error(msg);
       }
 
       toast.success("Proyecto eliminado correctamente");
@@ -53,8 +51,7 @@ export function DeleteProjectButton({
       router.push("/app/companies/reino-editorial/projects");
       router.refresh();
     } catch (error) {
-      console.error("[v0] Error deleting project:", error);
-      toast.error("Error al eliminar el proyecto");
+      toast.error(error instanceof Error ? error.message : "Error al eliminar el proyecto");
     } finally {
       setIsDeleting(false);
     }
