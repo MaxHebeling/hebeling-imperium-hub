@@ -42,20 +42,25 @@ export async function createProjectDistribution(options: {
 }
 
 export async function getProjectDistributions(projectId: string): Promise<ProjectDistribution[]> {
-  const supabase = getAdminClient();
+  try {
+    const supabase = getAdminClient();
 
-  const { data, error } = await supabase
-    .from("editorial_project_distributions")
-    .select("*")
-    .eq("project_id", projectId)
-    .order("created_at", { ascending: false });
+    const { data, error } = await supabase
+      .from("editorial_project_distributions")
+      .select("*")
+      .eq("project_id", projectId)
+      .order("created_at", { ascending: false });
 
-  if (error) {
-    // Table may not exist yet
+    if (error) {
+      console.warn("[v0] Failed to get distributions:", error.message);
+      return [];
+    }
+
+    return (data ?? []) as ProjectDistribution[];
+  } catch (error) {
+    console.warn("[v0] Error fetching distributions:", error);
     return [];
   }
-
-  return (data ?? []) as ProjectDistribution[];
 }
 
 export async function updateDistributionStatus(

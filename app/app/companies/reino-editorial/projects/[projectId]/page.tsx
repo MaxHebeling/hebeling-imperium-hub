@@ -30,20 +30,116 @@ export default async function ReinoEditorialProjectDetailPage({
     typeof params?.projectId === "string" ? params.projectId : "";
   const projectId = rawProjectId.trim();
 
-  const [detail, alerts, exports, distributions] = await Promise.all([
-    getStaffProject(projectId),
-    getProjectAlertsWithRecalc(projectId),
-    getProjectExports(projectId),
-    getProjectDistributions(projectId),
-  ]);
+  try {
+    const [detail, alerts, exports, distributions] = await Promise.all([
+      getStaffProject(projectId),
+      getProjectAlertsWithRecalc(projectId),
+      getProjectExports(projectId),
+      getProjectDistributions(projectId),
+    ]);
 
-  if (!detail) {
+    if (!detail) {
+      return (
+        <div className="space-y-6 pb-6 px-6 pt-4">
+          <header className="space-y-2">
+            <h1 className="text-2xl font-semibold tracking-tight text-foreground">Proyecto</h1>
+            <p className="text-sm text-muted-foreground">
+              No hemos encontrado este proyecto en la base de datos.
+            </p>
+          </header>
+
+          <Card>
+            <CardContent className="py-10">
+              <StaffEmptyState
+                icon={BookOpen}
+                title="Proyecto no encontrado"
+                description="Puede que el enlace sea incorrecto o que el proyecto haya sido eliminado."
+              >
+                <Button asChild variant="outline" className="gap-2">
+                  <Link href="/app/companies/reino-editorial/projects">Volver a proyectos</Link>
+                </Button>
+              </StaffEmptyState>
+            </CardContent>
+          </Card>
+        </div>
+      );
+    }
+
+    const { project, created_by_name, created_by_email, files } = detail;
+    const manuscriptFiles = files.filter((f) => f.file_type === "manuscript_original");
+
+    return (
+      <div className="space-y-6 pb-6 px-6 pt-4">
+        <div className="flex flex-col gap-4">
+          <StaffProjectHeader
+            projectId={project.id}
+            title={project.title}
+            authorName={project.author_name}
+            currentStage={project.current_stage}
+            progressPercent={project.progress_percent}
+            status={project.status}
+            createdByName={created_by_name}
+            createdByEmail={created_by_email}
+            backHref="/app/companies/reino-editorial/projects"
+            backLabel="Volver a proyectos"
+          />
+          <div className="flex justify-end">
+            <DeleteEditorialProjectButton projectId={project.id} />
+          </div>
+        </div>
+
+        <StaffAlertsPanel projectId={project.id} alerts={alerts} />
+
+        {/* Manuscript section – visible placeholder, ready for uploader wiring */}
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base">Manuscript</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <p className="text-sm text-muted-foreground">
+              Sube el manuscrito original para iniciar la ingesta y permitir que el Reino Editorial AI Engine lo procese.
+            </p>
+            {manuscriptFiles.length === 0 ? (
+              <div className="flex items-center justify-between gap-4 rounded-lg border border-dashed border-border bg-muted/30 p-4">
+                <div className="space-y-1">
+                  <p className="text-sm font-medium text-foreground">No manuscript uploaded yet.</p>
+                  <p className="text-xs text-muted-foreground">
+                    Cuando lo subas, se registrará en "Files" y se podrán encolar jobs de AI.
+                  </p>
+                </div>
+                <Button asChild className="gap-2 shrink-0">
+                  {/* Ancla a la sección de Files donde ya existe el uploader real */}
+                  <Link href="#files">
+                    <Upload className="h-4 w-4" />
+                    Upload Manuscript
+                  </Link>
+                </Button>
+              </div>
+            ) : (
+              <div className="rounded-lg border border-border p-4">
+                <p className="text-sm text-foreground">
+                  Manuscrito subido:{" "}
+                  <span className="font-medium">{manuscriptFiles[0]?.storage_path ?? "—"}</span>
+                </p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Main dashboard sections: overview, files, activity, AI engine, etc. */}
+        <div id="files">
+          <StaffProjectTabs detail={detail} exports={exports} distributions={distributions} />
+        </div>
+      </div>
+    );
+  } catch (error) {
+    console.error("[v0] Error in project detail page:", error);
     return (
       <div className="space-y-6 pb-6 px-6 pt-4">
         <header className="space-y-2">
-          <h1 className="text-2xl font-semibold tracking-tight text-foreground">Proyecto</h1>
+          <h1 className="text-2xl font-semibold tracking-tight text-foreground">Error</h1>
           <p className="text-sm text-muted-foreground">
-            No hemos encontrado este proyecto en la base de datos.
+            Ocurrió un error al cargar el proyecto.
           </p>
         </header>
 
@@ -51,8 +147,8 @@ export default async function ReinoEditorialProjectDetailPage({
           <CardContent className="py-10">
             <StaffEmptyState
               icon={BookOpen}
-              title="Proyecto no encontrado"
-              description="Puede que el enlace sea incorrecto o que el proyecto haya sido eliminado."
+              title="Error al cargar"
+              description="Por favor intenta nuevamente o contacta al soporte."
             >
               <Button asChild variant="outline" className="gap-2">
                 <Link href="/app/companies/reino-editorial/projects">Volver a proyectos</Link>
@@ -63,72 +159,4 @@ export default async function ReinoEditorialProjectDetailPage({
       </div>
     );
   }
-
-  const { project, created_by_name, created_by_email, files } = detail;
-  const manuscriptFiles = files.filter((f) => f.file_type === "manuscript_original");
-
-  return (
-    <div className="space-y-6 pb-6 px-6 pt-4">
-      <div className="flex flex-col gap-4">
-        <StaffProjectHeader
-          projectId={project.id}
-          title={project.title}
-          authorName={project.author_name}
-          currentStage={project.current_stage}
-          progressPercent={project.progress_percent}
-          status={project.status}
-          createdByName={created_by_name}
-          createdByEmail={created_by_email}
-          backHref="/app/companies/reino-editorial/projects"
-          backLabel="Volver a proyectos"
-        />
-        <div className="flex justify-end">
-          <DeleteEditorialProjectButton projectId={project.id} />
-        </div>
-      </div>
-
-      <StaffAlertsPanel projectId={project.id} alerts={alerts} />
-
-      {/* Manuscript section – visible placeholder, ready for uploader wiring */}
-      <Card>
-        <CardHeader className="pb-2">
-          <CardTitle className="text-base">Manuscript</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <p className="text-sm text-muted-foreground">
-            Sube el manuscrito original para iniciar la ingesta y permitir que el Reino Editorial AI Engine lo procese.
-          </p>
-          {manuscriptFiles.length === 0 ? (
-            <div className="flex items-center justify-between gap-4 rounded-lg border border-dashed border-border bg-muted/30 p-4">
-              <div className="space-y-1">
-                <p className="text-sm font-medium text-foreground">No manuscript uploaded yet.</p>
-                <p className="text-xs text-muted-foreground">
-                  Cuando lo subas, se registrará en "Files" y se podrán encolar jobs de AI.
-                </p>
-              </div>
-              <Button asChild className="gap-2 shrink-0">
-                {/* Ancla a la sección de Files donde ya existe el uploader real */}
-                <Link href="#files">
-                  <Upload className="h-4 w-4" />
-                  Upload Manuscript
-                </Link>
-              </Button>
-            </div>
-          ) : (
-            <div className="rounded-lg border border-border p-4">
-              <p className="text-sm text-foreground">
-                Manuscrito subido:{" "}
-                <span className="font-medium">{manuscriptFiles[0]?.storage_path ?? "—"}</span>
-              </p>
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Main dashboard sections: overview, files, activity, AI engine, etc. */}
-      <div id="files">
-        <StaffProjectTabs detail={detail} exports={exports} distributions={distributions} />
-      </div>
-    </div>
-  );
 }
