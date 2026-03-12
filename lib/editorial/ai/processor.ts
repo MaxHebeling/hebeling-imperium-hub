@@ -50,7 +50,7 @@ async function fetchManuscriptContent(projectId: string, fileId?: string | null)
   if (fileId) {
     fileQuery = fileQuery.eq("id", fileId);
   } else {
-    fileQuery = fileQuery.order("version_number", { ascending: false }).limit(1);
+    fileQuery = fileQuery.order("version", { ascending: false }).limit(1);
   }
 
   const { data: fileRecord, error: fileError } = await fileQuery.single();
@@ -76,16 +76,14 @@ async function fetchManuscriptContent(projectId: string, fileId?: string | null)
   }
   
   if (fileName.endsWith(".docx")) {
-    // For DOCX, we extract text content
-    // In production, you might want to use a library like mammoth
-    // For now, we'll try to extract plain text
     try {
       const arrayBuffer = await fileData.arrayBuffer();
-      const text = await extractTextFromDocx(arrayBuffer);
-      return text;
-    } catch {
-      // Fallback: try to read as text
-      return await fileData.text();
+      const { parseDocxToText } = await import("@/lib/editorial/docx");
+      const buffer = Buffer.from(arrayBuffer);
+      return await parseDocxToText(buffer);
+    } catch (err) {
+      console.error("[editorial-ai][processor] DOCX parse error", (err as Error).message);
+      throw new Error("No se pudo extraer texto del DOCX.");
     }
   }
 
@@ -97,32 +95,6 @@ async function fetchManuscriptContent(projectId: string, fileId?: string | null)
 
   // Default: try to read as text
   return await fileData.text();
-}
-
-/**
- * Simple DOCX text extraction
- * Note: For production, consider using mammoth.js
- */
-async function extractTextFromDocx(arrayBuffer: ArrayBuffer): Promise<string> {
-  // DOCX is a ZIP file containing XML
-  // This is a simplified extraction that looks for text in the document.xml
-  const uint8Array = new Uint8Array(arrayBuffer);
-  const decoder = new TextDecoder("utf-8");
-  const content = decoder.decode(uint8Array);
-  
-  // Try to find and extract text between <w:t> tags (Word text elements)
-  const textMatches = content.match(/<w:t[^>]*>([^<]*)<\/w:t>/g);
-  
-  if (textMatches) {
-    return textMatches
-      .map(match => match.replace(/<[^>]+>/g, ""))
-      .join(" ")
-      .replace(/\s+/g, " ")
-      .trim();
-  }
-
-  // Fallback: strip all XML tags
-  return content.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
 }
 
 /**

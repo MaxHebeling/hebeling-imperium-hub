@@ -4,6 +4,11 @@ import { getAdminClient } from "@/lib/leads/helpers";
 import { listSuggestionsForFile } from "@/lib/editorial/ai/suggestions";
 import { createRevisionFromSuggestions } from "@/lib/editorial/ai/revisions";
 import { EDITORIAL_BUCKETS } from "@/lib/editorial/storage/buckets";
+import {
+  parseDocxToText,
+  generateDocxFromText,
+  applySuggestionsToText,
+} from "@/lib/editorial/docx";
 
 interface ApplyRevisionBody {
   sourceFileId: string;
@@ -56,7 +61,10 @@ export async function POST(
       );
     }
 
-    const originalText = await fileData.text();
+    const ext = (sourceFile.storage_path.split(".").pop() ?? "txt").toLowerCase();
+    const isDocx =
+      ext === "docx" ||
+      sourceFile.mime_type === "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
 
     const suggestions = await listSuggestionsForFile({
       projectId,
@@ -72,38 +80,32 @@ export async function POST(
       );
     }
 
-    // Para v1, asumimos formato de texto plano y aplicamos reemplazos simples.
-    // Aplicamos de atrás hacia adelante si hay offsets.
-    let updatedText = originalText;
+    let uploadBody: string | Buffer;
+    let sizeBytes: number;
+    const contentType =
+      sourceFile.mime_type ?? (isDocx ? "application/vnd.openxmlformats-officedocument.wordprocessingml.document" : "text/plain");
 
-    const withOffsets = toApply.filter(
-      (s) =>
-        typeof s.location.offset_start === "number" &&
-        typeof s.location.offset_end === "number"
-    );
+    if (isDocx) {
+      const arrayBuffer = await fileData.arrayBuffer();
+      const buffer = Buffer.from(arrayBuffer);
+      const originalText = await parseDocxToText(buffer);
+      const updatedText = applySuggestionsToText(originalText, toApply);
+      const docxBuffer = await generateDocxFromText(updatedText);
+      uploadBody = docxBuffer;
+      sizeBytes = docxBuffer.byteLength;
+    } else {
+      const originalText = await fileData.text();
+      const updatedText = applySuggestionsToText(originalText, toApply);
+      uploadBody = updatedText;
+      sizeBytes = Buffer.byteLength(updatedText, "utf-8");
+    }
 
-    withOffsets
-      .sort(
-        (a, b) =>
-          (b.location.offset_start ?? 0) - (a.location.offset_start ?? 0)
-      )
-      .forEach((s) => {
-        const start = s.location.offset_start as number;
-        const end = s.location.offset_end as number;
-        updatedText =
-          updatedText.slice(0, start) +
-          s.suggested_text +
-          updatedText.slice(end);
-      });
-
-    // Subir nueva versión editada
-    const ext = (sourceFile.storage_path.split(".").pop() ?? "txt").toLowerCase();
     const newPath = `${sourceFile.project_id}/ai-revisions/${Date.now()}-${sourceFile.id}.${ext}`;
 
     const { error: uploadError } = await supabase.storage
       .from(bucket)
-      .upload(newPath, updatedText, {
-        contentType: sourceFile.mime_type ?? "text/plain",
+      .upload(newPath, uploadBody, {
+        contentType,
       });
 
     if (uploadError) {
@@ -121,8 +123,8 @@ export async function POST(
         file_type: resultFileType,
         version: (sourceFile.version as number) + 1,
         storage_path: newPath,
-        mime_type: sourceFile.mime_type,
-        size_bytes: updatedText.length,
+        mime_type: contentType,
+        size_bytes: sizeBytes,
         uploaded_by: staff.userId,
         visibility: sourceFile.visibility,
       })
