@@ -95,6 +95,8 @@ export function StaffProjectTabs({ detail, exports = [], distributions = [] }: S
           stages={stages}
           currentStage={project.current_stage}
           files={files}
+          exports={exports}
+          distributions={distributions}
         />
       </TabsContent>
 

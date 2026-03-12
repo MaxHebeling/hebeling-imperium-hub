@@ -498,26 +498,18 @@ export default function AuthorProjectDetailPage() {
               <Download className="w-4 h-4 text-muted-foreground" />
               Descargas ({exports_.length})
             </CardTitle>
+            <CardDescription className="text-xs">
+              Descarga tu libro en diferentes formatos
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="flex flex-col gap-2">
               {exports_.map((ex) => (
-                <div
-                  key={ex.id}
-                  className="flex items-center justify-between gap-3 p-3 rounded-lg border bg-muted/30"
-                >
-                  <div>
-                    <p className="text-sm font-semibold uppercase">
-                      {ex.export_type}
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      v{ex.version} · {fmtDate(ex.created_at)}
-                    </p>
-                  </div>
-                  <Badge variant="default" className="text-xs shrink-0">
-                    Listo
-                  </Badge>
-                </div>
+                <ExportDownloadItem 
+                  key={ex.id} 
+                  projectId={projectId} 
+                  exportItem={ex} 
+                />
               ))}
             </div>
           </CardContent>
@@ -538,5 +530,82 @@ function BackLink() {
         Mis libros
       </Link>
     </Button>
+  );
+}
+
+function ExportDownloadItem({ 
+  projectId, 
+  exportItem 
+}: { 
+  projectId: string; 
+  exportItem: ExportRow;
+}) {
+  const [downloading, setDownloading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function handleDownload() {
+    if (exportItem.status !== "completed") return;
+    
+    setDownloading(true);
+    setError(null);
+    
+    try {
+      const res = await fetch(
+        `/api/author/projects/${projectId}/exports/${exportItem.id}/download`
+      );
+      const json = await res.json();
+      
+      if (!json.success || !json.downloadUrl) {
+        setError(json.error ?? "Error al obtener descarga");
+        return;
+      }
+      
+      // Open the download URL in a new tab/trigger download
+      window.open(json.downloadUrl, "_blank");
+    } catch {
+      setError("Error de red");
+    } finally {
+      setDownloading(false);
+    }
+  }
+
+  const isReady = exportItem.status === "completed";
+
+  return (
+    <div className="flex items-center justify-between gap-3 p-3 rounded-lg border bg-muted/30">
+      <div className="min-w-0">
+        <p className="text-sm font-semibold uppercase">
+          {exportItem.export_type}
+        </p>
+        <p className="text-xs text-muted-foreground">
+          v{exportItem.version} · {fmtDate(exportItem.created_at)}
+        </p>
+        {error && (
+          <p className="text-xs text-destructive mt-1">{error}</p>
+        )}
+      </div>
+      {isReady ? (
+        <Button 
+          size="sm" 
+          variant="outline"
+          onClick={handleDownload}
+          disabled={downloading}
+          className="shrink-0"
+        >
+          {downloading ? (
+            <Loader2 className="w-4 h-4 animate-spin" />
+          ) : (
+            <>
+              <Download className="w-4 h-4 mr-1" />
+              Descargar
+            </>
+          )}
+        </Button>
+      ) : (
+        <Badge variant="secondary" className="text-xs shrink-0">
+          {exportItem.status === "processing" ? "Generando..." : "Pendiente"}
+        </Badge>
+      )}
+    </div>
   );
 }

@@ -7,9 +7,16 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Check, Circle, Loader2, Clock, CheckCircle2 } from "lucide-react";
 import { EDITORIAL_STAGE_LABELS } from "@/lib/editorial/pipeline/constants";
+import { getNextStage } from "@/lib/editorial/pipeline/stage-utils";
 import type { EditorialFile, EditorialStageKey, StageWithApprover } from "@/lib/editorial/types/editorial";
 import type { EditorialAiTaskKey } from "@/lib/editorial/types/ai";
 import { AiStageAssistPanel } from "@/components/editorial/staff/ai-stage-assist-panel";
+import { StageReviewPanel } from "@/components/editorial/staff/stage-review-panel";
+import { StageMaquetacionPanel } from "@/components/editorial/staff/stage-maquetacion-panel";
+import { StageExportPanel } from "@/components/editorial/staff/stage-export-panel";
+import { StageDistributionPanel } from "@/components/editorial/staff/stage-distribution-panel";
+import type { EditorialExportJob } from "@/lib/editorial/export/types";
+import type { ProjectDistribution } from "@/lib/editorial/distribution/types";
 
 const STAGE_ORDER: EditorialStageKey[] = [
   "ingesta",
@@ -18,6 +25,8 @@ const STAGE_ORDER: EditorialStageKey[] = [
   "ortotipografia",
   "maquetacion",
   "revision_final",
+  "export",
+  "distribution",
 ];
 
 const STATUS_LABELS: Record<string, string> = {
@@ -59,9 +68,18 @@ interface StaffPipelineTabProps {
   currentStage: string;
   projectId: string;
   files: EditorialFile[];
+  exports?: EditorialExportJob[];
+  distributions?: ProjectDistribution[];
 }
 
-export function StaffPipelineTab({ stages, currentStage, projectId, files }: StaffPipelineTabProps) {
+export function StaffPipelineTab({ 
+  stages, 
+  currentStage, 
+  projectId, 
+  files,
+  exports = [],
+  distributions = [],
+}: StaffPipelineTabProps) {
   const router = useRouter();
   const [isApproving, setIsApproving] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -72,6 +90,10 @@ export function StaffPipelineTab({ stages, currentStage, projectId, files }: Sta
     label: EDITORIAL_STAGE_LABELS[key],
     stage: byKey.get(key),
   }));
+
+  // Get current stage data for the review panel
+  const currentStageData = byKey.get(currentStage as EditorialStageKey);
+  const nextStageKey = getNextStage(currentStage as EditorialStageKey);
 
   const hasManuscript =
     files.some((f) => f.file_type === "manuscript_original") ||
@@ -125,6 +147,48 @@ export function StaffPipelineTab({ stages, currentStage, projectId, files }: Sta
 
   return (
     <div className="space-y-4 pt-2">
+      {/* Stage Review Panel - Main focus for current stage */}
+      {currentStageData && currentStage !== "maquetacion" && currentStage !== "export" && currentStage !== "distribution" && (
+        <StageReviewPanel
+          projectId={projectId}
+          stage={currentStageData}
+          nextStageKey={nextStageKey}
+          files={files}
+          onApproved={() => router.refresh()}
+        />
+      )}
+
+      {/* Specialized panel for Maquetacion */}
+      {currentStage === "maquetacion" && currentStageData && (
+        <StageMaquetacionPanel
+          projectId={projectId}
+          stage={currentStageData}
+          files={files}
+          onUploaded={() => router.refresh()}
+        />
+      )}
+
+      {/* Specialized panel for Export */}
+      {currentStage === "export" && currentStageData && (
+        <StageExportPanel
+          projectId={projectId}
+          stage={currentStageData}
+          exports={exports}
+          onExportCreated={() => router.refresh()}
+        />
+      )}
+
+      {/* Specialized panel for Distribution */}
+      {currentStage === "distribution" && currentStageData && (
+        <StageDistributionPanel
+          projectId={projectId}
+          stage={currentStageData}
+          distributions={distributions}
+          exports={exports}
+          onDistributionCreated={() => router.refresh()}
+        />
+      )}
+
       <Card>
         <CardHeader>
           <CardTitle className="text-base">Etapas editoriales</CardTitle>
