@@ -86,8 +86,6 @@ export async function getProjectExports(projectId: string): Promise<EditorialExp
     return [];
   }
 }
-  })) as EditorialExportJob[];
-}
 
 export async function getExportJob(exportId: string): Promise<EditorialExportJob | null> {
   const supabase = getAdminClient();
