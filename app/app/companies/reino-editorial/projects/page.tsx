@@ -13,6 +13,7 @@ import { ReinoEditorialProjectsHeader } from "@/components/editorial/reino-edito
 import { BookOpen } from "lucide-react";
 import { EDITORIAL_STAGE_LABELS } from "@/lib/editorial/pipeline/constants";
 import type { EditorialStageKey } from "@/lib/editorial/types/editorial";
+import { ProjectListItem } from "@/components/editorial/project-list-item";
 
 function formatDate(dateStr: string | null) {
   if (!dateStr) return "—";
@@ -39,46 +40,7 @@ export default async function ReinoEditorialProjectsPage() {
       ) : (
         <ul className="space-y-3">
           {books.map((book) => (
-            <li key={book.id}>
-              <Link
-                href={`/app/companies/reino-editorial/projects/${book.id}`}
-                className="focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring rounded-lg"
-              >
-                <Card className="transition-colors hover:bg-accent/50">
-                  <CardHeader className="pb-2">
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="flex gap-2">
-                        <BookOpen className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
-                        <div>
-                          <CardTitle className="text-base">{book.title}</CardTitle>
-                          {book.author_name && (
-                            <CardDescription className="text-sm mt-0.5">
-                              {book.author_name}
-                            </CardDescription>
-                          )}
-                          {(book.created_by_name ?? book.created_by_email) && (
-                            <p className="text-xs text-muted-foreground mt-1">
-                              Responsable: {book.created_by_name ?? book.created_by_email}
-                            </p>
-                          )}
-                        </div>
-                      </div>
-                      <Badge variant="secondary">
-                        {EDITORIAL_STAGE_LABELS[
-                          book.current_stage as EditorialStageKey
-                        ] ?? book.current_stage}
-                      </Badge>
-                    </div>
-                  </CardHeader>
-                  <CardContent className="pt-0">
-                    <p className="text-xs text-muted-foreground">
-                      {book.progress_percent}% · {book.status} · Última actividad:{" "}
-                      {formatDate(book.last_activity_at)}
-                    </p>
-                  </CardContent>
-                </Card>
-              </Link>
-            </li>
+            <ProjectListItem key={book.id} book={book} />
           ))}
         </ul>
       )}
