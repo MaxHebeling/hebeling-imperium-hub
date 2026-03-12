@@ -20,6 +20,7 @@ export default function SubmitManuscriptPage() {
   const [error, setError] = useState<string | null>(null);
 
   const handleSubmit = async (values: SubmitManuscriptFormValues, file: File) => {
+    console.log("[v0] handleSubmit started with file:", file.name, file.size);
     setError(null);
     setIsSubmitting(true);
     try {
@@ -33,23 +34,35 @@ export default function SubmitManuscriptPage() {
       body.append("shortDescription", values.shortDescription.trim());
       body.append("manuscript", file);
 
+      console.log("[v0] FormData prepared, sending to /api/editorial/submit-manuscript");
       const res = await fetch("/api/editorial/submit-manuscript", {
         method: "POST",
         body,
       });
 
-      const data = await res.json().catch(() => ({}));
+      console.log("[v0] Response status:", res.status, res.statusText);
+      const data = await res.json().catch((err) => {
+        console.log("[v0] Failed to parse JSON response:", err);
+        return {};
+      });
+      console.log("[v0] Response data:", data);
+      
       if (!res.ok) {
-        setError(data.error || data.message || "Failed to submit manuscript.");
+        const errorMsg = data.error || data.message || "Failed to submit manuscript.";
+        console.log("[v0] Error response:", errorMsg);
+        setError(errorMsg);
         setIsSubmitting(false);
         return;
       }
 
+      console.log("[v0] Submit successful, showing success screen");
       setSuccess(true);
       setTimeout(() => {
+        console.log("[v0] Redirecting to project:", data.projectId);
         router.push(data.projectId ? `/author/projects/${data.projectId}` : "/author/projects");
       }, 2500);
-    } catch {
+    } catch (err) {
+      console.error("[v0] catch block error:", err);
       setError("Connection error. Please try again.");
       setIsSubmitting(false);
     }
