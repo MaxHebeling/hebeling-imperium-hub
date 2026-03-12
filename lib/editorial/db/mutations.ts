@@ -287,7 +287,7 @@ export async function upsertProjectMember(options: {
         project_id: options.projectId,
         user_id: options.userId,
         role: options.role,
-        accepted_at: now,
+        
       },
       { onConflict: "project_id,user_id" }
     );
