@@ -1,14 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { CreateProjectModal } from "@/components/editorial/create-project-modal";
 import { Plus } from "lucide-react";
 
 export function ReinoEditorialProjectsHeader() {
   const [modalOpen, setModalOpen] = useState(false);
-  const router = useRouter();
 
   return (
     <>
@@ -32,9 +30,7 @@ export function ReinoEditorialProjectsHeader() {
       <CreateProjectModal
         open={modalOpen}
         onOpenChange={setModalOpen}
-        onSuccess={(projectId) => {
-          router.push(`/app/companies/reino-editorial/projects/${projectId}`);
-        }}
+        successRedirectHref={(projectId) => `/app/companies/reino-editorial/projects/${projectId}`}
       />
     </>
   );

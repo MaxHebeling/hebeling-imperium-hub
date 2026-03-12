@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -48,17 +49,25 @@ const INITIAL_FORM: CreateProjectFormValues = {
 export interface CreateProjectModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSuccess: (projectId: string) => void;
+  /** Optional hook for parent side effects (analytics, refresh, etc). */
+  onSuccess?: (projectId: string) => void;
+  /**
+   * If provided, the modal will navigate to this URL after creation.
+   * This avoids depending on parent components to redirect correctly.
+   */
+  successRedirectHref?: (projectId: string) => string;
 }
 
 export function CreateProjectModal({
   open,
   onOpenChange,
   onSuccess,
+  successRedirectHref,
 }: CreateProjectModalProps) {
   const [form, setForm] = useState<CreateProjectFormValues>(INITIAL_FORM);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -86,12 +95,21 @@ export function CreateProjectModal({
         setError(data.error ?? "Failed to create project.");
         return;
       }
-      if (data.success && data.projectId) {
+      const projectId = data?.projectId as string | undefined;
+      const isUuid =
+        typeof projectId === "string" &&
+        /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(projectId);
+
+      if (data.success && isUuid) {
         onOpenChange(false);
         setForm(INITIAL_FORM);
-        onSuccess(data.projectId);
+        onSuccess?.(projectId);
+        const href = successRedirectHref?.(projectId);
+        if (href) {
+          router.push(href);
+        }
       } else {
-        setError("Invalid response from server.");
+        setError("Invalid response from server (missing projectId).");
       }
     } catch {
       setError("Network error. Please try again.");
