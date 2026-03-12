@@ -62,22 +62,30 @@ export async function createExportJob(options: {
 }
 
 export async function getProjectExports(projectId: string): Promise<EditorialExportJob[]> {
-  const supabase = getAdminClient();
+  try {
+    const supabase = getAdminClient();
 
-  const { data, error } = await supabase
-    .from("editorial_exports")
-    .select("*")
-    .eq("project_id", projectId)
-    .order("created_at", { ascending: false });
+    const { data, error } = await supabase
+      .from("editorial_exports")
+      .select("*")
+      .eq("project_id", projectId)
+      .order("created_at", { ascending: false });
 
-  if (error) {
-    throw new Error(`Failed to get exports: ${error.message}`);
+    if (error) {
+      console.warn("[v0] Failed to get exports:", error.message);
+      return [];
+    }
+
+    return (data ?? []).map((row) => ({
+      ...row,
+      quality: "digital" as ExportQuality,
+      config: DEFAULT_EXPORT_CONFIG,
+    })) as EditorialExportJob[];
+  } catch (error) {
+    console.warn("[v0] Error fetching exports:", error);
+    return [];
   }
-
-  return (data ?? []).map((row) => ({
-    ...row,
-    quality: "digital" as ExportQuality,
-    config: DEFAULT_EXPORT_CONFIG,
+}
   })) as EditorialExportJob[];
 }
 
