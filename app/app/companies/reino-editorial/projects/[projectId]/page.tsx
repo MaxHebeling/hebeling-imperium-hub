@@ -9,7 +9,7 @@ import { StaffEmptyState } from "@/components/editorial/staff/staff-empty-state"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { BookOpen, Upload } from "lucide-react";
-import { DeleteProjectButton } from "@/components/editorial/delete-project-button";
+import { DeleteEditorialProjectButton } from "@/components/editorial/delete-editorial-project-button";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -63,7 +63,7 @@ export default async function ReinoEditorialProjectDetailPage({
 
   return (
     <div className="space-y-6 pb-6 px-6 pt-4">
-      <div className="flex items-start justify-between gap-4">
+      <div className="flex flex-col gap-4">
         <StaffProjectHeader
           projectId={project.id}
           title={project.title}
@@ -76,10 +76,9 @@ export default async function ReinoEditorialProjectDetailPage({
           backHref="/app/companies/reino-editorial/projects"
           backLabel="Volver a proyectos"
         />
-        <DeleteProjectButton 
-          projectId={project.id} 
-          projectTitle={project.title} 
-        />
+        <div className="flex justify-end">
+          <DeleteEditorialProjectButton projectId={project.id} />
+        </div>
       </div>
 
       <StaffAlertsPanel projectId={project.id} alerts={alerts} />
