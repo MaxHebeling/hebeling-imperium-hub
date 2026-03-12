@@ -15,7 +15,7 @@ export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
 interface ProjectDetailPageProps {
-  params: { projectId: string };
+  params: { projectId?: string | string[] } | Promise<{ projectId?: string | string[] }>;
 }
 
 export default async function ReinoEditorialProjectDetailPage({
@@ -24,7 +24,20 @@ export default async function ReinoEditorialProjectDetailPage({
   // Avoid Next.js fetch caching for Supabase reads (critical right after create).
   noStore();
 
-  const { projectId } = params;
+  const resolvedParams = await Promise.resolve(params);
+  const rawProjectId = Array.isArray(resolvedParams?.projectId)
+    ? resolvedParams.projectId[0]
+    : resolvedParams?.projectId;
+  const projectId = typeof rawProjectId === "string" ? rawProjectId.trim() : "";
+
+  // Temporary server-side debug for Vercel logs
+  console.info("[reino-editorial] project detail params", {
+    paramsType: typeof params,
+    resolvedParams,
+    rawProjectId,
+    projectId,
+  });
+
   const uuidRegex =
     /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
