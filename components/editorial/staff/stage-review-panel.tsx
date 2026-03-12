@@ -15,7 +15,8 @@ import {
   FileText, 
   Clock,
   ArrowRight,
-  Loader2
+  Loader2,
+  Play
 } from "lucide-react";
 import { EDITORIAL_STAGE_LABELS, EDITORIAL_STAGE_PROGRESS } from "@/lib/editorial/pipeline/constants";
 import type { EditorialFile, EditorialStageKey, StageWithApprover } from "@/lib/editorial/types/editorial";
@@ -71,8 +72,10 @@ export function StageReviewPanel({
   // Filter files for this stage
   const stageFiles = files.filter((f) => f.stage_key === stageKey || (stageKey === "ingesta" && f.file_type === "manuscript_original"));
 
-  const canApprove = stage.status !== "approved" && stage.status !== "completed";
+  const canApprove = stage.status !== "approved" && stage.status !== "completed" && stage.status !== "pending";
   const isApproved = stage.status === "approved" || stage.status === "completed";
+  const needsStart = stage.status === "pending";
+  const isProcessing = stage.status === "processing" || stage.status === "queued";
 
   async function handleApprove() {
     setError(null);
@@ -126,24 +129,13 @@ export function StageReviewPanel({
     setError(null);
     startTransition(async () => {
       try {
-        // Add rejection comment
-        await fetch(`/api/staff/projects/${projectId}/comments`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            stageKey,
-            comment: `[RECHAZO] ${notes.trim()}`,
-            visibility: "internal",
-          }),
-        });
-
-        // Set status to failed
+        // Use the reject API endpoint
         const res = await fetch(
-          `/api/staff/projects/${projectId}/stages/${stageKey}/status`,
+          `/api/staff/projects/${projectId}/stages/${stageKey}/reject`,
           {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ status: "failed" }),
+            body: JSON.stringify({ reason: notes.trim() }),
           }
         );
         const json = await res.json();
@@ -157,6 +149,28 @@ export function StageReviewPanel({
         router.refresh();
       } catch {
         setError("Error de red al rechazar la etapa.");
+      }
+    });
+  }
+
+  async function handleStart() {
+    setError(null);
+    startTransition(async () => {
+      try {
+        const res = await fetch(
+          `/api/staff/projects/${projectId}/stages/${stageKey}/start`,
+          { method: "POST" }
+        );
+        const json = await res.json();
+
+        if (!json.success) {
+          setError(json.error ?? "No se pudo iniciar la etapa.");
+          return;
+        }
+
+        router.refresh();
+      } catch {
+        setError("Error de red al iniciar la etapa.");
       }
     });
   }
@@ -292,7 +306,42 @@ export function StageReviewPanel({
             </div>
           </div>
         )}
+
+        {/* Pending State - needs to be started */}
+        {needsStart && (
+          <div className="rounded-lg bg-amber-50 dark:bg-amber-950/20 p-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2 text-sm text-amber-700 dark:text-amber-400">
+                <Clock className="h-4 w-4" />
+                <span>Esta etapa esta pendiente de iniciar. Haz clic en "Iniciar Etapa" para comenzar el trabajo.</span>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Processing State */}
+        {isProcessing && (
+          <div className="rounded-lg bg-blue-50 dark:bg-blue-950/20 p-3">
+            <div className="flex items-center gap-2 text-sm text-blue-700 dark:text-blue-400">
+              <Loader2 className="h-4 w-4 animate-spin" />
+              <span>Esta etapa esta en proceso. Revisa cuando estes listo para aprobar o rechazar.</span>
+            </div>
+          </div>
+        )}
       </CardContent>
+
+      {/* Footer for pending stages */}
+      {needsStart && (
+        <CardFooter className="flex justify-end gap-2 pt-0">
+          <Button
+            onClick={handleStart}
+            disabled={isPending}
+          >
+            {isPending ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Play className="h-4 w-4 mr-2" />}
+            Iniciar Etapa
+          </Button>
+        </CardFooter>
+      )}
 
       {canApprove && (
         <CardFooter className="flex justify-end gap-2 pt-0">

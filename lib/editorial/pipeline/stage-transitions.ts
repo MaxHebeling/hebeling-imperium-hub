@@ -1,6 +1,8 @@
-import { getAdminClient } from "@/lib/leads/helpers";
+import { getAdminClient, ORG_ID } from "@/lib/leads/helpers";
 import type { EditorialStageKey } from "../types/editorial";
+import type { EditorialAiTaskKey } from "../types/ai";
 import { logWorkflowEvent } from "../workflow-events";
+import { requestStageAiAssist, isTaskAllowedForStage } from "../ai/stage-assist";
 
 /**
  * Stage configuration: defines behavior for each stage
@@ -97,6 +99,45 @@ export async function initializeNextStage(options: {
       actorId: options.actorId ?? null,
       payload: { initialStatus, autoStart: config.autoStart },
     });
+
+    // Auto-trigger AI task if configured and stage auto-starts
+    if (config.autoStart && config.aiTaskKey) {
+      const aiTaskKey = config.aiTaskKey as EditorialAiTaskKey;
+      if (isTaskAllowedForStage(options.stageKey, aiTaskKey)) {
+        try {
+          // Get the latest file for this project to use as source
+          const { data: latestFile } = await supabase
+            .from("editorial_files")
+            .select("id, version_number")
+            .eq("project_id", options.projectId)
+            .order("version_number", { ascending: false })
+            .limit(1)
+            .single();
+
+          await requestStageAiAssist({
+            orgId: project.org_id,
+            projectId: options.projectId,
+            stageKey: options.stageKey,
+            taskKey: aiTaskKey,
+            requestedBy: options.actorId ?? "system",
+            sourceFileId: latestFile?.id,
+            sourceFileVersion: latestFile?.version_number,
+          });
+
+          await logWorkflowEvent({
+            orgId: project.org_id,
+            projectId: options.projectId,
+            stageKey: options.stageKey,
+            eventType: "ai_task_queued",
+            actorId: options.actorId ?? null,
+            payload: { taskKey: aiTaskKey, autoTriggered: true },
+          });
+        } catch (aiError) {
+          console.error(`[stage-transitions] Failed to queue AI task for ${options.stageKey}:`, aiError);
+          // Don't fail the stage initialization if AI task fails
+        }
+      }
+    }
   }
 }
 
