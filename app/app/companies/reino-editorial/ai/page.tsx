@@ -27,10 +27,10 @@ export default async function ReinoEditorialAiPage() {
   const data = await getAiDashboard();
 
   return (
-    <div className="space-y-6 pb-6 px-6 pt-4 min-h-full" style={{ backgroundColor: "var(--re-bg)" }}>
+    <div className="space-y-6 pb-6 px-6 pt-4 min-h-full">
       <header className="space-y-1">
-        <h1 className="text-2xl font-semibold tracking-tight" style={{ color: "var(--re-text)" }}>AI Editorial</h1>
-        <p className="text-sm" style={{ color: "var(--re-text-muted)" }}>
+        <h1 className="text-2xl font-semibold tracking-tight">AI Editorial</h1>
+        <p className="text-sm text-muted-foreground">
           Vision global de actividad AI: jobs, findings y backlog de revision editorial.
         </p>
       </header>
