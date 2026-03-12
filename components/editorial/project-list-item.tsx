@@ -2,18 +2,9 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { BookOpen, Trash2 } from "lucide-react";
 import { EDITORIAL_STAGE_LABELS } from "@/lib/editorial/pipeline/constants";
 import type { EditorialStageKey, StaffProjectListItem } from "@/lib/editorial/types/editorial";
-import { Button } from "@/components/ui/button";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -81,55 +72,147 @@ export function ProjectListItem({ book }: ProjectListItemProps) {
   return (
     <>
       <li>
-        <div className="flex items-start justify-between gap-2">
+        <div className="flex items-stretch gap-2">
           <Link
             href={`/app/companies/reino-editorial/projects/${book.id}`}
-            className="flex-1 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring rounded-lg"
+            className="flex-1 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 rounded-2xl"
+            style={{ outlineColor: "var(--re-blue)" }}
           >
-            <Card className="transition-colors hover:bg-accent/50">
-              <CardHeader className="pb-2">
-                <div className="flex items-start justify-between gap-2">
-                  <div className="flex gap-2">
-                    <BookOpen className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
-                    <div>
-                      <CardTitle className="text-base">{book.title}</CardTitle>
-                      {book.author_name && (
-                        <CardDescription className="text-sm mt-0.5">
-                          {book.author_name}
-                        </CardDescription>
-                      )}
-                      {(book.created_by_name ?? book.created_by_email) && (
-                        <p className="text-xs text-muted-foreground mt-1">
-                          Responsable: {book.created_by_name ?? book.created_by_email}
-                        </p>
-                      )}
-                    </div>
+            <div
+              className="flex items-start gap-4 p-5 rounded-2xl transition-all duration-200 h-full"
+              style={{
+                backgroundColor: "var(--re-surface)",
+                border: "1px solid var(--re-border)",
+                boxShadow: "var(--re-shadow-sm)",
+              }}
+              onMouseEnter={(e) => {
+                (e.currentTarget as HTMLElement).style.boxShadow = "var(--re-shadow-md)";
+                (e.currentTarget as HTMLElement).style.borderColor = "var(--re-border-blue)";
+                (e.currentTarget as HTMLElement).style.transform = "translateY(-1px)";
+              }}
+              onMouseLeave={(e) => {
+                (e.currentTarget as HTMLElement).style.boxShadow = "var(--re-shadow-sm)";
+                (e.currentTarget as HTMLElement).style.borderColor = "var(--re-border)";
+                (e.currentTarget as HTMLElement).style.transform = "translateY(0)";
+              }}
+            >
+              {/* Icon */}
+              <div
+                className="flex items-center justify-center w-10 h-10 rounded-xl shrink-0 mt-0.5"
+                style={{
+                  background: "var(--re-blue-pale)",
+                  border: "1px solid var(--re-border-blue)",
+                }}
+              >
+                <BookOpen className="h-5 w-5" style={{ color: "var(--re-blue)" }} />
+              </div>
+
+              {/* Content */}
+              <div className="flex-1 min-w-0">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <p
+                      className="text-sm font-semibold truncate"
+                      style={{ color: "var(--re-text)" }}
+                    >
+                      {book.title}
+                    </p>
+                    {book.author_name && (
+                      <p
+                        className="text-xs mt-0.5"
+                        style={{ color: "var(--re-text-muted)" }}
+                      >
+                        {book.author_name}
+                      </p>
+                    )}
+                    {(book.created_by_name ?? book.created_by_email) && (
+                      <p
+                        className="text-xs mt-0.5"
+                        style={{ color: "var(--re-text-subtle)" }}
+                      >
+                        Responsable: {book.created_by_name ?? book.created_by_email}
+                      </p>
+                    )}
                   </div>
-                  <Badge variant="secondary">
-                    {EDITORIAL_STAGE_LABELS[
-                      book.current_stage as EditorialStageKey
-                    ] ?? book.current_stage}
-                  </Badge>
+                  {/* Stage badge */}
+                  <span
+                    className="shrink-0 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold"
+                    style={{
+                      backgroundColor: "var(--re-cyan-pale)",
+                      color: "var(--re-cyan)",
+                      border: "1px solid var(--re-border-cyan)",
+                    }}
+                  >
+                    {EDITORIAL_STAGE_LABELS[book.current_stage as EditorialStageKey] ??
+                      book.current_stage}
+                  </span>
                 </div>
-              </CardHeader>
-              <CardContent className="pt-0">
-                <p className="text-xs text-muted-foreground">
-                  {book.progress_percent}% · {book.status} · Última actividad:{" "}
-                  {formatDate(book.last_activity_at)}
-                </p>
-              </CardContent>
-            </Card>
+
+                {/* Progress + meta */}
+                <div className="mt-3 flex items-center gap-4">
+                  <div className="flex items-center gap-2 flex-1">
+                    <div
+                      className="flex-1 h-1.5 rounded-full overflow-hidden"
+                      style={{ backgroundColor: "var(--re-surface-3)" }}
+                    >
+                      <div
+                        className="h-full rounded-full"
+                        style={{
+                          width: `${book.progress_percent}%`,
+                          background: "linear-gradient(90deg, var(--re-blue) 0%, var(--re-cyan) 100%)",
+                        }}
+                      />
+                    </div>
+                    <span
+                      className="text-xs font-semibold w-8 text-right shrink-0"
+                      style={{ color: "var(--re-blue)" }}
+                    >
+                      {book.progress_percent}%
+                    </span>
+                  </div>
+                  <span
+                    className="text-xs shrink-0"
+                    style={{ color: "var(--re-text-subtle)" }}
+                  >
+                    {formatDate(book.last_activity_at)}
+                  </span>
+                </div>
+              </div>
+            </div>
           </Link>
-          <Button
-            variant="destructive"
-            size="sm"
+
+          {/* Delete button */}
+          <button
             onClick={handleDeleteClick}
             disabled={isDeleting}
-            className="gap-2 shrink-0"
+            aria-label="Eliminar proyecto"
+            className="flex items-center justify-center w-10 rounded-2xl transition-all duration-150 shrink-0"
+            style={{
+              backgroundColor: "var(--re-surface)",
+              border: "1px solid var(--re-border)",
+              color: "var(--re-text-subtle)",
+              boxShadow: "var(--re-shadow-sm)",
+            }}
+            onMouseEnter={(e) => {
+              (e.currentTarget as HTMLElement).style.backgroundColor = "var(--re-danger-pale)";
+              (e.currentTarget as HTMLElement).style.borderColor = "var(--re-danger)";
+              (e.currentTarget as HTMLElement).style.color = "var(--re-danger)";
+            }}
+            onMouseLeave={(e) => {
+              (e.currentTarget as HTMLElement).style.backgroundColor = "var(--re-surface)";
+              (e.currentTarget as HTMLElement).style.borderColor = "var(--re-border)";
+              (e.currentTarget as HTMLElement).style.color = "var(--re-text-subtle)";
+            }}
           >
-            <Trash2 className="h-4 w-4" />
-            <span className="sr-only">Eliminar proyecto</span>
-          </Button>
+            {isDeleting ? (
+              <div
+                className="w-4 h-4 rounded-full border-2 border-t-transparent animate-spin"
+                style={{ borderColor: "var(--re-danger)" }}
+              />
+            ) : (
+              <Trash2 className="h-4 w-4" />
+            )}
+          </button>
         </div>
       </li>
 

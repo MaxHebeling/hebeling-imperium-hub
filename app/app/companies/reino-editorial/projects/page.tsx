@@ -34,7 +34,10 @@ export default async function ReinoEditorialProjectsPage() {
   const books = await listStaffProjects();
 
   return (
-    <div className="space-y-6 p-6">
+    <div
+      className="min-h-full p-6 space-y-6"
+      style={{ backgroundColor: "var(--re-bg)" }}
+    >
       <ReinoEditorialProjectsHeader />
 
       {books.length === 0 ? (
