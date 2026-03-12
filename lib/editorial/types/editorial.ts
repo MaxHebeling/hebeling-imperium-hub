@@ -289,7 +289,8 @@ export type EditorialWorkflowEventType =
   | "checklist_item_completed"
   | "checklist_completed"
   | "assignment_changed"
-  | "rule_override_applied";
+  | "rule_override_applied"
+  | "manuscript_submitted";
 
 export interface EditorialWorkflowEvent {
   id: string;

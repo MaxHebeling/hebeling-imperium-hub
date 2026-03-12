@@ -9,6 +9,7 @@ import {
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { StaffEmptyState } from "@/components/editorial/staff/staff-empty-state";
+import { ReinoEditorialProjectsHeader } from "@/components/editorial/reino-editorial-projects-header";
 import { BookOpen } from "lucide-react";
 import { EDITORIAL_STAGE_LABELS } from "@/lib/editorial/pipeline/constants";
 import type { EditorialStageKey } from "@/lib/editorial/types/editorial";
@@ -27,12 +28,7 @@ export default async function ReinoEditorialProjectsPage() {
 
   return (
     <div className="space-y-6 p-6">
-      <header>
-        <h1 className="text-2xl font-semibold tracking-tight">Projects</h1>
-        <p className="text-sm text-muted-foreground mt-1">
-          Proyectos del pipeline editorial. Vista company-first dentro de Reino Editorial.
-        </p>
-      </header>
+      <ReinoEditorialProjectsHeader />
 
       {books.length === 0 ? (
         <StaffEmptyState

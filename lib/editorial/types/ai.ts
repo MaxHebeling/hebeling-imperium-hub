@@ -1,6 +1,7 @@
 import type { EditorialStageKey } from "@/lib/editorial/types/editorial";
 
 export type EditorialAiTaskKey =
+  | "manuscript_analysis"
   | "structure_analysis"
   | "style_suggestions"
   | "orthotypography_review"

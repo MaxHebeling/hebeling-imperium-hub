@@ -60,6 +60,12 @@ export async function middleware(request: NextRequest) {
   if (pathname === "/apply" || pathname.startsWith("/apply")) {
     return NextResponse.next();
   }
+  if (pathname === "/submit-manuscript") {
+    return NextResponse.next();
+  }
+  if (pathname === "/api/editorial/submit-manuscript") {
+    return NextResponse.next();
+  }
 
   // Update Supabase session and get user + profile
   const session = await updateSession(request);
