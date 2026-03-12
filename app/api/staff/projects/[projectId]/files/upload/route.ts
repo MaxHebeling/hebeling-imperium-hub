@@ -130,21 +130,34 @@ export async function POST(
       capability: "files:upload",
     });
     if (!decision.allowed) {
-      console.info("[upload-debug] 403 FORBIDDEN_ROLE_CAPABILITY", {
-        projectId,
-        orgId: project.org_id,
-        userId: staff.userId,
-        required: "files:upload",
-        effectiveCapabilities: decision.effectiveCapabilities,
-        reason: decision.reason,
-      });
-      return NextResponse.json(
-        {
-          success: false,
-          error: `FORBIDDEN_ROLE: ${decision.reason ?? "missing files:upload capability"}`,
-        },
-        { status: 403 }
-      );
+      // Allow hard override for org-level superadmin while we debug capabilities.
+      if (staff.role === "superadmin") {
+        console.info("[editorial-files][upload] OVERRIDE files:upload for superadmin", {
+          projectId,
+          orgId: project.org_id,
+          userId: staff.userId,
+          staffRole: staff.role,
+          required: "files:upload",
+          effectiveCapabilities: decision.effectiveCapabilities,
+          reason: decision.reason,
+        });
+      } else {
+        console.info("[upload-debug] 403 FORBIDDEN_ROLE_CAPABILITY", {
+          projectId,
+          orgId: project.org_id,
+          userId: staff.userId,
+          required: "files:upload",
+          effectiveCapabilities: decision.effectiveCapabilities,
+          reason: decision.reason,
+        });
+        return NextResponse.json(
+          {
+            success: false,
+            error: `FORBIDDEN_ROLE: ${decision.reason ?? "missing files:upload capability"}`,
+          },
+          { status: 403 }
+        );
+      }
     }
 
     const formData = await request.formData();
