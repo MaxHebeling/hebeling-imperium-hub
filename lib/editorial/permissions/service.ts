@@ -6,6 +6,33 @@ import type {
 } from "@/lib/editorial/types/editorial";
 import { DEFAULT_ROLE_CAPABILITIES } from "./constants";
 
+// Full capabilities for superadmin/admin users
+const ADMIN_FULL_CAPABILITIES: EditorialCapability[] = [
+  "stage:update_status",
+  "stage:approve",
+  "stage:reopen",
+  "files:upload",
+  "files:read",
+  "files:delete",
+  "comments:create",
+  "assignment:change",
+  "rule:override",
+  "ai:run",
+  "ai:review",
+];
+
+// Check if user is superadmin or admin in profiles table
+async function isGlobalAdmin(userId: string): Promise<boolean> {
+  const supabase = getAdminClient();
+  const { data, error } = await supabase
+    .from("profiles")
+    .select("role")
+    .eq("id", userId)
+    .single();
+  if (error || !data) return false;
+  return data.role === "superadmin" || data.role === "admin";
+}
+
 type CapabilityDecision = {
   allowed: boolean;
   reason?: string;
@@ -67,6 +94,12 @@ export async function getEffectiveProjectCapabilities(options: {
   orgId: string;
   userId: string;
 }): Promise<EditorialCapability[]> {
+  // Superadmin and admin have full access without needing project assignment
+  const isAdmin = await isGlobalAdmin(options.userId);
+  if (isAdmin) {
+    return ADMIN_FULL_CAPABILITIES;
+  }
+
   const roles = await getProjectStaffRoles(options.projectId, options.userId);
   console.info("[capability-debug] roles for user", {
     projectId: options.projectId,
