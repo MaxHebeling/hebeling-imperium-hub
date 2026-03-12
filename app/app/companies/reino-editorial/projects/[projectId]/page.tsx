@@ -10,8 +10,9 @@ import { StaffAlertsPanel } from "@/components/editorial/staff/staff-alerts-pane
 import { StaffEmptyState } from "@/components/editorial/staff/staff-empty-state";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { BookOpen, Upload } from "lucide-react";
+import { BookOpen } from "lucide-react";
 import { DeleteEditorialProjectButton } from "@/components/editorial/delete-editorial-project-button";
+import { ReinoEditorialManuscriptUpload } from "@/components/editorial/reino-editorial-manuscript-upload";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -94,7 +95,7 @@ export default async function ReinoEditorialProjectDetailPage({
 
         <StaffAlertsPanel projectId={project.id} alerts={alerts} />
 
-        {/* Manuscript section – visible placeholder, ready for uploader wiring */}
+        {/* Manuscript section – dedicated uploader for original manuscript */}
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-base">Manuscript</CardTitle>
@@ -111,13 +112,7 @@ export default async function ReinoEditorialProjectDetailPage({
                     Cuando lo subas, se registrará en "Files" y se podrán encolar jobs de AI.
                   </p>
                 </div>
-                <Button asChild className="gap-2 shrink-0">
-                  {/* Ancla a la sección de Files donde ya existe el uploader real */}
-                  <Link href="#files">
-                    <Upload className="h-4 w-4" />
-                    Upload Manuscript
-                  </Link>
-                </Button>
+                <ReinoEditorialManuscriptUpload projectId={project.id} />
               </div>
             ) : (
               <div className="rounded-lg border border-border p-4">
