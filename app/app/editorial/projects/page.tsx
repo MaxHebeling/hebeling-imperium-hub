@@ -151,20 +151,37 @@ export default function EditorialProjectsPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <Button variant="ghost" size="icon" asChild>
-            <Link href="/app/editorial">
-              <ArrowLeft className="w-4 h-4" />
-            </Link>
-          </Button>
+          <Link
+            href="/app/editorial"
+            className="flex items-center justify-center w-8 h-8 rounded-lg transition-colors"
+            style={{ color: "var(--re-text-muted)" }}
+          >
+            <ArrowLeft className="w-4 h-4" />
+          </Link>
           <div className="flex items-center gap-2">
-            <BookOpen className="w-5 h-5 text-purple-500" />
-            <h1 className="text-xl font-bold">Proyectos Editoriales</h1>
+            <div
+              className="flex items-center justify-center w-8 h-8 rounded-lg"
+              style={{ background: "#1B40C020" }}
+            >
+              <BookOpen className="w-4 h-4" style={{ color: "var(--re-cyan)" }} />
+            </div>
+            <h1 className="text-xl font-bold" style={{ color: "var(--re-text)" }}>
+              Proyectos Editoriales
+            </h1>
           </div>
         </div>
-        <Button onClick={() => setDialogOpen(true)} className="flex items-center gap-2">
+        <button
+          onClick={() => setDialogOpen(true)}
+          className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all"
+          style={{
+            background: "var(--re-blue)",
+            color: "#ffffff",
+            boxShadow: "0 0 16px #1B40C040",
+          }}
+        >
           <Plus className="w-4 h-4" />
           Nuevo Proyecto
-        </Button>
+        </button>
       </div>
 
       {/* Content */}
@@ -173,145 +190,154 @@ export default function EditorialProjectsPage() {
           <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
         </div>
       ) : error ? (
-        <Card>
-          <CardContent className="py-8 text-center text-sm text-destructive">{error}</CardContent>
-        </Card>
+        <div
+          className="rounded-xl p-6 text-center text-sm"
+          style={{ background: "var(--re-surface)", border: "1px solid var(--re-danger)30", color: "var(--re-danger)" }}
+        >
+          {error}
+        </div>
       ) : projects.length === 0 ? (
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">Sin proyectos</CardTitle>
-            <CardDescription>
-              Aún no hay proyectos editoriales. Crea el primero para comenzar el pipeline.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Button onClick={() => setDialogOpen(true)} variant="outline" className="flex items-center gap-2">
-              <Plus className="w-4 h-4" />
-              Crear Proyecto
-            </Button>
-          </CardContent>
-        </Card>
+        <div
+          className="rounded-2xl p-10 flex flex-col items-center gap-4 text-center"
+          style={{ background: "var(--re-surface)", border: "1px solid var(--re-border)" }}
+        >
+          <div
+            className="flex items-center justify-center w-12 h-12 rounded-2xl"
+            style={{ background: "#2DD4D415" }}
+          >
+            <BookOpen className="w-6 h-6" style={{ color: "var(--re-cyan)" }} />
+          </div>
+          <div>
+            <p className="font-semibold" style={{ color: "var(--re-text)" }}>Sin proyectos</p>
+            <p className="text-sm mt-1" style={{ color: "var(--re-text-muted)" }}>
+              Aun no hay proyectos editoriales. Crea el primero para comenzar el pipeline.
+            </p>
+          </div>
+          <button
+            onClick={() => setDialogOpen(true)}
+            className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold"
+            style={{ background: "var(--re-cyan-dim)", color: "var(--re-cyan)", border: "1px solid var(--re-border-cyan)" }}
+          >
+            <Plus className="w-4 h-4" />
+            Crear Proyecto
+          </button>
+        </div>
       ) : (
-        <Card>
-          <CardContent className="p-0">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Título</TableHead>
-                  <TableHead>Autor</TableHead>
-                  <TableHead>Etapa actual</TableHead>
-                  <TableHead>Progreso</TableHead>
-                  <TableHead>Estado</TableHead>
-                  <TableHead>Creado</TableHead>
-                  <TableHead className="w-[80px]"></TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {projects.map((project) => (
-                  <TableRow key={project.id}>
-                    <TableCell className="font-medium max-w-[200px]">
-                      <div className="truncate">{project.title}</div>
-                      {project.subtitle && (
-                        <div className="text-xs text-muted-foreground truncate">{project.subtitle}</div>
-                      )}
-                    </TableCell>
-                    <TableCell className="text-sm text-muted-foreground">
-                      {project.author_name ?? "—"}
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant={STAGE_BADGE_VARIANTS[project.current_stage] as "secondary" | "default" | "outline" | "destructive" ?? "secondary"}>
-                        {EDITORIAL_STAGE_LABELS[project.current_stage] ?? project.current_stage}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="min-w-[120px]">
-                      <div className="flex items-center gap-2">
-                        <Progress value={project.progress_percent} className="h-1.5 flex-1" />
-                        <span className="text-xs text-muted-foreground w-8 text-right">
-                          {project.progress_percent}%
-                        </span>
+        <div
+          className="rounded-2xl overflow-hidden"
+          style={{ background: "var(--re-surface)", border: "1px solid var(--re-border)" }}
+        >
+          <Table>
+            <TableHeader>
+              <TableRow style={{ borderColor: "var(--re-border)" }}>
+                <TableHead style={{ color: "var(--re-text-muted)" }}>Titulo</TableHead>
+                <TableHead style={{ color: "var(--re-text-muted)" }}>Autor</TableHead>
+                <TableHead style={{ color: "var(--re-text-muted)" }}>Etapa actual</TableHead>
+                <TableHead style={{ color: "var(--re-text-muted)" }}>Progreso</TableHead>
+                <TableHead style={{ color: "var(--re-text-muted)" }}>Estado</TableHead>
+                <TableHead style={{ color: "var(--re-text-muted)" }}>Creado</TableHead>
+                <TableHead className="w-[60px]" />
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {projects.map((project) => (
+                <TableRow
+                  key={project.id}
+                  style={{ borderColor: "var(--re-border)" }}
+                  className="transition-colors hover:bg-white/5"
+                >
+                  <TableCell className="font-medium max-w-[200px]">
+                    <div className="truncate" style={{ color: "var(--re-text)" }}>{project.title}</div>
+                    {project.subtitle && (
+                      <div className="text-xs truncate" style={{ color: "var(--re-text-muted)" }}>{project.subtitle}</div>
+                    )}
+                  </TableCell>
+                  <TableCell className="text-sm" style={{ color: "var(--re-text-muted)" }}>
+                    {project.author_name ?? "—"}
+                  </TableCell>
+                  <TableCell>
+                    <span
+                      className="px-2 py-0.5 rounded-full text-xs font-semibold"
+                      style={{ background: "#2DD4D415", color: "var(--re-cyan)", border: "1px solid #2DD4D430" }}
+                    >
+                      {EDITORIAL_STAGE_LABELS[project.current_stage] ?? project.current_stage}
+                    </span>
+                  </TableCell>
+                  <TableCell className="min-w-[130px]">
+                    <div className="flex items-center gap-2">
+                      <div className="flex-1 h-1.5 rounded-full overflow-hidden" style={{ background: "var(--re-surface-3)" }}>
+                        <div
+                          className="h-full rounded-full transition-all"
+                          style={{ width: `${project.progress_percent}%`, background: "var(--re-blue-light)" }}
+                        />
                       </div>
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant={STATUS_BADGE_VARIANTS[project.status] as "secondary" | "default" | "outline" | "destructive" ?? "secondary"}>
-                        {project.status}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-xs text-muted-foreground">
-                      {formatDate(project.created_at)}
-                    </TableCell>
-                    <TableCell>
-                      <Button variant="ghost" size="icon" asChild>
-                        <Link href={`/app/editorial/projects/${project.id}`}>
-                          <Eye className="w-4 h-4" />
-                        </Link>
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
+                      <span className="text-xs w-8 text-right" style={{ color: "var(--re-text-muted)" }}>
+                        {project.progress_percent}%
+                      </span>
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <span
+                      className="px-2 py-0.5 rounded-full text-xs font-semibold"
+                      style={{
+                        background: project.status === "completed" ? "#22d3a015" : "#F5C84215",
+                        color: project.status === "completed" ? "var(--re-success)" : "var(--re-gold)",
+                        border: `1px solid ${project.status === "completed" ? "#22d3a030" : "#F5C84230"}`,
+                      }}
+                    >
+                      {project.status}
+                    </span>
+                  </TableCell>
+                  <TableCell className="text-xs" style={{ color: "var(--re-text-muted)" }}>
+                    {formatDate(project.created_at)}
+                  </TableCell>
+                  <TableCell>
+                    <Link
+                      href={`/app/editorial/projects/${project.id}`}
+                      className="flex items-center justify-center w-8 h-8 rounded-lg transition-colors hover:bg-white/10"
+                      style={{ color: "var(--re-text-muted)" }}
+                    >
+                      <Eye className="w-4 h-4" />
+                    </Link>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
       )}
 
       {/* Summary stats */}
       {projects.length > 0 && (
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-          <Card>
-            <CardContent className="pt-4 pb-4">
-              <div className="flex items-center gap-2">
-                <BarChart2 className="w-4 h-4 text-muted-foreground" />
-                <div>
-                  <p className="text-xs text-muted-foreground">Total</p>
-                  <p className="text-lg font-bold">{projects.length}</p>
-                </div>
+          {[
+            { label: "Total", value: projects.length, icon: BarChart2, accent: "var(--re-cyan)" },
+            { label: "En progreso", value: projects.filter((p) => p.status === "in_progress").length, icon: BookOpen, accent: "var(--re-blue-light)" },
+            { label: "Completados", value: projects.filter((p) => p.status === "completed").length, icon: BarChart2, accent: "var(--re-success)" },
+            {
+              label: "Progreso medio",
+              value: `${projects.length > 0 ? Math.round(projects.reduce((acc, p) => acc + p.progress_percent, 0) / projects.length) : 0}%`,
+              icon: BarChart2,
+              accent: "var(--re-gold)",
+            },
+          ].map(({ label, value, icon: Icon, accent }) => (
+            <div
+              key={label}
+              className="rounded-xl p-4 flex items-center gap-3"
+              style={{ background: "var(--re-surface-2)", border: "1px solid var(--re-border)" }}
+            >
+              <div
+                className="flex items-center justify-center w-9 h-9 rounded-lg shrink-0"
+                style={{ background: `${accent}15` }}
+              >
+                <Icon className="w-4 h-4" style={{ color: accent }} />
               </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="pt-4 pb-4">
-              <div className="flex items-center gap-2">
-                <BookOpen className="w-4 h-4 text-muted-foreground" />
-                <div>
-                  <p className="text-xs text-muted-foreground">En progreso</p>
-                  <p className="text-lg font-bold">
-                    {projects.filter((p) => p.status === "in_progress").length}
-                  </p>
-                </div>
+              <div>
+                <p className="text-xs" style={{ color: "var(--re-text-muted)" }}>{label}</p>
+                <p className="text-xl font-bold leading-tight" style={{ color: "var(--re-text)" }}>{value}</p>
               </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="pt-4 pb-4">
-              <div className="flex items-center gap-2">
-                <BarChart2 className="w-4 h-4 text-muted-foreground" />
-                <div>
-                  <p className="text-xs text-muted-foreground">Completados</p>
-                  <p className="text-lg font-bold">
-                    {projects.filter((p) => p.status === "completed").length}
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="pt-4 pb-4">
-              <div className="flex items-center gap-2">
-                <BarChart2 className="w-4 h-4 text-muted-foreground" />
-                <div>
-                  <p className="text-xs text-muted-foreground">Progreso medio</p>
-                  <p className="text-lg font-bold">
-                    {projects.length > 0
-                      ? Math.round(
-                          projects.reduce((acc, p) => acc + p.progress_percent, 0) / projects.length
-                        )
-                      : 0}
-                    %
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+            </div>
+          ))}
         </div>
       )}
 

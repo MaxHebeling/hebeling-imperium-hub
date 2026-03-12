@@ -158,120 +158,167 @@ export default function EditorialProjectDetailPage() {
   return (
     <div className="flex flex-col gap-6 p-6 max-w-5xl mx-auto">
       {/* Back nav */}
-      <Button variant="ghost" size="sm" asChild className="w-fit">
-        <Link href="/app/editorial/projects" className="flex items-center gap-2">
-          <ArrowLeft className="w-4 h-4" />
-          Volver a proyectos
-        </Link>
-      </Button>
+      <Link
+        href="/app/editorial/projects"
+        className="inline-flex items-center gap-2 text-sm w-fit transition-colors"
+        style={{ color: "var(--re-text-muted)" }}
+      >
+        <ArrowLeft className="w-4 h-4" />
+        Volver a proyectos
+      </Link>
 
       {/* Project Header */}
-      <div className="flex flex-col gap-1">
-        <div className="flex items-center gap-2">
-          <BookOpen className="w-5 h-5 text-purple-500" />
-          <h1 className="text-2xl font-bold tracking-tight">{project.title}</h1>
+      <div className="flex flex-col gap-2">
+        <div className="flex items-center gap-3">
+          <div
+            className="flex items-center justify-center w-10 h-10 rounded-xl"
+            style={{ background: "linear-gradient(135deg, #1B40C0 0%, #2DD4D4 100%)" }}
+          >
+            <BookOpen className="w-5 h-5 text-white" />
+          </div>
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight" style={{ color: "var(--re-text)" }}>
+              {project.title}
+            </h1>
+            {project.author_name && (
+              <p className="text-sm" style={{ color: "var(--re-text-muted)" }}>
+                por {project.author_name}
+              </p>
+            )}
+          </div>
         </div>
-        {project.author_name && (
-          <p className="text-sm text-muted-foreground">por {project.author_name}</p>
-        )}
       </div>
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <Card>
-          <CardContent className="pt-4 pb-4">
-            <p className="text-xs text-muted-foreground mb-1">Estado</p>
-            <Badge variant="secondary">{project.status}</Badge>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-4 pb-4">
-            <p className="text-xs text-muted-foreground mb-1">Etapa actual</p>
-            <Badge variant="default">
-              {EDITORIAL_STAGE_LABELS[project.current_stage as EditorialStageKey] ?? project.current_stage}
-            </Badge>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-4 pb-4">
-            <p className="text-xs text-muted-foreground mb-2">Progreso general</p>
-            <div className="flex items-center gap-2">
-              <Progress value={project.progress_percent} className="flex-1 h-2" />
-              <span className="text-sm font-semibold">{project.progress_percent}%</span>
+        <div
+          className="rounded-xl p-4"
+          style={{ background: "var(--re-surface-2)", border: "1px solid var(--re-border)" }}
+        >
+          <p className="text-xs mb-2" style={{ color: "var(--re-text-muted)" }}>Estado</p>
+          <span
+            className="px-2.5 py-1 rounded-full text-xs font-semibold"
+            style={{ background: "#F5C84215", color: "var(--re-gold)", border: "1px solid #F5C84230" }}
+          >
+            {project.status}
+          </span>
+        </div>
+        <div
+          className="rounded-xl p-4"
+          style={{ background: "var(--re-surface-2)", border: "1px solid var(--re-border)" }}
+        >
+          <p className="text-xs mb-2" style={{ color: "var(--re-text-muted)" }}>Etapa actual</p>
+          <span
+            className="px-2.5 py-1 rounded-full text-xs font-semibold"
+            style={{ background: "#2DD4D415", color: "var(--re-cyan)", border: "1px solid #2DD4D430" }}
+          >
+            {EDITORIAL_STAGE_LABELS[project.current_stage as EditorialStageKey] ?? project.current_stage}
+          </span>
+        </div>
+        <div
+          className="rounded-xl p-4"
+          style={{ background: "var(--re-surface-2)", border: "1px solid var(--re-border)" }}
+        >
+          <p className="text-xs mb-2" style={{ color: "var(--re-text-muted)" }}>Progreso general</p>
+          <div className="flex items-center gap-2">
+            <div className="flex-1 h-2 rounded-full overflow-hidden" style={{ background: "var(--re-surface-3)" }}>
+              <div
+                className="h-full rounded-full"
+                style={{ width: `${project.progress_percent}%`, background: "var(--re-blue-light)" }}
+              />
             </div>
-          </CardContent>
-        </Card>
+            <span className="text-sm font-bold" style={{ color: "var(--re-text)" }}>
+              {project.progress_percent}%
+            </span>
+          </div>
+        </div>
       </div>
 
       {/* Pipeline stages */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Pipeline Editorial</CardTitle>
-          <CardDescription>Estado de cada etapa del proceso de producción.</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="flex flex-col gap-4">
-            {EDITORIAL_STAGE_KEYS.map((key, index) => {
-              const stage = stageMap.get(key);
-              const status: EditorialStageStatus = (stage?.status as EditorialStageStatus) ?? "pending";
-              const isCurrentStage = project.current_stage === key;
-              const targetProgress = EDITORIAL_STAGE_PROGRESS[key];
+      <div
+        className="rounded-2xl overflow-hidden"
+        style={{ background: "var(--re-surface)", border: "1px solid var(--re-border)" }}
+      >
+        <div className="px-5 py-4" style={{ borderBottom: "1px solid var(--re-border)" }}>
+          <h2 className="text-sm font-semibold" style={{ color: "var(--re-text)" }}>Pipeline Editorial</h2>
+          <p className="text-xs mt-0.5" style={{ color: "var(--re-text-muted)" }}>Estado de cada etapa del proceso de produccion.</p>
+        </div>
+        <div className="divide-y" style={{ borderColor: "var(--re-border)" }}>
+          {EDITORIAL_STAGE_KEYS.map((key, index) => {
+            const stage = stageMap.get(key);
+            const status: EditorialStageStatus = (stage?.status as EditorialStageStatus) ?? "pending";
+            const isCurrentStage = project.current_stage === key;
+            const targetProgress = EDITORIAL_STAGE_PROGRESS[key];
+            const isCompleted = status === "completed" || status === "approved";
 
-              return (
-                <div key={key}>
-                  <div
-                    className={`flex items-start gap-4 p-3 rounded-lg transition-colors ${
-                      isCurrentStage ? "bg-purple-50 dark:bg-purple-950/20 border border-purple-200 dark:border-purple-800" : ""
-                    }`}
-                  >
-                    {/* Step number */}
-                    <div className="flex items-center justify-center w-7 h-7 rounded-full bg-muted text-xs font-bold text-muted-foreground shrink-0 mt-0.5">
-                      {index + 1}
-                    </div>
-
-                    {/* Stage info */}
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1">
-                        <span className="font-medium text-sm">{EDITORIAL_STAGE_LABELS[key]}</span>
-                        {isCurrentStage && (
-                          <Badge variant="outline" className="text-xs text-purple-600 border-purple-400">
-                            Actual
-                          </Badge>
-                        )}
-                      </div>
-                      <div className="flex items-center gap-2">
-                        {STATUS_ICONS[status]}
-                        <Badge variant={STATUS_BADGE_MAP[status]} className="text-xs">
-                          {STATUS_LABELS[status]}
-                        </Badge>
-                      </div>
-                      {stage?.started_at && (
-                        <p className="text-xs text-muted-foreground mt-1">
-                          Iniciado: {formatDate(stage.started_at)}
-                        </p>
-                      )}
-                      {stage?.completed_at && (
-                        <p className="text-xs text-muted-foreground">
-                          Completado: {formatDate(stage.completed_at)}
-                        </p>
-                      )}
-                      {stage?.notes && (
-                        <p className="text-xs text-muted-foreground mt-1 italic">{stage.notes}</p>
-                      )}
-                    </div>
-
-                    {/* Progress target */}
-                    <div className="text-right shrink-0">
-                      <span className="text-xs text-muted-foreground">{targetProgress}%</span>
-                    </div>
-                  </div>
-                  {index < EDITORIAL_STAGE_KEYS.length - 1 && <Separator className="my-1" />}
+            return (
+              <div
+                key={key}
+                className="flex items-start gap-4 px-5 py-4 transition-colors"
+                style={{
+                  background: isCurrentStage ? "#1B40C010" : "transparent",
+                  borderLeft: isCurrentStage ? "3px solid var(--re-blue-light)" : "3px solid transparent",
+                }}
+              >
+                {/* Step number */}
+                <div
+                  className="flex items-center justify-center w-7 h-7 rounded-full text-xs font-bold shrink-0 mt-0.5"
+                  style={{
+                    background: isCompleted ? "#22d3a020" : isCurrentStage ? "#1B40C030" : "var(--re-surface-3)",
+                    color: isCompleted ? "var(--re-success)" : isCurrentStage ? "var(--re-blue-light)" : "var(--re-text-subtle)",
+                  }}
+                >
+                  {isCompleted ? <CheckCircle2 className="w-4 h-4" /> : index + 1}
                 </div>
-              );
-            })}
-          </div>
-        </CardContent>
-      </Card>
+
+                {/* Stage info */}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="font-medium text-sm" style={{ color: "var(--re-text)" }}>
+                      {EDITORIAL_STAGE_LABELS[key]}
+                    </span>
+                    {isCurrentStage && (
+                      <span
+                        className="px-1.5 py-0.5 rounded text-xs font-semibold"
+                        style={{ background: "#1B40C030", color: "var(--re-blue-light)" }}
+                      >
+                        Actual
+                      </span>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {STATUS_ICONS[status]}
+                    <span
+                      className="text-xs font-medium px-2 py-0.5 rounded-full"
+                      style={{
+                        background: isCompleted ? "#22d3a015" : status === "processing" ? "#1B40C020" : "var(--re-surface-3)",
+                        color: isCompleted ? "var(--re-success)" : status === "processing" ? "var(--re-blue-light)" : "var(--re-text-muted)",
+                      }}
+                    >
+                      {STATUS_LABELS[status]}
+                    </span>
+                  </div>
+                  {stage?.started_at && (
+                    <p className="text-xs mt-1" style={{ color: "var(--re-text-subtle)" }}>
+                      Iniciado: {formatDate(stage.started_at)}
+                    </p>
+                  )}
+                  {stage?.completed_at && (
+                    <p className="text-xs" style={{ color: "var(--re-text-subtle)" }}>
+                      Completado: {formatDate(stage.completed_at)}
+                    </p>
+                  )}
+                </div>
+
+                {/* Progress target */}
+                <span className="text-xs shrink-0" style={{ color: "var(--re-text-subtle)" }}>
+                  {targetProgress}%
+                </span>
+              </div>
+            );
+          })}
+        </div>
+      </div>
 
       {/* Files */}
       <Card>

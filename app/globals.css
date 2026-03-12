@@ -126,6 +126,122 @@
   }
 }
 
+/* ─────────────────────────────────────────────────────────────
+   Reino Editorial brand theme
+   Extracted directly from the Reino Editorial logo:
+     Royal blue  #1B40C0  – primary brand / text
+     Cyan        #2DD4D4  – open book / accent
+     Gold        #F5C842  – globe continents / highlight
+   ───────────────────────────────────────────────────────────── */
+.editorial-theme {
+  /* Base surfaces — deep navy, slightly blue */
+  --re-bg:          #0a0f1e;
+  --re-surface:     #0f1628;
+  --re-surface-2:   #151d35;
+  --re-surface-3:   #1c2540;
+
+  /* Brand palette */
+  --re-blue:        #1B40C0;
+  --re-blue-light:  #2a56e8;
+  --re-blue-dim:    #1B40C020;
+  --re-cyan:        #2DD4D4;
+  --re-cyan-dim:    #2DD4D415;
+  --re-gold:        #F5C842;
+  --re-gold-dim:    #F5C84215;
+
+  /* Text */
+  --re-text:        #e8edf8;
+  --re-text-muted:  #7b8db0;
+  --re-text-subtle: #4a5878;
+
+  /* Borders */
+  --re-border:      #1e2d50;
+  --re-border-cyan: #2DD4D430;
+
+  /* Status */
+  --re-success:     #22d3a0;
+  --re-warning:     #F5C842;
+  --re-danger:      #f04f5e;
+
+  background-color: var(--re-bg);
+  color: var(--re-text);
+}
+
+/* Cards dentro del área editorial */
+.editorial-theme .re-card {
+  background-color: var(--re-surface);
+  border: 1px solid var(--re-border);
+  border-radius: 0.75rem;
+}
+
+.editorial-theme .re-card-cyan {
+  background-color: var(--re-surface);
+  border: 1px solid var(--re-border-cyan);
+  border-radius: 0.75rem;
+}
+
+/* Overrides de shadcn dentro del tema editorial */
+.editorial-theme .bg-card {
+  background-color: var(--re-surface) !important;
+  border-color: var(--re-border) !important;
+}
+
+.editorial-theme .text-muted-foreground {
+  color: var(--re-text-muted) !important;
+}
+
+.editorial-theme .border {
+  border-color: var(--re-border) !important;
+}
+
+/* Tabs dentro del área editorial */
+.editorial-theme [role="tablist"] {
+  background-color: var(--re-surface-2) !important;
+  border: 1px solid var(--re-border);
+}
+
+.editorial-theme [role="tab"][data-state="active"] {
+  background-color: var(--re-blue) !important;
+  color: #ffffff !important;
+}
+
+/* Badges */
+.editorial-theme .re-badge-cyan {
+  background-color: var(--re-cyan-dim);
+  color: var(--re-cyan);
+  border: 1px solid var(--re-border-cyan);
+  border-radius: 9999px;
+  padding: 0.125rem 0.625rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.editorial-theme .re-badge-gold {
+  background-color: var(--re-gold-dim);
+  color: var(--re-gold);
+  border: 1px solid #F5C84230;
+  border-radius: 9999px;
+  padding: 0.125rem 0.625rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+/* Scrollbar dentro del área editorial */
+.editorial-theme ::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+.editorial-theme ::-webkit-scrollbar-track {
+  background: var(--re-surface);
+}
+.editorial-theme ::-webkit-scrollbar-thumb {
+  background: var(--re-border);
+  border-radius: 3px;
+}
+.editorial-theme ::-webkit-scrollbar-thumb:hover {
+  background: var(--re-blue);
+}
+
 /* Premium animations */
 @layer components {
   @keyframes fade-up {
