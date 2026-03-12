@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createEditorialProject, logEditorialActivity } from "@/lib/editorial/db/mutations";
+import { createClient as createServerSupabaseClient } from "@/lib/supabase/server";
 
 /**
  * POST /api/editorial/projects
@@ -9,6 +10,18 @@ import { createEditorialProject, logEditorialActivity } from "@/lib/editorial/db
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
+
+    const supabase = await createServerSupabaseClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) {
+      return NextResponse.json(
+        { success: false, error: "Unauthorized" },
+        { status: 401 }
+      );
+    }
 
     if (!body.title || typeof body.title !== "string" || !body.title.trim()) {
       return NextResponse.json(
@@ -25,6 +38,7 @@ export async function POST(request: NextRequest) {
       genre: body.genre?.trim() || undefined,
       target_audience: body.target_audience?.trim() || body.description?.trim() || undefined,
       client_id: body.client_id ?? undefined,
+      created_by: user.id,
     });
 
     await logEditorialActivity(project.id, "project_created", {
