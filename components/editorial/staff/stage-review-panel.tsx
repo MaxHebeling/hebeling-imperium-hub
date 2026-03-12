@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 import { EDITORIAL_STAGE_LABELS, EDITORIAL_STAGE_PROGRESS } from "@/lib/editorial/pipeline/constants";
 import type { EditorialFile, EditorialStageKey, StageWithApprover } from "@/lib/editorial/types/editorial";
+import { AiResultsPanel } from "./ai-results-panel";
 
 interface StageReviewPanelProps {
   projectId: string;
@@ -216,6 +217,11 @@ export function StageReviewPanel({
             </div>
           )}
         </div>
+
+        <Separator />
+
+        {/* AI Analysis Results */}
+        <AiResultsPanel projectId={projectId} stageKey={stageKey} />
 
         <Separator />
 
