@@ -25,8 +25,11 @@ export async function getEditorialProject(projectId: string): Promise<EditorialP
     .from("editorial_projects")
     .select("*")
     .eq("id", projectId)
-    .single();
-  if (error) return null;
+    .maybeSingle();
+  if (error) {
+    // Don't silently hide unexpected Supabase errors; "not found" should only mean 0 rows.
+    throw new Error(`Failed to fetch editorial project: ${error.message}`);
+  }
   return data as EditorialProject;
 }
 

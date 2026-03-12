@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { unstable_noStore as noStore } from "next/cache";
 import { getStaffProject } from "@/lib/editorial/staff/services";
 import { StaffProjectHeader } from "@/components/editorial/staff/staff-project-header";
 import { StaffProjectTabs } from "@/components/editorial/staff/staff-project-tabs";
@@ -10,6 +11,9 @@ import { Button } from "@/components/ui/button";
 import { BookOpen, Upload } from "lucide-react";
 import { DeleteProjectButton } from "@/components/editorial/delete-project-button";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 interface ProjectDetailPageProps {
   params: { projectId: string };
 }
@@ -17,6 +21,9 @@ interface ProjectDetailPageProps {
 export default async function ReinoEditorialProjectDetailPage({
   params,
 }: ProjectDetailPageProps) {
+  // Avoid Next.js fetch caching for Supabase reads (critical right after create).
+  noStore();
+
   const { projectId } = params;
 
   const [detail, alerts] = await Promise.all([
