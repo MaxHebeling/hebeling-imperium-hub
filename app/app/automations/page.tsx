@@ -639,7 +639,16 @@ export default function AutomationsPage() {
                               View Logs
                             </DropdownMenuItem>
                             <DropdownMenuSeparator />
-                            <DropdownMenuItem className="cursor-pointer text-destructive focus:text-destructive">
+                            <DropdownMenuItem 
+                              className="cursor-pointer text-destructive focus:text-destructive"
+                              onClick={() => {
+                                if (confirm(`Delete automation "${automation.name}"? This cannot be undone.`)) {
+                                  fetch(`/api/automations/${automation.id}`, { method: "DELETE" })
+                                    .then(res => res.json())
+                                    .then(data => { if (data.success) window.location.reload(); });
+                                }
+                              }}
+                            >
                               <Trash2 className="h-4 w-4 mr-2" />
                               Delete
                             </DropdownMenuItem>

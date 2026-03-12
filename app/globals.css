@@ -186,12 +186,34 @@
   border-color: var(--re-border) !important;
 }
 
+.editorial-theme .bg-card\/30 {
+  background-color: color-mix(in srgb, var(--re-surface) 30%, transparent) !important;
+}
+
 .editorial-theme .text-muted-foreground {
   color: var(--re-text-muted) !important;
 }
 
-.editorial-theme .border {
+.editorial-theme .border,
+.editorial-theme .border-border\/60 {
   border-color: var(--re-border) !important;
+}
+
+.editorial-theme .bg-primary {
+  background-color: var(--re-blue) !important;
+}
+
+.editorial-theme .text-primary-foreground {
+  color: #ffffff !important;
+}
+
+.editorial-theme .bg-muted\/60:hover,
+.editorial-theme .hover\:bg-muted\/60:hover {
+  background-color: var(--re-surface-2) !important;
+}
+
+.editorial-theme .hover\:text-foreground:hover {
+  color: var(--re-text) !important;
 }
 
 /* Tabs dentro del área editorial */

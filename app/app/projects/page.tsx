@@ -21,7 +21,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Plus, FolderKanban, Calendar, Building2, Search, LayoutGrid, List } from "lucide-react";
+import { Plus, FolderKanban, Calendar, Building2, Search, LayoutGrid, List, Trash2, MoreHorizontal } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import Link from "next/link";
 import { useLanguage } from "@/lib/i18n";
 
@@ -453,32 +459,60 @@ export default function ProjectsPage() {
                   </div>
                 ) : (
                   projectsByPhase[phase.value].map((project) => (
-                    <Link href={`/app/projects/${project.id}`} key={project.id}>
-                      <Card
-                        draggable
-                        onDragStart={(e) => {
-                          e.dataTransfer.setData("projectId", project.id);
-                        }}
-                        className="cursor-grab active:cursor-grabbing hover:shadow-md transition-shadow"
-                      >
-                        <CardContent className="p-3 space-y-2">
-                          <div className="font-medium text-sm line-clamp-2">{project.name}</div>
-                          <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                            <Building2 className="h-3 w-3" />
-                            {project.tenant?.name || t.projects.noClient}
-                          </div>
-                          <div className="flex items-center justify-between">
-                            {getStatusBadge(project.status)}
-                            {project.due_date && (
-                              <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                                <Calendar className="h-3 w-3" />
-                                {new Date(project.due_date).toLocaleDateString()}
-                              </div>
-                            )}
-                          </div>
-                        </CardContent>
-                      </Card>
-                    </Link>
+                    <Card
+                      key={project.id}
+                      draggable
+                      onDragStart={(e) => {
+                        e.dataTransfer.setData("projectId", project.id);
+                      }}
+                      className="cursor-grab active:cursor-grabbing hover:shadow-md transition-shadow"
+                    >
+                      <CardContent className="p-3 space-y-2">
+                        <div className="flex items-start justify-between">
+                          <Link href={`/app/projects/${project.id}`} className="font-medium text-sm line-clamp-2 hover:underline flex-1">
+                            {project.name}
+                          </Link>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <button className="p-1 hover:bg-muted rounded" onClick={(e) => e.stopPropagation()}>
+                                <MoreHorizontal className="h-3 w-3" />
+                              </button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem asChild>
+                                <Link href={`/app/projects/${project.id}`}>View Project</Link>
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                className="text-destructive focus:text-destructive"
+                                onClick={() => {
+                                  if (confirm(`Delete "${project.name}"? This cannot be undone.`)) {
+                                    fetch(`/api/projects/${project.id}`, { method: "DELETE" })
+                                      .then(res => res.json())
+                                      .then(data => { if (data.success) fetchData(); });
+                                  }
+                                }}
+                              >
+                                <Trash2 className="h-4 w-4 mr-2" />
+                                Delete
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </div>
+                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                          <Building2 className="h-3 w-3" />
+                          {project.tenant?.name || t.projects.noClient}
+                        </div>
+                        <div className="flex items-center justify-between">
+                          {getStatusBadge(project.status)}
+                          {project.due_date && (
+                            <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                              <Calendar className="h-3 w-3" />
+                              {new Date(project.due_date).toLocaleDateString()}
+                            </div>
+                          )}
+                        </div>
+                      </CardContent>
+                    </Card>
                   ))
                 )}
               </div>

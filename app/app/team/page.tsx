@@ -613,7 +613,16 @@ export default function TeamPage() {
                                 Suspend
                               </DropdownMenuItem>
                             )}
-                            <DropdownMenuItem className="cursor-pointer text-destructive focus:text-destructive">
+                            <DropdownMenuItem 
+                              className="cursor-pointer text-destructive focus:text-destructive"
+                              onClick={() => {
+                                if (confirm(`Remove "${member.name}" from the team? This cannot be undone.`)) {
+                                  fetch(`/api/team/${member.id}`, { method: "DELETE" })
+                                    .then(res => res.json())
+                                    .then(data => { if (data.success) window.location.reload(); });
+                                }
+                              }}
+                            >
                               <Trash2 className="h-4 w-4 mr-2" />
                               Remove
                             </DropdownMenuItem>

@@ -9,7 +9,15 @@ import {
   ArrowLeft,
   Eye,
   BarChart2,
+  Trash2,
+  MoreHorizontal,
 } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -292,13 +300,46 @@ export default function EditorialProjectsPage() {
                     {formatDate(project.created_at)}
                   </TableCell>
                   <TableCell>
-                    <Link
-                      href={`/app/editorial/projects/${project.id}`}
-                      className="flex items-center justify-center w-8 h-8 rounded-lg transition-colors hover:bg-white/10"
-                      style={{ color: "var(--re-text-muted)" }}
-                    >
-                      <Eye className="w-4 h-4" />
-                    </Link>
+                    <div className="flex items-center gap-1">
+                      <Link
+                        href={`/app/editorial/projects/${project.id}`}
+                        className="flex items-center justify-center w-8 h-8 rounded-lg transition-colors hover:bg-white/10"
+                        style={{ color: "var(--re-text-muted)" }}
+                      >
+                        <Eye className="w-4 h-4" />
+                      </Link>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <button
+                            className="flex items-center justify-center w-8 h-8 rounded-lg transition-colors hover:bg-white/10"
+                            style={{ color: "var(--re-text-muted)" }}
+                          >
+                            <MoreHorizontal className="w-4 h-4" />
+                          </button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem asChild>
+                            <Link href={`/app/editorial/projects/${project.id}`}>
+                              <Eye className="h-4 w-4 mr-2" />
+                              View Project
+                            </Link>
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            className="text-destructive focus:text-destructive"
+                            onClick={() => {
+                              if (confirm(`Delete "${project.title}"? This cannot be undone.`)) {
+                                fetch(`/api/editorial/projects/${project.id}`, { method: "DELETE" })
+                                  .then(res => res.json())
+                                  .then(data => { if (data.success) fetchProjects(); });
+                              }
+                            }}
+                          >
+                            <Trash2 className="h-4 w-4 mr-2" />
+                            Delete
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </div>
                   </TableCell>
                 </TableRow>
               ))}
