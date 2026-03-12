@@ -104,10 +104,14 @@ export function CreateProjectModal({
         onOpenChange(false);
         setForm(INITIAL_FORM);
         onSuccess?.(projectId);
-        const href = successRedirectHref?.(projectId);
-        if (href) {
-          router.push(href);
-        }
+        
+        // Small delay to ensure DB is synced before navigation
+        setTimeout(() => {
+          const href = successRedirectHref?.(projectId);
+          if (href) {
+            router.push(href);
+          }
+        }, 500);
       } else {
         setError("Invalid response from server (missing projectId).");
       }

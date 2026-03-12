@@ -47,8 +47,13 @@ export async function createEditorialProject(
     throw new Error(`Failed to create editorial project: ${error?.message}`);
   }
 
-  // Create one stage record per pipeline stage
-  const stageRows = EDITORIAL_STAGE_KEYS.map((key) => ({
+  // Create one stage record per pipeline stage (only for existing stages in the database)
+  // export and distribution are handled separately or may need a migration
+  const stageKeys = EDITORIAL_STAGE_KEYS.filter(
+    (key) => key !== "export" && key !== "distribution"
+  );
+  
+  const stageRows = stageKeys.map((key) => ({
     project_id: project.id,
     stage_key: key,
     status: "pending",
@@ -59,6 +64,13 @@ export async function createEditorialProject(
     .insert(stageRows);
 
   if (stagesError) {
+    console.error("[v0] Stages error details:", {
+      code: stagesError.code,
+      message: stagesError.message,
+      details: stagesError.details,
+      hint: stagesError.hint,
+      stageRows,
+    });
     throw new Error(`Failed to create editorial stages: ${stagesError.message}`);
   }
 

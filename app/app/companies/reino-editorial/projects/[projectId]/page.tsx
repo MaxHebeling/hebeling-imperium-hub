@@ -31,12 +31,7 @@ export default async function ReinoEditorialProjectDetailPage({
   const projectId = rawProjectId.trim();
 
   try {
-    const [detail, alerts, exports, distributions] = await Promise.all([
-      getStaffProject(projectId),
-      getProjectAlertsWithRecalc(projectId),
-      getProjectExports(projectId),
-      getProjectDistributions(projectId),
-    ]);
+    const detail = await getStaffProject(projectId);
 
     if (!detail) {
       return (
@@ -64,6 +59,17 @@ export default async function ReinoEditorialProjectDetailPage({
         </div>
       );
     }
+
+    // Load additional data independently to avoid one failure breaking the whole page
+    const [alerts, exports, distributions] = await Promise.allSettled([
+      getProjectAlertsWithRecalc(projectId),
+      getProjectExports(projectId),
+      getProjectDistributions(projectId),
+    ]).then((results) => [
+      results[0]?.status === "fulfilled" ? results[0].value : [],
+      results[1]?.status === "fulfilled" ? results[1].value : [],
+      results[2]?.status === "fulfilled" ? results[2].value : [],
+    ]);
 
     const { project, created_by_name, created_by_email, files } = detail;
     const manuscriptFiles = files.filter((f) => f.file_type === "manuscript_original");
