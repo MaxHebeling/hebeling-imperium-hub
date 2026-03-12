@@ -286,68 +286,19 @@ export async function upsertStaffAssignment(options: {
 
 export async function deleteEditorialProject(projectId: string): Promise<void> {
   const supabase = getAdminClient();
-  
-  // Delete all related records first (respecting cascade, but being explicit)
-  const { error: filesError } = await supabase
-    .from("editorial_files")
-    .delete()
-    .eq("project_id", projectId);
-  
-  if (filesError) {
-    throw new Error(`Failed to delete project files: ${filesError.message}`);
-  }
 
-  const { error: commentsError } = await supabase
-    .from("editorial_comments")
-    .delete()
-    .eq("project_id", projectId);
-  
-  if (commentsError) {
-    throw new Error(`Failed to delete project comments: ${commentsError.message}`);
-  }
-
-  const { error: stagesError } = await supabase
-    .from("editorial_stages")
-    .delete()
-    .eq("project_id", projectId);
-  
-  if (stagesError) {
-    throw new Error(`Failed to delete project stages: ${stagesError.message}`);
-  }
-
-  const { error: membersError } = await supabase
-    .from("editorial_project_members")
-    .delete()
-    .eq("project_id", projectId);
-  
-  if (membersError) {
-    throw new Error(`Failed to delete project members: ${membersError.message}`);
-  }
-
-  const { error: staffError } = await supabase
-    .from("editorial_project_staff_assignments")
-    .delete()
-    .eq("project_id", projectId);
-  
-  if (staffError) {
-    throw new Error(`Failed to delete project staff assignments: ${staffError.message}`);
-  }
-
-  const { error: activityError } = await supabase
-    .from("editorial_activity_log")
-    .delete()
-    .eq("project_id", projectId);
-  
-  if (activityError) {
-    throw new Error(`Failed to delete project activity: ${activityError.message}`);
-  }
-
-  // Finally, delete the project itself
+  /**
+   * IMPORTANT:
+   * Production DB does not include `editorial_project_staff_assignments` yet.
+   * Deleting from non-existent tables fails with: "Could not find the table ... in the schema cache".
+   *
+   * We rely on FK ON DELETE CASCADE from real child tables to clean up dependents.
+   */
   const { error: projectError } = await supabase
     .from("editorial_projects")
     .delete()
     .eq("id", projectId);
-  
+
   if (projectError) {
     throw new Error(`Failed to delete editorial project: ${projectError.message}`);
   }

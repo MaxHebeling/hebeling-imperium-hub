@@ -16,12 +16,10 @@ export async function DELETE(
       );
     }
 
-    console.log("[v0] Calling deleteEditorialProject...");
     await deleteEditorialProject(projectId);
-    console.log("[v0] Project deleted successfully");
 
     return NextResponse.json(
-      { success: true, message: "Project deleted successfully" },
+      { success: true, deletedCount: 1 },
       { status: 200 }
     );
   } catch (error) {
