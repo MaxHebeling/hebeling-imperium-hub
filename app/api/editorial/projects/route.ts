@@ -17,11 +17,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.log("[v0] Creating project with:", {
-      title: body.title,
-      language: body.language,
-    });
-
     const project = await createEditorialProject({
       title: body.title.trim(),
       subtitle: body.subtitle ?? undefined,
@@ -32,19 +27,16 @@ export async function POST(request: NextRequest) {
       client_id: body.client_id ?? undefined,
     });
 
-    console.log("[v0] Project created successfully:", project.id);
-
     await logEditorialActivity(project.id, "project_created", {
       payload: { title: project.title, stage: project.current_stage },
     });
 
-    return NextResponse.json({
-      success: true,
-      projectId: project.id,
-      project,
-    });
+    return NextResponse.json(
+      { projectId: project.id },
+      { status: 201 }
+    );
   } catch (error) {
-    console.error("[v0] [editorial/projects] POST error:", error);
+    console.error("[editorial/projects] POST error:", error);
     const message = error instanceof Error ? error.message : "Internal server error";
     return NextResponse.json({ success: false, error: message }, { status: 500 });
   }
