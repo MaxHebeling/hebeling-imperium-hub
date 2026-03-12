@@ -4,12 +4,14 @@ import { getActivePromptTemplate } from "@/lib/editorial/ai/prompts";
 import { requestAiTask } from "@/lib/editorial/ai/jobs";
 
 export const STAGE_AI_TASKS: Record<EditorialStageKey, EditorialAiTaskKey[]> = {
-  ingesta: ["issue_detection", "quality_scoring"],
+  ingesta: ["manuscript_analysis", "issue_detection", "quality_scoring"],
   estructura: ["structure_analysis", "issue_detection"],
   estilo: ["style_suggestions", "issue_detection"],
   ortotipografia: ["orthotypography_review", "issue_detection"],
-  maquetacion: ["issue_detection", "quality_scoring"],
+  maquetacion: ["layout_analysis", "typography_check", "page_flow_review", "issue_detection"],
   revision_final: ["issue_detection", "quality_scoring", "redline_diff"],
+  export: ["export_validation", "metadata_generation", "quality_scoring"],
+  distribution: ["metadata_generation"],
 };
 
 export function isTaskAllowedForStage(stageKey: EditorialStageKey, taskKey: EditorialAiTaskKey): boolean {

@@ -6,7 +6,9 @@ export type EditorialStageKey =
   | "estilo"
   | "ortotipografia"
   | "maquetacion"
-  | "revision_final";
+  | "revision_final"
+  | "export"
+  | "distribution";
 
 export type EditorialStageStatus =
   | "pending"

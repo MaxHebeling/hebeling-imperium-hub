@@ -3,6 +3,8 @@ import { getStaffProject } from "@/lib/editorial/staff/services";
 import { StaffProjectHeader } from "@/components/editorial/staff/staff-project-header";
 import { StaffProjectTabs } from "@/components/editorial/staff/staff-project-tabs";
 import { getProjectAlertsWithRecalc } from "@/lib/editorial/alerts/detection";
+import { getProjectExports } from "@/lib/editorial/export/services";
+import { getProjectDistributions } from "@/lib/editorial/distribution/services";
 import { StaffAlertsPanel } from "@/components/editorial/staff/staff-alerts-panel";
 import { StaffEmptyState } from "@/components/editorial/staff/staff-empty-state";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -19,9 +21,11 @@ export default async function ReinoEditorialProjectDetailPage({
 }: ProjectDetailPageProps) {
   const { projectId } = params;
 
-  const [detail, alerts] = await Promise.all([
+  const [detail, alerts, exports, distributions] = await Promise.all([
     getStaffProject(projectId),
     getProjectAlertsWithRecalc(projectId),
+    getProjectExports(projectId),
+    getProjectDistributions(projectId),
   ]);
 
   if (!detail) {
@@ -115,7 +119,7 @@ export default async function ReinoEditorialProjectDetailPage({
 
       {/* Main dashboard sections: overview, files, activity, AI engine, etc. */}
       <div id="files">
-        <StaffProjectTabs detail={detail} />
+        <StaffProjectTabs detail={detail} exports={exports} distributions={distributions} />
       </div>
     </div>
   );
