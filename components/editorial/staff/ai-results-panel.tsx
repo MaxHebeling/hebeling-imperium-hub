@@ -346,6 +346,28 @@ export function AiResultsPanel({ projectId, stageKey }: AiResultsPanelProps) {
 
   const hasQueuedJobs = jobs.some(j => j.status === "queued");
   const hasRunningJobs = jobs.some(j => j.status === "processing");
+  const hasNoJobs = jobs.length === 0;
+
+  async function handleRequestAnalysis() {
+    startTransition(async () => {
+      try {
+        const res = await fetch(`/api/editorial/projects/${projectId}/ai-jobs`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ stageKey }),
+        });
+        const json = await res.json();
+        if (!json.success) {
+          setError(json.error ?? "Error al solicitar analisis");
+          return;
+        }
+        await fetchJobs();
+        router.refresh();
+      } catch {
+        setError("Error al solicitar analisis de IA");
+      }
+    });
+  }
 
   return (
     <Card>
@@ -360,20 +382,37 @@ export function AiResultsPanel({ projectId, stageKey }: AiResultsPanelProps) {
               Resultados del analisis automatizado
             </CardDescription>
           </div>
-          {hasQueuedJobs && (
-            <Button 
-              size="sm" 
-              onClick={handleProcessAll}
-              disabled={isPending || hasRunningJobs}
-            >
-              {isPending ? (
-                <Loader2 className="h-4 w-4 animate-spin mr-1" />
-              ) : (
-                <Play className="h-4 w-4 mr-1" />
-              )}
-              Procesar Pendientes
-            </Button>
-          )}
+          <div className="flex gap-2">
+            {!hasNoJobs && (
+              <Button 
+                size="sm" 
+                variant="outline"
+                onClick={handleRequestAnalysis}
+                disabled={isPending || hasRunningJobs}
+              >
+                {isPending ? (
+                  <Loader2 className="h-4 w-4 animate-spin mr-1" />
+                ) : (
+                  <RefreshCw className="h-4 w-4 mr-1" />
+                )}
+                Nuevo Analisis
+              </Button>
+            )}
+            {hasQueuedJobs && (
+              <Button 
+                size="sm" 
+                onClick={handleProcessAll}
+                disabled={isPending || hasRunningJobs}
+              >
+                {isPending ? (
+                  <Loader2 className="h-4 w-4 animate-spin mr-1" />
+                ) : (
+                  <Play className="h-4 w-4 mr-1" />
+                )}
+                Procesar Pendientes
+              </Button>
+            )}
+          </div>
         </div>
       </CardHeader>
       <CardContent className="pt-0">
@@ -387,6 +426,20 @@ export function AiResultsPanel({ projectId, stageKey }: AiResultsPanelProps) {
           <div className="text-center py-6 text-muted-foreground">
             <Brain className="h-8 w-8 mx-auto mb-2 opacity-50" />
             <p className="text-sm">No hay analisis de IA para esta etapa.</p>
+            <Button
+              size="sm"
+              variant="outline"
+              className="mt-3"
+              onClick={handleRequestAnalysis}
+              disabled={isPending}
+            >
+              {isPending ? (
+                <Loader2 className="h-4 w-4 animate-spin mr-1" />
+              ) : (
+                <Play className="h-4 w-4 mr-1" />
+              )}
+              Solicitar Analisis IA
+            </Button>
           </div>
         ) : (
           <div className="space-y-3">
