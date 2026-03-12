@@ -3,7 +3,7 @@ import { EDITORIAL_BUCKETS } from "@/lib/editorial/storage/buckets";
 import { bucketKeyForFileType } from "@/lib/editorial/storage/upload";
 import type { EditorialFile } from "@/lib/editorial/types/editorial";
 import mammoth from "mammoth";
-import pdfParse from "pdf-parse";
+import pdfParseModule from "pdf-parse";
 
 // Límite para el texto extraído que enviaremos a IA en el MVP.
 // El archivo binario se descarga completo; solo se trunca el texto ya parseado.
@@ -96,6 +96,9 @@ export async function extractManuscriptText(file: EditorialFile): Promise<Extrac
   if (isPdf(file)) {
     console.info("[editorial-ai][extract] parsing PDF", { fileId: file.id });
     try {
+      const pdfParse = (pdfParseModule as unknown as { default?: typeof import("pdf-parse"); }).default ??
+        (pdfParseModule as unknown as typeof import("pdf-parse"));
+
       const result = await pdfParse(buffer);
       const originalText = result.text ?? "";
       const truncated = originalText.length > MAX_CHARS_FOR_MVP;
