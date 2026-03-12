@@ -4,6 +4,7 @@ import { getEditorialProject } from "@/lib/editorial/db/queries";
 import { requireEditorialCapability } from "@/lib/editorial/permissions";
 import { processManuscriptNow } from "@/lib/editorial/ai/process-manuscript";
 import { getProjectManuscriptAnalysis } from "@/lib/editorial/ai/get-project-manuscript-analysis";
+import { getAdminClient } from "@/lib/leads/helpers";
 
 /**
  * POST /api/staff/projects/[projectId]/ai/process-manuscript
@@ -21,7 +22,7 @@ export async function POST(
     console.info("[editorial-ai][process] endpoint start", {
       projectId,
       staffUserId: staff.userId,
-      staffRoles: staff.roles,
+      staffRole: staff.role,
     });
 
     const project = await getEditorialProject(projectId);
@@ -32,6 +33,22 @@ export async function POST(
       );
     }
 
+    // Debug membership / capabilities before enforcing ai:run
+    const admin = getAdminClient();
+    const { data: membership, error: membershipError } = await admin
+      .from("editorial_project_members")
+      .select("*")
+      .eq("project_id", projectId)
+      .eq("user_id", staff.userId);
+    console.info("[editorial-ai][process] membership debug", {
+      projectId,
+      orgId: project.org_id,
+      staffUserId: staff.userId,
+      staffRole: staff.role,
+      membership,
+      membershipError,
+    });
+
     const decision = await requireEditorialCapability({
       projectId,
       orgId: project.org_id,
@@ -40,17 +57,32 @@ export async function POST(
     });
 
     if (!decision.allowed) {
-      console.info("[editorial-ai][process] FORBIDDEN ai:run", {
-        projectId,
-        orgId: project.org_id,
-        userId: staff.userId,
-        effectiveCapabilities: decision.effectiveCapabilities,
-        reason: decision.reason,
-      });
-      return NextResponse.json(
-        { success: false, error: "FORBIDDEN: missing ai:run capability" },
-        { status: 403 }
-      );
+      // Allow hard override for org-level superadmin while we debug capabilities.
+      if (staff.role === "superadmin") {
+        console.info("[editorial-ai][process] OVERRIDE ai:run for superadmin", {
+          projectId,
+          orgId: project.org_id,
+          userId: staff.userId,
+          staffRole: staff.role,
+          requestedCapability: "ai:run",
+          effectiveCapabilities: decision.effectiveCapabilities,
+          reason: decision.reason,
+        });
+      } else {
+        console.info("[editorial-ai][process] FORBIDDEN ai:run", {
+          projectId,
+          orgId: project.org_id,
+          userId: staff.userId,
+          staffRole: staff.role,
+          requestedCapability: "ai:run",
+          effectiveCapabilities: decision.effectiveCapabilities,
+          reason: decision.reason,
+        });
+        return NextResponse.json(
+          { success: false, error: "FORBIDDEN: missing ai:run capability" },
+          { status: 403 }
+        );
+      }
     }
 
     const result = await processManuscriptNow({
