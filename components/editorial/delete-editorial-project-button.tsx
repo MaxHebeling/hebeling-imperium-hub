@@ -26,9 +26,19 @@ export function DeleteEditorialProjectButton({ projectId }: { projectId: string 
     setBusy(true);
     try {
       const res = await fetch(`/api/editorial/projects/${projectId}`, { method: "DELETE" });
-      const json = await res.json().catch(() => ({}));
+      const text = await res.text();
+      const json = (() => {
+        try {
+          return text ? JSON.parse(text) : {};
+        } catch {
+          return {};
+        }
+      })();
+
       if (!res.ok || !json?.success) {
-        const msg = json?.error ?? "No se pudo eliminar el proyecto.";
+        const msg =
+          json?.error ??
+          (text ? `HTTP ${res.status}: ${text}` : `HTTP ${res.status}: No response body`);
         toast({ title: "Error al eliminar", description: msg, variant: "destructive" });
         return;
       }

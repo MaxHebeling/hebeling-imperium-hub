@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { unstable_noStore as noStore } from "next/cache";
 import { listStaffProjects } from "@/lib/editorial/staff/services";
 import {
   Card,
@@ -24,7 +25,12 @@ function formatDate(dateStr: string | null) {
   });
 }
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 export default async function ReinoEditorialProjectsPage() {
+  // Avoid showing stale projects after create/delete.
+  noStore();
   const books = await listStaffProjects();
 
   return (
