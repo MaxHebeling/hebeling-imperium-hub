@@ -20,13 +20,14 @@ export interface ProfileRow {
 // ---------------------------------------------------------------------------
 
 export async function getEditorialProject(projectId: string): Promise<EditorialProject | null> {
+  const cleanId = String(projectId ?? "").trim();
+  const uuidRegex =
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
   // Supabase/Postgres expects a valid uuid in `editorial_projects.id`.
-  // If an invalid id hits this function (e.g. bad routing), treat as "not found" (not 500).
-  const isUuid =
-    typeof projectId === "string" &&
-    /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(projectId);
-  if (!isUuid) {
-    console.warn("[editorial] getEditorialProject: invalid uuid", { projectId });
+  // Treat invalid input as "not found" (avoid Postgres 22P02).
+  if (!uuidRegex.test(cleanId)) {
+    console.warn("[editorial] getEditorialProject: invalid uuid", { projectId: cleanId });
     return null;
   }
 
@@ -34,7 +35,7 @@ export async function getEditorialProject(projectId: string): Promise<EditorialP
   const { data, error } = await supabase
     .from("editorial_projects")
     .select("*")
-    .eq("id", projectId)
+    .eq("id", cleanId)
     .maybeSingle();
   if (error) {
     // Don't silently hide unexpected Supabase errors; "not found" should only mean 0 rows.
