@@ -24,7 +24,11 @@ function validateManuscriptFile(file: File): string | null {
 
 export async function POST(request: Request) {
   try {
+    console.log("[v0] submit-manuscript: Starting");
+    
     const formData = await request.formData();
+    console.log("[v0] FormData keys:", Array.from(formData.keys()));
+    
     const authorName = (formData.get("authorName") as string)?.trim();
     const authorEmail = (formData.get("authorEmail") as string)?.trim();
     const bookTitle = (formData.get("bookTitle") as string)?.trim();
@@ -34,7 +38,10 @@ export async function POST(request: Request) {
     const shortDescription = (formData.get("shortDescription") as string)?.trim() || undefined;
     const manuscript = formData.get("manuscript") as File | null;
 
+    console.log("[v0] Form fields:", { authorName, authorEmail, bookTitle, category, hasManuscript: !!manuscript });
+
     if (!authorName || !authorEmail || !bookTitle || !category) {
+      console.log("[v0] Missing required fields");
       return NextResponse.json(
         { error: "Missing required fields: authorName, authorEmail, bookTitle, category." },
         { status: 400 }
@@ -42,18 +49,22 @@ export async function POST(request: Request) {
     }
 
     if (!manuscript || !(manuscript instanceof File) || manuscript.size === 0) {
+      console.log("[v0] Manuscript file is required");
       return NextResponse.json(
         { error: "Manuscript file is required (.docx or .pdf, max 25MB)." },
         { status: 400 }
       );
     }
 
+    console.log("[v0] Validating file:", { name: manuscript.name, size: manuscript.size, type: manuscript.type });
     const fileError = validateManuscriptFile(manuscript);
     if (fileError) {
+      console.log("[v0] File validation error:", fileError);
       return NextResponse.json({ error: fileError }, { status: 400 });
     }
 
-    // 1. Create editorial project (and first stage "ingesta" via mutations – all stages are created)
+    // 1. Create editorial project
+    console.log("[v0] Creating editorial project");
     const project = await createEditorialProject({
       title: bookTitle,
       subtitle: bookSubtitle,
@@ -62,11 +73,15 @@ export async function POST(request: Request) {
       genre: category,
       target_audience: shortDescription ?? undefined,
     });
+    console.log("[v0] Project created:", project.id);
 
-    // 2. Upload manuscript to bucket editorial-manuscripts
+    // 2. Upload manuscript to bucket
+    console.log("[v0] Uploading manuscript to storage");
     const uploadResult = await uploadManuscript(project.id, manuscript, 1);
+    console.log("[v0] Manuscript uploaded:", uploadResult.storagePath);
 
-    // 3. Link file to project in editorial_files
+    // 3. Link file to project
+    console.log("[v0] Registering manuscript file in DB");
     const fileRecord = await registerManuscriptFile(
       project.id,
       uploadResult.storagePath,
@@ -76,8 +91,10 @@ export async function POST(request: Request) {
       1,
       "client"
     );
+    console.log("[v0] File registered:", fileRecord.id);
 
-    // 4. Queue AI job: manuscript_analysis (structure, language review, editorial suggestions)
+    // 4. Queue AI job
+    console.log("[v0] Queuing AI task");
     await requestAiTask({
       orgId: ORG_ID,
       projectId: project.id,
@@ -87,8 +104,10 @@ export async function POST(request: Request) {
       sourceFileVersion: 1,
       requestedBy: authorEmail,
     });
+    console.log("[v0] AI task queued");
 
-    // 5. Create workflow event "manuscript_submitted"
+    // 5. Create workflow event
+    console.log("[v0] Logging workflow event");
     await logWorkflowEvent({
       orgId: ORG_ID,
       projectId: project.id,
@@ -100,14 +119,16 @@ export async function POST(request: Request) {
         submitted_via: "submit-manuscript",
       },
     });
+    console.log("[v0] Workflow event logged");
 
+    console.log("[v0] Submission successful");
     return NextResponse.json({
       success: true,
       projectId: project.id,
       message: "Manuscript submitted successfully. Redirecting to your projects.",
     });
   } catch (err) {
-    console.error("[submit-manuscript]", err);
+    console.error("[v0] submit-manuscript error:", err);
     const message = err instanceof Error ? err.message : "Submission failed.";
     return NextResponse.json(
       { error: message },
