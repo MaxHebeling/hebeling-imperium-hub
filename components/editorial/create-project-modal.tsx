@@ -71,51 +71,56 @@ export function CreateProjectModal({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    console.log("[CreateProject] submit fired", form);
     if (!form.title.trim()) {
       setError("Title is required.");
       return;
     }
     setError(null);
     setSubmitting(true);
+    const payload = {
+      title: form.title.trim(),
+      author_name: form.author_name.trim() || undefined,
+      language: form.language || "es",
+      genre: form.genre.trim() || undefined,
+      description: form.description.trim() || undefined,
+      target_audience: form.description.trim() || undefined,
+    };
+    console.log("[CreateProject] payload →", payload);
     try {
+      console.log("[CreateProject] calling POST /api/editorial/projects");
       const res = await fetch("/api/editorial/projects", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          title: form.title.trim(),
-          author_name: form.author_name.trim() || undefined,
-          language: form.language || "es",
-          genre: form.genre.trim() || undefined,
-          description: form.description.trim() || undefined,
-          target_audience: form.description.trim() || undefined,
-        }),
+        body: JSON.stringify(payload),
       });
       const data = await res.json();
+      console.log("[CreateProject] response status:", res.status, "body:", data);
       if (!res.ok) {
         setError(data.error ?? "Failed to create project.");
         return;
       }
       const projectId = data?.projectId as string | undefined;
+      console.log("[CreateProject] projectId received:", projectId);
+      // Accept any well-formed UUID (v1–v8) so future Supabase UUID versions work.
       const isUuid =
         typeof projectId === "string" &&
-        /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(projectId);
+        /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(projectId);
 
       if (isUuid) {
         onOpenChange(false);
         setForm(INITIAL_FORM);
         onSuccess?.(projectId);
-        
-        // Small delay to ensure DB is synced before navigation
-        setTimeout(() => {
-          const href = successRedirectHref?.(projectId);
-          if (href) {
-            router.push(href);
-          }
-        }, 500);
+        const href =
+          successRedirectHref?.(projectId) ??
+          `/app/companies/reino-editorial/projects/${projectId}`;
+        console.log("[CreateProject] navigating to:", href);
+        router.push(href);
       } else {
         setError("Invalid response from server (missing projectId).");
       }
-    } catch {
+    } catch (err) {
+      console.error("[CreateProject] network error:", err);
       setError("Network error. Please try again.");
     } finally {
       setSubmitting(false);
