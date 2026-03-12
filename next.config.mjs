@@ -6,9 +6,6 @@ const nextConfig = {
   images: {
     unoptimized: true,
   },
-  experimental: {
-    turbopack: false,
-  },
   async rewrites() {
     return [
       {
