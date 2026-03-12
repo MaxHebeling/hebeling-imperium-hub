@@ -14,6 +14,7 @@ export const metadata: Metadata = {
   title: 'Hebeling Imperium Group Hub',
   description: 'Staff and client management platform',
   generator: 'v0.app',
+  // Force dev server restart - fixed turbopack caching issue
 }
 
 export const viewport: Viewport = {
