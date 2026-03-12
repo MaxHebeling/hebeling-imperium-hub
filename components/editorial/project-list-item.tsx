@@ -79,32 +79,22 @@ export function ProjectListItem({ book }: ProjectListItemProps) {
             style={{ outlineColor: "var(--re-blue)" }}
           >
             <div
-              className="flex items-start gap-4 p-5 rounded-2xl transition-all duration-200 h-full"
+              className="flex items-start gap-4 p-5 rounded-2xl transition-all duration-200 h-full hover:shadow-md hover:border-blue-400 hover:-translate-y-0.5"
               style={{
-                backgroundColor: "var(--re-surface)",
-                border: "1px solid var(--re-border)",
-                boxShadow: "var(--re-shadow-sm)",
-              }}
-              onMouseEnter={(e) => {
-                (e.currentTarget as HTMLElement).style.boxShadow = "var(--re-shadow-md)";
-                (e.currentTarget as HTMLElement).style.borderColor = "var(--re-border-blue)";
-                (e.currentTarget as HTMLElement).style.transform = "translateY(-1px)";
-              }}
-              onMouseLeave={(e) => {
-                (e.currentTarget as HTMLElement).style.boxShadow = "var(--re-shadow-sm)";
-                (e.currentTarget as HTMLElement).style.borderColor = "var(--re-border)";
-                (e.currentTarget as HTMLElement).style.transform = "translateY(0)";
+                backgroundColor: "var(--re-surface, #ffffff)",
+                border: "1px solid var(--re-border, #e0e0e0)",
+                boxShadow: "var(--re-shadow-sm, 0 1px 3px rgba(0,0,0,0.06))",
               }}
             >
               {/* Icon */}
               <div
                 className="flex items-center justify-center w-10 h-10 rounded-xl shrink-0 mt-0.5"
                 style={{
-                  background: "var(--re-blue-pale)",
-                  border: "1px solid var(--re-border-blue)",
+                  background: "var(--re-blue-pale, #f0f4ff)",
+                  border: "1px solid var(--re-border-blue, #1b40c025)",
                 }}
               >
-                <BookOpen className="h-5 w-5" style={{ color: "var(--re-blue)" }} />
+                <BookOpen className="h-5 w-5" style={{ color: "#1B40C0" }} />
               </div>
 
               {/* Content */}
@@ -186,28 +176,18 @@ export function ProjectListItem({ book }: ProjectListItemProps) {
             onClick={handleDeleteClick}
             disabled={isDeleting}
             aria-label="Eliminar proyecto"
-            className="flex items-center justify-center w-10 rounded-2xl transition-all duration-150 shrink-0"
+            className="flex items-center justify-center w-10 rounded-2xl transition-all duration-150 shrink-0 hover:bg-red-50 hover:border-red-400 hover:text-red-600"
             style={{
-              backgroundColor: "var(--re-surface)",
-              border: "1px solid var(--re-border)",
-              color: "var(--re-text-subtle)",
-              boxShadow: "var(--re-shadow-sm)",
-            }}
-            onMouseEnter={(e) => {
-              (e.currentTarget as HTMLElement).style.backgroundColor = "var(--re-danger-pale)";
-              (e.currentTarget as HTMLElement).style.borderColor = "var(--re-danger)";
-              (e.currentTarget as HTMLElement).style.color = "var(--re-danger)";
-            }}
-            onMouseLeave={(e) => {
-              (e.currentTarget as HTMLElement).style.backgroundColor = "var(--re-surface)";
-              (e.currentTarget as HTMLElement).style.borderColor = "var(--re-border)";
-              (e.currentTarget as HTMLElement).style.color = "var(--re-text-subtle)";
+              backgroundColor: "var(--re-surface, #ffffff)",
+              border: "1px solid var(--re-border, #e0e0e0)",
+              color: "var(--re-text-subtle, #999)",
+              boxShadow: "var(--re-shadow-sm, 0 1px 3px rgba(0,0,0,0.06))",
             }}
           >
             {isDeleting ? (
               <div
                 className="w-4 h-4 rounded-full border-2 border-t-transparent animate-spin"
-                style={{ borderColor: "var(--re-danger)" }}
+                style={{ borderColor: "#ef4444" }}
               />
             ) : (
               <Trash2 className="h-4 w-4" />
