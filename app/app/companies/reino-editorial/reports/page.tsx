@@ -1,10 +1,10 @@
-import { CompanyPlaceholderPage } from "@/components/company-placeholder-page";
+import { ReinoEditorialPlaceholderPage } from "@/components/editorial/reino-editorial-placeholder-page";
 
 export default function ReinoEditorialReportsPage() {
   return (
-    <CompanyPlaceholderPage
+    <ReinoEditorialPlaceholderPage
       title="Reports"
-      description="Analíticas, previsiones y cuadros de mando editoriales."
+      description="Analiticas, previsiones y cuadros de mando editoriales."
       moduleName="Reports"
     />
   );

@@ -31,12 +31,11 @@ export default async function ReinoEditorialOperationsPage() {
   const blockedCount = blocked.length;
 
   return (
-    <div className="space-y-6 pb-6 px-6 pt-4">
+    <div className="space-y-6 pb-6 px-6 pt-4 min-h-full" style={{ backgroundColor: "var(--re-bg)" }}>
       <header className="space-y-1">
-        <h1 className="text-2xl font-semibold tracking-tight">Operaciones</h1>
-        <p className="text-sm text-muted-foreground">
-          Visión operativa del pipeline: SLA, carga de equipo y atención
-          prioritaria.
+        <h1 className="text-2xl font-semibold tracking-tight" style={{ color: "var(--re-text)" }}>Operaciones</h1>
+        <p className="text-sm" style={{ color: "var(--re-text-muted)" }}>
+          Vision operativa del pipeline: SLA, carga de equipo y atencion prioritaria.
         </p>
       </header>
 

@@ -1,8 +1,8 @@
-import { CompanyPlaceholderPage } from "@/components/company-placeholder-page";
+import { ReinoEditorialPlaceholderPage } from "@/components/editorial/reino-editorial-placeholder-page";
 
 export default function ReinoEditorialMarketplacePage() {
   return (
-    <CompanyPlaceholderPage
+    <ReinoEditorialPlaceholderPage
       title="Marketplace"
       description="Profesionales, servicios y pedidos del marketplace editorial."
       moduleName="Marketplace"

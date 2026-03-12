@@ -126,143 +126,204 @@
   }
 }
 
-/* ─────────────────────────────────────────────────────────────
-   Reino Editorial brand theme
-   Extracted directly from the Reino Editorial logo:
-     Royal blue  #1B40C0  – primary brand / text
-     Cyan        #2DD4D4  – open book / accent
-     Gold        #F5C842  – globe continents / highlight
-   ───────────────────────────────────────────────────────────── */
+/* ═══════════════════════════════════════════════════════════════
+   REINO EDITORIAL — Premium Light Theme
+   Logo palette:
+     Royal Blue  #1B40C0  — authority, trust, prestige
+     Cyan        #2DD4D4  — innovation, creativity
+     Gold        #E8A020  — refined, darkened for elegance on light bg
+   Base: warm ivory/cream for an editorial, book-house aesthetic
+   ═══════════════════════════════════════════════════════════════ */
 .editorial-theme {
-  /* Base surfaces — deep navy, slightly blue */
-  --re-bg:          #0a0f1e;
-  --re-surface:     #0f1628;
-  --re-surface-2:   #151d35;
-  --re-surface-3:   #1c2540;
+  /* ── Surfaces (warm ivory → white) ── */
+  --re-bg:           #F7F5F0;
+  --re-surface:      #FFFFFF;
+  --re-surface-2:    #F2EFE9;
+  --re-surface-3:    #E9E5DD;
+  --re-surface-nav:  #FFFFFF;
 
-  /* Brand palette */
-  --re-blue:        #1B40C0;
-  --re-blue-light:  #2a56e8;
-  --re-blue-dim:    #1B40C020;
-  --re-cyan:        #2DD4D4;
-  --re-cyan-dim:    #2DD4D415;
-  --re-gold:        #F5C842;
-  --re-gold-dim:    #F5C84215;
+  /* ── Brand: Royal Blue ── */
+  --re-blue:         #1B40C0;
+  --re-blue-deep:    #132e90;
+  --re-blue-light:   #2a56e8;
+  --re-blue-pale:    #EEF2FC;
+  --re-blue-muted:   #1B40C015;
 
-  /* Text */
-  --re-text:        #e8edf8;
-  --re-text-muted:  #7b8db0;
-  --re-text-subtle: #4a5878;
+  /* ── Brand: Cyan (toned for light bg) ── */
+  --re-cyan:         #18A8A8;
+  --re-cyan-bright:  #2DD4D4;
+  --re-cyan-pale:    #EAF9F9;
+  --re-cyan-muted:   #2DD4D412;
 
-  /* Borders */
-  --re-border:      #1e2d50;
-  --re-border-cyan: #2DD4D430;
+  /* ── Brand: Gold (refined, darkened) ── */
+  --re-gold:         #C48B0A;
+  --re-gold-bright:  #E8A020;
+  --re-gold-pale:    #FEF9EC;
+  --re-gold-muted:   #F5C84218;
 
-  /* Status */
-  --re-success:     #22d3a0;
-  --re-warning:     #F5C842;
-  --re-danger:      #f04f5e;
+  /* ── Text ── */
+  --re-text:         #1A1814;
+  --re-text-muted:   #6B6458;
+  --re-text-subtle:  #A09588;
+
+  /* ── Borders ── */
+  --re-border:       #E0DAD0;
+  --re-border-blue:  #1B40C025;
+  --re-border-cyan:  #2DD4D430;
+  --re-border-gold:  #E8A02030;
+
+  /* ── Shadows ── */
+  --re-shadow-sm:    0 1px 3px rgba(26,24,20,0.06), 0 1px 2px rgba(26,24,20,0.04);
+  --re-shadow-md:    0 4px 16px rgba(26,24,20,0.08), 0 2px 6px rgba(26,24,20,0.04);
+  --re-shadow-lg:    0 12px 40px rgba(26,24,20,0.10), 0 4px 12px rgba(26,24,20,0.06);
+
+  /* ── Status ── */
+  --re-success:      #0D7A5F;
+  --re-success-pale: #E8FAF4;
+  --re-warning:      #C48B0A;
+  --re-warning-pale: #FEF9EC;
+  --re-danger:       #C0312B;
+  --re-danger-pale:  #FEEEEE;
 
   background-color: var(--re-bg);
   color: var(--re-text);
 }
 
-/* Cards dentro del área editorial */
+/* ── Shadcn token overrides inside editorial-theme ── */
+.editorial-theme {
+  --background:        var(--re-bg);
+  --foreground:        var(--re-text);
+  --card:              var(--re-surface);
+  --card-foreground:   var(--re-text);
+  --border:            var(--re-border);
+  --input:             var(--re-surface-2);
+  --muted:             var(--re-surface-2);
+  --muted-foreground:  var(--re-text-muted);
+  --primary:           var(--re-blue);
+  --primary-foreground:#FFFFFF;
+  --secondary:         var(--re-surface-2);
+  --secondary-foreground: var(--re-text);
+  --accent:            var(--re-blue-pale);
+  --accent-foreground: var(--re-blue);
+  --ring:              var(--re-blue);
+}
+
+/* ── Nav bar ── */
+.editorial-theme .re-nav {
+  background-color: var(--re-surface-nav);
+  border-bottom: 1px solid var(--re-border);
+  box-shadow: var(--re-shadow-sm);
+}
+
+/* ── Cards ── */
 .editorial-theme .re-card {
   background-color: var(--re-surface);
   border: 1px solid var(--re-border);
-  border-radius: 0.75rem;
+  border-radius: 1rem;
+  box-shadow: var(--re-shadow-sm);
+  transition: box-shadow 0.2s ease, transform 0.2s ease;
+}
+.editorial-theme .re-card:hover {
+  box-shadow: var(--re-shadow-md);
+  transform: translateY(-1px);
 }
 
-.editorial-theme .re-card-cyan {
-  background-color: var(--re-surface);
+/* ── Accent strips ── */
+.editorial-theme .re-strip-blue { border-left: 3px solid var(--re-blue); }
+.editorial-theme .re-strip-cyan { border-left: 3px solid var(--re-cyan-bright); }
+.editorial-theme .re-strip-gold { border-left: 3px solid var(--re-gold-bright); }
+
+/* ── Badges ── */
+.editorial-theme .re-badge {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 9999px;
+  padding: 0.2rem 0.7rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+.editorial-theme .re-badge-blue {
+  background-color: var(--re-blue-pale);
+  color: var(--re-blue);
+  border: 1px solid var(--re-border-blue);
+}
+.editorial-theme .re-badge-cyan {
+  background-color: var(--re-cyan-pale);
+  color: var(--re-cyan);
   border: 1px solid var(--re-border-cyan);
-  border-radius: 0.75rem;
+}
+.editorial-theme .re-badge-gold {
+  background-color: var(--re-gold-pale);
+  color: var(--re-gold);
+  border: 1px solid var(--re-border-gold);
 }
 
-/* Overrides de shadcn dentro del tema editorial */
-.editorial-theme .bg-card {
-  background-color: var(--re-surface) !important;
-  border-color: var(--re-border) !important;
-}
-
-.editorial-theme .bg-card\/30 {
-  background-color: color-mix(in srgb, var(--re-surface) 30%, transparent) !important;
-}
-
-.editorial-theme .text-muted-foreground {
-  color: var(--re-text-muted) !important;
-}
-
-.editorial-theme .border,
-.editorial-theme .border-border\/60 {
-  border-color: var(--re-border) !important;
-}
-
-.editorial-theme .bg-primary {
-  background-color: var(--re-blue) !important;
-}
-
-.editorial-theme .text-primary-foreground {
-  color: #ffffff !important;
-}
-
-.editorial-theme .bg-muted\/60:hover,
-.editorial-theme .hover\:bg-muted\/60:hover {
-  background-color: var(--re-surface-2) !important;
-}
-
-.editorial-theme .hover\:text-foreground:hover {
-  color: var(--re-text) !important;
-}
-
-/* Tabs dentro del área editorial */
+/* ── Tabs ── */
 .editorial-theme [role="tablist"] {
   background-color: var(--re-surface-2) !important;
-  border: 1px solid var(--re-border);
+  border: 1px solid var(--re-border) !important;
+  border-radius: 0.75rem !important;
+  padding: 0.25rem !important;
 }
-
 .editorial-theme [role="tab"][data-state="active"] {
   background-color: var(--re-blue) !important;
   color: #ffffff !important;
+  border-radius: 0.5rem !important;
+  box-shadow: var(--re-shadow-sm) !important;
+}
+.editorial-theme [role="tab"] {
+  color: var(--re-text-muted) !important;
+  border-radius: 0.5rem !important;
 }
 
-/* Badges */
-.editorial-theme .re-badge-cyan {
-  background-color: var(--re-cyan-dim);
-  color: var(--re-cyan);
-  border: 1px solid var(--re-border-cyan);
-  border-radius: 9999px;
-  padding: 0.125rem 0.625rem;
-  font-size: 0.75rem;
+/* ── Buttons ── */
+.editorial-theme .re-btn-primary {
+  background-color: var(--re-blue);
+  color: #ffffff;
+  border: none;
+  border-radius: 0.625rem;
+  padding: 0.5rem 1.25rem;
   font-weight: 600;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: background-color 0.15s, box-shadow 0.15s;
+  box-shadow: 0 2px 8px rgba(27,64,192,0.25);
 }
-
-.editorial-theme .re-badge-gold {
-  background-color: var(--re-gold-dim);
-  color: var(--re-gold);
-  border: 1px solid #F5C84230;
-  border-radius: 9999px;
-  padding: 0.125rem 0.625rem;
-  font-size: 0.75rem;
+.editorial-theme .re-btn-primary:hover {
+  background-color: var(--re-blue-deep);
+  box-shadow: 0 4px 16px rgba(27,64,192,0.35);
+}
+.editorial-theme .re-btn-gold {
+  background-color: var(--re-gold-bright);
+  color: #ffffff;
+  border: none;
+  border-radius: 0.625rem;
+  padding: 0.5rem 1.25rem;
   font-weight: 600;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: background-color 0.15s, box-shadow 0.15s;
+  box-shadow: 0 2px 8px rgba(232,160,32,0.3);
 }
 
-/* Scrollbar dentro del área editorial */
-.editorial-theme ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+/* ── Progress bar ── */
+.editorial-theme .re-progress-track {
+  background-color: var(--re-surface-3);
+  border-radius: 9999px;
+  overflow: hidden;
 }
-.editorial-theme ::-webkit-scrollbar-track {
-  background: var(--re-surface);
+.editorial-theme .re-progress-fill {
+  background: linear-gradient(90deg, var(--re-blue) 0%, var(--re-cyan-bright) 100%);
+  border-radius: 9999px;
+  transition: width 0.4s ease;
 }
-.editorial-theme ::-webkit-scrollbar-thumb {
-  background: var(--re-border);
-  border-radius: 3px;
-}
-.editorial-theme ::-webkit-scrollbar-thumb:hover {
-  background: var(--re-blue);
-}
+
+/* ── Scrollbar ── */
+.editorial-theme ::-webkit-scrollbar { width: 5px; height: 5px; }
+.editorial-theme ::-webkit-scrollbar-track { background: var(--re-surface-2); }
+.editorial-theme ::-webkit-scrollbar-thumb { background: var(--re-border); border-radius: 3px; }
+.editorial-theme ::-webkit-scrollbar-thumb:hover { background: var(--re-blue-light); }
 
 /* Premium animations */
 @layer components {

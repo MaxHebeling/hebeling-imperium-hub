@@ -62,13 +62,13 @@ const AVAILABLE_CHANNELS = [
 
 export default function ReinoEditorialDistributionPage() {
   return (
-    <div className="space-y-6 p-6">
+    <div className="space-y-6 p-6 min-h-full" style={{ backgroundColor: "var(--re-bg)" }}>
       <header className="space-y-2">
-        <h1 className="text-2xl font-semibold tracking-tight text-foreground flex items-center gap-2">
-          <Globe className="h-6 w-6" />
+        <h1 className="text-2xl font-semibold tracking-tight flex items-center gap-2" style={{ color: "var(--re-text)" }}>
+          <Globe className="h-6 w-6" style={{ color: "var(--re-blue)" }} />
           Distribution
         </h1>
-        <p className="text-sm text-muted-foreground">
+        <p className="text-sm" style={{ color: "var(--re-text-muted)" }}>
           Canales de distribucion disponibles para tus proyectos editoriales.
         </p>
       </header>

@@ -1,10 +1,10 @@
-import { CompanyPlaceholderPage } from "@/components/company-placeholder-page";
+import { ReinoEditorialPlaceholderPage } from "@/components/editorial/reino-editorial-placeholder-page";
 
 export default function ReinoEditorialPipelinePage() {
   return (
-    <CompanyPlaceholderPage
+    <ReinoEditorialPlaceholderPage
       title="Pipeline"
-      description="Vista por etapas del pipeline editorial (ingesta → revisión final)."
+      description="Vista por etapas del pipeline editorial (ingesta a revision final)."
       moduleName="Pipeline"
     />
   );
