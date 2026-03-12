@@ -19,7 +19,6 @@ import {
   RefreshCw,
   Play,
 } from "lucide-react";
-import type { AnalysisResult } from "@/lib/editorial/ai/processor";
 
 interface AiJob {
   id: string;
@@ -28,10 +27,18 @@ interface AiJob {
   jobType: string;
   status: string;
   createdAt: string;
-  startedAt: string | null;
   finishedAt: string | null;
-  errorLog: string | null;
-  result: AnalysisResult | null;
+  outputRef: Record<string, any> | null;
+  errorMessage: string | null;
+}
+
+interface AnalysisResult {
+  summary: string;
+  strengths: string[];
+  improvements: string[];
+  issues: Array<{ type: string; description: string }>;
+  recommendations: string[];
+  score?: number;
 }
 
 interface AiResultsPanelProps {
