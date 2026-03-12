@@ -1,21 +1,27 @@
 "use client";
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { FileText, GitBranch, MessageSquare, Users, LayoutGrid, Sparkles } from "lucide-react";
+import { FileText, GitBranch, MessageSquare, Users, LayoutGrid, Sparkles, Download, Globe } from "lucide-react";
 import { StaffProjectSummaryTab } from "./staff-project-summary-tab";
 import { StaffPipelineTab } from "./staff-pipeline-tab";
 import { StaffFilesTab } from "./staff-files-tab";
 import { StaffCommentsTab } from "./staff-comments-tab";
 import { StaffAssignmentsTab } from "./staff-assignments-tab";
 import { AiStageAssistPanel } from "@/components/editorial/staff/ai-stage-assist-panel";
+import { ExportPanel } from "@/components/editorial/export/export-panel";
+import { DistributionPanel } from "@/components/editorial/distribution/distribution-panel";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { EDITORIAL_STAGE_LABELS } from "@/lib/editorial/pipeline/constants";
 import type { StaffProjectDetail } from "@/lib/editorial/types/editorial";
 import type { EditorialStageKey } from "@/lib/editorial/types/editorial";
 import type { EditorialAiTaskKey } from "@/lib/editorial/types/ai";
+import type { EditorialExportJob } from "@/lib/editorial/export/types";
+import type { ProjectDistribution } from "@/lib/editorial/distribution/types";
 
 interface StaffProjectTabsProps {
   detail: StaffProjectDetail;
+  exports?: EditorialExportJob[];
+  distributions?: ProjectDistribution[];
 }
 
 const AI_TASKS_BY_STAGE: Partial<Record<EditorialStageKey, EditorialAiTaskKey[]>> = {
@@ -28,7 +34,7 @@ function isAiSupportedStage(stageKey: string): stageKey is EditorialStageKey {
   return stageKey === "estructura" || stageKey === "estilo" || stageKey === "ortotipografia";
 }
 
-export function StaffProjectTabs({ detail }: StaffProjectTabsProps) {
+export function StaffProjectTabs({ detail, exports = [], distributions = [] }: StaffProjectTabsProps) {
   const { project, stages, files, comments, members, staffAssignments, created_by_name, created_by_email } = detail;
 
   const currentStageKey = project.current_stage;
@@ -62,6 +68,14 @@ export function StaffProjectTabs({ detail }: StaffProjectTabsProps) {
           <TabsTrigger value="asignaciones" className="gap-1.5 px-3 text-xs sm:text-sm shrink-0">
             <Users className="h-3.5 w-3.5 shrink-0" />
             Asignaciones
+          </TabsTrigger>
+          <TabsTrigger value="export" className="gap-1.5 px-3 text-xs sm:text-sm shrink-0">
+            <Download className="h-3.5 w-3.5 shrink-0" />
+            Export
+          </TabsTrigger>
+          <TabsTrigger value="distribution" className="gap-1.5 px-3 text-xs sm:text-sm shrink-0">
+            <Globe className="h-3.5 w-3.5 shrink-0" />
+            Distribución
           </TabsTrigger>
         </TabsList>
       </div>
@@ -120,6 +134,22 @@ export function StaffProjectTabs({ detail }: StaffProjectTabsProps) {
           members={members}
           staffAssignments={staffAssignments}
           projectId={project.id}
+        />
+      </TabsContent>
+
+      <TabsContent value="export" className="mt-4">
+        <ExportPanel
+          projectId={project.id}
+          projectTitle={project.title}
+          exports={exports}
+        />
+      </TabsContent>
+
+      <TabsContent value="distribution" className="mt-4">
+        <DistributionPanel
+          projectId={project.id}
+          projectTitle={project.title}
+          distributions={distributions}
         />
       </TabsContent>
     </Tabs>

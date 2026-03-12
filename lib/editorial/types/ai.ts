@@ -7,7 +7,12 @@ export type EditorialAiTaskKey =
   | "orthotypography_review"
   | "issue_detection"
   | "quality_scoring"
-  | "redline_diff";
+  | "redline_diff"
+  | "layout_analysis"
+  | "typography_check"
+  | "page_flow_review"
+  | "export_validation"
+  | "metadata_generation";
 
 export type EditorialAiJobStatus = "queued" | "running" | "succeeded" | "failed" | "cancelled";
 

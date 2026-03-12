@@ -7,6 +7,8 @@ export const EDITORIAL_STAGE_KEYS: EditorialStageKey[] = [
   "ortotipografia",
   "maquetacion",
   "revision_final",
+  "export",
+  "distribution",
 ];
 
 export const EDITORIAL_STAGE_LABELS: Record<EditorialStageKey, string> = {
@@ -16,15 +18,19 @@ export const EDITORIAL_STAGE_LABELS: Record<EditorialStageKey, string> = {
   ortotipografia: "Ortotipografía",
   maquetacion: "Maquetación",
   revision_final: "Revisión Final",
+  export: "Export",
+  distribution: "Distribución",
 };
 
 export const EDITORIAL_STAGE_PROGRESS: Record<EditorialStageKey, number> = {
-  ingesta: 15,
-  estructura: 30,
-  estilo: 50,
-  ortotipografia: 70,
-  maquetacion: 90,
-  revision_final: 100,
+  ingesta: 10,
+  estructura: 25,
+  estilo: 40,
+  ortotipografia: 55,
+  maquetacion: 70,
+  revision_final: 85,
+  export: 95,
+  distribution: 100,
 };
 
 export const EDITORIAL_STAGE_STATUSES = [
