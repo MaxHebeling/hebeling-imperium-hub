@@ -1,5 +1,3 @@
-"use server";
-
 import { deleteEditorialProject } from "@/lib/editorial/db/mutations";
 import { NextRequest, NextResponse } from "next/server";
 
