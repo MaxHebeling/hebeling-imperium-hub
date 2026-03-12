@@ -17,7 +17,7 @@ export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
 interface ProjectDetailPageProps {
-  params?: { projectId?: string };
+  params: Promise<{ projectId: string }>;
 }
 
 export default async function ReinoEditorialProjectDetailPage({
@@ -26,9 +26,7 @@ export default async function ReinoEditorialProjectDetailPage({
   // Avoid Next.js fetch caching for Supabase reads (critical right after create).
   noStore();
 
-  const rawProjectId =
-    typeof params?.projectId === "string" ? params.projectId : "";
-  const projectId = rawProjectId.trim();
+  const { projectId } = await params;
 
   try {
     const detail = await getStaffProject(projectId);
