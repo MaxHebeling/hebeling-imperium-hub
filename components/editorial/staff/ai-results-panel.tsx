@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useTransition } from "react";
+import { useState, useEffect, useTransition, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -264,8 +264,9 @@ export function AiResultsPanel({ projectId, stageKey }: AiResultsPanelProps) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
+  const pollingRef = useRef<NodeJS.Timeout | null>(null);
 
-  async function fetchJobs() {
+  const fetchJobs = useCallback(async () => {
     try {
       const res = await fetch(
         `/api/editorial/projects/${projectId}/ai-jobs?stageKey=${stageKey}`
@@ -273,6 +274,20 @@ export function AiResultsPanel({ projectId, stageKey }: AiResultsPanelProps) {
       const json = await res.json();
       if (json.success) {
         setJobs(json.jobs);
+        
+        // Check if we need to start/stop polling
+        const hasRunning = json.jobs.some((j: AiJob) => j.status === "queued" || j.status === "processing");
+        
+        if (hasRunning && !pollingRef.current) {
+          // Start polling
+          pollingRef.current = setInterval(() => {
+            fetchJobs();
+          }, 5000);
+        } else if (!hasRunning && pollingRef.current) {
+          // Stop polling
+          clearInterval(pollingRef.current);
+          pollingRef.current = null;
+        }
       } else {
         setError(json.error);
       }
@@ -281,21 +296,19 @@ export function AiResultsPanel({ projectId, stageKey }: AiResultsPanelProps) {
     } finally {
       setLoading(false);
     }
-  }
+  }, [projectId, stageKey]);
 
   useEffect(() => {
     fetchJobs();
     
-    // Poll for updates if there are running jobs
-    const interval = setInterval(() => {
-      const hasRunning = jobs.some(j => j.status === "queued" || j.status === "processing");
-      if (hasRunning) {
-        fetchJobs();
+    // Cleanup polling on unmount
+    return () => {
+      if (pollingRef.current) {
+        clearInterval(pollingRef.current);
+        pollingRef.current = null;
       }
-    }, 5000);
-
-    return () => clearInterval(interval);
-  }, [projectId, stageKey]);
+    };
+  }, [fetchJobs]);
 
   async function handleRetry(jobId: string) {
     startTransition(async () => {

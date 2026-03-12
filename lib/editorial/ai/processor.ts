@@ -177,12 +177,13 @@ IMPORTANTE: Debes responder con un objeto JSON valido que siga este esquema:
 
     const analysisResult = result.object as AnalysisResult;
 
-    // Save result to database
+    // Mark job as succeeded (this also sets finished_at)
+    await markAiJobStatus({ jobId: options.jobId, status: "succeeded" });
+
+    // Save result output to database
     await supabase
       .from("editorial_jobs")
       .update({
-        status: "completed",
-        finished_at: new Date().toISOString(),
         output_ref: JSON.stringify(analysisResult),
       })
       .eq("id", options.jobId);
@@ -196,9 +197,6 @@ IMPORTANTE: Debes responder con un objeto JSON valido que siga este esquema:
       })
       .eq("project_id", options.projectId)
       .eq("stage_key", options.stageKey);
-
-    // Mark job as succeeded
-    await markAiJobStatus({ jobId: options.jobId, status: "succeeded" });
 
     return analysisResult;
   } catch (error) {
