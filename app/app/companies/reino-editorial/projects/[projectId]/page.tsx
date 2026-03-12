@@ -8,6 +8,7 @@ import { StaffEmptyState } from "@/components/editorial/staff/staff-empty-state"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { BookOpen, Upload } from "lucide-react";
+import { DeleteProjectButton } from "@/components/editorial/delete-project-button";
 
 interface ProjectDetailPageProps {
   params: { projectId: string };
@@ -55,18 +56,24 @@ export default async function ReinoEditorialProjectDetailPage({
 
   return (
     <div className="space-y-6 pb-6 px-6 pt-4">
-      <StaffProjectHeader
-        projectId={project.id}
-        title={project.title}
-        authorName={project.author_name}
-        currentStage={project.current_stage}
-        progressPercent={project.progress_percent}
-        status={project.status}
-        createdByName={created_by_name}
-        createdByEmail={created_by_email}
-        backHref="/app/companies/reino-editorial/projects"
-        backLabel="Volver a proyectos"
-      />
+      <div className="flex items-start justify-between gap-4">
+        <StaffProjectHeader
+          projectId={project.id}
+          title={project.title}
+          authorName={project.author_name}
+          currentStage={project.current_stage}
+          progressPercent={project.progress_percent}
+          status={project.status}
+          createdByName={created_by_name}
+          createdByEmail={created_by_email}
+          backHref="/app/companies/reino-editorial/projects"
+          backLabel="Volver a proyectos"
+        />
+        <DeleteProjectButton 
+          projectId={project.id} 
+          projectTitle={project.title} 
+        />
+      </div>
 
       <StaffAlertsPanel projectId={project.id} alerts={alerts} />
 
@@ -84,7 +91,7 @@ export default async function ReinoEditorialProjectDetailPage({
               <div className="space-y-1">
                 <p className="text-sm font-medium text-foreground">No manuscript uploaded yet.</p>
                 <p className="text-xs text-muted-foreground">
-                  Cuando lo subas, se registrará en “Files” y se podrán encolar jobs de AI.
+                  Cuando lo subas, se registrará en "Files" y se podrán encolar jobs de AI.
                 </p>
               </div>
               <Button asChild className="gap-2 shrink-0">
@@ -113,4 +120,3 @@ export default async function ReinoEditorialProjectDetailPage({
     </div>
   );
 }
-
