@@ -1,9 +1,13 @@
-import { notFound } from "next/navigation";
+import Link from "next/link";
 import { getStaffProject } from "@/lib/editorial/staff/services";
 import { StaffProjectHeader } from "@/components/editorial/staff/staff-project-header";
 import { StaffProjectTabs } from "@/components/editorial/staff/staff-project-tabs";
 import { getProjectAlertsWithRecalc } from "@/lib/editorial/alerts/detection";
 import { StaffAlertsPanel } from "@/components/editorial/staff/staff-alerts-panel";
+import { StaffEmptyState } from "@/components/editorial/staff/staff-empty-state";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { BookOpen, Upload } from "lucide-react";
 
 interface ProjectDetailPageProps {
   params: { projectId: string };
@@ -20,10 +24,34 @@ export default async function ReinoEditorialProjectDetailPage({
   ]);
 
   if (!detail) {
-    notFound();
+    return (
+      <div className="space-y-6 pb-6 px-6 pt-4">
+        <header className="space-y-2">
+          <h1 className="text-2xl font-semibold tracking-tight text-foreground">Proyecto</h1>
+          <p className="text-sm text-muted-foreground">
+            No hemos encontrado este proyecto en la base de datos.
+          </p>
+        </header>
+
+        <Card>
+          <CardContent className="py-10">
+            <StaffEmptyState
+              icon={BookOpen}
+              title="Proyecto no encontrado"
+              description="Puede que el enlace sea incorrecto o que el proyecto haya sido eliminado."
+            >
+              <Button asChild variant="outline" className="gap-2">
+                <Link href="/app/companies/reino-editorial/projects">Volver a proyectos</Link>
+              </Button>
+            </StaffEmptyState>
+          </CardContent>
+        </Card>
+      </div>
+    );
   }
 
-  const { project, created_by_name, created_by_email } = detail;
+  const { project, created_by_name, created_by_email, files } = detail;
+  const manuscriptFiles = files.filter((f) => f.file_type === "manuscript_original");
 
   return (
     <div className="space-y-6 pb-6 px-6 pt-4">
@@ -42,7 +70,46 @@ export default async function ReinoEditorialProjectDetailPage({
 
       <StaffAlertsPanel projectId={project.id} alerts={alerts} />
 
-      <StaffProjectTabs detail={detail} />
+      {/* Manuscript section – visible placeholder, ready for uploader wiring */}
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-base">Manuscript</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <p className="text-sm text-muted-foreground">
+            Sube el manuscrito original para iniciar la ingesta y permitir que el Reino Editorial AI Engine lo procese.
+          </p>
+          {manuscriptFiles.length === 0 ? (
+            <div className="flex items-center justify-between gap-4 rounded-lg border border-dashed border-border bg-muted/30 p-4">
+              <div className="space-y-1">
+                <p className="text-sm font-medium text-foreground">No manuscript uploaded yet.</p>
+                <p className="text-xs text-muted-foreground">
+                  Cuando lo subas, se registrará en “Files” y se podrán encolar jobs de AI.
+                </p>
+              </div>
+              <Button asChild className="gap-2 shrink-0">
+                {/* Ancla a la sección de Files donde ya existe el uploader real */}
+                <Link href="#files">
+                  <Upload className="h-4 w-4" />
+                  Upload Manuscript
+                </Link>
+              </Button>
+            </div>
+          ) : (
+            <div className="rounded-lg border border-border p-4">
+              <p className="text-sm text-foreground">
+                Manuscrito subido:{" "}
+                <span className="font-medium">{manuscriptFiles[0]?.storage_path ?? "—"}</span>
+              </p>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Main dashboard sections: overview, files, activity, AI engine, etc. */}
+      <div id="files">
+        <StaffProjectTabs detail={detail} />
+      </div>
     </div>
   );
 }
