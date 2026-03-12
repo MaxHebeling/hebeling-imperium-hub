@@ -47,12 +47,16 @@ export async function createEditorialProject(
     throw new Error(`Failed to create editorial project: ${error?.message}`);
   }
 
-  // Create one stage record per pipeline stage (only for existing stages in the database)
-  // export and distribution are handled separately or may need a migration
+  // Create one stage record per pipeline stage (only for existing stages in the database).
+  // Uses upsert with ignoreDuplicates so that:
+  //   - a DB trigger that pre-creates stages doesn't cause a UNIQUE violation
+  //   - a retry on an existing project doesn't fail
+  //   - stage creation failure is non-fatal: the project was already created
+  //     and the user should still be redirected so they can see it.
   const stageKeys = EDITORIAL_STAGE_KEYS.filter(
     (key) => key !== "export" && key !== "distribution"
   );
-  
+
   const stageRows = stageKeys.map((key) => ({
     project_id: project.id,
     stage_key: key,
@@ -61,17 +65,19 @@ export async function createEditorialProject(
 
   const { error: stagesError } = await supabase
     .from("editorial_stages")
-    .insert(stageRows);
+    .upsert(stageRows, { onConflict: "project_id,stage_key", ignoreDuplicates: true });
 
   if (stagesError) {
-    console.error("[v0] Stages error details:", {
+    // Non-fatal: log and continue. The project exists; stages can be retried or
+    // created later. Do NOT throw here – throwing would return 500 to the
+    // browser even though the project was successfully created.
+    console.error("[editorial] Stage upsert failed (non-fatal):", {
       code: stagesError.code,
       message: stagesError.message,
       details: stagesError.details,
       hint: stagesError.hint,
-      stageRows,
+      projectId: project.id,
     });
-    throw new Error(`Failed to create editorial stages: ${stagesError.message}`);
   }
 
   return project as EditorialProject;

@@ -24,9 +24,11 @@ export async function POST(request: NextRequest) {
 
     await logEditorialActivity(project.id, "project_created", {
       payload: { title: project.title, stage: project.current_stage },
+    }).catch((logErr) => {
+      console.error("[editorial/create] logEditorialActivity failed (non-fatal):", logErr);
     });
 
-    return NextResponse.json({ success: true, project });
+    return NextResponse.json({ success: true, project, projectId: project.id });
   } catch (error) {
     console.error("[editorial/create] error:", error);
     const message = error instanceof Error ? error.message : "Internal server error";

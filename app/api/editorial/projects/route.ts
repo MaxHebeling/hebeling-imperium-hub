@@ -27,8 +27,11 @@ export async function POST(request: NextRequest) {
       client_id: body.client_id ?? undefined,
     });
 
-    await logEditorialActivity(project.id, "project_created", {
+    // Fire-and-forget: log the event but never block the 201 response.
+    logEditorialActivity(project.id, "project_created", {
       payload: { title: project.title, stage: project.current_stage },
+    }).catch((logErr) => {
+      console.error("[editorial/projects] logEditorialActivity failed (non-fatal):", logErr);
     });
 
     return NextResponse.json(
