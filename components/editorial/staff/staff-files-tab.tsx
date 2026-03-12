@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Download, ExternalLink, FileText, Loader2, Upload } from "lucide-react";
+import { Download, ExternalLink, FileText, Loader2, Upload, Trash2 } from "lucide-react";
 import type { EditorialFile } from "@/lib/editorial/types/editorial";
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -62,6 +62,7 @@ export function StaffFilesTab({ files, projectId }: StaffFilesTabProps) {
   const [error, setError] = useState<string | null>(null);
   const [openBusyId, setOpenBusyId] = useState<string | null>(null);
   const [downloadBusyId, setDownloadBusyId] = useState<string | null>(null);
+  const [deleteBusyId, setDeleteBusyId] = useState<string | null>(null);
   const [file, setFile] = useState<File | null>(null);
   const [fileType, setFileType] = useState("manuscript_original");
   const [stageKey, setStageKey] = useState<string>("ingesta");
@@ -138,6 +139,31 @@ export function StaffFilesTab({ files, projectId }: StaffFilesTabProps) {
       toast({ title: "Error de red", description: "No se pudo descargar el archivo.", variant: "destructive" });
     } finally {
       setDownloadBusyId(null);
+    }
+  }
+
+  async function deleteFile(fileId: string) {
+    if (!confirm("¿Estás seguro de eliminar este archivo? Esta acción no se puede deshacer.")) {
+      return;
+    }
+    setError(null);
+    setDeleteBusyId(fileId);
+    try {
+      const res = await fetch(`/api/staff/files/${fileId}`, { method: "DELETE" });
+      const json = await res.json();
+      if (!json.success) {
+        const msg = json.error ?? "No se pudo eliminar el archivo.";
+        setError(msg);
+        toast({ title: "Error", description: msg, variant: "destructive" });
+        return;
+      }
+      toast({ title: "Archivo eliminado", description: "Se eliminó correctamente." });
+      router.refresh();
+    } catch {
+      setError("Error de red al eliminar el archivo.");
+      toast({ title: "Error de red", description: "No se pudo eliminar.", variant: "destructive" });
+    } finally {
+      setDeleteBusyId(null);
     }
   }
 
@@ -364,6 +390,20 @@ export function StaffFilesTab({ files, projectId }: StaffFilesTabProps) {
                               <Loader2 className="h-4 w-4 animate-spin" />
                             ) : (
                               <Download className="h-4 w-4" />
+                            )}
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="h-8 px-2 text-xs text-destructive hover:text-destructive"
+                            onClick={() => deleteFile(f.id)}
+                            aria-label="Eliminar"
+                            disabled={deleteBusyId === f.id}
+                          >
+                            {deleteBusyId === f.id ? (
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                            ) : (
+                              <Trash2 className="h-4 w-4" />
                             )}
                           </Button>
                           <span className="text-xs text-muted-foreground">
