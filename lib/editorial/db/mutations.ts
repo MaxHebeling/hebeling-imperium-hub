@@ -84,7 +84,6 @@ export async function createEditorialProject(
         user_id: project.created_by,
         role: "owner",
         invited_at: now,
-        accepted_at: now,
       });
 
     if (memberError) {
