@@ -63,9 +63,9 @@ function LoginForm() {
       return;
     }
     
-    // Redirect based on role
+    // Redirect based on role — staff lands in company-first OS
     if (profile.role === "superadmin" || profile.role === "admin" || profile.role === "sales" || profile.role === "ops") {
-      router.push("/app/dashboard");
+      router.push("/app/companies");
       router.refresh();
     } else if (profile.role === "client") {
       // Clients should use client-login

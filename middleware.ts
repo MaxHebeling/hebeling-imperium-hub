@@ -96,12 +96,32 @@ export async function middleware(request: NextRequest) {
     (isLocal && appHint === "clients") ||
     (isPreview && appHint === "clients");
 
+  /**
+   * Apply author portal rules (/author/*) that are identical across all host
+   * contexts. Returns a redirect Response when action is needed, otherwise null.
+   */
+  function applyAuthorPortalRules(): NextResponse | null {
+    if (pathname.startsWith("/author") && !pathname.startsWith("/author/login")) {
+      if (!user) {
+        const url = request.nextUrl.clone();
+        url.pathname = "/author/login";
+        return NextResponse.redirect(url);
+      }
+    }
+    if (pathname === "/author/login" && user) {
+      const url = request.nextUrl.clone();
+      url.pathname = "/author/projects";
+      return NextResponse.redirect(url);
+    }
+    return null;
+  }
+
   // HUB (staff)
   if (isHubHost) {
-    // If staff user is logged in and visits /login, redirect to dashboard
+    // If staff user is logged in and visits /login, redirect to company-first OS
     if (pathname === "/login" && user && isStaff) {
       const url = request.nextUrl.clone();
-      url.pathname = "/app/dashboard";
+      url.pathname = "/app/companies";
       return NextResponse.redirect(url);
     }
 
@@ -115,6 +135,37 @@ export async function middleware(request: NextRequest) {
       if (!isStaff) {
         const url = request.nextUrl.clone();
         url.pathname = "/login";
+        return NextResponse.redirect(url);
+      }
+    }
+
+    // Author portal: /author/* requires any authenticated user.
+    // /author/login is public (no auth needed).
+    const authorRedirect = applyAuthorPortalRules();
+    if (authorRedirect) return authorRedirect;
+
+    // Staff dashboard: /staff/* (except login) requires auth AND staff role. Login is public.
+    if (pathname.startsWith("/staff")) {
+      if (pathname !== "/staff/login") {
+        if (!user) {
+          const url = request.nextUrl.clone();
+          url.pathname = "/staff/login";
+          return NextResponse.redirect(url);
+        }
+        if (!isStaff) {
+          const url = request.nextUrl.clone();
+          url.pathname = "/staff/login";
+          url.searchParams.set("reason", "forbidden");
+          return NextResponse.redirect(url);
+        }
+      } else if (user) {
+        // Logged-in non-staff users should not be able to access /staff/*
+        if (!isStaff) {
+          return supabaseResponse;
+        }
+        // Staff already logged in visiting /staff/login → company-first OS
+        const url = request.nextUrl.clone();
+        url.pathname = "/app/companies";
         return NextResponse.redirect(url);
       }
     }
@@ -138,6 +189,11 @@ export async function middleware(request: NextRequest) {
       }
     }
 
+    // Author portal: /author/* requires any authenticated user.
+    // /author/login is public.
+    const authorRedirect = applyAuthorPortalRules();
+    if (authorRedirect) return authorRedirect;
+
     // If client user is logged in and visits /client-login, redirect to portal
     if (pathname === "/client-login" && user && isClient) {
       const url = request.nextUrl.clone();
@@ -148,6 +204,7 @@ export async function middleware(request: NextRequest) {
     const allowed =
       pathname === "/client-login" ||
       pathname.startsWith("/portal") ||
+      pathname.startsWith("/author") ||
       pathname === "/" ||
       isAsset;
 

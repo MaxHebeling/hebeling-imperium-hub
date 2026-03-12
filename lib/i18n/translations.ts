@@ -26,6 +26,10 @@ export const translations = {
       organizations: "Organizaciones",
       team: "Equipo",
       roles: "Roles y Permisos",
+      clients: "Clientes",
+      billing: "Facturación",
+      files: "Archivos",
+      intelligence: "Inteligencia",
     },
     // Sidebar sections
     sidebar: {
@@ -38,6 +42,8 @@ export const translations = {
       external: "Externo",
       collapse: "Colapsar",
       expand: "Expandir",
+      empresas: "Empresas",
+      infraestructuraCompartida: "Infraestructura Compartida",
     },
     // Topbar
     topbar: {
@@ -688,6 +694,10 @@ export const translations = {
       organizations: "Organizations",
       team: "Team",
       roles: "Roles & Permissions",
+      clients: "Clients",
+      billing: "Billing",
+      files: "Files",
+      intelligence: "Intelligence",
     },
     // Sidebar sections
     sidebar: {
@@ -700,6 +710,8 @@ export const translations = {
       external: "External",
       collapse: "Collapse",
       expand: "Expand",
+      empresas: "Companies",
+      infraestructuraCompartida: "Shared Infrastructure",
     },
     // Topbar
     topbar: {
