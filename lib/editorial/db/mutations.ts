@@ -74,6 +74,32 @@ export async function createEditorialProject(
     throw new Error(`Failed to create editorial stages: ${stagesError.message}`);
   }
 
+  // Ensure the creator is a member so RLS ep_member_read can see the project.
+  if (project.created_by) {
+    const now = new Date().toISOString();
+    const { error: memberError } = await supabase
+      .from("editorial_project_members")
+      .insert({
+        project_id: project.id,
+        user_id: project.created_by,
+        role: "owner",
+        invited_at: now,
+        accepted_at: now,
+      });
+
+    if (memberError) {
+      console.error("[editorial] Failed to create project membership", {
+        projectId: project.id,
+        created_by: project.created_by,
+        code: memberError.code,
+        message: memberError.message,
+        details: memberError.details,
+        hint: memberError.hint,
+      });
+      // Do not throw: project itself was created successfully.
+    }
+  }
+
   return project as EditorialProject;
 }
 
