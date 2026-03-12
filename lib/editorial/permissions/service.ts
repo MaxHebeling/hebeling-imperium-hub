@@ -68,21 +68,50 @@ export async function getEffectiveProjectCapabilities(options: {
   userId: string;
 }): Promise<EditorialCapability[]> {
   const roles = await getProjectStaffRoles(options.projectId, options.userId);
+  console.info("[capability-debug] roles for user", {
+    projectId: options.projectId,
+    orgId: options.orgId,
+    userId: options.userId,
+    roles,
+  });
 
   const roleCapsLists = await Promise.all(
     roles.map(async (role) => {
       const fromDb = await getRoleCapabilitiesFromDb(options.orgId, role);
-      return fromDb ?? DEFAULT_ROLE_CAPABILITIES[role] ?? [];
+      const caps = fromDb ?? DEFAULT_ROLE_CAPABILITIES[role] ?? [];
+      console.info("[capability-debug] role capabilities source", {
+        projectId: options.projectId,
+        orgId: options.orgId,
+        userId: options.userId,
+        role,
+        fromDb: !!fromDb,
+        capabilities: caps,
+      });
+      return caps;
     })
   );
 
   const base = new Set<EditorialCapability>(roleCapsLists.flat());
   const override = await getUserCapabilityOverride(options.projectId, options.userId);
   if (override) {
+    console.info("[capability-debug] user override", {
+      projectId: options.projectId,
+      orgId: options.orgId,
+      userId: options.userId,
+      allow: override.allow,
+      deny: override.deny,
+    });
     (override.deny ?? []).forEach((c) => base.delete(c as EditorialCapability));
     (override.allow ?? []).forEach((c) => base.add(c as EditorialCapability));
   }
-  return Array.from(base);
+  const effective = Array.from(base);
+  console.info("[capability-debug] effective capabilities", {
+    projectId: options.projectId,
+    orgId: options.orgId,
+    userId: options.userId,
+    effectiveCapabilities: effective,
+  });
+  return effective;
 }
 
 export async function requireEditorialCapability(options: {
@@ -93,10 +122,20 @@ export async function requireEditorialCapability(options: {
 }): Promise<CapabilityDecision> {
   const effectiveCapabilities = await getEffectiveProjectCapabilities(options);
   const allowed = effectiveCapabilities.includes(options.capability);
-  return {
+  const decision: CapabilityDecision = {
     allowed,
     reason: allowed ? undefined : `Missing capability: ${options.capability}`,
     effectiveCapabilities,
   };
+  console.info("[capability-debug] requireEditorialCapability decision", {
+    projectId: options.projectId,
+    orgId: options.orgId,
+    userId: options.userId,
+    requestedCapability: options.capability,
+    allowed: decision.allowed,
+    reason: decision.reason,
+    effectiveCapabilities: decision.effectiveCapabilities,
+  });
+  return decision;
 }
 

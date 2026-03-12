@@ -1,4 +1,4 @@
-"use client";
+\"use client\";
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
@@ -13,6 +13,24 @@ interface ReinoEditorialManuscriptUploadProps {
   projectId: string;
 }
 
+type UploadStatus = "idle" | "uploading" | "success" | "error";
+
+const MAX_FILE_SIZE = 25 * 1024 * 1024; // 25MB
+const ALLOWED_EXTENSIONS = [".doc", ".docx", ".pdf", ".txt", ".md"];
+const ACCEPT =
+  ".doc,.docx,.pdf,.txt,.md,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/pdf,text/plain,text/markdown";
+
+function validateFile(file: File): string | null {
+  const ext = "." + (file.name.split(".").pop() ?? "").toLowerCase();
+  if (!ALLOWED_EXTENSIONS.includes(ext)) {
+    return "Solo se permiten archivos .doc, .docx, .pdf, .txt o .md.";
+  }
+  if (file.size > MAX_FILE_SIZE) {
+    return "Archivo demasiado grande (máx. 25 MB).";
+  }
+  return null;
+}
+
 export function ReinoEditorialManuscriptUpload({
   projectId,
 }: ReinoEditorialManuscriptUploadProps) {
@@ -22,6 +40,7 @@ export function ReinoEditorialManuscriptUpload({
   const [file, setFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [status, setStatus] = useState<UploadStatus>("idle");
 
   async function handleUpload() {
     console.info("[reino-manuscript] handleUpload start", {
@@ -29,11 +48,20 @@ export function ReinoEditorialManuscriptUpload({
       projectId,
     });
     setError(null);
+    setStatus("idle");
     if (!file) {
-      setError("Selecciona un archivo (.docx o .pdf).");
+      setError("Selecciona un archivo (.docx, .pdf, .txt o .md).");
       return;
     }
+
+    const validationError = validateFile(file);
+    if (validationError) {
+      setError(validationError);
+      return;
+    }
+
     setIsUploading(true);
+    setStatus("uploading");
     try {
       const form = new FormData();
       form.set("file", file);
@@ -67,6 +95,7 @@ export function ReinoEditorialManuscriptUpload({
           json?.error ??
           (text ? `HTTP ${res.status}: ${text}` : `HTTP ${res.status}: No response body`);
         setError(msg);
+        setStatus("error");
         toast({
           title: "No se pudo subir el manuscrito",
           description: msg,
@@ -78,12 +107,14 @@ export function ReinoEditorialManuscriptUpload({
         title: "Manuscrito subido",
         description: "El manuscrito se registró correctamente en el proyecto.",
       });
+      setStatus("success");
       setOpen(false);
       setFile(null);
       router.refresh();
     } catch {
       console.error("[reino-manuscript] network error during upload");
       setError("Error de red al subir el manuscrito.");
+      setStatus("error");
       toast({
         title: "Error de red",
         description: "No se pudo subir el manuscrito. Intenta de nuevo.",
@@ -102,6 +133,7 @@ export function ReinoEditorialManuscriptUpload({
         setOpen(next);
         if (!next) {
           setError(null);
+          setStatus("idle");
           setFile(null);
         }
       }}
@@ -115,7 +147,7 @@ export function ReinoEditorialManuscriptUpload({
         }}
       >
         <Upload className="h-4 w-4" />
-        Upload Manuscript TEST
+        Upload New Manuscript
       </Button>
 
       <DialogContent className="sm:max-w-md">
@@ -135,7 +167,7 @@ export function ReinoEditorialManuscriptUpload({
             <Input
               id="manuscript-file"
               type="file"
-              accept=".doc,.docx,.pdf"
+              accept={ACCEPT}
               onChange={(e) => {
                 const f = e.target.files?.[0] ?? null;
                 console.info("[reino-manuscript] file selected", {
@@ -144,10 +176,32 @@ export function ReinoEditorialManuscriptUpload({
                   type: f?.type,
                   size: f?.size,
                 });
+                if (!f) {
+                  setFile(null);
+                  setError(null);
+                  return;
+                }
+                const validationError = validateFile(f);
+                if (validationError) {
+                  setFile(null);
+                  setError(validationError);
+                  return;
+                }
+                setError(null);
                 setFile(f);
               }}
             />
+            <p className="mt-1 text-xs text-muted-foreground">
+              Tipos permitidos: .doc, .docx, .pdf, .txt, .md · Tamaño máximo: 25 MB.
+            </p>
           </div>
+        </div>
+
+        <div className="mt-2 text-xs text-muted-foreground">
+          {status === "idle" && !isUploading && "Selecciona un archivo y haz clic en “Subir manuscrito”."}
+          {status === "uploading" && isUploading && "Subiendo manuscrito… No cierres esta ventana."}
+          {status === "success" && !isUploading && "Última subida completada correctamente."}
+          {status === "error" && !isUploading && "Hubo un error en la última subida. Revisa el mensaje arriba."}
         </div>
 
         <div className="mt-4 flex justify-end gap-2">
