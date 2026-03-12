@@ -19,7 +19,7 @@ export default function ReinoEditorialLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="flex flex-col min-h-0 flex-1">
+    <div className="editorial-theme flex flex-col min-h-0 flex-1">
       <CompanySecondaryNav
         title="Reino Editorial"
         items={REINO_NAV_ITEMS}

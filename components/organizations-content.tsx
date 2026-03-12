@@ -204,7 +204,16 @@ export function OrganizationsContent({ organizations }: OrganizationsContentProp
                                 {t.common.view}
                               </Link>
                             </DropdownMenuItem>
-                            <DropdownMenuItem className="text-destructive focus:text-destructive cursor-pointer">
+                            <DropdownMenuItem 
+                              className="text-destructive focus:text-destructive cursor-pointer"
+                              onClick={() => {
+                                if (confirm(`Delete organization "${org.name}"? This cannot be undone.`)) {
+                                  fetch(`/api/organizations/${org.id}`, { method: "DELETE" })
+                                    .then(res => res.json())
+                                    .then(data => { if (data.success) window.location.reload(); });
+                                }
+                              }}
+                            >
                               <Trash2 className="h-4 w-4 mr-2" />
                               {t.common.delete}
                             </DropdownMenuItem>

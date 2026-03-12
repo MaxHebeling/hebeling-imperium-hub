@@ -55,6 +55,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Loader2,
+  Trash2,
   Contact,
   ClipboardList,
   Phone,
@@ -174,6 +175,8 @@ export default function CRMPage() {
   });
   const [saving, setSaving] = useState(false);
   const [userOrgId, setUserOrgId] = useState<string | null>(null);
+  const [deletingLeadId, setDeletingLeadId] = useState<string | null>(null);
+  const [deleteConfirmLead, setDeleteConfirmLead] = useState<Lead | null>(null);
 
   const fetchTenants = useCallback(async () => {
     setLoading(true);
@@ -386,6 +389,26 @@ export default function CRMPage() {
     setIsLeadModalOpen(true);
   };
 
+  const handleDeleteLead = async (lead: Lead) => {
+    setDeletingLeadId(lead.id);
+    try {
+      const res = await fetch(`/api/leads/${lead.id}`, { method: "DELETE" });
+      const json = await res.json();
+      if (!json.success) {
+        console.error("Error deleting lead:", json.error);
+        return;
+      }
+      setIsLeadModalOpen(false);
+      setSelectedLead(null);
+      setDeleteConfirmLead(null);
+      fetchLeads();
+    } catch (err) {
+      console.error("Delete lead error:", err);
+    } finally {
+      setDeletingLeadId(null);
+    }
+  };
+
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString("en-US", {
       year: "numeric",
@@ -524,6 +547,7 @@ export default function CRMPage() {
                     <TableHead>{t.crm.project}</TableHead>
                     <TableHead>{t.crm.status}</TableHead>
                     <TableHead>{t.crm.date}</TableHead>
+                    <TableHead className="w-[50px]" />
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -581,6 +605,19 @@ export default function CRMPage() {
                       </TableCell>
                       <TableCell className="text-muted-foreground text-sm">
                         {formatDate(lead.created_at)}
+                      </TableCell>
+                      <TableCell>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-7 w-7 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setDeleteConfirmLead(lead);
+                          }}
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </Button>
                       </TableCell>
                     </TableRow>
                   ))}
@@ -1191,7 +1228,20 @@ export default function CRMPage() {
             </div>
           )}
 
-          <DialogFooter className="mt-4">
+          <DialogFooter className="mt-4 flex-col-reverse sm:flex-row gap-2">
+            <Button
+              variant="destructive"
+              className="gap-2 sm:mr-auto"
+              onClick={() => selectedLead && setDeleteConfirmLead(selectedLead)}
+              disabled={deletingLeadId === selectedLead?.id}
+            >
+              {deletingLeadId === selectedLead?.id ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Trash2 className="h-4 w-4" />
+              )}
+              Eliminar lead
+            </Button>
             {selectedLead?.whatsapp && (
               <Button asChild variant="outline" className="gap-2">
                 <a href={`https://wa.me/${selectedLead.whatsapp.replace(/\D/g, '')}`} target="_blank" rel="noopener noreferrer">
@@ -1202,6 +1252,41 @@ export default function CRMPage() {
             )}
             <Button onClick={() => setIsLeadModalOpen(false)}>
               Cerrar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={!!deleteConfirmLead} onOpenChange={(open) => !open && setDeleteConfirmLead(null)}>
+        <DialogContent className="sm:max-w-[400px]">
+          <DialogHeader>
+            <DialogTitle>Eliminar lead</DialogTitle>
+            <DialogDescription>
+              Esta accion es permanente y no se puede deshacer. Se eliminara el lead{" "}
+              <span className="font-semibold text-foreground">{deleteConfirmLead?.full_name}</span>{" "}
+              ({deleteConfirmLead?.lead_code}) por completo.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2 mt-2">
+            <Button
+              variant="outline"
+              onClick={() => setDeleteConfirmLead(null)}
+              disabled={!!deletingLeadId}
+            >
+              Cancelar
+            </Button>
+            <Button
+              variant="destructive"
+              className="gap-2"
+              onClick={() => deleteConfirmLead && handleDeleteLead(deleteConfirmLead)}
+              disabled={!!deletingLeadId}
+            >
+              {deletingLeadId ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Trash2 className="h-4 w-4" />
+              )}
+              Si, eliminar
             </Button>
           </DialogFooter>
         </DialogContent>

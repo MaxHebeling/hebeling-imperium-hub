@@ -23,7 +23,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Plus, DollarSign, Building2, GripVertical } from "lucide-react";
+import { Plus, DollarSign, Building2, GripVertical, Trash2, MoreHorizontal } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { useLanguage, stageKeyMap } from "@/lib/i18n";
 
 interface Stage {
@@ -540,41 +546,68 @@ export default function DealsPage() {
                   {t.deals.noDeals}
                 </div>
               ) : (
-                getDealsForStage(stage.id).map((deal) => (
-                  <div
-                    key={deal.id}
-                    draggable
-                    onDragStart={() => handleDragStart(deal)}
-                    onDragEnd={handleDragEnd}
-                    className={`bg-white rounded-md border p-3 cursor-grab active:cursor-grabbing shadow-sm hover:shadow-md transition-shadow ${
-                      draggedDeal?.id === deal.id ? "opacity-50" : ""
-                    }`}
-                  >
-                    <div className="flex items-start gap-2">
-                      <GripVertical className="h-4 w-4 text-muted-foreground mt-0.5 flex-shrink-0" />
-                      <div className="flex-1 min-w-0">
-                        <h4 className="font-medium text-sm truncate">
-                          {deal.title}
-                        </h4>
-                        {deal.tenant && (
-                          <div className="flex items-center gap-1 text-xs text-muted-foreground mt-1">
-                            <Building2 className="h-3 w-3" />
-                            <span className="truncate">{deal.tenant.name}</span>
+                  getDealsForStage(stage.id).map((deal) => (
+                    <div
+                      key={deal.id}
+                      draggable
+                      onDragStart={() => handleDragStart(deal)}
+                      onDragEnd={handleDragEnd}
+                      className={`bg-white rounded-md border p-3 cursor-grab active:cursor-grabbing shadow-sm hover:shadow-md transition-shadow ${
+                        draggedDeal?.id === deal.id ? "opacity-50" : ""
+                      }`}
+                    >
+                      <div className="flex items-start gap-2">
+                        <GripVertical className="h-4 w-4 text-muted-foreground mt-0.5 flex-shrink-0" />
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-start justify-between gap-1">
+                            <h4 className="font-medium text-sm truncate">
+                              {deal.title}
+                            </h4>
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <button 
+                                  className="p-1 hover:bg-muted rounded flex-shrink-0" 
+                                  onClick={(e) => e.stopPropagation()}
+                                >
+                                  <MoreHorizontal className="h-3 w-3" />
+                                </button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end">
+                                <DropdownMenuItem
+                                  className="text-destructive focus:text-destructive"
+                                  onClick={() => {
+                                    if (confirm(`Delete deal "${deal.title}"? This cannot be undone.`)) {
+                                      fetch(`/api/deals/${deal.id}`, { method: "DELETE" })
+                                        .then(res => res.json())
+                                        .then(data => { if (data.success) loadData(); });
+                                    }
+                                  }}
+                                >
+                                  <Trash2 className="h-4 w-4 mr-2" />
+                                  Delete
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
                           </div>
-                        )}
-                        <div className="flex items-center gap-1 text-sm font-semibold text-emerald-600 mt-2">
-                          <DollarSign className="h-3 w-3" />
-                          {formatCurrency(deal.value || 0, deal.currency)}
+                          {deal.tenant && (
+                            <div className="flex items-center gap-1 text-xs text-muted-foreground mt-1">
+                              <Building2 className="h-3 w-3" />
+                              <span className="truncate">{deal.tenant.name}</span>
+                            </div>
+                          )}
+                          <div className="flex items-center gap-1 text-sm font-semibold text-emerald-600 mt-2">
+                            <DollarSign className="h-3 w-3" />
+                            {formatCurrency(deal.value || 0, deal.currency)}
+                          </div>
+                          {deal.brand && (
+                            <Badge variant="outline" className="mt-2 text-xs">
+                              {deal.brand.name}
+                            </Badge>
+                          )}
                         </div>
-                        {deal.brand && (
-                          <Badge variant="outline" className="mt-2 text-xs">
-                            {deal.brand.name}
-                          </Badge>
-                        )}
                       </div>
                     </div>
-                  </div>
-                ))
+                  ))
               )}
             </div>
           </div>

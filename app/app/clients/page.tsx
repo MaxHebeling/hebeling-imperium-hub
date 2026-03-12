@@ -52,6 +52,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Loader2,
+  Trash2,
 } from "lucide-react";
 import Link from "next/link";
 
@@ -666,11 +667,28 @@ export default function ClientsPage() {
                               Create Deal
                             </DropdownMenuItem>
                             <DropdownMenuSeparator />
-                            <DropdownMenuItem className="cursor-pointer">
-                              <FileText className="h-4 w-4 mr-2" />
-                              View Documents
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
+<DropdownMenuItem className="cursor-pointer">
+  <FileText className="h-4 w-4 mr-2" />
+  View Documents
+</DropdownMenuItem>
+  <DropdownMenuSeparator />
+  <DropdownMenuItem 
+    className="cursor-pointer text-destructive focus:text-destructive"
+    onClick={(e) => {
+      e.stopPropagation();
+      if (confirm(`Are you sure you want to delete "${client.name}"? This action cannot be undone.`)) {
+        fetch(`/api/clients/${client.id}`, { method: "DELETE" })
+          .then(res => res.json())
+          .then(data => {
+            if (data.success) fetchClients();
+          });
+      }
+    }}
+  >
+    <Trash2 className="h-4 w-4 mr-2" />
+    Delete Client
+  </DropdownMenuItem>
+  </DropdownMenuContent>
                         </DropdownMenu>
                       </div>
                     </TableCell>
