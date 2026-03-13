@@ -6,20 +6,15 @@ import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 import {
-  LayoutDashboard,
   Users,
-  FileText,
   Settings,
   ClipboardList,
   CreditCard,
-  Zap,
-  BarChart3,
   Building2,
   PanelLeftClose,
   PanelLeft,
   ChevronRight,
   FolderOpen,
-  UserCircle,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -33,12 +28,6 @@ import {
 
 const navSections = [
   {
-    titleKey: null as string | null,
-    items: [
-      { href: "/app/dashboard", labelKey: "dashboard", icon: LayoutDashboard },
-    ],
-  },
-  {
     titleKey: "empresas" as const,
     items: [
       { href: "/app/companies", labelKey: "companies", icon: Building2 },
@@ -48,11 +37,8 @@ const navSections = [
     titleKey: "infraestructuraCompartida" as const,
     items: [
       { href: "/app/crm", labelKey: "crm", icon: Users },
-      { href: "/app/clients", labelKey: "clients", icon: UserCircle },
       { href: "/app/finance-vault", labelKey: "billing", icon: CreditCard },
       { href: "/app/documents", labelKey: "files", icon: FolderOpen },
-      { href: "/app/analytics", labelKey: "intelligence", icon: BarChart3 },
-      { href: "/app/automations", labelKey: "automations", icon: Zap },
     ],
   },
   {
@@ -118,7 +104,7 @@ export function AppSidebar({ userName, userRole }: AppSidebarProps) {
         {/* Logo */}
         <div className={cn("border-b border-sidebar-border", isCollapsed ? "p-3" : "p-4")}>
           <Link
-            href="/app/dashboard"
+            href="/app/companies"
             className={cn(
               "flex items-center gap-3",
               isCollapsed && "justify-center"
