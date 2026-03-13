@@ -39,7 +39,6 @@ export async function createEditorialProject(
       current_stage: "ingesta",
       status: "created",
       progress_percent: 0,
-      service_type: input.service_type ?? "full_pipeline",
       created_by: input.created_by ?? null,
     })
     .select()
