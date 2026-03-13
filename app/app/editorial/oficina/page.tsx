@@ -9,6 +9,11 @@ import {
   Plus,
   Trash2,
   Globe,
+  ExternalLink,
+  Link2,
+  BookOpen,
+  Users,
+  LayoutDashboard,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { SERVICE_CATALOG } from "@/lib/editorial/oficina/company-config";
@@ -47,6 +52,39 @@ export default function OficinaPage() {
               Contratos, presupuestos, facturas y recibos
             </p>
           </div>
+        </div>
+      </div>
+
+      {/* Links Rápidos */}
+      <div className="rounded-xl border border-gray-200 bg-white p-5">
+        <h3 className="text-sm font-bold text-gray-900 mb-4 uppercase tracking-wide flex items-center gap-2">
+          <Link2 className="w-4 h-4" style={{ color: "#1a3a6b" }} />
+          Links Rápidos
+        </h3>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+          {QUICK_LINKS.map((link) => (
+            <a
+              key={link.href}
+              href={link.href}
+              target={link.external ? "_blank" : undefined}
+              rel={link.external ? "noopener noreferrer" : undefined}
+              className="flex items-center gap-3 p-3 rounded-lg border border-gray-100 hover:border-blue-200 hover:bg-blue-50/50 transition-all group"
+            >
+              <div
+                className="flex items-center justify-center w-9 h-9 rounded-lg shrink-0"
+                style={{ background: link.iconBg }}
+              >
+                <link.icon className="w-4 h-4 text-white" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-semibold text-gray-900 group-hover:text-blue-700 transition-colors truncate">
+                  {link.label}
+                </p>
+                <p className="text-[11px] text-gray-500 truncate">{link.description}</p>
+              </div>
+              <ExternalLink className="w-3.5 h-3.5 text-gray-300 group-hover:text-blue-500 transition-colors shrink-0" />
+            </a>
+          ))}
         </div>
       </div>
 
@@ -777,4 +815,60 @@ const JURISDICTIONS: { value: ContractJurisdiction; label: string; sub: string; 
   { value: "usa", label: "Estados Unidos", sub: "California / Common Law", flag: "\u{1F1FA}\u{1F1F8}" },
   { value: "mexico", label: "Mexico", sub: "Codigo Civil Federal", flag: "\u{1F1F2}\u{1F1FD}" },
   { value: "argentina", label: "Argentina", sub: "Codigo Civil y Comercial", flag: "\u{1F1E6}\u{1F1F7}" },
+];
+
+/* ------------------------------------------------------------------ */
+/*  Quick Links for the Oficina                                        */
+/* ------------------------------------------------------------------ */
+const QUICK_LINKS: {
+  label: string;
+  description: string;
+  href: string;
+  icon: typeof FileText;
+  iconBg: string;
+  external?: boolean;
+}[] = [
+  {
+    label: "Portal de Clientes",
+    description: "Login para autores y clientes",
+    href: "/client-login",
+    icon: Users,
+    iconBg: "linear-gradient(135deg, #7c3aed 0%, #a855f7 100%)",
+  },
+  {
+    label: "Dashboard Editorial",
+    description: "Pipeline y proyectos activos",
+    href: "/app/editorial",
+    icon: LayoutDashboard,
+    iconBg: "linear-gradient(135deg, #1a3a6b 0%, #2a5a9b 100%)",
+  },
+  {
+    label: "Proyectos",
+    description: "Gestión de manuscritos",
+    href: "/app/editorial/projects",
+    icon: BookOpen,
+    iconBg: "linear-gradient(135deg, #059669 0%, #10b981 100%)",
+  },
+  {
+    label: "Portadas AI",
+    description: "Generador de portadas con DALL-E",
+    href: "/app/editorial/portadas",
+    icon: FileText,
+    iconBg: "linear-gradient(135deg, #d97706 0%, #f59e0b 100%)",
+  },
+  {
+    label: "Empresas",
+    description: "Volver al dashboard principal",
+    href: "/app/companies",
+    icon: Building2,
+    iconBg: "linear-gradient(135deg, #374151 0%, #6b7280 100%)",
+  },
+  {
+    label: "reinoeditorial.com",
+    description: "Sitio web público",
+    href: "https://reinoeditorial.com",
+    icon: Globe,
+    iconBg: "linear-gradient(135deg, #dc2626 0%, #ef4444 100%)",
+    external: true,
+  },
 ];
