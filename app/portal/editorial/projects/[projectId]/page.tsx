@@ -18,7 +18,7 @@ import {
   Globe,
   Lock,
   Palette,
-  Sparkles,
+  Zap,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type {
@@ -707,7 +707,7 @@ export default function ClientProjectDetailPage() {
                 </>
               ) : (
                 <>
-                  <Sparkles className="w-4 h-4 mr-2" />
+                  <Zap className="w-4 h-4 mr-2" />
                   {locale === "es" ? "Enviar mi visión de portada" : "Send my cover vision"}
                 </>
               )}

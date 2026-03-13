@@ -3,7 +3,7 @@
 import { useState, useCallback } from "react";
 import {
   Palette,
-  Sparkles,
+  Zap,
   User,
   Loader2,
   Download,
@@ -191,7 +191,7 @@ export default function PortadasAIPage() {
                   : "text-gray-500 hover:text-gray-700"
               }`}
             >
-              <Sparkles className="w-4 h-4" />
+              <Zap className="w-4 h-4" />
               Sugerencia Editorial
             </button>
             <button
@@ -411,7 +411,7 @@ export default function PortadasAIPage() {
               </>
             ) : (
               <>
-                <Sparkles className="w-4 h-4" />
+                <Zap className="w-4 h-4" />
                 Generar Portada AI
               </>
             )}

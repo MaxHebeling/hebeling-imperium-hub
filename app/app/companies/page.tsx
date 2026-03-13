@@ -6,7 +6,6 @@ import {
   BookOpen,
   Briefcase,
   ArrowUpRight,
-  Sparkles,
   BarChart3,
   Users,
   Zap,
@@ -213,7 +212,7 @@ export default function CompaniesPage() {
               { icon: Zap, label: "Unidades Activas", value: "5" },
               { icon: BarChart3, label: "Pipeline AI", value: "Activo" },
               { icon: Users, label: "Jurisdicciones", value: "USA · MX · AR" },
-              { icon: Sparkles, label: "Motor", value: "OpenAI + Claude" },
+              { icon: Zap, label: "Motor", value: "OpenAI + Claude" },
             ] as const).map((s) => (
               <div key={s.label} className="flex items-center gap-2.5">
                 <div
@@ -286,7 +285,7 @@ export default function CompaniesPage() {
                               border: `1px solid ${P.gold}30`,
                             }}
                           >
-                            <Sparkles className="w-2.5 h-2.5" />
+                            <Zap className="w-2.5 h-2.5" />
                             AI
                           </span>
                         )}

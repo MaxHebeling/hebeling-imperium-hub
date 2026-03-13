@@ -32,7 +32,7 @@ import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import {
-  Sparkles,
+  Zap,
   Send,
   BarChart3,
   FileText,
@@ -49,7 +49,6 @@ import {
   ChevronUp,
   History,
   Settings,
-  Zap,
   Target,
   Search,
   RefreshCw,
@@ -382,7 +381,7 @@ export default function AICommandCenterPage() {
             </span>
           </div>
           <h1 className="text-3xl lg:text-4xl font-bold tracking-tight text-foreground flex items-center gap-3">
-            <Sparkles className="h-8 w-8 text-cyan-400" />
+            <Zap className="h-8 w-8 text-cyan-400" />
             AI Command Center
           </h1>
           <p className="text-muted-foreground max-w-2xl">
@@ -508,7 +507,7 @@ export default function AICommandCenterPage() {
               <CardHeader className="pb-3">
                 <div className="flex items-center justify-between">
                   <CardTitle className="text-base font-medium flex items-center gap-2">
-                    <Sparkles className="h-4 w-4 text-cyan-400" />
+                    <Zap className="h-4 w-4 text-cyan-400" />
                     AI Response
                   </CardTitle>
                   <div className="flex items-center gap-2">

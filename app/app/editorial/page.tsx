@@ -1,7 +1,7 @@
 import Link from "next/link";
 import {
   BookOpen,
-  Sparkles,
+  Zap,
   ArrowRight,
   Layers,
   FileText,
@@ -78,7 +78,7 @@ export default function EditorialPage() {
         }}
       >
         <div className="flex items-center gap-2 mb-3">
-          <Sparkles
+          <Zap
             className="w-4 h-4"
             style={{ color: "var(--re-cyan)" }}
           />
@@ -268,7 +268,7 @@ const PIPELINE_STAGES = [
   {
     key: "estilo",
     label: "Estilo",
-    icon: Sparkles,
+    icon: Zap,
     description: "Mejora y homogeneizacion del estilo de escritura.",
     accent: "#F5C842",
     progress: 40,
