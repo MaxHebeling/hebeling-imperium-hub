@@ -4,13 +4,14 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import Image from "next/image";
-import { LogOut, BookMarked, BookOpen } from "lucide-react";
+import { LogOut, BookMarked, BookOpen, HelpCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/client";
 
 const navItems = [
   { href: "/portal/editorial/projects", label: "Mis Libros", icon: BookMarked },
   { href: "/portal/overview", label: "Resumen", icon: BookOpen },
+  { href: "/portal/ayuda", label: "Ayuda", icon: HelpCircle },
 ];
 
 interface PortalNavProps {
