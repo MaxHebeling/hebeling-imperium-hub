@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { ArrowUpRight } from "lucide-react";
 
 interface CompanyCardProps {
@@ -11,7 +12,7 @@ interface CompanyCardProps {
   leads: number;
   revenue: string;
   recentActivity: string;
-  initials: string;
+  logo: string;
   accentBg: string;
   accentText: string;
 }
@@ -24,7 +25,7 @@ function CompanyCard({
   leads,
   revenue,
   recentActivity,
-  initials,
+  logo,
   accentBg,
   accentText,
 }: CompanyCardProps) {
@@ -40,8 +41,14 @@ function CompanyCard({
         {/* Header */}
         <div className="flex items-start justify-between mb-4">
           <div className="flex items-center gap-3">
-            <div className={`h-9 w-9 rounded-lg ${accentBg} flex items-center justify-center text-sm font-bold text-card`}>
-              {initials}
+            <div className="h-10 w-10 rounded-lg bg-background/60 border border-border/40 flex items-center justify-center flex-shrink-0 overflow-hidden">
+              <Image
+                src={logo}
+                alt={`${name} logo`}
+                width={40}
+                height={40}
+                className="w-full h-full object-cover"
+              />
             </div>
             <div>
               <h3 className="text-sm font-semibold text-foreground group-hover:text-primary transition-colors">{name}</h3>
@@ -77,16 +84,16 @@ function CompanyCard({
 export function CompaniesPanel() {
   const companies: CompanyCardProps[] = [
     {
-      name: "Max Hebeling",
-      href: "/app/companies/max-hebeling",
-      tagline: "Personal brand & consulting",
+      name: "Red Apostólica",
+      href: "/app/companies/red-apostolica",
+      tagline: "Kingdom & revival movement",
       activeProjects: 3,
       leads: 18,
       revenue: "$45.2K",
-      recentActivity: "New enterprise deal closed with Apex Corp",
-      initials: "MH",
-      accentBg: "bg-[#4A7FB5]",
-      accentText: "text-[#7EB3E8]",
+      recentActivity: "New outreach program launched",
+      logo: "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Copia%20de%20foto%20de%20perfil%20de%20LinkedIn%20creativo%20verde-5-nXFFuAeL3Evr2nHnLOKBY6m5JYgjI5.png",
+      accentBg: "bg-amber-600",
+      accentText: "text-amber-400",
     },
     {
       name: "Reino Editorial",
@@ -96,7 +103,7 @@ export function CompaniesPanel() {
       leads: 32,
       revenue: "$52.8K",
       recentActivity: "3 manuscripts entered production phase",
-      initials: "RE",
+      logo: "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/LOGO%20Editorial%20Reino-vYSSKY658dA54Mv4uUGzRGJ6fj3Zwg.png",
       accentBg: "bg-primary",
       accentText: "text-primary",
     },
@@ -108,7 +115,7 @@ export function CompaniesPanel() {
       leads: 12,
       revenue: "$18.5K",
       recentActivity: "New partnership agreement signed",
-      initials: "iK",
+      logo: "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Favicon%20Ikingdom-dMRh22LB0rQrPr8EDc6nXwC40C72GQ.png",
       accentBg: "bg-secondary",
       accentText: "text-[#C8A84B]",
     },
@@ -120,7 +127,7 @@ export function CompaniesPanel() {
       leads: 28,
       revenue: "$61.3K",
       recentActivity: "Q1 expansion strategy initiated",
-      initials: "IG",
+      logo: "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Logo%20Oficial%20IG-0bGM4ryVIortfYBXZmEkv08Q9UtgJb.png",
       accentBg: "bg-emerald-600",
       accentText: "text-emerald-400",
     },
