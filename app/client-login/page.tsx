@@ -224,12 +224,18 @@ function ClientLoginContent() {
                   haz clic en el enlace para acceder a tu portal.
                 </p>
               </div>
+              <a
+                href="https://editorialreino.com"
+                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#1a3a6b]/5 text-[#1a3a6b] text-sm font-medium hover:bg-[#1a3a6b]/10 transition-colors mt-2"
+              >
+                Visitar sitio web
+              </a>
               <button
                 onClick={() => {
                   setMagicLinkSent(false);
                   setEmail("");
                 }}
-                className="text-xs text-[#1a3a6b]/60 hover:text-[#1a3a6b] transition-colors mt-2"
+                className="text-xs text-[#1a3a6b]/60 hover:text-[#1a3a6b] transition-colors mt-1"
               >
                 Usar otro correo
               </button>
