@@ -218,6 +218,18 @@ export default function EditorialPage() {
             <BookOpen className="w-4 h-4" />
           </Link>
           <Link
+            href="/app/editorial/portadas"
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all"
+            style={{
+              background: "linear-gradient(135deg, #9333ea20, #ec489920)",
+              color: "#9333ea",
+              border: "1px solid #9333ea30",
+            }}
+          >
+            Portadas AI
+            <Palette className="w-4 h-4" />
+          </Link>
+          <Link
             href="/app/editorial/oficina"
             className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all"
             style={{
