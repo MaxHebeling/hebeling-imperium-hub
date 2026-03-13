@@ -1,5 +1,5 @@
 import { getAdminClient } from "@/lib/leads/helpers";
-import { EDITORIAL_BUCKETS } from "./buckets";
+import { EDITORIAL_BUCKETS, ensureBucket } from "./buckets";
 import type { EditorialBucketKey } from "./buckets";
 
 export interface UploadManuscriptResult {
@@ -39,6 +39,8 @@ export async function uploadManuscript(
 
   const bytes = await file.arrayBuffer();
   const buffer = Buffer.from(bytes);
+
+  await ensureBucket(EDITORIAL_BUCKETS.manuscripts);
 
   const { error } = await supabase.storage
     .from(EDITORIAL_BUCKETS.manuscripts)
@@ -95,6 +97,8 @@ export async function uploadEditorialFile(
 
   const bytes = await file.arrayBuffer();
   const buffer = Buffer.from(bytes);
+
+  await ensureBucket(bucket);
 
   const { error } = await supabase.storage.from(bucket).upload(storagePath, buffer, {
     contentType: file.type,
