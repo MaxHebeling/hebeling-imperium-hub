@@ -1,3 +1,5 @@
+"use client";
+
 import Link from "next/link";
 import { Building2, BookOpen, Globe, Crown, User, Briefcase } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
