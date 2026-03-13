@@ -131,6 +131,10 @@ export default function EditorialProjectDetailPage() {
   const [downloadingReport, setDownloadingReport] = useState(false);
   const [reportError, setReportError] = useState<string | null>(null);
 
+  // Stage control state (staff can move to any stage)
+  const [changingStage, setChangingStage] = useState(false);
+  const [stageChangeError, setStageChangeError] = useState<string | null>(null);
+
   const fetchData = useCallback(async () => {
     if (!projectId) return;
     setLoading(true);
@@ -237,6 +241,29 @@ export default function EditorialProjectDetailPage() {
     } finally {
       setUploading(false);
       e.target.value = "";
+    }
+  }
+
+  async function handleStageChange(targetStage: EditorialStageKey) {
+    if (changingStage) return;
+    setChangingStage(true);
+    setStageChangeError(null);
+    try {
+      const res = await fetch(`/api/editorial/projects/${projectId}/stage`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ stage: targetStage }),
+      });
+      const json = await res.json();
+      if (json.success) {
+        await fetchData();
+      } else {
+        setStageChangeError(json.error ?? "Error al cambiar etapa");
+      }
+    } catch {
+      setStageChangeError("Error de conexión al cambiar etapa");
+    } finally {
+      setChangingStage(false);
     }
   }
 
@@ -401,8 +428,13 @@ export default function EditorialProjectDetailPage() {
       >
         <div className="px-5 py-4" style={{ borderBottom: "1px solid var(--re-border)" }}>
           <h2 className="text-sm font-semibold" style={{ color: "var(--re-text)" }}>Pipeline Editorial</h2>
-          <p className="text-xs mt-0.5" style={{ color: "var(--re-text-muted)" }}>Estado de cada etapa del proceso de produccion.</p>
+          <p className="text-xs mt-0.5" style={{ color: "var(--re-text-muted)" }}>Haz clic en cualquier etapa para mover el proyecto a esa fase.</p>
         </div>
+        {stageChangeError && (
+          <div className="px-5 py-2 text-xs" style={{ color: "var(--re-danger, #ef4444)", background: "#ef444410" }}>
+            {stageChangeError}
+          </div>
+        )}
         <div className="divide-y" style={{ borderColor: "var(--re-border)" }}>
           {EDITORIAL_STAGE_KEYS.map((key, index) => {
             const stage = stageMap.get(key);
@@ -410,25 +442,37 @@ export default function EditorialProjectDetailPage() {
             const isCurrentStage = project.current_stage === key;
             const targetProgress = EDITORIAL_STAGE_PROGRESS[key];
             const isCompleted = status === "completed" || status === "approved";
+            const canNavigate = !isCurrentStage && !changingStage;
 
             return (
-              <div
+              <button
                 key={key}
-                className="flex items-start gap-4 px-5 py-4 transition-colors"
+                type="button"
+                disabled={isCurrentStage || changingStage}
+                onClick={() => canNavigate && handleStageChange(key)}
+                className="flex items-start gap-4 px-5 py-4 transition-colors w-full text-left group"
                 style={{
                   background: isCurrentStage ? "#1B40C010" : "transparent",
                   borderLeft: isCurrentStage ? "3px solid var(--re-blue-light)" : "3px solid transparent",
+                  cursor: canNavigate ? "pointer" : isCurrentStage ? "default" : "wait",
+                  opacity: changingStage && !isCurrentStage ? 0.6 : 1,
                 }}
               >
                 {/* Step number */}
                 <div
-                  className="flex items-center justify-center w-7 h-7 rounded-full text-xs font-bold shrink-0 mt-0.5"
+                  className="flex items-center justify-center w-7 h-7 rounded-full text-xs font-bold shrink-0 mt-0.5 transition-transform group-hover:scale-110"
                   style={{
                     background: isCompleted ? "#22d3a020" : isCurrentStage ? "#1B40C030" : "var(--re-surface-3)",
                     color: isCompleted ? "var(--re-success)" : isCurrentStage ? "var(--re-blue-light)" : "var(--re-text-subtle)",
                   }}
                 >
-                  {isCompleted ? <CheckCircle2 className="w-4 h-4" /> : index + 1}
+                  {changingStage && isCurrentStage ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : isCompleted ? (
+                    <CheckCircle2 className="w-4 h-4" />
+                  ) : (
+                    index + 1
+                  )}
                 </div>
 
                 {/* Stage info */}
@@ -443,6 +487,14 @@ export default function EditorialProjectDetailPage() {
                         style={{ background: "#1B40C030", color: "var(--re-blue-light)" }}
                       >
                         Actual
+                      </span>
+                    )}
+                    {canNavigate && (
+                      <span
+                        className="px-1.5 py-0.5 rounded text-xs font-medium opacity-0 group-hover:opacity-100 transition-opacity"
+                        style={{ background: "var(--re-surface-3)", color: "var(--re-text-muted)" }}
+                      >
+                        {EDITORIAL_STAGE_KEYS.indexOf(key) < EDITORIAL_STAGE_KEYS.indexOf(project.current_stage as EditorialStageKey) ? "Regresar aqui" : "Avanzar aqui"}
                       </span>
                     )}
                   </div>
@@ -474,7 +526,7 @@ export default function EditorialProjectDetailPage() {
                 <span className="text-xs shrink-0" style={{ color: "var(--re-text-subtle)" }}>
                   {targetProgress}%
                 </span>
-              </div>
+              </button>
             );
           })}
         </div>
