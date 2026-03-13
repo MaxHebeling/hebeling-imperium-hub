@@ -62,16 +62,16 @@ export default function ClientEditorialProjectsPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-white">
+          <h1 className="text-2xl font-bold tracking-tight text-gray-900">
             {t.myBooksTitle}
           </h1>
-          <p className="text-sm text-white/40 mt-0.5">
+          <p className="text-sm text-gray-400 mt-0.5">
             {t.myBooksSubtitle}
           </p>
         </div>
         <button
           onClick={toggleLocale}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-xs text-white/50 hover:text-white/80 hover:bg-white/10 transition-colors"
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gray-100 border border-gray-200 text-xs text-gray-500 hover:text-gray-700 hover:bg-gray-200 transition-colors"
         >
           <Globe className="w-3.5 h-3.5" />
           {locale === "es" ? "EN" : "ES"}
@@ -81,30 +81,30 @@ export default function ClientEditorialProjectsPage() {
       {/* Content */}
       {loading ? (
         <div className="flex flex-col items-center justify-center gap-3 py-20">
-          <div className="w-8 h-8 rounded-full border-2 border-[#1a3a6b]/30 border-t-cyan-400 animate-spin" />
-          <p className="text-sm text-white/30">{t.loading}</p>
+          <div className="w-8 h-8 rounded-full border-2 border-[#1a3a6b]/20 border-t-[#1a3a6b] animate-spin" />
+          <p className="text-sm text-gray-400">{t.loading}</p>
         </div>
       ) : error ? (
-        <div className="rounded-2xl border border-red-500/20 bg-red-500/5 p-6 flex flex-col items-center gap-3 text-center">
+        <div className="rounded-2xl border border-red-200 bg-red-50 p-6 flex flex-col items-center gap-3 text-center">
           <AlertCircle className="w-8 h-8 text-red-400" />
-          <p className="text-sm text-red-300">{error}</p>
+          <p className="text-sm text-red-600">{error}</p>
           <Button
             variant="outline"
             size="sm"
             onClick={fetchProjects}
-            className="border-white/10 text-white/60 hover:bg-white/5"
+            className="border-gray-200 text-gray-600 hover:bg-gray-100"
           >
             {t.retry}
           </Button>
         </div>
       ) : projects.length === 0 ? (
-        <div className="rounded-2xl border border-[#1a3a6b]/20 bg-white/[0.02] p-8 flex flex-col items-center gap-4 text-center">
+        <div className="rounded-2xl border border-gray-200 bg-white p-8 flex flex-col items-center gap-4 text-center shadow-sm">
           <div className="w-16 h-16 rounded-2xl bg-[#1a3a6b]/10 flex items-center justify-center">
-            <BookOpen className="w-8 h-8 text-cyan-500/40" />
+            <BookOpen className="w-8 h-8 text-[#1a3a6b]/40" />
           </div>
           <div>
-            <p className="font-semibold text-white/80">{t.noProjectsYet}</p>
-            <p className="text-sm text-white/30 mt-1">
+            <p className="font-semibold text-gray-700">{t.noProjectsYet}</p>
+            <p className="text-sm text-gray-400 mt-1">
               {t.noProjectsDesc}
             </p>
           </div>
@@ -124,45 +124,45 @@ export default function ClientEditorialProjectsPage() {
                 href={`/portal/editorial/projects/${project.id}`}
                 className="block group"
               >
-                <div className="rounded-2xl border border-[#1a3a6b]/15 bg-white/[0.02] hover:bg-white/[0.04] p-4 transition-all active:scale-[0.99]">
+                <div className="rounded-2xl border border-gray-200 bg-white hover:bg-gray-50 p-4 transition-all active:scale-[0.99] shadow-sm">
                   <div className="flex items-start gap-4">
                     {/* Book avatar */}
-                    <div className="w-12 h-16 rounded-lg bg-gradient-to-b from-[#1a3a6b]/30 to-[#1a3a6b]/50 border border-[#1a3a6b]/20 flex items-center justify-center shrink-0">
-                      <BookOpen className="w-5 h-5 text-cyan-400/60" />
+                    <div className="w-12 h-16 rounded-lg bg-gradient-to-b from-[#1a3a6b]/10 to-[#1a3a6b]/20 border border-[#1a3a6b]/10 flex items-center justify-center shrink-0">
+                      <BookOpen className="w-5 h-5 text-[#1a3a6b]/60" />
                     </div>
 
                     {/* Info */}
                     <div className="flex-1 min-w-0">
                       <div className="flex items-start justify-between gap-2">
                         <div className="min-w-0">
-                          <p className="font-semibold text-sm text-white leading-snug truncate">
+                          <p className="font-semibold text-sm text-gray-900 leading-snug truncate">
                             {project.title}
                           </p>
                           {project.author_name && (
-                            <p className="text-xs text-white/30 truncate mt-0.5">
+                            <p className="text-xs text-gray-400 truncate mt-0.5">
                               {project.author_name}
                             </p>
                           )}
                         </div>
-                        <ChevronRight className="w-4 h-4 text-white/20 group-hover:text-cyan-400 shrink-0 mt-0.5 transition-colors" />
+                        <ChevronRight className="w-4 h-4 text-gray-300 group-hover:text-[#1a3a6b] shrink-0 mt-0.5 transition-colors" />
                       </div>
 
                       {/* Stage badge */}
                       <div className="flex items-center gap-2 mt-2">
-                        <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-cyan-500/10 text-cyan-400/80 text-xs font-medium">
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-[#1a3a6b]/10 text-[#1a3a6b] text-xs font-medium">
                           {stageLabel}
                         </span>
                       </div>
 
                       {/* Progress bar */}
                       <div className="flex items-center gap-2 mt-3">
-                        <div className="flex-1 h-1.5 rounded-full bg-white/5 overflow-hidden">
+                        <div className="flex-1 h-1.5 rounded-full bg-gray-100 overflow-hidden">
                           <div
-                            className="h-full rounded-full bg-gradient-to-r from-[#1a3a6b] to-cyan-400 transition-all duration-700"
+                            className="h-full rounded-full bg-gradient-to-r from-[#1a3a6b] to-[#2a5a9b] transition-all duration-700"
                             style={{ width: `${visibleProgress}%` }}
                           />
                         </div>
-                        <span className="text-xs font-medium text-cyan-400/70 w-8 text-right shrink-0">
+                        <span className="text-xs font-medium text-[#1a3a6b]/70 w-8 text-right shrink-0">
                           {visibleProgress}%
                         </span>
                       </div>
@@ -177,11 +177,11 @@ export default function ClientEditorialProjectsPage() {
 
       {/* Info note */}
       {!loading && !error && projects.length > 0 && (
-        <p className="text-xs text-white/20 text-center">
+        <p className="text-xs text-gray-400 text-center">
           {t.cantSeeBook}{" "}
           <a
             href="mailto:editorial@reinoeditorial.com"
-            className="text-cyan-500/60 hover:text-cyan-400 transition-colors"
+            className="text-[#1a3a6b]/60 hover:text-[#1a3a6b] transition-colors"
           >
             {t.contactUs}
           </a>

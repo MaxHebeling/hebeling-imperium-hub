@@ -29,7 +29,7 @@ export function PortalNav({ userEmail }: PortalNavProps) {
   };
 
   return (
-    <header className="sticky top-0 z-50 border-b border-[#1a3a6b]/20 bg-[#0a0a0a]/95 backdrop-blur supports-[backdrop-filter]:bg-[#0a0a0a]/80">
+    <header className="sticky top-0 z-50 border-b border-[#1a3a6b]/10 bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/80 shadow-sm">
       <div className="container mx-auto max-w-6xl px-4">
         <div className="flex h-14 items-center justify-between">
           <div className="flex items-center gap-6">
@@ -41,7 +41,7 @@ export function PortalNav({ userEmail }: PortalNavProps) {
                 height={32}
                 className="h-8 w-8 object-contain"
               />
-              <span className="font-bold text-sm text-white tracking-tight">Reino Editorial</span>
+              <span className="font-bold text-sm text-[#1a3a6b] tracking-tight">Reino Editorial</span>
             </Link>
 
             <nav className="hidden md:flex items-center gap-1">
@@ -55,8 +55,8 @@ export function PortalNav({ userEmail }: PortalNavProps) {
                     className={cn(
                       "px-3 py-1.5 text-sm font-medium rounded-lg transition-colors flex items-center gap-1.5",
                       isActive
-                        ? "bg-[#1a3a6b]/20 text-cyan-400"
-                        : "text-white/40 hover:text-white/70 hover:bg-white/5"
+                        ? "bg-[#1a3a6b]/10 text-[#1a3a6b]"
+                        : "text-gray-400 hover:text-gray-700 hover:bg-gray-100"
                     )}
                   >
                     <Icon className="h-3.5 w-3.5" />
@@ -69,7 +69,7 @@ export function PortalNav({ userEmail }: PortalNavProps) {
 
           <div className="flex items-center gap-3">
             {userEmail && (
-              <span className="text-xs text-white/30 hidden sm:inline truncate max-w-40">
+              <span className="text-xs text-gray-400 hidden sm:inline truncate max-w-40">
                 {userEmail}
               </span>
             )}
@@ -77,7 +77,7 @@ export function PortalNav({ userEmail }: PortalNavProps) {
               variant="ghost"
               size="sm"
               onClick={handleSignOut}
-              className="text-white/40 hover:text-white hover:bg-white/5 h-8 px-2"
+              className="text-gray-400 hover:text-gray-700 hover:bg-gray-100 h-8 px-2"
             >
               <LogOut className="h-3.5 w-3.5" />
               <span className="hidden sm:inline ml-1.5 text-xs">Salir</span>
@@ -87,7 +87,7 @@ export function PortalNav({ userEmail }: PortalNavProps) {
       </div>
 
       {/* Mobile bottom nav */}
-      <div className="md:hidden fixed bottom-0 left-0 right-0 z-50 border-t border-[#1a3a6b]/20 bg-[#0a0a0a]/95 backdrop-blur px-4 pb-safe">
+      <div className="md:hidden fixed bottom-0 left-0 right-0 z-50 border-t border-gray-200 bg-white/95 backdrop-blur px-4 pb-safe shadow-[0_-2px_10px_rgba(0,0,0,0.05)]">
         <div className="flex items-center justify-around h-14">
           {navItems.map((item) => {
             const isActive = pathname === item.href || pathname.startsWith(item.href + "/");
@@ -98,7 +98,7 @@ export function PortalNav({ userEmail }: PortalNavProps) {
                 href={item.href}
                 className={cn(
                   "flex flex-col items-center gap-0.5 text-xs font-medium transition-colors py-1 px-3",
-                  isActive ? "text-cyan-400" : "text-white/30"
+                  isActive ? "text-[#1a3a6b]" : "text-gray-400"
                 )}
               >
                 <Icon className="h-5 w-5" />
@@ -108,7 +108,7 @@ export function PortalNav({ userEmail }: PortalNavProps) {
           })}
           <button
             onClick={handleSignOut}
-            className="flex flex-col items-center gap-0.5 text-xs font-medium text-white/30 py-1 px-3"
+            className="flex flex-col items-center gap-0.5 text-xs font-medium text-gray-400 py-1 px-3"
           >
             <LogOut className="h-5 w-5" />
             Salir

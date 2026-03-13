@@ -19,7 +19,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#0a0a0a",
+  themeColor: "#f8f9fb",
   width: "device-width",
   initialScale: 1,
   maximumScale: 1,
@@ -39,7 +39,7 @@ export default async function PortalLayout({
   }
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a] text-white">
+    <div className="min-h-screen bg-[#f8f9fb] text-gray-900">
       <PortalNav userEmail={user.email} />
       <main className="container mx-auto max-w-lg px-4 py-6 pb-24 md:pb-8 md:max-w-6xl">
         {children}

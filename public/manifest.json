@@ -4,8 +4,8 @@
   "description": "Tu libro en las mejores manos. Sigue el progreso editorial de tu obra.",
   "start_url": "/portal/editorial/projects",
   "display": "standalone",
-  "background_color": "#0a0a0a",
-  "theme_color": "#b8860b",
+  "background_color": "#f8f9fb",
+  "theme_color": "#1a3a6b",
   "orientation": "portrait",
   "scope": "/portal",
   "icons": [

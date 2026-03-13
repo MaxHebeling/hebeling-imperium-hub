@@ -194,8 +194,8 @@ export default function ClientProjectDetailPage() {
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center gap-3 min-h-[60vh]">
-        <div className="w-8 h-8 rounded-full border-2 border-[#1a3a6b]/30 border-t-cyan-400 animate-spin" />
-        <p className="text-sm text-white/30">{t.loading}</p>
+        <div className="w-8 h-8 rounded-full border-2 border-[#1a3a6b]/20 border-t-[#1a3a6b] animate-spin" />
+        <p className="text-sm text-gray-400">{t.loading}</p>
       </div>
     );
   }
@@ -205,21 +205,21 @@ export default function ClientProjectDetailPage() {
       <div className="flex flex-col gap-4">
         <Link
           href="/portal/editorial/projects"
-          className="flex items-center gap-2 text-white/40 hover:text-white/70 text-sm w-fit"
+          className="flex items-center gap-2 text-gray-400 hover:text-gray-600 text-sm w-fit"
         >
           <ArrowLeft className="w-4 h-4" />
           {t.backToBooks}
         </Link>
-        <div className="rounded-2xl border border-red-500/20 bg-red-500/5 p-6 flex flex-col items-center gap-3 text-center">
+        <div className="rounded-2xl border border-red-200 bg-red-50 p-6 flex flex-col items-center gap-3 text-center">
           <AlertCircle className="w-8 h-8 text-red-400" />
-          <p className="text-sm text-red-300">
+          <p className="text-sm text-red-600">
             {error ?? "Proyecto no encontrado"}
           </p>
           <Button
             variant="outline"
             size="sm"
             onClick={fetchData}
-            className="border-white/10 text-white/60 hover:bg-white/5"
+            className="border-gray-200 text-gray-600 hover:bg-gray-100"
           >
             {t.retry}
           </Button>
@@ -246,14 +246,14 @@ export default function ClientProjectDetailPage() {
       <div className="flex items-center justify-between">
         <Link
           href="/portal/editorial/projects"
-          className="flex items-center gap-2 text-white/40 hover:text-white/70 text-sm"
+          className="flex items-center gap-2 text-gray-400 hover:text-gray-600 text-sm"
         >
           <ArrowLeft className="w-4 h-4" />
           {t.backToBooks}
         </Link>
         <button
           onClick={toggleLocale}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-xs text-white/50 hover:text-white/80 hover:bg-white/10 transition-colors"
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gray-100 border border-gray-200 text-xs text-gray-500 hover:text-gray-700 hover:bg-gray-200 transition-colors"
         >
           <Globe className="w-3.5 h-3.5" />
           {locale === "es" ? "EN" : "ES"}
@@ -263,18 +263,18 @@ export default function ClientProjectDetailPage() {
       {/* Project header */}
       <div className="flex flex-col gap-2">
         <div className="flex items-start gap-3">
-          <div className="w-12 h-16 rounded-lg bg-gradient-to-b from-[#1a3a6b]/30 to-[#1a3a6b]/50 border border-[#1a3a6b]/20 flex items-center justify-center shrink-0 mt-0.5">
-            <BookOpen className="w-5 h-5 text-cyan-400/60" />
+          <div className="w-12 h-16 rounded-lg bg-gradient-to-b from-[#1a3a6b]/10 to-[#1a3a6b]/20 border border-[#1a3a6b]/10 flex items-center justify-center shrink-0 mt-0.5">
+            <BookOpen className="w-5 h-5 text-[#1a3a6b]/60" />
           </div>
           <div className="min-w-0">
-            <h1 className="text-xl font-bold tracking-tight text-white leading-tight">
+            <h1 className="text-xl font-bold tracking-tight text-gray-900 leading-tight">
               {project.title}
             </h1>
             {project.subtitle && (
-              <p className="text-sm text-white/40 mt-0.5">{project.subtitle}</p>
+              <p className="text-sm text-gray-400 mt-0.5">{project.subtitle}</p>
             )}
             {project.author_name && (
-              <p className="text-xs text-white/30 mt-0.5">
+              <p className="text-xs text-gray-400 mt-0.5">
                 {t.by} {project.author_name}
               </p>
             )}
@@ -283,31 +283,31 @@ export default function ClientProjectDetailPage() {
       </div>
 
       {/* Progress overview */}
-      <div className="rounded-2xl border border-[#1a3a6b]/20 bg-white/[0.02] p-5">
+      <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
         <div className="flex items-center justify-between mb-3">
-          <span className="text-sm font-medium text-white/60">{t.progress}</span>
-          <span className="text-2xl font-bold text-cyan-400">{visibleProgress}%</span>
+          <span className="text-sm font-medium text-gray-500">{t.progress}</span>
+          <span className="text-2xl font-bold text-[#1a3a6b]">{visibleProgress}%</span>
         </div>
-        <div className="h-2 rounded-full bg-white/5 overflow-hidden">
+        <div className="h-2 rounded-full bg-gray-100 overflow-hidden">
           <div
-            className="h-full rounded-full bg-gradient-to-r from-[#1a3a6b] to-cyan-400 transition-all duration-1000"
+            className="h-full rounded-full bg-gradient-to-r from-[#1a3a6b] to-[#2a5a9b] transition-all duration-1000"
             style={{ width: `${visibleProgress}%` }}
           />
         </div>
         {project.due_date && (
-          <p className="text-xs text-white/20 mt-3">
-            {t.estimatedDelivery}: <span className="text-white/40">{formatDate(project.due_date, locale === "es" ? "es-ES" : "en-US")}</span>
+          <p className="text-xs text-gray-400 mt-3">
+            {t.estimatedDelivery}: <span className="text-gray-600">{formatDate(project.due_date, locale === "es" ? "es-ES" : "en-US")}</span>
           </p>
         )}
       </div>
 
       {/* Pipeline stages with delays */}
-      <div className="rounded-2xl border border-[#1a3a6b]/20 bg-white/[0.02] overflow-hidden">
-        <div className="p-4 border-b border-[#1a3a6b]/10">
-          <h2 className="text-sm font-semibold text-white">{t.pipelineStatus}</h2>
-          <p className="text-xs text-white/30 mt-0.5">{t.pipelineDesc}</p>
+      <div className="rounded-2xl border border-gray-200 bg-white overflow-hidden shadow-sm">
+        <div className="p-4 border-b border-gray-100">
+          <h2 className="text-sm font-semibold text-gray-900">{t.pipelineStatus}</h2>
+          <p className="text-xs text-gray-400 mt-0.5">{t.pipelineDesc}</p>
         </div>
-        <div className="divide-y divide-white/5">
+        <div className="divide-y divide-gray-100">
           {visibleStages.map((stage, index) => {
             const stageLabel = t.stageLabels[stage.stageKey] ?? stage.label;
             const stageMsg = stage.isCompleted
@@ -320,25 +320,25 @@ export default function ClientProjectDetailPage() {
               <div
                 key={stage.stageKey}
                 className={`flex items-start gap-3 px-4 py-3.5 transition-colors ${
-                  stage.isActive ? "bg-cyan-500/5" : ""
+                  stage.isActive ? "bg-blue-50" : ""
                 } ${!stage.isRevealed ? "opacity-30" : ""}`}
               >
                 {/* Status indicator */}
                 <div className="shrink-0 mt-0.5">
                   {stage.isCompleted ? (
-                    <div className="w-6 h-6 rounded-full bg-green-500/20 flex items-center justify-center">
-                      <CheckCircle2 className="w-3.5 h-3.5 text-green-400" />
+                    <div className="w-6 h-6 rounded-full bg-green-100 flex items-center justify-center">
+                      <CheckCircle2 className="w-3.5 h-3.5 text-green-500" />
                     </div>
                   ) : stage.isActive ? (
-                    <div className="w-6 h-6 rounded-full bg-cyan-500/20 flex items-center justify-center">
-                      <div className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse" />
+                    <div className="w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center">
+                      <div className="w-2 h-2 rounded-full bg-[#1a3a6b] animate-pulse" />
                     </div>
                   ) : (
-                    <div className="w-6 h-6 rounded-full bg-white/5 flex items-center justify-center">
+                    <div className="w-6 h-6 rounded-full bg-gray-100 flex items-center justify-center">
                       {stage.isRevealed ? (
-                        <Clock className="w-3 h-3 text-white/20" />
+                        <Clock className="w-3 h-3 text-gray-300" />
                       ) : (
-                        <Lock className="w-3 h-3 text-white/10" />
+                        <Lock className="w-3 h-3 text-gray-200" />
                       )}
                     </div>
                   )}
@@ -347,28 +347,28 @@ export default function ClientProjectDetailPage() {
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
                     <span className={`text-sm font-medium ${
-                      stage.isCompleted ? "text-white/70" : stage.isActive ? "text-white" : "text-white/30"
+                      stage.isCompleted ? "text-gray-600" : stage.isActive ? "text-gray-900" : "text-gray-300"
                     }`}>
                       {stageLabel}
                     </span>
                     {stage.isActive && (
-                      <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-cyan-500/10 text-cyan-400">
+                      <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-[#1a3a6b]/10 text-[#1a3a6b]">
                         {t.current}
                       </span>
                     )}
                   </div>
                   {stage.isRevealed && stageMsg && (
-                    <p className="text-xs text-white/30 mt-0.5 leading-relaxed">
+                    <p className="text-xs text-gray-400 mt-0.5 leading-relaxed">
                       {stageMsg}
                     </p>
                   )}
                 </div>
 
-                <span className="text-xs text-white/20 shrink-0 mt-0.5 tabular-nums">
+                <span className="text-xs text-gray-300 shrink-0 mt-0.5 tabular-nums">
                   {stage.isCompleted ? (
-                    <span className="text-green-400/60">{t.stageCompleted}</span>
+                    <span className="text-green-500">{t.stageCompleted}</span>
                   ) : stage.isActive ? (
-                    <span className="text-cyan-400/60">{t.processing}</span>
+                    <span className="text-[#1a3a6b]">{t.processing}</span>
                   ) : null}
                 </span>
               </div>
@@ -378,22 +378,22 @@ export default function ClientProjectDetailPage() {
       </div>
 
       {/* Upload new version */}
-      <div className="rounded-2xl border border-[#1a3a6b]/20 bg-white/[0.02] p-4">
+      <div className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
         <div className="flex items-start gap-3 mb-3">
-          <div className="w-10 h-10 rounded-xl bg-[#1a3a6b]/20 flex items-center justify-center shrink-0">
-            <Upload className="w-5 h-5 text-cyan-400/60" />
+          <div className="w-10 h-10 rounded-xl bg-[#1a3a6b]/10 flex items-center justify-center shrink-0">
+            <Upload className="w-5 h-5 text-[#1a3a6b]/60" />
           </div>
           <div>
-            <p className="font-semibold text-sm text-white">{t.uploadNewVersion}</p>
-            <p className="text-xs text-white/30 mt-0.5">{t.uploadDesc}</p>
+            <p className="font-semibold text-sm text-gray-900">{t.uploadNewVersion}</p>
+            <p className="text-xs text-gray-400 mt-0.5">{t.uploadDesc}</p>
           </div>
         </div>
 
         {uploadError && (
-          <p className="text-xs text-red-400 px-1 mb-2">{uploadError}</p>
+          <p className="text-xs text-red-500 px-1 mb-2">{uploadError}</p>
         )}
         {uploadSuccess && (
-          <p className="text-xs text-green-400 px-1 mb-2 flex items-center gap-1">
+          <p className="text-xs text-green-500 px-1 mb-2 flex items-center gap-1">
             <CheckCircle2 className="w-3.5 h-3.5" />
             {t.uploadSuccess}
           </p>
@@ -408,7 +408,7 @@ export default function ClientProjectDetailPage() {
           disabled={uploading}
         />
         <Button
-          className="w-full h-11 bg-[#1a3a6b]/30 hover:bg-[#1a3a6b]/50 text-white border border-[#1a3a6b]/20 rounded-xl"
+          className="w-full h-11 bg-[#1a3a6b] hover:bg-[#2a5a9b] text-white border border-[#1a3a6b]/20 rounded-xl"
           disabled={uploading}
           onClick={() => fileInputRef.current?.click()}
         >
@@ -424,26 +424,26 @@ export default function ClientProjectDetailPage() {
             </>
           )}
         </Button>
-        <p className="text-xs text-white/15 text-center mt-2">{t.acceptedFormats}</p>
+        <p className="text-xs text-gray-300 text-center mt-2">{t.acceptedFormats}</p>
       </div>
 
       {/* Files */}
       {files.length > 0 && (
-        <div className="rounded-2xl border border-[#1a3a6b]/20 bg-white/[0.02] overflow-hidden">
-          <div className="p-4 border-b border-[#1a3a6b]/10">
-            <h2 className="text-sm font-semibold text-white flex items-center gap-2">
-              <FileText className="w-4 h-4 text-white/30" />
+        <div className="rounded-2xl border border-gray-200 bg-white overflow-hidden shadow-sm">
+          <div className="p-4 border-b border-gray-100">
+            <h2 className="text-sm font-semibold text-gray-900 flex items-center gap-2">
+              <FileText className="w-4 h-4 text-gray-400" />
               {t.myFiles} ({files.length})
             </h2>
           </div>
-          <div className="divide-y divide-white/5">
+          <div className="divide-y divide-gray-50">
             {files.map((file) => (
               <div key={file.id} className="flex items-center justify-between px-4 py-3">
                 <div className="min-w-0">
-                  <p className="text-sm font-medium text-white/70 truncate capitalize">
+                  <p className="text-sm font-medium text-gray-700 truncate capitalize">
                     {file.file_type.replace(/_/g, " ")}
                   </p>
-                  <p className="text-xs text-white/20">
+                  <p className="text-xs text-gray-400">
                     v{file.version} · {formatBytes(file.size_bytes)} · {formatDate(file.created_at, locale === "es" ? "es-ES" : "en-US")}
                   </p>
                 </div>
@@ -454,33 +454,33 @@ export default function ClientProjectDetailPage() {
       )}
 
       {/* Comments — bidirectional */}
-      <div className="rounded-2xl border border-[#1a3a6b]/20 bg-white/[0.02] overflow-hidden">
-        <div className="p-4 border-b border-[#1a3a6b]/10">
-          <h2 className="text-sm font-semibold text-white flex items-center gap-2">
-            <MessageSquare className="w-4 h-4 text-white/30" />
+      <div className="rounded-2xl border border-gray-200 bg-white overflow-hidden shadow-sm">
+        <div className="p-4 border-b border-gray-100">
+          <h2 className="text-sm font-semibold text-gray-900 flex items-center gap-2">
+            <MessageSquare className="w-4 h-4 text-gray-400" />
             {t.comments} ({comments.length})
           </h2>
         </div>
         <div className="max-h-80 overflow-y-auto">
           {comments.length === 0 ? (
             <div className="p-6 text-center">
-              <p className="text-xs text-white/20">{t.editorialNotes}</p>
+              <p className="text-xs text-gray-400">{t.editorialNotes}</p>
             </div>
           ) : (
-            <div className="divide-y divide-white/5">
+            <div className="divide-y divide-gray-50">
               {comments.map((c) => {
                 const isClient = c.author_type === "client";
                 return (
-                  <div key={c.id} className={`px-4 py-3 ${isClient ? "bg-cyan-500/[0.03]" : ""}`}>
+                  <div key={c.id} className={`px-4 py-3 ${isClient ? "bg-blue-50/50" : ""}`}>
                     <div className="flex items-center gap-2 mb-1">
-                      <span className={`text-xs font-medium ${isClient ? "text-cyan-400/70" : "text-[#1a3a6b] dark:text-blue-300/70"}`}>
+                      <span className={`text-xs font-medium ${isClient ? "text-[#1a3a6b]" : "text-gray-500"}`}>
                         {isClient ? t.you : t.editorialTeam}
                       </span>
-                      <span className="text-[10px] text-white/15">
+                      <span className="text-[10px] text-gray-300">
                         {formatDate(c.created_at, locale === "es" ? "es-ES" : "en-US")}
                       </span>
                     </div>
-                    <p className="text-sm text-white/60 leading-relaxed">{c.comment}</p>
+                    <p className="text-sm text-gray-600 leading-relaxed">{c.comment}</p>
                   </div>
                 );
               })}
@@ -489,7 +489,7 @@ export default function ClientProjectDetailPage() {
         </div>
 
         {/* Comment input */}
-        <div className="p-3 border-t border-[#1a3a6b]/10">
+        <div className="p-3 border-t border-gray-100">
           <div className="flex items-center gap-2">
             <input
               type="text"
@@ -502,7 +502,7 @@ export default function ClientProjectDetailPage() {
                 }
               }}
               placeholder={t.writeComment}
-              className="flex-1 h-10 px-3 rounded-xl bg-white/5 border border-white/10 text-sm text-white placeholder:text-white/20 focus:outline-none focus:border-cyan-500/30"
+              className="flex-1 h-10 px-3 rounded-xl bg-gray-50 border border-gray-200 text-sm text-gray-900 placeholder:text-gray-300 focus:outline-none focus:border-[#1a3a6b]/30"
             />
             <Button
               size="sm"
@@ -522,23 +522,23 @@ export default function ClientProjectDetailPage() {
 
       {/* Downloads */}
       {projectExports.length > 0 && (
-        <div className="rounded-2xl border border-[#1a3a6b]/20 bg-white/[0.02] overflow-hidden">
-          <div className="p-4 border-b border-[#1a3a6b]/10">
-            <h2 className="text-sm font-semibold text-white flex items-center gap-2">
-              <Download className="w-4 h-4 text-white/30" />
+        <div className="rounded-2xl border border-gray-200 bg-white overflow-hidden shadow-sm">
+          <div className="p-4 border-b border-gray-100">
+            <h2 className="text-sm font-semibold text-gray-900 flex items-center gap-2">
+              <Download className="w-4 h-4 text-gray-400" />
               {t.downloads} ({projectExports.length})
             </h2>
           </div>
-          <div className="divide-y divide-white/5">
+          <div className="divide-y divide-gray-50">
             {projectExports.map((exp) => (
               <div key={exp.id} className="flex items-center justify-between px-4 py-3">
                 <div>
-                  <p className="text-sm font-semibold text-white/70 uppercase">{exp.export_type}</p>
-                  <p className="text-xs text-white/20">
+                  <p className="text-sm font-semibold text-gray-700 uppercase">{exp.export_type}</p>
+                  <p className="text-xs text-gray-400">
                     v{exp.version} · {formatDate(exp.created_at, locale === "es" ? "es-ES" : "en-US")}
                   </p>
                 </div>
-                <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-green-500/10 text-green-400/80 text-xs font-medium">
+                <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-green-100 text-green-600 text-xs font-medium">
                   {t.ready}
                 </span>
               </div>
@@ -548,7 +548,7 @@ export default function ClientProjectDetailPage() {
       )}
 
       {/* Footer */}
-      <p className="text-xs text-white/10 text-center pb-4">
+      <p className="text-xs text-gray-300 text-center pb-4">
         &copy; {new Date().getFullYear()} Reino Editorial
       </p>
     </div>
