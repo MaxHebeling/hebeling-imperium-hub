@@ -1,8 +1,7 @@
 "use client";
 
-// Force server restart - fixed turbopack config
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import Link from "next/link";
 import {
   Card,
   CardContent,
@@ -10,18 +9,18 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { CheckCircle2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { CheckCircle2, BookOpen, Settings } from "lucide-react";
 import { SubmitManuscriptForm } from "@/components/editorial/submit-manuscript-form";
 import type { SubmitManuscriptFormValues } from "@/components/editorial/submit-manuscript-form";
 
 export default function SubmitManuscriptPage() {
-  const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [projectId, setProjectId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const handleSubmit = async (values: SubmitManuscriptFormValues, file: File) => {
-    console.log("[v0] handleSubmit started with file:", file.name, file.size);
     setError(null);
     setIsSubmitting(true);
     try {
@@ -35,36 +34,24 @@ export default function SubmitManuscriptPage() {
       body.append("shortDescription", values.shortDescription.trim());
       body.append("manuscript", file);
 
-      console.log("[v0] FormData prepared, sending to /api/editorial/submit-manuscript");
       const res = await fetch("/api/editorial/submit-manuscript", {
         method: "POST",
         body,
       });
 
-      console.log("[v0] Response status:", res.status, res.statusText);
-      const data = await res.json().catch((err) => {
-        console.log("[v0] Failed to parse JSON response:", err);
-        return {};
-      });
-      console.log("[v0] Response data:", data);
-      
+      const data = await res.json().catch(() => ({}));
+
       if (!res.ok) {
-        const errorMsg = data.error || data.message || "Failed to submit manuscript.";
-        console.log("[v0] Error response:", errorMsg);
+        const errorMsg = data.error || data.message || "Error al enviar el manuscrito.";
         setError(errorMsg);
         setIsSubmitting(false);
         return;
       }
 
-      console.log("[v0] Submit successful, showing success screen");
       setSuccess(true);
-      setTimeout(() => {
-        console.log("[v0] Redirecting to project:", data.projectId);
-        router.push(data.projectId ? `/author/projects/${data.projectId}` : "/author/projects");
-      }, 2500);
-    } catch (err) {
-      console.error("[v0] catch block error:", err);
-      setError("Connection error. Please try again.");
+      setProjectId(data.projectId ?? null);
+    } catch {
+      setError("Error de conexión. Inténtalo de nuevo.");
       setIsSubmitting(false);
     }
   };
@@ -72,7 +59,7 @@ export default function SubmitManuscriptPage() {
   if (success) {
     return (
       <div className="min-h-screen bg-muted/30 flex items-center justify-center p-4">
-        <Card className="w-full max-w-md border-border bg-card shadow-sm">
+        <Card className="w-full max-w-lg border-border bg-card shadow-sm">
           <CardHeader className="text-center">
             <div className="flex justify-center mb-2">
               <div className="h-14 w-14 rounded-full bg-primary/10 flex items-center justify-center">
@@ -80,14 +67,36 @@ export default function SubmitManuscriptPage() {
               </div>
             </div>
             <CardTitle className="text-xl text-foreground">
-              Manuscript received
+              Manuscrito recibido
             </CardTitle>
             <CardDescription className="text-base text-muted-foreground">
-              Your manuscript is now being processed by the Reino Editorial AI Engine.
+              Tu manuscrito ha sido recibido y el motor de IA de Reino Editorial
+              comenzará a procesarlo. Usa los enlaces a continuación para acceder
+              al proyecto y activar el proceso editorial.
             </CardDescription>
           </CardHeader>
-          <CardContent className="text-center text-sm text-muted-foreground">
-            Redirecting to your project…
+          <CardContent className="space-y-3">
+            {projectId && (
+              <>
+                <Link href={`/app/editorial/projects/${projectId}`} className="block">
+                  <Button className="w-full" size="lg">
+                    <Settings className="mr-2 h-5 w-5" />
+                    Activar proceso editorial (Staff)
+                  </Button>
+                </Link>
+                <Link href={`/portal/editorial/projects/${projectId}`} className="block">
+                  <Button variant="outline" className="w-full" size="lg">
+                    <BookOpen className="mr-2 h-5 w-5" />
+                    Ver proyecto como cliente
+                  </Button>
+                </Link>
+              </>
+            )}
+            <Link href="/app/editorial/projects" className="block">
+              <Button variant="ghost" className="w-full text-muted-foreground">
+                Ver todos los proyectos editoriales
+              </Button>
+            </Link>
           </CardContent>
         </Card>
       </div>
