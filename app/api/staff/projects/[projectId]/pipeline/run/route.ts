@@ -3,19 +3,38 @@ import { requireStaff } from "@/lib/auth/staff";
 import { getEditorialProject } from "@/lib/editorial/db/queries";
 import { requireEditorialCapability } from "@/lib/editorial/permissions";
 import { advanceProjectStage, approveStage, updateStageStatus, logEditorialActivity } from "@/lib/editorial/db/mutations";
-import { getNextStage, isValidStageKey } from "@/lib/editorial/pipeline/stage-utils";
+import { getNextStage } from "@/lib/editorial/pipeline/stage-utils";
 import { EDITORIAL_STAGE_KEYS } from "@/lib/editorial/pipeline/constants";
 import { initializeNextStage } from "@/lib/editorial/pipeline/stage-transitions";
 import { processManuscriptNow } from "@/lib/editorial/ai/process-manuscript";
+import { processAiJob } from "@/lib/editorial/ai/processor";
+import { requestAiTask } from "@/lib/editorial/ai/jobs";
 import { logWorkflowEvent } from "@/lib/editorial/workflow-events";
+import { getLatestManuscriptForProject } from "@/lib/editorial/files/get-latest-manuscript";
 import type { EditorialStageKey } from "@/lib/editorial/types/editorial";
+import type { EditorialAiTaskKey } from "@/lib/editorial/types/ai";
+
+/**
+ * Primary AI task to run for each editorial stage.
+ * ingesta uses OpenAI (processManuscriptNow), all others use Claude via processAiJob.
+ */
+const STAGE_PRIMARY_AI_TASK: Record<EditorialStageKey, EditorialAiTaskKey | null> = {
+  ingesta: "manuscript_analysis",        // OpenAI gpt-4.1-mini
+  estructura: "structure_analysis",       // Claude – análisis estructural
+  estilo: "style_suggestions",            // Claude – sugerencias de estilo
+  ortotipografia: "orthotypography_review", // Claude – corrección ortotipográfica
+  maquetacion: "layout_analysis",         // Claude – análisis de maquetación
+  revision_final: "redline_diff",         // Claude – revisión final exhaustiva
+  export: "export_validation",            // Claude – validación para exportación
+  distribution: "metadata_generation",    // Claude – metadatos para distribución
+};
 
 /**
  * POST /api/staff/projects/[projectId]/pipeline/run
  *
  * Runs the full editorial pipeline automatically:
  * 1. Starts at the project's current stage
- * 2. For each stage: runs AI analysis (if applicable), approves, advances
+ * 2. For each stage: runs AI analysis (OpenAI for ingesta, Claude for the rest), approves, advances
  * 3. Returns a summary of what was processed
  *
  * This is a long-running request that processes all stages sequentially.
@@ -43,10 +62,16 @@ export async function POST(
       return NextResponse.json({ success: false, error: "FORBIDDEN" }, { status: 403 });
     }
 
+    // Get the latest manuscript file for AI jobs
+    const latestManuscript = await getLatestManuscriptForProject(projectId);
+    const manuscriptFileId = latestManuscript?.file?.id ?? null;
+    const manuscriptFileVersion = latestManuscript?.file?.version ?? null;
+
     const stagesProcessed: Array<{
       stage: string;
       status: "completed" | "skipped" | "failed";
       aiAnalysis?: boolean;
+      aiTask?: string;
       error?: string;
     }> = [];
 
@@ -75,8 +100,11 @@ export async function POST(
         // Mark stage as processing
         await updateStageStatus(projectId, stageKey, "processing");
 
-        // Run AI analysis for ingesta stage (manuscript analysis with OpenAI)
+        // Run AI analysis for this stage
+        const primaryTask = STAGE_PRIMARY_AI_TASK[stageKey];
+
         if (stageKey === "ingesta") {
+          // Ingesta uses OpenAI via processManuscriptNow
           try {
             await processManuscriptNow({
               projectId,
@@ -84,9 +112,42 @@ export async function POST(
               requestedBy: staff.userId,
             });
             stageResult.aiAnalysis = true;
+            stageResult.aiTask = "manuscript_analysis (OpenAI)";
           } catch (aiError) {
             console.warn(`[pipeline/run] AI analysis failed for ${stageKey}:`, aiError);
-            // Continue pipeline even if AI fails
+          }
+        } else if (primaryTask && manuscriptFileId) {
+          // All other stages use Claude via processAiJob
+          try {
+            const { jobId } = await requestAiTask({
+              orgId: project.org_id,
+              projectId,
+              stageKey,
+              taskKey: primaryTask,
+              requestedBy: staff.userId,
+              sourceFileId: manuscriptFileId,
+              sourceFileVersion: manuscriptFileVersion ?? undefined,
+            });
+
+            await processAiJob({
+              jobId,
+              projectId,
+              stageKey,
+              taskKey: primaryTask,
+              context: {
+                project_id: projectId,
+                stage_key: stageKey,
+                source_file_id: manuscriptFileId,
+                source_file_version: manuscriptFileVersion,
+                requested_by: staff.userId,
+              },
+            });
+
+            stageResult.aiAnalysis = true;
+            stageResult.aiTask = `${primaryTask} (Claude)`;
+          } catch (aiError) {
+            console.warn(`[pipeline/run] AI analysis failed for ${stageKey}/${primaryTask}:`, aiError);
+            // Continue pipeline even if AI fails for this stage
           }
         }
 
@@ -101,7 +162,7 @@ export async function POST(
           eventType: "stage_completed",
           actorId: staff.userId,
           actorRole: staff.role,
-          payload: { via: "automated_pipeline" },
+          payload: { via: "automated_pipeline", aiTask: stageResult.aiTask ?? null },
         });
 
         // Advance to next stage
@@ -151,7 +212,7 @@ export async function POST(
       completed: allCompleted,
       stagesProcessed,
       message: allCompleted
-        ? "Pipeline editorial completado. El libro está listo para publicar."
+        ? "Pipeline editorial completado con AI en todas las etapas. El libro está listo para publicar."
         : `Pipeline procesó ${stagesProcessed.filter((s) => s.status === "completed").length} de ${EDITORIAL_STAGE_KEYS.length} etapas.`,
     });
   } catch (error) {

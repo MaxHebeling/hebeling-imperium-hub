@@ -13,6 +13,7 @@ interface StageResult {
   stage: string;
   status: "completed" | "skipped" | "failed";
   aiAnalysis?: boolean;
+  aiTask?: string;
   error?: string;
 }
 
@@ -123,7 +124,7 @@ export function PipelineRunnerPanel({ projectId, currentStage, projectStatus }: 
             <div>
               <p className="text-sm font-medium">Ejecutando pipeline editorial...</p>
               <p className="text-xs text-muted-foreground">
-                Procesando cada etapa: análisis AI, aprobación y avance automático. Esto puede tomar unos segundos.
+                Procesando cada etapa con AI (OpenAI + Claude): análisis, aprobación y avance automático. Esto puede tomar varios minutos.
               </p>
             </div>
           </div>
@@ -151,7 +152,7 @@ export function PipelineRunnerPanel({ projectId, currentStage, projectStatus }: 
                     {EDITORIAL_STAGE_LABELS[result.stage as keyof typeof EDITORIAL_STAGE_LABELS] ?? result.stage}
                   </span>
                   {result.aiAnalysis && (
-                    <Badge variant="secondary" className="text-[10px]">AI</Badge>
+                    <Badge variant="secondary" className="text-[10px]">{result.aiTask ?? "AI"}</Badge>
                   )}
                 </div>
                 <Badge
