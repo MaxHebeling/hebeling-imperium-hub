@@ -60,6 +60,9 @@ export async function middleware(request: NextRequest) {
   if (pathname === "/apply" || pathname.startsWith("/apply")) {
     return NextResponse.next();
   }
+  if (pathname.startsWith("/auth/callback")) {
+    return NextResponse.next();
+  }
   if (pathname === "/submit-manuscript") {
     return NextResponse.next();
   }
