@@ -81,7 +81,7 @@ const UNITS: BusinessUnit[] = [
     editorialHref: null,
     oficinaHref: null,
     logo: "/logo-ikingdom.png",
-    logoBg: "#D4AF37",
+    logoBg: "#ffffff",
     logoRounded: false,
     gradient: "linear-gradient(135deg, #1a1a1a, #444444)",
     accent: "#1a1a1a",
