@@ -42,8 +42,8 @@ export async function POST(request: Request) {
     const adminSupabase = createAdminClient(supabaseUrl, serviceRoleKey);
 
     // Determine the redirect URL – send client directly to their project if available
-    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL
-      || (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "http://localhost:3000");
+    // Always use the canonical production URL so Supabase redirect allowlist matches
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://www.hebeling.io";
     const portalPath = projectId
       ? `/portal/editorial/projects/${projectId}`
       : "/portal/editorial/projects";
