@@ -180,7 +180,7 @@ export default function ClientEditorialProjectsPage() {
         <p className="text-xs text-gray-400 text-center">
           {t.cantSeeBook}{" "}
           <a
-            href="mailto:editorial@reinoeditorial.com"
+            href="mailto:info@editorialreino.com"
             className="text-[#1a3a6b]/60 hover:text-[#1a3a6b] transition-colors"
           >
             {t.contactUs}
