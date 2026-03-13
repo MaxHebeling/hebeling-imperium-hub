@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useCallback } from "react";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -24,6 +25,7 @@ export function ReinoEditorialManuscriptUpload({
   projectId,
   onUploadComplete,
 }: ReinoEditorialManuscriptUploadProps) {
+  const router = useRouter();
   const [open, setOpen] = useState(false);
   const [dragActive, setDragActive] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -130,10 +132,11 @@ export function ReinoEditorialManuscriptUpload({
         version: result.version,
       });
 
-      // Close dialog after success
+      // Close dialog after success and refresh page data
       setTimeout(() => {
         setOpen(false);
         resetState();
+        router.refresh();
       }, 1500);
     } catch (error) {
       setUploadStatus("error");
