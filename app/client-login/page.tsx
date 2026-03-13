@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Lock, Mail, Loader2, Sparkles, CheckCircle2 } from "lucide-react";
+import { Lock, Mail, Loader2, Send, CheckCircle2 } from "lucide-react";
 import Image from "next/image";
 import { createClient } from "@/lib/supabase/client";
 
@@ -193,7 +193,7 @@ export default function ClientLoginPage() {
                       : "text-gray-400 hover:text-gray-600"
                   }`}
                 >
-                  <Sparkles className="w-3.5 h-3.5" />
+                  <Send className="w-3.5 h-3.5" />
                   Enlace por correo
                 </button>
                 <button
@@ -259,7 +259,7 @@ export default function ClientLoginPage() {
                       </>
                     ) : (
                       <>
-                        <Sparkles className="w-4 h-4 mr-2" />
+                        <Send className="w-4 h-4 mr-2" />
                         Enviar enlace de acceso
                       </>
                     )}
