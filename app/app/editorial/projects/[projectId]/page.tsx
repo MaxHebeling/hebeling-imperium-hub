@@ -201,20 +201,37 @@ export default function EditorialProjectDetailPage() {
     setUploadError(null);
     setUploadSuccess(false);
     try {
-      const formData = new FormData();
-      formData.append("file", file);
-      const res = await fetch("/api/editorial/projects/" + projectId + "/upload", {
+      // Step 1: Get a signed upload URL from our API (small JSON request)
+      const urlRes = await fetch("/api/editorial/projects/" + projectId + "/upload-url", {
         method: "POST",
-        body: formData,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          fileName: file.name,
+          mimeType: file.type,
+          sizeBytes: file.size,
+        }),
       });
-      const json = await res.json();
-      if (json.success) {
-        setUploadSuccess(true);
-        await fetchData();
-        setTimeout(() => setUploadSuccess(false), 3000);
-      } else {
-        setUploadError(json.error ?? "Error al subir archivo");
+      const urlJson = await urlRes.json();
+      if (!urlJson.success) {
+        setUploadError(urlJson.error ?? "Error al preparar la subida");
+        return;
       }
+
+      // Step 2: Upload file directly to Supabase Storage using the signed URL
+      const uploadRes = await fetch(urlJson.signedUrl, {
+        method: "PUT",
+        headers: { "Content-Type": file.type },
+        body: file,
+      });
+
+      if (!uploadRes.ok) {
+        setUploadError("Error al subir el archivo al almacenamiento");
+        return;
+      }
+
+      setUploadSuccess(true);
+      await fetchData();
+      setTimeout(() => setUploadSuccess(false), 3000);
     } catch {
       setUploadError("Error de conexión al subir archivo");
     } finally {
