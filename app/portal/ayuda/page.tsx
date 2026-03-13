@@ -75,7 +75,7 @@ const T = {
       },
       {
         q: "Se me olvido mi contrasena",
-        a: "Contacta a tu editor en editorial@reinoeditorial.com para que te la restablezcan.",
+        a: "Contacta a tu editor en info@editorialreino.com para que te la restablezcan.",
       },
       {
         q: "Cuanto tiempo tarda el proceso editorial?",
@@ -84,7 +84,7 @@ const T = {
     ],
     contactTitle: "Necesitas mas ayuda?",
     contactDesc: "Escribe a tu editor:",
-    contactEmail: "editorial@reinoeditorial.com",
+    contactEmail: "info@editorialreino.com",
   },
   en: {
     back: "My books",
@@ -150,7 +150,7 @@ const T = {
       },
       {
         q: "I forgot my password",
-        a: "Contact your editor at editorial@reinoeditorial.com to reset it.",
+        a: "Contact your editor at info@editorialreino.com to reset it.",
       },
       {
         q: "How long does the editorial process take?",
@@ -159,7 +159,7 @@ const T = {
     ],
     contactTitle: "Need more help?",
     contactDesc: "Write to your editor:",
-    contactEmail: "editorial@reinoeditorial.com",
+    contactEmail: "info@editorialreino.com",
   },
 };
 

@@ -11,7 +11,7 @@ export const COMPANY_INFO: CompanyInfo = {
   address: "Blvd la Cuspide 1962 #28\nPrivada Monte Ararat\nLa Cuspide C.P 22517\nTijuana, BC - Mexico",
   taxId: "",
   phone: "",
-  email: "editorial@reinoeditorial.com",
+  email: "info@editorialreino.com",
   website: "editorialreino.com",
   bankName: "",
   bankAccount: "",

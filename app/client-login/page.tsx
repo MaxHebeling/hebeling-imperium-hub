@@ -351,10 +351,10 @@ function ClientLoginContent() {
         <p className="text-center text-xs text-gray-400 mt-6">
           ¿No tienes acceso? Contacta a tu editor en{" "}
           <a
-            href="mailto:editorial@reinoeditorial.com"
+            href="mailto:info@editorialreino.com"
             className="text-[#1a3a6b]/60 hover:text-[#1a3a6b] transition-colors"
           >
-            editorial@reinoeditorial.com
+            info@editorialreino.com
           </a>
         </p>
 
