@@ -363,12 +363,12 @@ export function DashboardContent({ metrics, brands, activities, deals }: Dashboa
               <div className="space-y-3">
                 <PriorityItem
                   label={t.dashboard.pendingApprovals}
-                  count={2}
+                  count={0}
                   priority="high"
                 />
                 <PriorityItem
                   label={t.dashboard.documentsAwaiting}
-                  count={5}
+                  count={0}
                   priority="medium"
                 />
                 <PriorityItem

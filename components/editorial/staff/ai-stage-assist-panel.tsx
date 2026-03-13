@@ -10,12 +10,21 @@ import type { EditorialAiTaskKey } from "@/lib/editorial/types/ai";
 import type { EditorialAiFinding } from "@/lib/editorial/types/ai-findings";
 
 const TASK_LABELS: Record<string, string> = {
+  manuscript_analysis: "Análisis de manuscrito",
   structure_analysis: "Análisis de estructura",
   style_suggestions: "Sugerencias de estilo",
   orthotypography_review: "Revisión ortotipográfica",
   issue_detection: "Detección de issues",
   quality_scoring: "Quality scoring",
   redline_diff: "Diff/redline",
+  layout_analysis: "Análisis de maquetación",
+  typography_check: "Revisión tipográfica",
+  page_flow_review: "Flujo de páginas",
+  export_validation: "Validación de export",
+  metadata_generation: "Generación de metadatos",
+  line_editing: "Line editing (Claude)",
+  copyediting: "Copyediting (Claude)",
+  concept_review: "Revisión conceptual",
 };
 
 function severityVariant(severity: string): "default" | "secondary" | "destructive" | "outline" {

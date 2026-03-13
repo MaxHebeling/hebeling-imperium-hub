@@ -1,7 +1,7 @@
 "use client";
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { FileText, GitBranch, MessageSquare, Users, LayoutGrid, Sparkles, Download, Globe } from "lucide-react";
+import { FileText, GitBranch, MessageSquare, Users, LayoutGrid, Sparkles, Download, Globe, Paintbrush } from "lucide-react";
 import { StaffProjectSummaryTab } from "./staff-project-summary-tab";
 import { StaffPipelineTab } from "./staff-pipeline-tab";
 import { StaffFilesTab } from "./staff-files-tab";
@@ -10,8 +10,7 @@ import { StaffAssignmentsTab } from "./staff-assignments-tab";
 import { AiStageAssistPanel } from "@/components/editorial/staff/ai-stage-assist-panel";
 import { ExportPanel } from "@/components/editorial/export/export-panel";
 import { DistributionPanel } from "@/components/editorial/distribution/distribution-panel";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { EDITORIAL_STAGE_LABELS } from "@/lib/editorial/pipeline/constants";
+import { CoverGeneratorPanel } from "@/components/editorial/staff/cover-generator-panel";
 import type { StaffProjectDetail } from "@/lib/editorial/types/editorial";
 import type { EditorialStageKey } from "@/lib/editorial/types/editorial";
 import type { EditorialAiTaskKey } from "@/lib/editorial/types/ai";
@@ -24,22 +23,26 @@ interface StaffProjectTabsProps {
   distributions?: ProjectDistribution[];
 }
 
-const AI_TASKS_BY_STAGE: Partial<Record<EditorialStageKey, EditorialAiTaskKey[]>> = {
+const AI_TASKS_BY_STAGE: Record<EditorialStageKey, EditorialAiTaskKey[]> = {
+  ingesta: ["manuscript_analysis", "issue_detection", "quality_scoring"],
   estructura: ["structure_analysis", "issue_detection"],
   estilo: ["style_suggestions", "issue_detection"],
   ortotipografia: ["orthotypography_review", "issue_detection"],
+  maquetacion: ["layout_analysis", "typography_check", "page_flow_review", "issue_detection"],
+  revision_final: ["issue_detection", "quality_scoring", "redline_diff"],
+  export: ["export_validation", "metadata_generation", "quality_scoring"],
+  distribution: ["metadata_generation"],
 };
 
 function isAiSupportedStage(stageKey: string): stageKey is EditorialStageKey {
-  return stageKey === "estructura" || stageKey === "estilo" || stageKey === "ortotipografia";
+  return stageKey in AI_TASKS_BY_STAGE;
 }
 
 export function StaffProjectTabs({ detail, exports = [], distributions = [] }: StaffProjectTabsProps) {
   const { project, stages, files, comments, members, staffAssignments, created_by_name, created_by_email } = detail;
 
   const currentStageKey = project.current_stage;
-  const aiStageLabel = EDITORIAL_STAGE_LABELS[currentStageKey as EditorialStageKey] ?? currentStageKey;
-  const aiTasks = isAiSupportedStage(currentStageKey) ? (AI_TASKS_BY_STAGE[currentStageKey] ?? []) : [];
+  const aiTasks = isAiSupportedStage(currentStageKey) ? AI_TASKS_BY_STAGE[currentStageKey] : [];
 
   return (
     <Tabs defaultValue="resumen" className="w-full">
@@ -68,6 +71,10 @@ export function StaffProjectTabs({ detail, exports = [], distributions = [] }: S
           <TabsTrigger value="asignaciones" className="gap-1.5 px-3 text-xs sm:text-sm shrink-0">
             <Users className="h-3.5 w-3.5 shrink-0" />
             Asignaciones
+          </TabsTrigger>
+          <TabsTrigger value="portada" className="gap-1.5 px-3 text-xs sm:text-sm shrink-0">
+            <Paintbrush className="h-3.5 w-3.5 shrink-0" />
+            Portada AI
           </TabsTrigger>
           <TabsTrigger value="export" className="gap-1.5 px-3 text-xs sm:text-sm shrink-0">
             <Download className="h-3.5 w-3.5 shrink-0" />
@@ -101,26 +108,7 @@ export function StaffProjectTabs({ detail, exports = [], distributions = [] }: S
       </TabsContent>
 
       <TabsContent value="ai" className="mt-4">
-        {isAiSupportedStage(currentStageKey) ? (
-          <AiStageAssistPanel projectId={project.id} stageKey={currentStageKey} tasks={aiTasks} />
-        ) : (
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-base">AI – Asistencia editorial</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              <p className="text-sm text-muted-foreground">
-                La asistencia AI aún no está habilitada para la etapa actual:{" "}
-                <span className="font-medium text-foreground">{aiStageLabel}</span>.
-              </p>
-              <p className="text-sm text-muted-foreground">
-                Cambia la etapa a <span className="font-medium text-foreground">Estructura</span>,{" "}
-                <span className="font-medium text-foreground">Estilo</span> u{" "}
-                <span className="font-medium text-foreground">Ortotipografía</span> para ver acciones de AI.
-              </p>
-            </CardContent>
-          </Card>
-        )}
+        <AiStageAssistPanel projectId={project.id} stageKey={currentStageKey as EditorialStageKey} tasks={aiTasks} />
       </TabsContent>
 
       <TabsContent value="archivos" className="mt-4">
@@ -137,6 +125,10 @@ export function StaffProjectTabs({ detail, exports = [], distributions = [] }: S
           staffAssignments={staffAssignments}
           projectId={project.id}
         />
+      </TabsContent>
+
+      <TabsContent value="portada" className="mt-4">
+        <CoverGeneratorPanel projectId={project.id} />
       </TabsContent>
 
       <TabsContent value="export" className="mt-4">

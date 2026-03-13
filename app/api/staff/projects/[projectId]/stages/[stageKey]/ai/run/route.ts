@@ -9,12 +9,21 @@ import { requestStageAiAssist } from "@/lib/editorial/ai/stage-assist";
 
 function isAiTaskKey(value: string): value is EditorialAiTaskKey {
   return [
+    "manuscript_analysis",
     "structure_analysis",
     "style_suggestions",
     "orthotypography_review",
     "issue_detection",
     "quality_scoring",
     "redline_diff",
+    "layout_analysis",
+    "typography_check",
+    "page_flow_review",
+    "export_validation",
+    "metadata_generation",
+    "line_editing",
+    "copyediting",
+    "concept_review",
   ].includes(value);
 }
 

@@ -95,79 +95,22 @@ const roleColors: Record<string, string> = {
   guest: "bg-slate-500/10 text-slate-400 border-slate-500/30",
 };
 
-// Mock data - In production, this would come from Supabase
+// TODO: Fetch real data from Supabase
 const mockOrganization: Organization = {
-  id: "org-1",
-  name: "Hebeling Imperium",
-  slug: "hebeling-imperium",
-  description: "Main business operating system",
+  id: "",
+  name: "",
+  slug: "",
+  description: "",
   status: "active",
   plan: "enterprise",
-  created_at: "2024-01-15T10:00:00Z",
+  created_at: new Date().toISOString(),
 };
 
-const mockMembers: OrganizationMember[] = [
-  {
-    id: "mem-1",
-    user_id: "user-1",
-    role: "owner",
-    joined_at: "2024-01-15T10:00:00Z",
-    profiles: {
-      full_name: "Max Hebeling",
-      email: "max@hebeling.com",
-      avatar_url: null,
-    },
-  },
-  {
-    id: "mem-2",
-    user_id: "user-2",
-    role: "admin",
-    joined_at: "2024-02-01T10:00:00Z",
-    profiles: {
-      full_name: "Sarah Johnson",
-      email: "sarah@hebeling.com",
-      avatar_url: null,
-    },
-  },
-];
+const mockMembers: OrganizationMember[] = [];
 
-const mockTeams: Team[] = [
-  {
-    id: "team-1",
-    name: "Leadership",
-    description: "Executive leadership team",
-    member_count: 3,
-    created_at: "2024-01-15T10:00:00Z",
-  },
-  {
-    id: "team-2",
-    name: "Development",
-    description: "Product development team",
-    member_count: 8,
-    created_at: "2024-02-01T10:00:00Z",
-  },
-];
+const mockTeams: Team[] = [];
 
-const mockRoles: Role[] = [
-  {
-    id: "role-1",
-    name: "Owner",
-    description: "Full access to organization",
-    permissions: ["admin", "edit", "delete", "invite"],
-  },
-  {
-    id: "role-2",
-    name: "Admin",
-    description: "Administrative access",
-    permissions: ["edit", "delete", "invite"],
-  },
-  {
-    id: "role-3",
-    name: "Member",
-    description: "Standard member access",
-    permissions: ["edit", "view"],
-  },
-];
+const mockRoles: Role[] = [];
 
 export default function OrganizationDetailPage({ params }: { params: { id: string } }) {
   const router = useRouter();
