@@ -18,6 +18,7 @@ import {
   UserPlus,
   Send,
   CheckCheck,
+  Download,
 } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -126,6 +127,10 @@ export default function EditorialProjectDetailPage() {
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [uploadSuccess, setUploadSuccess] = useState(false);
 
+  // Correction report download state
+  const [downloadingReport, setDownloadingReport] = useState(false);
+  const [reportError, setReportError] = useState<string | null>(null);
+
   const fetchData = useCallback(async () => {
     if (!projectId) return;
     setLoading(true);
@@ -215,6 +220,35 @@ export default function EditorialProjectDetailPage() {
     } finally {
       setUploading(false);
       e.target.value = "";
+    }
+  }
+
+  async function handleDownloadCorrectionReport() {
+    setDownloadingReport(true);
+    setReportError(null);
+    try {
+      const res = await fetch(`/api/editorial/projects/${projectId}/correction-report`);
+      if (!res.ok) {
+        const json = await res.json().catch(() => ({ error: "Error al generar reporte" }));
+        setReportError(json.error ?? "Error al generar el reporte de correcciones");
+        return;
+      }
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const disposition = res.headers.get("Content-Disposition");
+      const fileNameMatch = disposition?.match(/filename="?([^"]+)"?/);
+      const fileName = fileNameMatch?.[1] ?? `Correcciones_${projectId}.docx`;
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = fileName;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch {
+      setReportError("Error de conexión al descargar el reporte");
+    } finally {
+      setDownloadingReport(false);
     }
   }
 
@@ -516,6 +550,46 @@ export default function EditorialProjectDetailPage() {
               ))}
             </div>
           )}
+        </div>
+      </div>
+
+      {/* Correction Report Download */}
+      <div
+        className="rounded-2xl overflow-hidden"
+        style={{ background: "var(--re-surface)", border: "1px solid var(--re-border)" }}
+      >
+        <div className="px-5 py-4" style={{ borderBottom: "1px solid var(--re-border)" }}>
+          <h2 className="text-sm font-semibold" style={{ color: "var(--re-text)" }}>Reporte de Correcciones</h2>
+          <p className="text-xs mt-0.5" style={{ color: "var(--re-text-muted)" }}>
+            Genera un documento Word con todos los errores ortográficos y gramaticales encontrados.
+          </p>
+        </div>
+        <div className="px-5 py-4">
+          {reportError && (
+            <div className="mb-3 rounded-lg px-3 py-2 text-xs" style={{ color: "var(--re-danger, #ef4444)", background: "#ef444410", border: "1px solid #ef444430" }}>
+              {reportError}
+            </div>
+          )}
+          <button
+            onClick={handleDownloadCorrectionReport}
+            disabled={downloadingReport}
+            className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all w-full justify-center"
+            style={{
+              background: "linear-gradient(135deg, #1B40C0 0%, #2DD4D4 100%)",
+              color: "#ffffff",
+              boxShadow: "0 0 16px #1B40C040",
+              opacity: downloadingReport ? 0.7 : 1,
+            }}
+          >
+            {downloadingReport ? (
+              <><Loader2 className="w-4 h-4 animate-spin" /> Generando reporte...</>
+            ) : (
+              <><Download className="w-4 h-4" /> Descargar Reporte de Correcciones (.docx)</>
+            )}
+          </button>
+          <p className="text-xs mt-2 text-center" style={{ color: "var(--re-text-subtle)" }}>
+            El documento incluye errores agrupados por tipo y severidad, listo para enviar al autor.
+          </p>
         </div>
       </div>
 
