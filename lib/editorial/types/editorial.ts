@@ -19,6 +19,8 @@ export type EditorialStageStatus =
   | "failed"
   | "completed";
 
+export type EditorialServiceType = "full_pipeline" | "reedicion" | "rediseno_portada" | "reedicion_y_portada";
+
 export interface EditorialProject {
   id: string;
   org_id: string;
@@ -34,6 +36,7 @@ export interface EditorialProject {
   current_stage: EditorialStageKey;
   status: string;
   progress_percent: number;
+  service_type: EditorialServiceType;
   due_date: string | null;
   created_by: string | null;
   created_at: string;
