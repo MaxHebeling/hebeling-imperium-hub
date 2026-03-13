@@ -60,6 +60,9 @@ export async function middleware(request: NextRequest) {
   if (pathname === "/apply" || pathname.startsWith("/apply")) {
     return NextResponse.next();
   }
+  if (pathname.startsWith("/auth/callback")) {
+    return NextResponse.next();
+  }
   if (pathname === "/submit-manuscript") {
     return NextResponse.next();
   }
@@ -143,6 +146,25 @@ export async function middleware(request: NextRequest) {
         url.pathname = "/login";
         return NextResponse.redirect(url);
       }
+    }
+
+    // Client portal routes on hub host: /portal/* requires client auth, /client-login is public
+    if (pathname.startsWith("/portal")) {
+      if (!user || !profile) {
+        const url = request.nextUrl.clone();
+        url.pathname = "/client-login";
+        return NextResponse.redirect(url);
+      }
+      if (!isClient && !isStaff) {
+        const url = request.nextUrl.clone();
+        url.pathname = "/client-login";
+        return NextResponse.redirect(url);
+      }
+    }
+    if (pathname === "/client-login" && user && isClient) {
+      const url = request.nextUrl.clone();
+      url.pathname = "/portal/editorial/projects";
+      return NextResponse.redirect(url);
     }
 
     // Author portal: /author/* requires any authenticated user.

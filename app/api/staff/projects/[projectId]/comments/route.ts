@@ -5,6 +5,8 @@ import { createEditorialComment, logEditorialActivity } from "@/lib/editorial/db
 import { isValidStageKey } from "@/lib/editorial/pipeline/stage-utils";
 import type { EditorialStageKey } from "@/lib/editorial/types/editorial";
 import { requireEditorialCapability } from "@/lib/editorial/permissions";
+import { notifyStaffComment, notifySuggestion } from "@/lib/editorial/notifications/service";
+import { getAdminClient } from "@/lib/leads/helpers";
 
 /**
  * POST /api/staff/projects/[projectId]/comments
@@ -70,6 +72,35 @@ export async function POST(
       actorType: "staff",
       payload: { visibility },
     });
+
+    // Notify client if comment is visible to them
+    if (visibility === "client" || visibility === "public") {
+      try {
+        const admin = getAdminClient();
+        const { data: proj } = await admin
+          .from("editorial_projects")
+          .select("client_id, title")
+          .eq("id", projectId)
+          .single();
+        const { data: staffProfile } = await admin
+          .from("profiles")
+          .select("full_name")
+          .eq("id", staff.userId)
+          .single();
+        const staffName = staffProfile?.full_name || "Equipo Editorial";
+        if (proj?.client_id) {
+          await notifyStaffComment(
+            projectId,
+            proj.client_id,
+            comment,
+            staffName,
+            stageKey
+          );
+        }
+      } catch (notifErr) {
+        console.error("[staff/comments] notification error:", notifErr);
+      }
+    }
 
     return NextResponse.json({ success: true });
   } catch (error) {

@@ -3,6 +3,11 @@ import type { EditorialStageKey } from "../types/editorial";
 import type { EditorialAiTaskKey } from "../types/ai";
 import { logWorkflowEvent } from "../workflow-events";
 import { requestStageAiAssist, isTaskAllowedForStage } from "../ai/stage-assist";
+import {
+  notifyStageStarted,
+  notifyStageCompleted,
+  notifyProjectCompleted,
+} from "../notifications/service";
 
 /**
  * Stage configuration: defines behavior for each stage
@@ -100,6 +105,25 @@ export async function initializeNextStage(options: {
       payload: { initialStatus, autoStart: config.autoStart },
     });
 
+    // Send notification to client about stage start
+    try {
+      const { data: proj } = await supabase
+        .from("editorial_projects")
+        .select("client_id, title")
+        .eq("id", options.projectId)
+        .single();
+      if (proj?.client_id) {
+        await notifyStageStarted(
+          options.projectId,
+          proj.client_id,
+          options.stageKey,
+          proj.title ?? "Tu libro"
+        );
+      }
+    } catch (notifErr) {
+      console.error("[stage-transitions] notification error:", notifErr);
+    }
+
     // Auto-trigger AI task if configured and stage auto-starts
     if (config.autoStart && config.aiTaskKey) {
       const aiTaskKey = config.aiTaskKey as EditorialAiTaskKey;
@@ -175,6 +199,36 @@ export async function transitionStageStatus(options: {
 
   if (error) {
     return { success: false, error: error.message };
+  }
+
+  // Send notification to client about stage completion
+  if (options.toStatus === "completed" || options.toStatus === "approved") {
+    try {
+      const { data: proj } = await supabase
+        .from("editorial_projects")
+        .select("client_id, title")
+        .eq("id", options.projectId)
+        .single();
+      if (proj?.client_id) {
+        await notifyStageCompleted(
+          options.projectId,
+          proj.client_id,
+          options.stageKey,
+          proj.title ?? "Tu libro"
+        );
+
+        // If it's the distribution stage completing, notify project completed
+        if (options.stageKey === "distribution") {
+          await notifyProjectCompleted(
+            options.projectId,
+            proj.client_id,
+            proj.title ?? "Tu libro"
+          );
+        }
+      }
+    } catch (notifErr) {
+      console.error("[stage-transitions] notification error:", notifErr);
+    }
   }
 
   return { success: true };

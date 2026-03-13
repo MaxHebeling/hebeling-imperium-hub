@@ -11,6 +11,8 @@ import {
   BarChart2,
   Trash2,
   MoreHorizontal,
+  RefreshCw,
+  Palette,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -68,12 +70,22 @@ function formatDate(dateStr: string) {
   });
 }
 
+type ServiceType = "full_pipeline" | "reedicion" | "rediseno_portada" | "reedicion_y_portada";
+
+const SERVICE_TYPES: { value: ServiceType; label: string; desc: string; icon: typeof BookOpen }[] = [
+  { value: "full_pipeline", label: "Pipeline Completo", desc: "Nuevo libro: 8 etapas completas", icon: BookOpen },
+  { value: "reedicion", label: "Re-edici\u00f3n", desc: "Correcci\u00f3n y mejora de libro existente", icon: RefreshCw },
+  { value: "rediseno_portada", label: "Re-dise\u00f1o de Portada", desc: "Nueva portada para libro existente", icon: Palette },
+  { value: "reedicion_y_portada", label: "Re-edici\u00f3n + Portada", desc: "Edici\u00f3n completa + nueva portada", icon: RefreshCw },
+];
+
 interface CreateProjectForm {
   title: string;
   subtitle: string;
   author_name: string;
   language: string;
   genre: string;
+  service_type: ServiceType;
 }
 
 const INITIAL_FORM: CreateProjectForm = {
@@ -82,6 +94,7 @@ const INITIAL_FORM: CreateProjectForm = {
   author_name: "",
   language: "es",
   genre: "",
+  service_type: "full_pipeline",
 };
 
 export default function EditorialProjectsPage() {
@@ -133,6 +146,7 @@ export default function EditorialProjectsPage() {
           author_name: form.author_name.trim() || undefined,
           language: form.language || "es",
           genre: form.genre.trim() || undefined,
+          service_type: form.service_type,
         }),
       });
       const json = await res.json();
@@ -393,6 +407,37 @@ export default function EditorialProjectsPage() {
               </DialogDescription>
             </DialogHeader>
             <div className="flex flex-col gap-4 py-4">
+              {/* Service Type Selector */}
+              <div className="flex flex-col gap-1.5">
+                <Label>Tipo de servicio</Label>
+                <div className="grid grid-cols-2 gap-2">
+                  {SERVICE_TYPES.map((st) => (
+                    <button
+                      key={st.value}
+                      type="button"
+                      onClick={() => handleFieldChange("service_type", st.value)}
+                      className={`p-3 rounded-lg border text-left transition-all ${
+                        form.service_type === st.value
+                          ? "border-[#1a3a6b] bg-[#1a3a6b]/5 ring-1 ring-[#1a3a6b]/20"
+                          : "border-gray-200 hover:border-gray-300"
+                      }`}
+                    >
+                      <div className="flex items-center gap-2">
+                        <st.icon className={`w-4 h-4 ${
+                          form.service_type === st.value ? "text-[#1a3a6b]" : "text-gray-400"
+                        }`} />
+                        <span className={`text-xs font-semibold ${
+                          form.service_type === st.value ? "text-[#1a3a6b]" : "text-gray-700"
+                        }`}>
+                          {st.label}
+                        </span>
+                      </div>
+                      <p className="text-[10px] text-gray-400 mt-1 ml-6">{st.desc}</p>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
               <div className="flex flex-col gap-1.5">
                 <Label htmlFor="title">Título *</Label>
                 <Input

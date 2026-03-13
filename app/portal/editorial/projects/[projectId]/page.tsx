@@ -17,6 +17,8 @@ import {
   Send,
   Globe,
   Lock,
+  Palette,
+  Sparkles,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type {
@@ -91,6 +93,16 @@ export default function ClientProjectDetailPage() {
   const [commentText, setCommentText] = useState("");
   const [sendingComment, setSendingComment] = useState(false);
   const [locale, setLocale] = useState<PortalLocale>("es");
+
+  // Cover request state
+  const [showCoverForm, setShowCoverForm] = useState(false);
+  const [coverAuthorPrompt, setCoverAuthorPrompt] = useState("");
+  const [coverColorPalette, setCoverColorPalette] = useState("");
+  const [coverReferences, setCoverReferences] = useState("");
+  const [coverImageStyle, setCoverImageStyle] = useState<"realistic" | "illustrated" | "abstract" | "typographic" | "photographic">("illustrated");
+  const [sendingCoverRequest, setSendingCoverRequest] = useState(false);
+  const [coverRequestSuccess, setCoverRequestSuccess] = useState(false);
+  const [coverRequestError, setCoverRequestError] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const t = getTranslations(locale);
@@ -185,6 +197,46 @@ export default function ClientProjectDetailPage() {
       // silently fail
     } finally {
       setSendingComment(false);
+    }
+  }
+
+  async function handleCoverRequest() {
+    if (!coverAuthorPrompt.trim() || sendingCoverRequest) return;
+    setSendingCoverRequest(true);
+    setCoverRequestError("");
+    setCoverRequestSuccess(false);
+    try {
+      const res = await fetch(
+        `/api/editorial/client/projects/${projectId}/cover-request`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            authorPrompt: coverAuthorPrompt.trim(),
+            colorPalette: coverColorPalette.trim() || undefined,
+            references: coverReferences.trim() || undefined,
+            imageStyle: coverImageStyle,
+          }),
+        }
+      );
+      const json = await res.json();
+      if (json.success) {
+        setCoverRequestSuccess(true);
+        setCoverAuthorPrompt("");
+        setCoverColorPalette("");
+        setCoverReferences("");
+        setCoverImageStyle("illustrated");
+        setTimeout(() => {
+          setCoverRequestSuccess(false);
+          setShowCoverForm(false);
+        }, 5000);
+      } else {
+        setCoverRequestError(json.error ?? (locale === "es" ? "Error al enviar solicitud" : "Error sending request"));
+      }
+    } catch {
+      setCoverRequestError(locale === "es" ? "Error de red" : "Network error");
+    } finally {
+      setSendingCoverRequest(false);
     }
   }
 
@@ -518,6 +570,156 @@ export default function ClientProjectDetailPage() {
             </Button>
           </div>
         </div>
+      </div>
+
+      {/* Cover Request — Author can suggest their vision */}
+      <div className="rounded-2xl border border-gray-200 bg-white overflow-hidden shadow-sm">
+        <div className="p-4 border-b border-gray-100">
+          <div className="flex items-center justify-between">
+            <h2 className="text-sm font-semibold text-gray-900 flex items-center gap-2">
+              <Palette className="w-4 h-4 text-purple-500" />
+              {locale === "es" ? "Diseño de Portada" : "Cover Design"}
+            </h2>
+            <button
+              onClick={() => setShowCoverForm(!showCoverForm)}
+              className="text-xs font-medium px-3 py-1.5 rounded-lg bg-purple-50 text-purple-600 hover:bg-purple-100 transition-colors border border-purple-100"
+            >
+              {showCoverForm
+                ? (locale === "es" ? "Cerrar" : "Close")
+                : (locale === "es" ? "Sugerir Portada" : "Suggest Cover")}
+            </button>
+          </div>
+          <p className="text-xs text-gray-400 mt-1">
+            {locale === "es"
+              ? "Comparte tu visión para la portada de tu libro. Nuestro equipo editorial también generará propuestas."
+              : "Share your vision for your book cover. Our editorial team will also generate proposals."}
+          </p>
+        </div>
+
+        {coverRequestSuccess && (
+          <div className="p-4 bg-green-50 border-b border-green-100 flex items-center gap-2">
+            <CheckCircle2 className="w-4 h-4 text-green-500 shrink-0" />
+            <p className="text-sm text-green-700">
+              {locale === "es"
+                ? "¡Solicitud enviada! Nuestro equipo revisará tu visión y generará opciones de portada."
+                : "Request sent! Our team will review your vision and generate cover options."}
+            </p>
+          </div>
+        )}
+
+        {showCoverForm && !coverRequestSuccess && (
+          <div className="p-4 space-y-4">
+            {/* Author vision */}
+            <div>
+              <label className="block text-xs font-medium text-gray-600 mb-1.5">
+                {locale === "es" ? "Tu visión para la portada *" : "Your cover vision *"}
+              </label>
+              <textarea
+                value={coverAuthorPrompt}
+                onChange={(e) => setCoverAuthorPrompt(e.target.value)}
+                placeholder={locale === "es"
+                  ? "Describe cómo imaginas la portada de tu libro. Ej: Un atardecer sobre montañas con tonos cálidos, el título en letras elegantes doradas..."
+                  : "Describe how you imagine your book cover. E.g.: A sunset over mountains with warm tones, the title in elegant golden letters..."}
+                rows={4}
+                className="w-full px-3 py-2.5 rounded-xl bg-gray-50 border border-gray-200 text-sm text-gray-900 placeholder:text-gray-300 focus:outline-none focus:border-purple-300 resize-none"
+              />
+            </div>
+
+            {/* Image style */}
+            <div>
+              <label className="block text-xs font-medium text-gray-600 mb-1.5">
+                {locale === "es" ? "Estilo visual" : "Visual style"}
+              </label>
+              <div className="grid grid-cols-3 gap-2 sm:grid-cols-5">
+                {([
+                  { value: "realistic" as const, label: locale === "es" ? "Realista" : "Realistic", icon: "📷" },
+                  { value: "illustrated" as const, label: locale === "es" ? "Ilustrado" : "Illustrated", icon: "🎨" },
+                  { value: "abstract" as const, label: locale === "es" ? "Abstracto" : "Abstract", icon: "🔮" },
+                  { value: "typographic" as const, label: locale === "es" ? "Tipográfico" : "Typographic", icon: "✍️" },
+                  { value: "photographic" as const, label: locale === "es" ? "Fotográfico" : "Photographic", icon: "📸" },
+                ]).map((style) => (
+                  <button
+                    key={style.value}
+                    onClick={() => setCoverImageStyle(style.value)}
+                    className={`flex flex-col items-center gap-1 p-2.5 rounded-xl border text-xs transition-all ${
+                      coverImageStyle === style.value
+                        ? "border-purple-300 bg-purple-50 text-purple-700"
+                        : "border-gray-200 bg-white text-gray-500 hover:border-gray-300"
+                    }`}
+                  >
+                    <span className="text-lg">{style.icon}</span>
+                    <span className="font-medium">{style.label}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Color palette */}
+            <div>
+              <label className="block text-xs font-medium text-gray-600 mb-1.5">
+                {locale === "es" ? "Paleta de colores (opcional)" : "Color palette (optional)"}
+              </label>
+              <input
+                type="text"
+                value={coverColorPalette}
+                onChange={(e) => setCoverColorPalette(e.target.value)}
+                placeholder={locale === "es"
+                  ? "Ej: Azul oscuro, dorado, blanco"
+                  : "E.g.: Dark blue, gold, white"}
+                className="w-full h-10 px-3 rounded-xl bg-gray-50 border border-gray-200 text-sm text-gray-900 placeholder:text-gray-300 focus:outline-none focus:border-purple-300"
+              />
+            </div>
+
+            {/* References */}
+            <div>
+              <label className="block text-xs font-medium text-gray-600 mb-1.5">
+                {locale === "es" ? "Referencias o inspiración (opcional)" : "References or inspiration (optional)"}
+              </label>
+              <input
+                type="text"
+                value={coverReferences}
+                onChange={(e) => setCoverReferences(e.target.value)}
+                placeholder={locale === "es"
+                  ? "Ej: Estilo similar a 'El Alquimista', portadas minimalistas de Penguin..."
+                  : "E.g.: Style similar to 'The Alchemist', Penguin minimalist covers..."}
+                className="w-full h-10 px-3 rounded-xl bg-gray-50 border border-gray-200 text-sm text-gray-900 placeholder:text-gray-300 focus:outline-none focus:border-purple-300"
+              />
+            </div>
+
+            {coverRequestError && (
+              <p className="text-xs text-red-500 flex items-center gap-1">
+                <AlertCircle className="w-3.5 h-3.5" />
+                {coverRequestError}
+              </p>
+            )}
+
+            {/* Submit */}
+            <Button
+              onClick={handleCoverRequest}
+              disabled={!coverAuthorPrompt.trim() || sendingCoverRequest}
+              className="w-full h-11 rounded-xl text-white font-semibold"
+              style={{ background: "linear-gradient(135deg, #9333ea, #7c3aed)" }}
+            >
+              {sendingCoverRequest ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  {locale === "es" ? "Enviando..." : "Sending..."}
+                </>
+              ) : (
+                <>
+                  <Sparkles className="w-4 h-4 mr-2" />
+                  {locale === "es" ? "Enviar mi visión de portada" : "Send my cover vision"}
+                </>
+              )}
+            </Button>
+
+            <p className="text-[11px] text-gray-300 text-center">
+              {locale === "es"
+                ? "Nuestro equipo editorial usará tu visión junto con IA para generar opciones de portada profesionales."
+                : "Our editorial team will use your vision along with AI to generate professional cover options."}
+            </p>
+          </div>
+        )}
       </div>
 
       {/* Downloads */}

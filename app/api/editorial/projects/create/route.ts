@@ -12,6 +12,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const serviceType = body.service_type ?? "full_pipeline";
+
     const project = await createEditorialProject({
       title: body.title.trim(),
       subtitle: body.subtitle ?? undefined,
@@ -20,10 +22,11 @@ export async function POST(request: NextRequest) {
       genre: body.genre ?? undefined,
       target_audience: body.target_audience ?? undefined,
       client_id: body.client_id ?? undefined,
+      service_type: serviceType,
     });
 
     await logEditorialActivity(project.id, "project_created", {
-      payload: { title: project.title, stage: project.current_stage },
+      payload: { title: project.title, stage: project.current_stage, service_type: serviceType },
     });
 
     return NextResponse.json({ success: true, project });

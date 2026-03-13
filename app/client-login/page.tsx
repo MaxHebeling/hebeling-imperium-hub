@@ -1,20 +1,25 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Lock, Mail, Loader2 } from "lucide-react";
+import { Lock, Mail, Loader2, Send, CheckCircle2 } from "lucide-react";
 import Image from "next/image";
 import { createClient } from "@/lib/supabase/client";
 
+type LoginMode = "magic" | "password";
+
 export default function ClientLoginPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [mode, setMode] = useState<LoginMode>("magic");
+  const [magicLinkSent, setMagicLinkSent] = useState(false);
 
   // Register service worker for PWA
   useEffect(() => {
@@ -23,7 +28,43 @@ export default function ClientLoginPage() {
     }
   }, []);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  // Check for magic link errors in URL
+  useEffect(() => {
+    const urlError = searchParams.get("error");
+    if (urlError === "magic_link_expired") {
+      setError(
+        "El enlace ha expirado. Solicita uno nuevo ingresando tu correo."
+      );
+    }
+  }, [searchParams]);
+
+  const handleMagicLink = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+    setError(null);
+
+    const supabase = createClient();
+
+    const { error: otpError } = await supabase.auth.signInWithOtp({
+      email,
+      options: {
+        emailRedirectTo: `${window.location.origin}/auth/callback?next=/portal/editorial/projects`,
+      },
+    });
+
+    if (otpError) {
+      setError(
+        "Error al enviar el enlace. Verifica tu correo e intenta de nuevo."
+      );
+      setIsLoading(false);
+      return;
+    }
+
+    setMagicLinkSent(true);
+    setIsLoading(false);
+  };
+
+  const handlePassword = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     setError(null);
@@ -112,73 +153,187 @@ export default function ClientLoginPage() {
             </p>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {error && (
-              <div className="p-3 rounded-xl bg-red-50 border border-red-200 text-red-600 text-sm">
-                {error}
+          {/* Magic Link Sent Success */}
+          {magicLinkSent ? (
+            <div className="flex flex-col items-center gap-4 py-4">
+              <div className="w-16 h-16 rounded-full bg-green-50 flex items-center justify-center">
+                <CheckCircle2 className="w-8 h-8 text-green-500" />
               </div>
-            )}
-
-            <div className="space-y-2">
-              <Label htmlFor="email" className="text-sm font-medium text-gray-600">
-                Correo electrónico
-              </Label>
-              <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#1a3a6b]/40" />
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="tu@correo.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="pl-10 bg-gray-50 border-gray-200 text-gray-900 placeholder:text-gray-300 focus:border-[#1a3a6b]/50 focus:ring-[#1a3a6b]/20 h-12 rounded-xl"
-                  required
-                />
+              <div className="text-center">
+                <p className="font-semibold text-gray-900">
+                  ¡Enlace enviado!
+                </p>
+                <p className="text-sm text-gray-400 mt-2">
+                  Revisa tu correo <strong className="text-gray-600">{email}</strong> y
+                  haz clic en el enlace para acceder a tu portal.
+                </p>
               </div>
+              <button
+                onClick={() => {
+                  setMagicLinkSent(false);
+                  setEmail("");
+                }}
+                className="text-xs text-[#1a3a6b]/60 hover:text-[#1a3a6b] transition-colors mt-2"
+              >
+                Usar otro correo
+              </button>
             </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="password" className="text-sm font-medium text-gray-600">
-                Contraseña
-              </Label>
-              <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#1a3a6b]/40" />
-                <Input
-                  id="password"
-                  type="password"
-                  placeholder="Tu contraseña"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="pl-10 bg-gray-50 border-gray-200 text-gray-900 placeholder:text-gray-300 focus:border-[#1a3a6b]/50 focus:ring-[#1a3a6b]/20 h-12 rounded-xl"
-                  required
-                />
+          ) : (
+            <>
+              {/* Mode Tabs */}
+              <div className="flex rounded-xl bg-gray-100 p-1 mb-5">
+                <button
+                  onClick={() => {
+                    setMode("magic");
+                    setError(null);
+                  }}
+                  className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-semibold transition-all ${
+                    mode === "magic"
+                      ? "bg-white text-[#1a3a6b] shadow-sm"
+                      : "text-gray-400 hover:text-gray-600"
+                  }`}
+                >
+                  <Send className="w-3.5 h-3.5" />
+                  Enlace por correo
+                </button>
+                <button
+                  onClick={() => {
+                    setMode("password");
+                    setError(null);
+                  }}
+                  className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-semibold transition-all ${
+                    mode === "password"
+                      ? "bg-white text-[#1a3a6b] shadow-sm"
+                      : "text-gray-400 hover:text-gray-600"
+                  }`}
+                >
+                  <Lock className="w-3.5 h-3.5" />
+                  Contraseña
+                </button>
               </div>
-            </div>
 
-            <Button
-              type="submit"
-              className="w-full h-12 mt-2 bg-gradient-to-r from-[#1a3a6b] to-[#2a5a9b] hover:from-[#2a5a9b] hover:to-[#3a6abf] text-white font-semibold rounded-xl shadow-lg shadow-[#1a3a6b]/20 transition-all"
-              disabled={isLoading}
-            >
-              {isLoading ? (
-                <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Ingresando...
-                </>
+              {/* Magic Link Form */}
+              {mode === "magic" ? (
+                <form onSubmit={handleMagicLink} className="space-y-4">
+                  {error && (
+                    <div className="p-3 rounded-xl bg-red-50 border border-red-200 text-red-600 text-sm">
+                      {error}
+                    </div>
+                  )}
+
+                  <div className="space-y-2">
+                    <Label
+                      htmlFor="magic-email"
+                      className="text-sm font-medium text-gray-600"
+                    >
+                      Correo electrónico
+                    </Label>
+                    <div className="relative">
+                      <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#1a3a6b]/40" />
+                      <Input
+                        id="magic-email"
+                        type="email"
+                        placeholder="tu@correo.com"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        className="pl-10 bg-gray-50 border-gray-200 text-gray-900 placeholder:text-gray-300 focus:border-[#1a3a6b]/50 focus:ring-[#1a3a6b]/20 h-12 rounded-xl"
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  <p className="text-xs text-gray-400">
+                    Te enviaremos un enlace seguro a tu correo. Solo haz clic
+                    para entrar, sin necesidad de contraseña.
+                  </p>
+
+                  <Button
+                    type="submit"
+                    className="w-full h-12 mt-2 bg-gradient-to-r from-[#1a3a6b] to-[#2a5a9b] hover:from-[#2a5a9b] hover:to-[#3a6abf] text-white font-semibold rounded-xl shadow-lg shadow-[#1a3a6b]/20 transition-all"
+                    disabled={isLoading}
+                  >
+                    {isLoading ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        Enviando enlace...
+                      </>
+                    ) : (
+                      <>
+                        <Send className="w-4 h-4 mr-2" />
+                        Enviar enlace de acceso
+                      </>
+                    )}
+                  </Button>
+                </form>
               ) : (
-                "Ingresar"
-              )}
-            </Button>
-          </form>
+                /* Password Form */
+                <form onSubmit={handlePassword} className="space-y-4">
+                  {error && (
+                    <div className="p-3 rounded-xl bg-red-50 border border-red-200 text-red-600 text-sm">
+                      {error}
+                    </div>
+                  )}
 
-          <div className="mt-5 text-center">
-            <a
-              href="#"
-              className="text-xs text-gray-400 hover:text-[#1a3a6b] transition-colors"
-            >
-              ¿Olvidaste tu contraseña?
-            </a>
-          </div>
+                  <div className="space-y-2">
+                    <Label
+                      htmlFor="email"
+                      className="text-sm font-medium text-gray-600"
+                    >
+                      Correo electrónico
+                    </Label>
+                    <div className="relative">
+                      <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#1a3a6b]/40" />
+                      <Input
+                        id="email"
+                        type="email"
+                        placeholder="tu@correo.com"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        className="pl-10 bg-gray-50 border-gray-200 text-gray-900 placeholder:text-gray-300 focus:border-[#1a3a6b]/50 focus:ring-[#1a3a6b]/20 h-12 rounded-xl"
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label
+                      htmlFor="password"
+                      className="text-sm font-medium text-gray-600"
+                    >
+                      Contraseña
+                    </Label>
+                    <div className="relative">
+                      <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#1a3a6b]/40" />
+                      <Input
+                        id="password"
+                        type="password"
+                        placeholder="Tu contraseña"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        className="pl-10 bg-gray-50 border-gray-200 text-gray-900 placeholder:text-gray-300 focus:border-[#1a3a6b]/50 focus:ring-[#1a3a6b]/20 h-12 rounded-xl"
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  <Button
+                    type="submit"
+                    className="w-full h-12 mt-2 bg-gradient-to-r from-[#1a3a6b] to-[#2a5a9b] hover:from-[#2a5a9b] hover:to-[#3a6abf] text-white font-semibold rounded-xl shadow-lg shadow-[#1a3a6b]/20 transition-all"
+                    disabled={isLoading}
+                  >
+                    {isLoading ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        Ingresando...
+                      </>
+                    ) : (
+                      "Ingresar"
+                    )}
+                  </Button>
+                </form>
+              )}
+            </>
+          )}
         </div>
 
         <p className="text-center text-xs text-gray-400 mt-6">
