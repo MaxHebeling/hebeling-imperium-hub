@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { getAdminClient } from "@/lib/leads/helpers";
-import { notifyProjectUpdate } from "@/lib/editorial/notifications/service";
+import { notifyClientComment } from "@/lib/editorial/notifications/service";
 
 /**
  * POST /api/editorial/client/projects/[projectId]/cover-request
@@ -79,10 +79,11 @@ export async function POST(
 
     if (assignments && assignments.length > 0) {
       for (const a of assignments) {
-        await notifyProjectUpdate(
+        await notifyClientComment(
           projectId,
           a.user_id,
-          `El autor ha enviado una solicitud de diseño de portada para "${project.title || "su libro"}"`,
+          user.email ?? "Autor",
+          `Solicitud de portada: ${authorPrompt.slice(0, 100)}${authorPrompt.length > 100 ? "…" : ""}`,
         );
       }
     }
