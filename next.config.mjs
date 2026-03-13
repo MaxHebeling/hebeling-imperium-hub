@@ -8,6 +8,11 @@ const nextConfig = {
   },
   swcMinify: true,
   productionBrowserSourceMaps: false,
+  experimental: {
+    serverActions: {
+      bodySizeLimit: "100mb",
+    },
+  },
   async rewrites() {
     return [
       {

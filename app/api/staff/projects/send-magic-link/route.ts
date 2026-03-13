@@ -4,15 +4,20 @@ import { createClient as createAdminClient } from "@supabase/supabase-js";
 
 /**
  * POST /api/staff/projects/send-magic-link
- * Staff sends a magic link to a client so they can access their book portal.
- * Requires: { email: string, projectId?: string }
+ * Staff invites a client to the portal. Creates their account if needed,
+ * links the project to them, and sends an invite email where they set a password.
+ * Requires: { email: string, projectId?: string, clientName?: string }
  */
 export async function POST(request: Request) {
   try {
     await requireStaff();
 
     const body = await request.json();
-    const { email } = body as { email: string; projectId?: string };
+    const { email, projectId, clientName } = body as {
+      email: string;
+      projectId?: string;
+      clientName?: string;
+    };
 
     if (!email) {
       return NextResponse.json(
@@ -36,75 +41,115 @@ export async function POST(request: Request) {
 
     const adminSupabase = createAdminClient(supabaseUrl, serviceRoleKey);
 
-    // Check if user exists in profiles with client role
+    // Determine the redirect URL
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL
+      || (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "http://localhost:3000");
+    const redirectTo = `${siteUrl}/auth/callback?next=/portal/editorial/projects`;
+
+    // Check if user already exists in profiles
     const { data: existingProfiles } = await adminSupabase
       .from("profiles")
       .select("id, email, role")
-      .eq("email", email)
-      .eq("role", "client");
+      .eq("email", email);
 
-    if (!existingProfiles || existingProfiles.length === 0) {
-      // Create new user with client role via admin API
-      const { data: newUser, error: createError } =
-        await adminSupabase.auth.admin.createUser({
-          email,
-          email_confirm: true,
-          user_metadata: { role: "client" },
+    let userId: string | null = null;
+
+    if (existingProfiles && existingProfiles.length > 0) {
+      // User already exists - get their ID
+      userId = existingProfiles[0].id;
+
+      // Ensure they have client role
+      if (existingProfiles[0].role !== "client") {
+        await adminSupabase
+          .from("profiles")
+          .update({ role: "client" })
+          .eq("id", userId);
+      }
+
+      // Send magic link for existing users (they already have a password)
+      const { error: linkError } = await adminSupabase.auth.admin.generateLink({
+        type: "magiclink",
+        email,
+        options: { redirectTo },
+      });
+
+      if (linkError) {
+        return NextResponse.json(
+          { success: false, error: `Error enviando link: ${linkError.message}` },
+          { status: 500 }
+        );
+      }
+    } else {
+      // New user - invite them so they set their own password
+      const { data: inviteData, error: inviteError } =
+        await adminSupabase.auth.admin.inviteUserByEmail(email, {
+          redirectTo,
+          data: {
+            role: "client",
+            full_name: clientName || undefined,
+          },
         });
 
-      if (createError) {
-        // User might already exist in auth but not in profiles as client
-        if (createError.message?.includes("already been registered")) {
-          // User exists in auth, just send the magic link
+      if (inviteError) {
+        // User might exist in auth but not in profiles
+        if (inviteError.message?.includes("already been registered")) {
+          // Try to get user from auth and create profile
+          const { data: authUsers } = await adminSupabase.auth.admin.listUsers();
+          const existingAuthUser = authUsers?.users?.find(
+            (u) => u.email === email
+          );
+          if (existingAuthUser) {
+            userId = existingAuthUser.id;
+            await adminSupabase.from("profiles").upsert({
+              id: userId,
+              email,
+              role: "client",
+              full_name: clientName || existingAuthUser.user_metadata?.full_name || null,
+              org_id: "reino-editorial",
+            });
+            // Send magic link since they already have an account
+            await adminSupabase.auth.admin.generateLink({
+              type: "magiclink",
+              email,
+              options: { redirectTo },
+            });
+          } else {
+            return NextResponse.json(
+              { success: false, error: "Error: usuario registrado pero no encontrado" },
+              { status: 500 }
+            );
+          }
         } else {
           return NextResponse.json(
-            {
-              success: false,
-              error: `Error creando usuario: ${createError.message}`,
-            },
+            { success: false, error: `Error invitando usuario: ${inviteError.message}` },
             { status: 500 }
           );
         }
-      } else if (newUser?.user) {
+      } else if (inviteData?.user) {
+        userId = inviteData.user.id;
         // Create profile for new user
         await adminSupabase.from("profiles").upsert({
-          id: newUser.user.id,
+          id: userId,
           email,
           role: "client",
+          full_name: clientName || null,
           org_id: "reino-editorial",
         });
       }
     }
 
-    // Send magic link using Supabase OTP (magic link)
-    const siteUrl =
-      process.env.NEXT_PUBLIC_SITE_URL ||
-      process.env.VERCEL_URL
-        ? `https://${process.env.VERCEL_URL}`
-        : "http://localhost:3000";
-
-    const { error: otpError } =
-      await adminSupabase.auth.admin.generateLink({
-        type: "magiclink",
-        email,
-        options: {
-          redirectTo: `${siteUrl}/auth/callback?next=/portal/editorial/projects`,
-        },
-      });
-
-    if (otpError) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: `Error enviando link: ${otpError.message}`,
-        },
-        { status: 500 }
-      );
+    // Link the project to the client if projectId was provided
+    if (projectId && userId) {
+      await adminSupabase
+        .from("editorial_projects")
+        .update({ client_id: userId })
+        .eq("id", projectId);
     }
 
     return NextResponse.json({
       success: true,
-      message: `Link de acceso enviado a ${email}`,
+      message: `Invitaci\u00f3n enviada a ${email}`,
+      userId,
     });
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
