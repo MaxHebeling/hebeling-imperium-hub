@@ -79,6 +79,41 @@ export const SERVICE_CATALOG = {
         "Conversion del manuscrito a formato EPUB y MOBI optimizado para lectores digitales.",
       defaultPrice: 0,
     },
+    {
+      key: "copyright_usa",
+      name: "Gestion de Registro de Copyright (USA)",
+      description:
+        "Tramite completo de registro de copyright ante la U.S. Copyright Office, incluyendo formulario, envio de manuscrito y seguimiento.",
+      defaultPrice: 0,
+    },
+    {
+      key: "copyright_mx",
+      name: "Gestion de Registro de Copyright (Mexico - INDAUTOR)",
+      description:
+        "Tramite de registro de derechos de autor ante INDAUTOR, incluyendo preparacion de documentos y seguimiento.",
+      defaultPrice: 0,
+    },
+    {
+      key: "copyright_ar",
+      name: "Gestion de Registro de Copyright (Argentina - DNDA)",
+      description:
+        "Tramite de registro de derechos de autor ante la Direccion Nacional del Derecho de Autor de Argentina.",
+      defaultPrice: 0,
+    },
+    {
+      key: "reedicion",
+      name: "Re-edicion de manuscrito",
+      description:
+        "Revision y re-edicion completa de un manuscrito previamente publicado o editado.",
+      defaultPrice: 0,
+    },
+    {
+      key: "rediseno_portada",
+      name: "Re-diseno de portada",
+      description:
+        "Nuevo diseno profesional de portada para un libro ya publicado o en proceso.",
+      defaultPrice: 0,
+    },
   ],
   en: [
     {
@@ -134,6 +169,41 @@ export const SERVICE_CATALOG = {
       name: "eBook creation",
       description:
         "Manuscript conversion to EPUB and MOBI formats optimized for digital readers.",
+      defaultPrice: 0,
+    },
+    {
+      key: "copyright_usa",
+      name: "Copyright Registration Management (USA)",
+      description:
+        "Complete copyright registration process with the U.S. Copyright Office, including form submission, manuscript upload, and follow-up.",
+      defaultPrice: 0,
+    },
+    {
+      key: "copyright_mx",
+      name: "Copyright Registration Management (Mexico - INDAUTOR)",
+      description:
+        "Copyright registration process with INDAUTOR, including document preparation and follow-up.",
+      defaultPrice: 0,
+    },
+    {
+      key: "copyright_ar",
+      name: "Copyright Registration Management (Argentina - DNDA)",
+      description:
+        "Copyright registration process with Argentina's National Directorate of Copyright.",
+      defaultPrice: 0,
+    },
+    {
+      key: "reedicion",
+      name: "Manuscript re-editing",
+      description:
+        "Complete review and re-editing of a previously published or edited manuscript.",
+      defaultPrice: 0,
+    },
+    {
+      key: "rediseno_portada",
+      name: "Cover redesign",
+      description:
+        "New professional cover design for an already published or in-progress book.",
       defaultPrice: 0,
     },
   ],

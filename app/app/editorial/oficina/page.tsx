@@ -274,7 +274,7 @@ function ContractForm() {
                 <input
                   className="text-xs bg-transparent border-b border-gray-200 focus:border-blue-500 outline-none py-1 text-gray-500"
                   placeholder="Descripcion"
-                  value={svc.description}
+                  value={svc.description || ""}
                   onChange={(e) => updateService(i, "description", e.target.value)}
                 />
               </div>

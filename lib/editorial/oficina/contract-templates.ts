@@ -44,8 +44,7 @@ export function generateContractHTML(data: ContractData): string {
       <tr>
         <td style="padding:8px 12px;border-bottom:1px solid #e5e7eb;color:#374151;font-size:13px;">${i + 1}</td>
         <td style="padding:8px 12px;border-bottom:1px solid #e5e7eb;color:#374151;font-size:13px;">
-          <strong>${s.name}</strong><br/>
-          <span style="color:#6b7280;font-size:12px;">${s.description}</span>
+          <strong>${s.name}</strong>${s.description ? `<br/><span style="color:#6b7280;font-size:12px;">${s.description}</span>` : ""}
         </td>
         <td style="padding:8px 12px;border-bottom:1px solid #e5e7eb;color:#374151;font-size:13px;text-align:right;">${fmtCurrency(s.amount, data.currency)}</td>
       </tr>`

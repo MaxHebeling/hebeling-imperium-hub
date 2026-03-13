@@ -59,7 +59,7 @@ export interface ContractData {
 
 export interface ContractService {
   name: string;
-  description: string;
+  description?: string;
   amount: number;
 }
 
