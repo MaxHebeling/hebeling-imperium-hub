@@ -40,40 +40,47 @@
   --sidebar-ring: oklch(0.4 0.02 240);
 }
 
-/* Dark mode - Premium Executive Palette */
+/* Dark mode - Hebeling Imperium Palette: Navy / Gold / Crimson */
 .dark {
-  --background: oklch(0.11 0.01 240);
-  --foreground: oklch(0.98 0.01 240);
-  --card: oklch(0.15 0.012 240);
-  --card-foreground: oklch(0.98 0.01 240);
-  --popover: oklch(0.15 0.012 240);
-  --popover-foreground: oklch(0.98 0.01 240);
-  --primary: oklch(0.98 0.01 240);
-  --primary-foreground: oklch(0.11 0.01 240);
-  --secondary: oklch(0.2 0.015 240);
-  --secondary-foreground: oklch(0.98 0.01 240);
-  --muted: oklch(0.2 0.015 240);
-  --muted-foreground: oklch(0.65 0.02 240);
-  --accent: oklch(0.55 0.12 220);
-  --accent-foreground: oklch(0.98 0.01 240);
-  --destructive: oklch(0.45 0.18 25);
-  --destructive-foreground: oklch(0.95 0 0);
-  --border: oklch(0.22 0.01 240);
-  --input: oklch(0.18 0.012 240);
-  --ring: oklch(0.55 0.12 220);
-  --chart-1: oklch(0.55 0.2 250);
-  --chart-2: oklch(0.6 0.15 180);
-  --chart-3: oklch(0.65 0.18 30);
-  --chart-4: oklch(0.55 0.2 300);
-  --chart-5: oklch(0.6 0.22 15);
-  --sidebar: oklch(0.1 0.01 240);
-  --sidebar-foreground: oklch(0.98 0.01 240);
-  --sidebar-primary: oklch(0.98 0.01 240);
-  --sidebar-primary-foreground: oklch(0.1 0.01 240);
-  --sidebar-accent: oklch(0.18 0.012 240);
-  --sidebar-accent-foreground: oklch(0.98 0.01 240);
-  --sidebar-border: oklch(0.2 0.01 240);
-  --sidebar-ring: oklch(0.55 0.12 220);
+  /* Background: deep steel-navy from logo */
+  --background: #1C2B42;
+  --foreground: #F0E6CC;
+  /* Cards: slightly lighter navy */
+  --card: #243450;
+  --card-foreground: #F0E6CC;
+  --popover: #1C2B42;
+  --popover-foreground: #F0E6CC;
+  /* Primary: gold from logo crown/H */
+  --primary: #C8A84B;
+  --primary-foreground: #1C2B42;
+  /* Secondary: crimson/burgundy shield */
+  --secondary: #7D1A3C;
+  --secondary-foreground: #F0E6CC;
+  --muted: #243450;
+  --muted-foreground: #8FA3BF;
+  /* Accent: gold hover state */
+  --accent: #2D3F5A;
+  --accent-foreground: #C8A84B;
+  --destructive: #C0392B;
+  --destructive-foreground: #F0E6CC;
+  --border: #2D3F5A;
+  --input: #243450;
+  --ring: #C8A84B;
+  --chart-1: #C8A84B;
+  --chart-2: #7D1A3C;
+  --chart-3: #4A7FB5;
+  --chart-4: #2A9D8F;
+  --chart-5: #E76F51;
+  /* Sidebar: darkest navy */
+  --sidebar: #152236;
+  --sidebar-foreground: #F0E6CC;
+  --sidebar-primary: #C8A84B;
+  --sidebar-primary-foreground: #152236;
+  --sidebar-accent: #1C2B42;
+  --sidebar-accent-foreground: #C8A84B;
+  --sidebar-border: #243450;
+  --sidebar-ring: #C8A84B;
+  --radius: 0.625rem;
 }
 
 @theme inline {

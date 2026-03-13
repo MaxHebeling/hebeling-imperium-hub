@@ -1,15 +1,15 @@
 "use client";
 
-import { Zap } from "lucide-react";
+import { Cpu, Search, Mail, Phone, CalendarCheck, CheckCircle } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 
 export function AiPanel() {
   const aiMetrics = [
-    { name: "Leads Researched", value: 284, icon: "🔍" },
-    { name: "Emails Sent", value: 1240, icon: "✉️" },
-    { name: "Calls Handled", value: 42, icon: "☎️" },
-    { name: "Meetings Scheduled", value: 16, icon: "📅" },
-    { name: "Conversions", value: 8, icon: "✅" },
+    { name: "Leads Researched", value: 284, icon: <Search className="w-3.5 h-3.5" /> },
+    { name: "Emails Sent", value: 1240, icon: <Mail className="w-3.5 h-3.5" /> },
+    { name: "Calls Handled", value: 42, icon: <Phone className="w-3.5 h-3.5" /> },
+    { name: "Meetings Booked", value: 16, icon: <CalendarCheck className="w-3.5 h-3.5" /> },
+    { name: "Conversions", value: 8, icon: <CheckCircle className="w-3.5 h-3.5" /> },
   ];
 
   const chartData = [
@@ -23,90 +23,90 @@ export function AiPanel() {
   ];
 
   return (
-    <div className="rounded-lg border border-border/40 bg-card/50 backdrop-blur-sm overflow-hidden">
+    <div
+      className="rounded-xl border border-border bg-card overflow-hidden"
+      style={{ boxShadow: "0 2px 12px rgba(0,0,0,0.18)" }}
+    >
       {/* Header */}
-      <div className="px-6 py-4 border-b border-border/40 bg-card/80">
-        <div className="flex items-center gap-2 mb-1">
-          <div className="p-1.5 rounded-lg bg-cyan-400/10">
-            <Zap className="w-4 h-4 text-cyan-400" />
+      <div className="px-6 py-4 border-b border-border flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <div className="h-8 w-8 rounded-lg bg-primary/15 flex items-center justify-center">
+            <Cpu className="w-4 h-4 text-primary" />
           </div>
-          <h3 className="text-lg font-semibold text-foreground">ANNA AI System</h3>
+          <div>
+            <h3 className="text-sm font-semibold text-foreground">ANNA AI System</h3>
+            <p className="text-xs text-muted-foreground">Autonomous operations</p>
+          </div>
         </div>
-        <p className="text-sm text-muted-foreground">Autonomous AI operations & automation metrics</p>
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-1.5 text-xs text-emerald-400 font-medium">
+            <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
+            Operational
+          </div>
+          <div className="text-xs text-muted-foreground border border-border rounded-full px-2.5 py-0.5">
+            Efficiency <span className="text-primary font-semibold">94.2%</span>
+          </div>
+        </div>
       </div>
 
-      {/* Content */}
       <div className="p-6">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Metrics Cards */}
-          <div className="lg:col-span-1 space-y-3">
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-5">
+
+          {/* Metrics column — 2 cols */}
+          <div className="lg:col-span-2 grid grid-cols-1 gap-3">
             {aiMetrics.map((metric) => (
               <div
                 key={metric.name}
-                className="rounded-lg border border-border/40 bg-background/50 p-4 hover:bg-background/80 transition-colors"
+                className="flex items-center justify-between rounded-lg border border-border bg-background/50 px-4 py-3 hover:border-primary/30 transition-colors duration-150"
               >
-                <div className="flex items-start justify-between mb-2">
-                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                    {metric.name}
-                  </p>
-                  <span className="text-lg">{metric.icon}</span>
+                <div className="flex items-center gap-3">
+                  <div className="h-7 w-7 rounded-md bg-primary/10 flex items-center justify-center text-primary">
+                    {metric.icon}
+                  </div>
+                  <p className="text-xs font-medium text-muted-foreground">{metric.name}</p>
                 </div>
-                <p className="text-2xl font-bold text-foreground">{metric.value}</p>
+                <p className="text-base font-bold text-foreground tabular-nums">{metric.value.toLocaleString()}</p>
               </div>
             ))}
           </div>
 
-          {/* Activity Chart */}
-          <div className="lg:col-span-2 rounded-lg border border-border/40 bg-background/50 p-4">
-            <h4 className="text-sm font-semibold text-foreground mb-4">Weekly Activity Trend</h4>
-            <ResponsiveContainer width="100%" height={280}>
-              <BarChart data={chartData}>
-                <CartesianGrid
-                  strokeDasharray="3 3"
-                  stroke="rgba(212, 175, 55, 0.1)"
-                  vertical={false}
-                />
-                <XAxis
-                  dataKey="name"
-                  tick={{ fill: "rgba(148, 163, 184, 0.6)", fontSize: 12 }}
-                  stroke="rgba(148, 163, 184, 0.2)"
-                />
-                <YAxis
-                  tick={{ fill: "rgba(148, 163, 184, 0.6)", fontSize: 12 }}
-                  stroke="rgba(148, 163, 184, 0.2)"
-                />
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: "rgba(15, 23, 42, 0.8)",
-                    border: "1px solid rgba(212, 175, 55, 0.3)",
-                    borderRadius: "6px",
-                    color: "#D4AF37",
-                  }}
-                  cursor={{ fill: "rgba(212, 175, 55, 0.05)" }}
-                />
-                <Bar dataKey="value" fill="#D4AF37" radius={[8, 8, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
+          {/* Chart — 3 cols */}
+          <div className="lg:col-span-3 rounded-lg border border-border bg-background/50 p-4 flex flex-col">
+            <div className="flex items-center justify-between mb-4">
+              <h4 className="text-xs font-semibold text-foreground uppercase tracking-widest">Weekly Activity</h4>
+              <span className="text-xs text-muted-foreground">This week</span>
+            </div>
+            <div className="flex-1 min-h-0" style={{ minHeight: 200 }}>
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={chartData} barSize={22}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#2D3F5A" vertical={false} />
+                  <XAxis
+                    dataKey="name"
+                    tick={{ fill: "#8FA3BF", fontSize: 11 }}
+                    axisLine={false}
+                    tickLine={false}
+                  />
+                  <YAxis
+                    tick={{ fill: "#8FA3BF", fontSize: 11 }}
+                    axisLine={false}
+                    tickLine={false}
+                  />
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: "#243450",
+                      border: "1px solid #C8A84B40",
+                      borderRadius: "8px",
+                      fontSize: 12,
+                    }}
+                    itemStyle={{ color: "#C8A84B" }}
+                    cursor={{ fill: "rgba(200,168,75,0.06)" }}
+                  />
+                  <Bar dataKey="value" fill="#C8A84B" radius={[6, 6, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
           </div>
-        </div>
 
-        {/* Bottom Status Bar */}
-        <div className="mt-6 pt-6 border-t border-border/40 grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="flex items-center justify-between p-3 rounded-lg bg-emerald-400/5 border border-emerald-400/20">
-            <span className="text-sm text-muted-foreground">System Status</span>
-            <span className="flex items-center gap-2 text-sm font-semibold text-emerald-400">
-              <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
-              Operational
-            </span>
-          </div>
-          <div className="flex items-center justify-between p-3 rounded-lg bg-cyan-400/5 border border-cyan-400/20">
-            <span className="text-sm text-muted-foreground">Last Update</span>
-            <span className="text-sm font-semibold text-cyan-400">2 minutes ago</span>
-          </div>
-          <div className="flex items-center justify-between p-3 rounded-lg bg-amber-400/5 border border-amber-400/20">
-            <span className="text-sm text-muted-foreground">Efficiency</span>
-            <span className="text-sm font-semibold text-amber-400">94.2%</span>
-          </div>
         </div>
       </div>
     </div>
