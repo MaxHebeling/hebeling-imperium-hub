@@ -93,33 +93,41 @@ export async function POST(request: Request) {
     );
     console.log("[v0] File registered:", fileRecord.id);
 
-    // 4. Queue AI job
+    // 4. Queue AI job (best-effort – do not fail the submission if this step errors)
     console.log("[v0] Queuing AI task");
-    await requestAiTask({
-      orgId: ORG_ID,
-      projectId: project.id,
-      stageKey: "ingesta",
-      taskKey: "manuscript_analysis",
-      sourceFileId: fileRecord.id,
-      sourceFileVersion: 1,
-      requestedBy: authorEmail,
-    });
-    console.log("[v0] AI task queued");
+    try {
+      await requestAiTask({
+        orgId: ORG_ID,
+        projectId: project.id,
+        stageKey: "ingesta",
+        taskKey: "manuscript_analysis",
+        sourceFileId: fileRecord.id,
+        sourceFileVersion: 1,
+        requestedBy: authorEmail,
+      });
+      console.log("[v0] AI task queued");
+    } catch (aiErr) {
+      console.error("[v0] AI task queuing failed (non-fatal):", aiErr);
+    }
 
-    // 5. Create workflow event
+    // 5. Create workflow event (best-effort – do not fail the submission if this step errors)
     console.log("[v0] Logging workflow event");
-    await logWorkflowEvent({
-      orgId: ORG_ID,
-      projectId: project.id,
-      stageKey: "ingesta",
-      eventType: "manuscript_submitted",
-      payload: {
-        author_email: authorEmail,
-        short_description: shortDescription ?? null,
-        submitted_via: "submit-manuscript",
-      },
-    });
-    console.log("[v0] Workflow event logged");
+    try {
+      await logWorkflowEvent({
+        orgId: ORG_ID,
+        projectId: project.id,
+        stageKey: "ingesta",
+        eventType: "manuscript_submitted",
+        payload: {
+          author_email: authorEmail,
+          short_description: shortDescription ?? null,
+          submitted_via: "submit-manuscript",
+        },
+      });
+      console.log("[v0] Workflow event logged");
+    } catch (evtErr) {
+      console.error("[v0] Workflow event logging failed (non-fatal):", evtErr);
+    }
 
     console.log("[v0] Submission successful");
     return NextResponse.json({

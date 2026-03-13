@@ -90,7 +90,7 @@ export async function GET(
           .from("editorial_exports")
           .select("id, export_type, version, status, created_at")
           .eq("project_id", projectId)
-          .eq("status", "ready")
+          .eq("status", "completed")
           .order("created_at", { ascending: false }),
       ]);
 

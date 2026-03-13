@@ -13,6 +13,15 @@ export type EditorialBucketKey = keyof typeof EDITORIAL_BUCKETS;
 /** In-process cache of bucket names that are confirmed to exist. */
 const verifiedBuckets = new Set<string>();
 
+/** Extracts the HTTP status code from a Supabase StorageError if available. */
+function getErrorStatus(error: unknown): number | null {
+  if (error && typeof error === "object" && "status" in error) {
+    const s = (error as { status: unknown }).status;
+    return typeof s === "number" ? s : null;
+  }
+  return null;
+}
+
 /**
  * Ensures a Supabase Storage bucket exists, creating it (private) if it does not.
  * Results are cached in-process so subsequent calls within the same runtime are no-ops.
@@ -31,7 +40,7 @@ export async function ensureBucket(bucketName: string): Promise<void> {
 
   // Only proceed to create when the bucket genuinely does not exist (404/400).
   // For any other error (permissions, network) surface it immediately.
-  const getStatus = getError && "status" in getError ? (getError as { status: number }).status : null;
+  const getStatus = getErrorStatus(getError);
   if (getError && getStatus !== 404 && getStatus !== 400) {
     throw new Error(`Storage error checking bucket "${bucketName}": ${getError.message}`);
   }
@@ -43,9 +52,7 @@ export async function ensureBucket(bucketName: string): Promise<void> {
 
   if (createError) {
     // status 409 means a concurrent request already created it — treat as success.
-    const createStatus =
-      "status" in createError ? (createError as { status: number }).status : null;
-    if (createStatus !== 409) {
+    if (getErrorStatus(createError) !== 409) {
       throw new Error(`Failed to create storage bucket "${bucketName}": ${createError.message}`);
     }
   }

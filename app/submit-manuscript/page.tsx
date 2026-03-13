@@ -13,6 +13,7 @@ import {
 import { CheckCircle2 } from "lucide-react";
 import { SubmitManuscriptForm } from "@/components/editorial/submit-manuscript-form";
 import type { SubmitManuscriptFormValues } from "@/components/editorial/submit-manuscript-form";
+import { SUBMIT_REDIRECT_DELAY_MS } from "@/lib/editorial/portal-config";
 
 export default function SubmitManuscriptPage() {
   const router = useRouter();
@@ -59,9 +60,9 @@ export default function SubmitManuscriptPage() {
       console.log("[v0] Submit successful, showing success screen");
       setSuccess(true);
       setTimeout(() => {
-        console.log("[v0] Redirecting to project:", data.projectId);
-        router.push(data.projectId ? `/author/projects/${data.projectId}` : "/author/projects");
-      }, 2500);
+        console.log("[v0] Redirecting to author login");
+        router.push("/author/login");
+      }, SUBMIT_REDIRECT_DELAY_MS);
     } catch (err) {
       console.error("[v0] catch block error:", err);
       setError("Connection error. Please try again.");
@@ -84,10 +85,11 @@ export default function SubmitManuscriptPage() {
             </CardTitle>
             <CardDescription className="text-base text-muted-foreground">
               Your manuscript is now being processed by the Reino Editorial AI Engine.
+              You will receive access credentials by email so you can track your project.
             </CardDescription>
           </CardHeader>
           <CardContent className="text-center text-sm text-muted-foreground">
-            Redirecting to your project…
+            Redirecting to author login…
           </CardContent>
         </Card>
       </div>
