@@ -148,6 +148,25 @@ export async function middleware(request: NextRequest) {
       }
     }
 
+    // Client portal routes on hub host: /portal/* requires client auth, /client-login is public
+    if (pathname.startsWith("/portal")) {
+      if (!user || !profile) {
+        const url = request.nextUrl.clone();
+        url.pathname = "/client-login";
+        return NextResponse.redirect(url);
+      }
+      if (!isClient && !isStaff) {
+        const url = request.nextUrl.clone();
+        url.pathname = "/client-login";
+        return NextResponse.redirect(url);
+      }
+    }
+    if (pathname === "/client-login" && user && isClient) {
+      const url = request.nextUrl.clone();
+      url.pathname = "/portal/editorial/projects";
+      return NextResponse.redirect(url);
+    }
+
     // Author portal: /author/* requires any authenticated user.
     // /author/login is public (no auth needed).
     const authorRedirect = applyAuthorPortalRules();
