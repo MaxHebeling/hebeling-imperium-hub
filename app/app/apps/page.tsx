@@ -136,7 +136,7 @@ const STATUS_CONFIG: Record<AppStatus, { label: string; color: string; bgClass: 
   },
 };
 
-// Mock apps data
+// Apps registry — metrics are zeroed until connected to real data
 const APPS: AppModule[] = [
   {
     id: "ai-command-center",
@@ -149,7 +149,7 @@ const APPS: AppModule[] = [
     status: "core",
     version: "1.0.0",
     enabled: true,
-    metrics: { total_entities: 1250, active_usage: 89 },
+    metrics: { total_entities: 0, active_usage: 0 },
   },
   {
     id: "automations",
@@ -162,7 +162,7 @@ const APPS: AppModule[] = [
     status: "core",
     version: "1.0.0",
     enabled: true,
-    metrics: { total_entities: 47, active_usage: 95 },
+    metrics: { total_entities: 0, active_usage: 0 },
   },
   {
     id: "analytics",
@@ -175,7 +175,7 @@ const APPS: AppModule[] = [
     status: "beta",
     version: "0.9.0",
     enabled: true,
-    metrics: { total_entities: 156, active_usage: 72 },
+    metrics: { total_entities: 0, active_usage: 0 },
   },
   {
     id: "crm",
@@ -188,7 +188,7 @@ const APPS: AppModule[] = [
     status: "enabled",
     version: "1.2.0",
     enabled: true,
-    metrics: { total_entities: 2450, active_usage: 88 },
+    metrics: { total_entities: 0, active_usage: 0 },
   },
   {
     id: "deals",
@@ -201,7 +201,7 @@ const APPS: AppModule[] = [
     status: "enabled",
     version: "1.1.0",
     enabled: true,
-    metrics: { total_entities: 189, active_usage: 91 },
+    metrics: { total_entities: 0, active_usage: 0 },
   },
   {
     id: "clients",
@@ -214,7 +214,7 @@ const APPS: AppModule[] = [
     status: "enabled",
     version: "1.0.0",
     enabled: true,
-    metrics: { total_entities: 78, active_usage: 94 },
+    metrics: { total_entities: 0, active_usage: 0 },
   },
   {
     id: "projects",
@@ -227,7 +227,7 @@ const APPS: AppModule[] = [
     status: "enabled",
     version: "1.3.0",
     enabled: true,
-    metrics: { total_entities: 234, active_usage: 85 },
+    metrics: { total_entities: 0, active_usage: 0 },
   },
   {
     id: "websites",
@@ -240,7 +240,7 @@ const APPS: AppModule[] = [
     status: "enabled",
     version: "1.0.0",
     enabled: true,
-    metrics: { total_entities: 45, active_usage: 78 },
+    metrics: { total_entities: 0, active_usage: 0 },
   },
   {
     id: "documents",
@@ -253,7 +253,7 @@ const APPS: AppModule[] = [
     status: "enabled",
     version: "1.0.0",
     enabled: true,
-    metrics: { total_entities: 1890, active_usage: 67 },
+    metrics: { total_entities: 0, active_usage: 0 },
   },
   {
     id: "payments",
@@ -266,7 +266,7 @@ const APPS: AppModule[] = [
     status: "enabled",
     version: "1.0.0",
     enabled: true,
-    metrics: { total_entities: 567, active_usage: 82 },
+    metrics: { total_entities: 0, active_usage: 0 },
   },
   {
     id: "investors",
