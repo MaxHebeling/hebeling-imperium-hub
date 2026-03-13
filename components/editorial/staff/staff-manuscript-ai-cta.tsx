@@ -1,8 +1,9 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { Sparkles, Loader2 } from "lucide-react";
+import { Sparkles, Loader2, CheckCircle2, AlertCircle } from "lucide-react";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 
 interface StaffManuscriptAiCtaProps {
   projectId: string;
@@ -14,17 +15,33 @@ export function StaffManuscriptAiCta({
   hasLatestManuscript,
 }: StaffManuscriptAiCtaProps) {
   const [isProcessing, setIsProcessing] = useState(false);
+  const [result, setResult] = useState<"idle" | "success" | "error">("idle");
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const router = useRouter();
 
   async function handleClick() {
-    // Placeholder: en el siguiente paso se conectará con
-    // /api/staff/projects/[projectId]/ai/process-manuscript
     console.info("[editorial-ai][cta] Run AI Editorial Analysis clicked", {
       projectId,
     });
     setIsProcessing(true);
+    setResult("idle");
+    setErrorMsg(null);
     try {
-      // Aquí se invocará el endpoint real en la siguiente fase.
-      await new Promise((resolve) => setTimeout(resolve, 400));
+      const res = await fetch(
+        `/api/staff/projects/${encodeURIComponent(projectId)}/ai/process-manuscript`,
+        { method: "POST" }
+      );
+      const json = await res.json();
+      if (!res.ok || !json?.success) {
+        setResult("error");
+        setErrorMsg(json?.error ?? `Error HTTP ${res.status}`);
+        return;
+      }
+      setResult("success");
+      router.refresh();
+    } catch (e) {
+      setResult("error");
+      setErrorMsg(e instanceof Error ? e.message : "Error de red");
     } finally {
       setIsProcessing(false);
     }
@@ -41,9 +58,19 @@ export function StaffManuscriptAiCta({
         </p>
         <p className="text-[11px] text-muted-foreground">
           {hasLatestManuscript
-            ? "Latest manuscript ready for analysis. Próximo paso: conectar el motor de AI."
-            : "No manuscript uploaded yet. Sube un manuscrito para habilitar el análisis editorial."}
+            ? "Manuscrito listo para análisis editorial con AI."
+            : "No hay manuscrito aún. Sube uno para habilitar el análisis editorial."}
         </p>
+        {result === "success" && (
+          <p className="text-[11px] text-emerald-600 flex items-center gap-1">
+            <CheckCircle2 className="h-3 w-3" /> Análisis completado. Revisa los resultados en AI Review.
+          </p>
+        )}
+        {result === "error" && errorMsg && (
+          <p className="text-[11px] text-destructive flex items-center gap-1">
+            <AlertCircle className="h-3 w-3" /> {errorMsg}
+          </p>
+        )}
       </div>
       <Button
         type="button"
