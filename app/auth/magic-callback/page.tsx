@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 
@@ -14,7 +14,7 @@ import { createClient } from "@/lib/supabase/client";
  * This page reads the hash, establishes the session in the browser,
  * and redirects the user to the portal.
  */
-export default function MagicCallbackPage() {
+function MagicCallbackContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const next = searchParams.get("next") || "/portal/editorial/projects";
@@ -102,5 +102,22 @@ export default function MagicCallbackPage() {
         </p>
       </div>
     </div>
+  );
+}
+
+export default function MagicCallbackPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center p-4">
+          <div className="text-center space-y-4">
+            <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full mx-auto" />
+            <p className="text-muted-foreground">Cargando...</p>
+          </div>
+        </div>
+      }
+    >
+      <MagicCallbackContent />
+    </Suspense>
   );
 }
