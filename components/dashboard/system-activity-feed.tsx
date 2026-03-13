@@ -1,104 +1,102 @@
 "use client";
 
-import { AlertCircle, CheckCircle2, Clock, FileUp, Users } from "lucide-react";
+import { FileUp, AlertCircle, Clock, Users, CheckCircle2 } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface ActivityItem {
   id: string;
-  type: "manuscript" | "lead" | "meeting" | "client" | "automation";
   title: string;
   description: string;
   timestamp: string;
   icon: React.ReactNode;
-  color: string;
+  dot: string;
 }
 
 export function SystemActivityFeed() {
   const activities: ActivityItem[] = [
     {
       id: "1",
-      type: "manuscript",
-      title: "New manuscript uploaded",
-      description: "The Echoes of Tomorrow - Kingdom Editorial",
-      timestamp: "2 min ago",
-      icon: <FileUp className="w-4 h-4" />,
-      color: "text-blue-400",
+      title: "Manuscript uploaded",
+      description: "The Echoes of Tomorrow — Reino Editorial",
+      timestamp: "2m ago",
+      icon: <FileUp className="w-3.5 h-3.5" />,
+      dot: "bg-[#7EB3E8]",
     },
     {
       id: "2",
-      type: "lead",
       title: "New lead detected",
-      description: "Potential enterprise client from US market",
-      timestamp: "15 min ago",
-      icon: <AlertCircle className="w-4 h-4" />,
-      color: "text-amber-400",
+      description: "Enterprise client — US market",
+      timestamp: "15m ago",
+      icon: <AlertCircle className="w-3.5 h-3.5" />,
+      dot: "bg-primary",
     },
     {
       id: "3",
-      type: "meeting",
       title: "Meeting scheduled",
-      description: "Q1 Strategic Planning Session - Max Hebeling",
-      timestamp: "28 min ago",
-      icon: <Clock className="w-4 h-4" />,
-      color: "text-purple-400",
+      description: "Q1 Strategy — Max Hebeling",
+      timestamp: "28m ago",
+      icon: <Clock className="w-3.5 h-3.5" />,
+      dot: "bg-secondary",
     },
     {
       id: "4",
-      type: "client",
-      title: "New client registered",
-      description: "iKingdom Acquisitions - Premium tier",
-      timestamp: "1 hour ago",
-      icon: <Users className="w-4 h-4" />,
-      color: "text-cyan-400",
+      title: "Client registered",
+      description: "iKingdom Acquisitions — Premium",
+      timestamp: "1h ago",
+      icon: <Users className="w-3.5 h-3.5" />,
+      dot: "bg-emerald-500",
     },
     {
       id: "5",
-      type: "automation",
       title: "Automation executed",
-      description: "Email campaign sent to 1,240 leads - 34% open rate",
-      timestamp: "2 hours ago",
-      icon: <CheckCircle2 className="w-4 h-4" />,
-      color: "text-emerald-400",
+      description: "Email campaign — 1,240 leads · 34% open",
+      timestamp: "2h ago",
+      icon: <CheckCircle2 className="w-3.5 h-3.5" />,
+      dot: "bg-primary",
+    },
+    {
+      id: "6",
+      title: "Deal closed",
+      description: "Imperium Group — $61K contract",
+      timestamp: "3h ago",
+      icon: <CheckCircle2 className="w-3.5 h-3.5" />,
+      dot: "bg-emerald-500",
     },
   ];
 
   return (
-    <div className="rounded-lg border border-border/40 bg-card/50 backdrop-blur-sm overflow-hidden">
-      {/* Header */}
-      <div className="px-6 py-4 border-b border-border/40 bg-card/80">
-        <h3 className="text-lg font-semibold text-foreground">System Activity</h3>
-        <p className="text-sm text-muted-foreground">Real-time event stream</p>
+    <div className="rounded-xl border border-border bg-card overflow-hidden h-full" style={{ boxShadow: "0 2px 12px rgba(0,0,0,0.18)" }}>
+      <div className="px-5 py-4 border-b border-border flex items-center justify-between">
+        <div>
+          <h3 className="text-sm font-semibold text-foreground">System Activity</h3>
+          <p className="text-xs text-muted-foreground mt-0.5">Live event stream</p>
+        </div>
+        <span className="flex items-center gap-1.5 text-xs text-emerald-400 font-medium">
+          <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
+          Live
+        </span>
       </div>
 
-      {/* Activity Feed */}
-      <ScrollArea className="h-96">
-        <div className="divide-y divide-border/40">
-          {activities.map((activity, index) => (
+      <ScrollArea className="h-[360px]">
+        <div className="p-2">
+          {activities.map((activity) => (
             <div
               key={activity.id}
-              className="px-6 py-4 hover:bg-accent/30 transition-colors duration-200 group"
+              className="flex gap-3 px-3 py-3 rounded-lg hover:bg-accent/60 transition-colors duration-150 group cursor-default"
             >
-              <div className="flex gap-4">
-                {/* Icon */}
-                <div
-                  className={`${activity.color} mt-1 flex-shrink-0 opacity-60 group-hover:opacity-100 transition-opacity`}
-                >
-                  {activity.icon}
-                </div>
-
-                {/* Content */}
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-foreground group-hover:text-amber-400/80 transition-colors">
-                    {activity.title}
-                  </p>
-                  <p className="text-xs text-muted-foreground mt-1 truncate">
-                    {activity.description}
-                  </p>
-                  <p className="text-xs text-muted-foreground/60 mt-1.5">
-                    {activity.timestamp}
-                  </p>
-                </div>
+              {/* Timeline dot + line */}
+              <div className="flex flex-col items-center pt-0.5 flex-shrink-0">
+                <div className={`h-2 w-2 rounded-full ${activity.dot} ring-2 ring-card`} />
               </div>
+
+              <div className="flex-1 min-w-0">
+                <p className="text-xs font-semibold text-foreground group-hover:text-primary transition-colors truncate">
+                  {activity.title}
+                </p>
+                <p className="text-xs text-muted-foreground mt-0.5 truncate">{activity.description}</p>
+              </div>
+
+              <span className="text-[10px] text-muted-foreground flex-shrink-0 pt-0.5">{activity.timestamp}</span>
             </div>
           ))}
         </div>
