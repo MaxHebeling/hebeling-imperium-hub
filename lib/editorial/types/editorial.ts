@@ -36,7 +36,7 @@ export interface EditorialProject {
   current_stage: EditorialStageKey;
   status: string;
   progress_percent: number;
-  service_type: EditorialServiceType;
+  service_type?: EditorialServiceType;
   due_date: string | null;
   created_by: string | null;
   created_at: string;
