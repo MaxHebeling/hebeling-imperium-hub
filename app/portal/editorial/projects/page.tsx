@@ -6,39 +6,34 @@ import {
   BookOpen,
   ChevronRight,
   Loader2,
-  Plus,
   AlertCircle,
+  Globe,
 } from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Progress } from "@/components/ui/progress";
 import type { EditorialProject } from "@/lib/editorial/types/editorial";
-import { EDITORIAL_STAGE_LABELS } from "@/lib/editorial/pipeline/constants";
-
-const STATUS_LABELS: Record<string, string> = {
-  created: "Creado",
-  in_progress: "En proceso",
-  review: "En revisión",
-  completed: "Completado",
-  archived: "Archivado",
-};
-
-const STATUS_VARIANTS: Record<
-  string,
-  "secondary" | "default" | "outline" | "destructive"
-> = {
-  created: "secondary",
-  in_progress: "default",
-  review: "outline",
-  completed: "default",
-  archived: "outline",
-};
+import { getClientVisibleProgress } from "@/lib/editorial/pipeline/client-delays";
+import type { PortalLocale } from "@/lib/editorial/i18n/portal-translations";
+import { getTranslations } from "@/lib/editorial/i18n/portal-translations";
+import type { EditorialStageKey } from "@/lib/editorial/types/editorial";
 
 export default function ClientEditorialProjectsPage() {
   const [projects, setProjects] = useState<EditorialProject[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [locale, setLocale] = useState<PortalLocale>("es");
+
+  const t = getTranslations(locale);
+
+  useEffect(() => {
+    const saved = localStorage.getItem("reino-locale") as PortalLocale | null;
+    if (saved === "en" || saved === "es") setLocale(saved);
+  }, []);
+
+  const toggleLocale = () => {
+    const next = locale === "es" ? "en" : "es";
+    setLocale(next);
+    localStorage.setItem("reino-locale", next);
+  };
 
   const fetchProjects = useCallback(async () => {
     setLoading(true);
@@ -52,11 +47,11 @@ export default function ClientEditorialProjectsPage() {
         setError(json.error ?? "Error al cargar tus proyectos");
       }
     } catch {
-      setError("Error de red. Verifica tu conexión e intenta de nuevo.");
+      setError(t.networkError);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [t.networkError]);
 
   useEffect(() => {
     fetchProjects();
@@ -65,126 +60,131 @@ export default function ClientEditorialProjectsPage() {
   return (
     <div className="flex flex-col gap-6">
       {/* Header */}
-      <div className="flex items-center gap-3">
-        <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-purple-100 dark:bg-purple-900/30 shrink-0">
-          <BookOpen className="w-5 h-5 text-purple-600 dark:text-purple-400" />
-        </div>
+      <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-xl font-bold tracking-tight">Mis Libros</h1>
-          <p className="text-sm text-muted-foreground">
-            Proyectos editoriales asociados a tu cuenta
+          <h1 className="text-2xl font-bold tracking-tight text-white">
+            {t.myBooksTitle}
+          </h1>
+          <p className="text-sm text-white/40 mt-0.5">
+            {t.myBooksSubtitle}
           </p>
         </div>
+        <button
+          onClick={toggleLocale}
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-xs text-white/50 hover:text-white/80 hover:bg-white/10 transition-colors"
+        >
+          <Globe className="w-3.5 h-3.5" />
+          {locale === "es" ? "EN" : "ES"}
+        </button>
       </div>
 
       {/* Content */}
       {loading ? (
         <div className="flex flex-col items-center justify-center gap-3 py-20">
-          <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
-          <p className="text-sm text-muted-foreground">Cargando proyectos…</p>
+          <div className="w-8 h-8 rounded-full border-2 border-[#1a3a6b]/30 border-t-cyan-400 animate-spin" />
+          <p className="text-sm text-white/30">{t.loading}</p>
         </div>
       ) : error ? (
-        <Card>
-          <CardContent className="flex flex-col items-center gap-3 py-10 text-center">
-            <AlertCircle className="w-8 h-8 text-destructive" />
-            <p className="text-sm text-destructive">{error}</p>
-            <Button variant="outline" size="sm" onClick={fetchProjects}>
-              Reintentar
-            </Button>
-          </CardContent>
-        </Card>
+        <div className="rounded-2xl border border-red-500/20 bg-red-500/5 p-6 flex flex-col items-center gap-3 text-center">
+          <AlertCircle className="w-8 h-8 text-red-400" />
+          <p className="text-sm text-red-300">{error}</p>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={fetchProjects}
+            className="border-white/10 text-white/60 hover:bg-white/5"
+          >
+            {t.retry}
+          </Button>
+        </div>
       ) : projects.length === 0 ? (
-        <Card>
-          <CardContent className="flex flex-col items-center gap-4 py-12 text-center">
-            <div className="flex items-center justify-center w-14 h-14 rounded-2xl bg-muted">
-              <BookOpen className="w-7 h-7 text-muted-foreground" />
-            </div>
-            <div>
-              <p className="font-medium">Sin proyectos aún</p>
-              <p className="text-sm text-muted-foreground mt-1">
-                Tu equipo editorial aún no ha vinculado ningún libro a tu cuenta.
-              </p>
-            </div>
-          </CardContent>
-        </Card>
+        <div className="rounded-2xl border border-[#1a3a6b]/20 bg-white/[0.02] p-8 flex flex-col items-center gap-4 text-center">
+          <div className="w-16 h-16 rounded-2xl bg-[#1a3a6b]/10 flex items-center justify-center">
+            <BookOpen className="w-8 h-8 text-cyan-500/40" />
+          </div>
+          <div>
+            <p className="font-semibold text-white/80">{t.noProjectsYet}</p>
+            <p className="text-sm text-white/30 mt-1">
+              {t.noProjectsDesc}
+            </p>
+          </div>
+        </div>
       ) : (
         <div className="flex flex-col gap-3">
-          {projects.map((project) => (
-            <Link
-              key={project.id}
-              href={`/portal/editorial/projects/${project.id}`}
-              className="block"
-            >
-              <Card className="hover:shadow-md transition-shadow active:scale-[0.99] transition-transform">
-                <CardContent className="p-4">
+          {projects.map((project) => {
+            const visibleProgress = getClientVisibleProgress(
+              project.created_at,
+              project.current_stage as EditorialStageKey
+            );
+            const stageLabel = t.stageLabels[project.current_stage as EditorialStageKey] ?? project.current_stage;
+
+            return (
+              <Link
+                key={project.id}
+                href={`/portal/editorial/projects/${project.id}`}
+                className="block group"
+              >
+                <div className="rounded-2xl border border-[#1a3a6b]/15 bg-white/[0.02] hover:bg-white/[0.04] p-4 transition-all active:scale-[0.99]">
                   <div className="flex items-start gap-4">
-                    {/* Book icon */}
-                    <div className="flex items-center justify-center w-12 h-12 rounded-xl bg-purple-50 dark:bg-purple-900/20 shrink-0">
-                      <BookOpen className="w-6 h-6 text-purple-500" />
+                    {/* Book avatar */}
+                    <div className="w-12 h-16 rounded-lg bg-gradient-to-b from-[#1a3a6b]/30 to-[#1a3a6b]/50 border border-[#1a3a6b]/20 flex items-center justify-center shrink-0">
+                      <BookOpen className="w-5 h-5 text-cyan-400/60" />
                     </div>
 
                     {/* Info */}
                     <div className="flex-1 min-w-0">
                       <div className="flex items-start justify-between gap-2">
                         <div className="min-w-0">
-                          <p className="font-semibold text-sm leading-snug truncate">
+                          <p className="font-semibold text-sm text-white leading-snug truncate">
                             {project.title}
                           </p>
                           {project.author_name && (
-                            <p className="text-xs text-muted-foreground truncate">
+                            <p className="text-xs text-white/30 truncate mt-0.5">
                               {project.author_name}
                             </p>
                           )}
                         </div>
-                        <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0 mt-0.5" />
+                        <ChevronRight className="w-4 h-4 text-white/20 group-hover:text-cyan-400 shrink-0 mt-0.5 transition-colors" />
                       </div>
 
-                      {/* Stage + status badges */}
-                      <div className="flex flex-wrap items-center gap-2 mt-2">
-                        <Badge variant="outline" className="text-xs">
-                          {EDITORIAL_STAGE_LABELS[project.current_stage] ??
-                            project.current_stage}
-                        </Badge>
-                        <Badge
-                          variant={
-                            STATUS_VARIANTS[project.status] ?? "secondary"
-                          }
-                          className="text-xs"
-                        >
-                          {STATUS_LABELS[project.status] ?? project.status}
-                        </Badge>
+                      {/* Stage badge */}
+                      <div className="flex items-center gap-2 mt-2">
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-cyan-500/10 text-cyan-400/80 text-xs font-medium">
+                          {stageLabel}
+                        </span>
                       </div>
 
                       {/* Progress bar */}
                       <div className="flex items-center gap-2 mt-3">
-                        <Progress
-                          value={project.progress_percent}
-                          className="h-1.5 flex-1"
-                        />
-                        <span className="text-xs font-medium text-muted-foreground w-8 text-right shrink-0">
-                          {project.progress_percent}%
+                        <div className="flex-1 h-1.5 rounded-full bg-white/5 overflow-hidden">
+                          <div
+                            className="h-full rounded-full bg-gradient-to-r from-[#1a3a6b] to-cyan-400 transition-all duration-700"
+                            style={{ width: `${visibleProgress}%` }}
+                          />
+                        </div>
+                        <span className="text-xs font-medium text-cyan-400/70 w-8 text-right shrink-0">
+                          {visibleProgress}%
                         </span>
                       </div>
                     </div>
                   </div>
-                </CardContent>
-              </Card>
-            </Link>
-          ))}
+                </div>
+              </Link>
+            );
+          })}
         </div>
       )}
 
       {/* Info note */}
       {!loading && !error && projects.length > 0 && (
-        <p className="text-xs text-muted-foreground text-center">
-          ¿No ves tu libro?{" "}
+        <p className="text-xs text-white/20 text-center">
+          {t.cantSeeBook}{" "}
           <a
-            href="mailto:editorial@hebeling.io"
-            className="underline underline-offset-2 hover:text-foreground"
+            href="mailto:editorial@reinoeditorial.com"
+            className="text-cyan-500/60 hover:text-cyan-400 transition-colors"
           >
-            Contáctanos
-          </a>{" "}
-          para vincularlo a tu cuenta.
+            {t.contactUs}
+          </a>
         </p>
       )}
     </div>
