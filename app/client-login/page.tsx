@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,6 +12,18 @@ import { createClient } from "@/lib/supabase/client";
 type LoginMode = "magic" | "password";
 
 export default function ClientLoginPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-[#f0f4f8] to-white">
+        <Loader2 className="w-6 h-6 animate-spin text-[#1a3a6b]" />
+      </div>
+    }>
+      <ClientLoginContent />
+    </Suspense>
+  );
+}
+
+function ClientLoginContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [email, setEmail] = useState("");
