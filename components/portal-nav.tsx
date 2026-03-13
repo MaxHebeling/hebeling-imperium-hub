@@ -1,10 +1,11 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import Image from "next/image";
-import { LogOut, BookMarked, BookOpen, HelpCircle, Bell } from "lucide-react";
+import { LogOut, BookMarked, BookOpen, HelpCircle, Bell, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/client";
 import { NotificationBell } from "@/components/portal-notification-bell";
@@ -22,6 +23,28 @@ interface PortalNavProps {
 export function PortalNav({ userEmail }: PortalNavProps) {
   const pathname = usePathname();
   const router = useRouter();
+  const [installPrompt, setInstallPrompt] = useState<Event | null>(null);
+  const [showInstallBanner, setShowInstallBanner] = useState(false);
+
+  useEffect(() => {
+    const handler = (e: Event) => {
+      e.preventDefault();
+      setInstallPrompt(e);
+      setShowInstallBanner(true);
+    };
+    window.addEventListener("beforeinstallprompt", handler);
+    return () => window.removeEventListener("beforeinstallprompt", handler);
+  }, []);
+
+  const handleInstall = async () => {
+    if (!installPrompt) return;
+    (installPrompt as BeforeInstallPromptEvent).prompt();
+    const result = await (installPrompt as BeforeInstallPromptEvent).userChoice;
+    if (result.outcome === "accepted") {
+      setShowInstallBanner(false);
+    }
+    setInstallPrompt(null);
+  };
 
   const handleSignOut = async () => {
     const supabase = createClient();
@@ -31,6 +54,7 @@ export function PortalNav({ userEmail }: PortalNavProps) {
   };
 
   return (
+    <>
     <header className="sticky top-0 z-50 border-b border-[#1a3a6b]/10 bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/80 shadow-sm">
       <div className="container mx-auto max-w-6xl px-4">
         <div className="flex h-14 items-center justify-between">
@@ -119,5 +143,40 @@ export function PortalNav({ userEmail }: PortalNavProps) {
         </div>
       </div>
     </header>
+
+    {/* PWA Install Banner */}
+    {showInstallBanner && (
+      <div className="fixed bottom-16 md:bottom-4 left-4 right-4 z-[60] md:left-auto md:right-4 md:max-w-sm">
+        <div className="bg-white border border-[#1a3a6b]/20 rounded-2xl shadow-lg p-4 flex items-center gap-3">
+          <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-[#1a3a6b]/10 shrink-0">
+            <Download className="w-5 h-5 text-[#1a3a6b]" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-semibold text-[#1a3a6b]">Instalar App</p>
+            <p className="text-xs text-gray-500">Accede m\u00e1s r\u00e1pido desde tu celular</p>
+          </div>
+          <div className="flex items-center gap-1.5 shrink-0">
+            <button
+              onClick={() => setShowInstallBanner(false)}
+              className="text-xs text-gray-400 hover:text-gray-600 px-2 py-1"
+            >
+              Ahora no
+            </button>
+            <button
+              onClick={handleInstall}
+              className="text-xs font-semibold text-white bg-[#1a3a6b] px-3 py-1.5 rounded-lg hover:bg-[#1a3a6b]/90 transition-colors"
+            >
+              Instalar
+            </button>
+          </div>
+        </div>
+      </div>
+    )}
+    </>
   );
+}
+
+interface BeforeInstallPromptEvent extends Event {
+  prompt(): Promise<void>;
+  userChoice: Promise<{ outcome: "accepted" | "dismissed" }>;
 }

@@ -35,6 +35,7 @@ export async function GET(
         current_stage: project.current_stage,
         status: project.status,
         progress_percent: project.progress_percent,
+        client_id: project.client_id ?? null,
       },
       stages,
       files,
