@@ -11,8 +11,6 @@ import {
   BarChart2,
   Trash2,
   MoreHorizontal,
-  RefreshCw,
-  Palette,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -74,9 +72,9 @@ type ServiceType = "full_pipeline" | "reedicion" | "rediseno_portada" | "reedici
 
 const SERVICE_TYPES: { value: ServiceType; label: string; desc: string; icon: typeof BookOpen }[] = [
   { value: "full_pipeline", label: "Pipeline Completo", desc: "Nuevo libro: 8 etapas completas", icon: BookOpen },
-  { value: "reedicion", label: "Re-edici\u00f3n", desc: "Correcci\u00f3n y mejora de libro existente", icon: RefreshCw },
-  { value: "rediseno_portada", label: "Re-dise\u00f1o de Portada", desc: "Nueva portada para libro existente", icon: Palette },
-  { value: "reedicion_y_portada", label: "Re-edici\u00f3n + Portada", desc: "Edici\u00f3n completa + nueva portada", icon: RefreshCw },
+  { value: "reedicion", label: "Re-edici\u00f3n", desc: "Correcci\u00f3n y mejora de libro existente", icon: BookOpen },
+  { value: "rediseno_portada", label: "Re-dise\u00f1o de Portada", desc: "Nueva portada para libro existente", icon: Eye },
+  { value: "reedicion_y_portada", label: "Re-edici\u00f3n + Portada", desc: "Edici\u00f3n completa + nueva portada", icon: BookOpen },
 ];
 
 interface CreateProjectForm {
