@@ -1,0 +1,28 @@
+{
+  "name": "Reino Editorial",
+  "short_name": "Reino Editorial",
+  "description": "Tu libro en las mejores manos. Sigue el progreso editorial de tu obra.",
+  "start_url": "/portal/editorial/projects",
+  "display": "standalone",
+  "background_color": "#f8f9fb",
+  "theme_color": "#1a3a6b",
+  "orientation": "portrait",
+  "scope": "/portal",
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["books", "productivity"],
+  "lang": "es",
+  "dir": "ltr"
+}

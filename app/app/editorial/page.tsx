@@ -9,6 +9,7 @@ import {
   Globe,
   Palette,
   BarChart3,
+  Building2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -215,6 +216,18 @@ export default function EditorialPage() {
           >
             Nuevo Manuscrito
             <BookOpen className="w-4 h-4" />
+          </Link>
+          <Link
+            href="/app/editorial/oficina"
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all"
+            style={{
+              background: "#1a3a6b10",
+              color: "#1a3a6b",
+              border: "1px solid #1a3a6b30",
+            }}
+          >
+            Oficina
+            <Building2 className="w-4 h-4" />
           </Link>
         </div>
       </div>

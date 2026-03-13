@@ -9,19 +9,16 @@ import {
   CheckCircle2,
   Clock,
   AlertCircle,
-  XCircle,
-  CircleDot,
   Loader2,
   Upload,
   FileText,
   Download,
   MessageSquare,
+  Send,
+  Globe,
+  Lock,
 } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
-import { Separator } from "@/components/ui/separator";
 import type {
   EditorialProject,
   EditorialStage,
@@ -29,13 +26,14 @@ import type {
   EditorialComment,
   EditorialExport,
   EditorialStageKey,
-  EditorialStageStatus,
 } from "@/lib/editorial/types/editorial";
+import { EDITORIAL_STAGE_KEYS } from "@/lib/editorial/pipeline/constants";
 import {
-  EDITORIAL_STAGE_KEYS,
-  EDITORIAL_STAGE_LABELS,
-  EDITORIAL_STAGE_PROGRESS,
-} from "@/lib/editorial/pipeline/constants";
+  getClientVisibleStages,
+  getClientVisibleProgress,
+} from "@/lib/editorial/pipeline/client-delays";
+import type { PortalLocale } from "@/lib/editorial/i18n/portal-translations";
+import { getTranslations } from "@/lib/editorial/i18n/portal-translations";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -53,6 +51,7 @@ interface ProgressData {
     | "status"
     | "progress_percent"
     | "due_date"
+    | "created_at"
   >;
   stages: EditorialStage[];
   files: EditorialFile[];
@@ -60,45 +59,9 @@ interface ProgressData {
   exports: EditorialExport[];
 }
 
-// ---------------------------------------------------------------------------
-// Display helpers
-// ---------------------------------------------------------------------------
-const STATUS_ICONS: Record<EditorialStageStatus, React.ReactNode> = {
-  pending: <Clock className="w-4 h-4 text-muted-foreground" />,
-  queued: <CircleDot className="w-4 h-4 text-blue-400" />,
-  processing: <Loader2 className="w-4 h-4 text-blue-500 animate-spin" />,
-  review_required: <AlertCircle className="w-4 h-4 text-yellow-500" />,
-  approved: <CheckCircle2 className="w-4 h-4 text-green-500" />,
-  failed: <XCircle className="w-4 h-4 text-destructive" />,
-  completed: <CheckCircle2 className="w-4 h-4 text-green-600" />,
-};
-
-const STATUS_BADGE: Record<
-  EditorialStageStatus,
-  "secondary" | "default" | "outline" | "destructive"
-> = {
-  pending: "secondary",
-  queued: "outline",
-  processing: "default",
-  review_required: "outline",
-  approved: "default",
-  failed: "destructive",
-  completed: "default",
-};
-
-const STATUS_LABELS: Record<EditorialStageStatus, string> = {
-  pending: "Pendiente",
-  queued: "En cola",
-  processing: "Procesando",
-  review_required: "Necesita revisión",
-  approved: "Aprobada",
-  failed: "Error",
-  completed: "Completada",
-};
-
-function formatDate(d: string | null) {
+function formatDate(d: string | null, locale: string = "es-ES") {
   if (!d) return "—";
-  return new Date(d).toLocaleDateString("es-ES", {
+  return new Date(d).toLocaleDateString(locale, {
     day: "2-digit",
     month: "short",
     year: "numeric",
@@ -125,7 +88,23 @@ export default function ClientProjectDetailPage() {
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [uploadSuccess, setUploadSuccess] = useState(false);
+  const [commentText, setCommentText] = useState("");
+  const [sendingComment, setSendingComment] = useState(false);
+  const [locale, setLocale] = useState<PortalLocale>("es");
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const t = getTranslations(locale);
+
+  useEffect(() => {
+    const saved = localStorage.getItem("reino-locale") as PortalLocale | null;
+    if (saved === "en" || saved === "es") setLocale(saved);
+  }, []);
+
+  const toggleLocale = () => {
+    const next = locale === "es" ? "en" : "es";
+    setLocale(next);
+    localStorage.setItem("reino-locale", next);
+  };
 
   const fetchData = useCallback(async () => {
     if (!projectId) return;
@@ -142,11 +121,11 @@ export default function ClientProjectDetailPage() {
         setError(json.error ?? "Error al cargar el proyecto");
       }
     } catch {
-      setError("Error de red. Verifica tu conexión.");
+      setError(t.networkError);
     } finally {
       setLoading(false);
     }
-  }, [projectId]);
+  }, [projectId, t.networkError]);
 
   useEffect(() => {
     fetchData();
@@ -172,7 +151,6 @@ export default function ClientProjectDetailPage() {
 
       if (json.success) {
         setUploadSuccess(true);
-        // Refresh to show new file
         await fetchData();
         setTimeout(() => setUploadSuccess(false), 4000);
       } else {
@@ -182,8 +160,31 @@ export default function ClientProjectDetailPage() {
       setUploadError("Error de red al subir el archivo");
     } finally {
       setUploading(false);
-      // Reset input so the same file can be re-selected if needed
       if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  }
+
+  async function handleSendComment() {
+    if (!commentText.trim() || sendingComment) return;
+    setSendingComment(true);
+    try {
+      const res = await fetch(
+        `/api/editorial/client/projects/${projectId}/comments`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ comment: commentText.trim() }),
+        }
+      );
+      const json = await res.json();
+      if (json.success) {
+        setCommentText("");
+        await fetchData();
+      }
+    } catch {
+      // silently fail
+    } finally {
+      setSendingComment(false);
     }
   }
 
@@ -193,8 +194,8 @@ export default function ClientProjectDetailPage() {
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center gap-3 min-h-[60vh]">
-        <Loader2 className="w-7 h-7 animate-spin text-muted-foreground" />
-        <p className="text-sm text-muted-foreground">Cargando tu proyecto…</p>
+        <div className="w-8 h-8 rounded-full border-2 border-[#1a3a6b]/20 border-t-[#1a3a6b] animate-spin" />
+        <p className="text-sm text-gray-400">{t.loading}</p>
       </div>
     );
   }
@@ -202,328 +203,354 @@ export default function ClientProjectDetailPage() {
   if (error || !data) {
     return (
       <div className="flex flex-col gap-4">
-        <Button variant="ghost" size="sm" asChild className="w-fit -ml-2">
-          <Link
-            href="/portal/editorial/projects"
-            className="flex items-center gap-2"
+        <Link
+          href="/portal/editorial/projects"
+          className="flex items-center gap-2 text-gray-400 hover:text-gray-600 text-sm w-fit"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          {t.backToBooks}
+        </Link>
+        <div className="rounded-2xl border border-red-200 bg-red-50 p-6 flex flex-col items-center gap-3 text-center">
+          <AlertCircle className="w-8 h-8 text-red-400" />
+          <p className="text-sm text-red-600">
+            {error ?? "Proyecto no encontrado"}
+          </p>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={fetchData}
+            className="border-gray-200 text-gray-600 hover:bg-gray-100"
           >
-            <ArrowLeft className="w-4 h-4" />
-            Mis libros
-          </Link>
-        </Button>
-        <Card>
-          <CardContent className="flex flex-col items-center gap-3 py-10 text-center">
-            <AlertCircle className="w-8 h-8 text-destructive" />
-            <p className="text-sm text-destructive">
-              {error ?? "Proyecto no encontrado"}
-            </p>
-            <Button variant="outline" size="sm" onClick={fetchData}>
-              Reintentar
-            </Button>
-          </CardContent>
-        </Card>
+            {t.retry}
+          </Button>
+        </div>
       </div>
     );
   }
 
-  const { project, stages, files, comments, exports: projectExports } = data;
-  const stageMap = new Map(stages.map((s) => [s.stage_key, s]));
+  const { project, files, comments, exports: projectExports } = data;
+
+  // Client-visible stages with delays
+  const visibleStages = getClientVisibleStages(
+    project.created_at,
+    project.current_stage as EditorialStageKey
+  );
+  const visibleProgress = getClientVisibleProgress(
+    project.created_at,
+    project.current_stage as EditorialStageKey
+  );
 
   return (
     <div className="flex flex-col gap-6">
-      {/* Back nav */}
-      <Button variant="ghost" size="sm" asChild className="w-fit -ml-2">
+      {/* Top bar */}
+      <div className="flex items-center justify-between">
         <Link
           href="/portal/editorial/projects"
-          className="flex items-center gap-2 text-muted-foreground"
+          className="flex items-center gap-2 text-gray-400 hover:text-gray-600 text-sm"
         >
           <ArrowLeft className="w-4 h-4" />
-          Mis libros
+          {t.backToBooks}
         </Link>
-      </Button>
+        <button
+          onClick={toggleLocale}
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gray-100 border border-gray-200 text-xs text-gray-500 hover:text-gray-700 hover:bg-gray-200 transition-colors"
+        >
+          <Globe className="w-3.5 h-3.5" />
+          {locale === "es" ? "EN" : "ES"}
+        </button>
+      </div>
 
       {/* Project header */}
-      <div className="flex flex-col gap-1">
-        <div className="flex items-center gap-2">
-          <BookOpen className="w-5 h-5 text-purple-500 shrink-0" />
-          <h1 className="text-xl font-bold tracking-tight leading-tight">
-            {project.title}
-          </h1>
+      <div className="flex flex-col gap-2">
+        <div className="flex items-start gap-3">
+          <div className="w-12 h-16 rounded-lg bg-gradient-to-b from-[#1a3a6b]/10 to-[#1a3a6b]/20 border border-[#1a3a6b]/10 flex items-center justify-center shrink-0 mt-0.5">
+            <BookOpen className="w-5 h-5 text-[#1a3a6b]/60" />
+          </div>
+          <div className="min-w-0">
+            <h1 className="text-xl font-bold tracking-tight text-gray-900 leading-tight">
+              {project.title}
+            </h1>
+            {project.subtitle && (
+              <p className="text-sm text-gray-400 mt-0.5">{project.subtitle}</p>
+            )}
+            {project.author_name && (
+              <p className="text-xs text-gray-400 mt-0.5">
+                {t.by} {project.author_name}
+              </p>
+            )}
+          </div>
         </div>
-        {project.subtitle && (
-          <p className="text-sm text-muted-foreground pl-7">{project.subtitle}</p>
-        )}
-        {project.author_name && (
-          <p className="text-xs text-muted-foreground pl-7">
-            por {project.author_name}
+      </div>
+
+      {/* Progress overview */}
+      <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
+        <div className="flex items-center justify-between mb-3">
+          <span className="text-sm font-medium text-gray-500">{t.progress}</span>
+          <span className="text-2xl font-bold text-[#1a3a6b]">{visibleProgress}%</span>
+        </div>
+        <div className="h-2 rounded-full bg-gray-100 overflow-hidden">
+          <div
+            className="h-full rounded-full bg-gradient-to-r from-[#1a3a6b] to-[#2a5a9b] transition-all duration-1000"
+            style={{ width: `${visibleProgress}%` }}
+          />
+        </div>
+        {project.due_date && (
+          <p className="text-xs text-gray-400 mt-3">
+            {t.estimatedDelivery}: <span className="text-gray-600">{formatDate(project.due_date, locale === "es" ? "es-ES" : "en-US")}</span>
           </p>
         )}
       </div>
 
-      {/* Quick stats */}
-      <div className="grid grid-cols-2 gap-3">
-        <Card>
-          <CardContent className="p-4">
-            <p className="text-xs text-muted-foreground mb-1">Etapa actual</p>
-            <Badge variant="default" className="text-xs">
-              {EDITORIAL_STAGE_LABELS[project.current_stage as EditorialStageKey] ??
-                project.current_stage}
-            </Badge>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4">
-            <p className="text-xs text-muted-foreground mb-2">Progreso</p>
-            <div className="flex items-center gap-2">
-              <Progress
-                value={project.progress_percent}
-                className="h-2 flex-1"
-              />
-              <span className="text-sm font-bold">
-                {project.progress_percent}%
-              </span>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Upload new version */}
-      <Card className="border-purple-200 dark:border-purple-800 bg-purple-50/50 dark:bg-purple-950/10">
-        <CardContent className="p-4">
-          <div className="flex flex-col gap-3">
-            <div className="flex items-start gap-3">
-              <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-purple-100 dark:bg-purple-900/30 shrink-0">
-                <Upload className="w-5 h-5 text-purple-600 dark:text-purple-400" />
-              </div>
-              <div>
-                <p className="font-semibold text-sm">Subir nueva versión</p>
-                <p className="text-xs text-muted-foreground mt-0.5">
-                  Sube el manuscrito actualizado. La versión anterior se
-                  conservará.
-                </p>
-              </div>
-            </div>
-
-            {uploadError && (
-              <p className="text-xs text-destructive px-1">{uploadError}</p>
-            )}
-            {uploadSuccess && (
-              <p className="text-xs text-green-600 dark:text-green-400 px-1 flex items-center gap-1">
-                <CheckCircle2 className="w-3.5 h-3.5" />
-                ¡Archivo subido correctamente!
-              </p>
-            )}
-
-            <input
-              ref={fileInputRef}
-              type="file"
-              className="hidden"
-              accept=".doc,.docx,.pdf,.txt,.odt"
-              onChange={handleUpload}
-              disabled={uploading}
-            />
-            <Button
-              className="w-full"
-              size="lg"
-              disabled={uploading}
-              onClick={() => fileInputRef.current?.click()}
-            >
-              {uploading ? (
-                <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Subiendo…
-                </>
-              ) : (
-                <>
-                  <Upload className="w-4 h-4 mr-2" />
-                  Seleccionar archivo
-                </>
-              )}
-            </Button>
-            <p className="text-xs text-muted-foreground text-center">
-              Formatos aceptados: .doc, .docx, .pdf, .txt, .odt
-            </p>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Pipeline */}
-      <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="text-base">Estado del pipeline</CardTitle>
-          <CardDescription className="text-xs">
-            Cada etapa del proceso de producción de tu libro
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="p-0">
-          {EDITORIAL_STAGE_KEYS.map((key, index) => {
-            const stage = stageMap.get(key);
-            const status: EditorialStageStatus =
-              (stage?.status as EditorialStageStatus) ?? "pending";
-            const isCurrent = project.current_stage === key;
-            const targetProgress = EDITORIAL_STAGE_PROGRESS[key];
+      {/* Pipeline stages with delays */}
+      <div className="rounded-2xl border border-gray-200 bg-white overflow-hidden shadow-sm">
+        <div className="p-4 border-b border-gray-100">
+          <h2 className="text-sm font-semibold text-gray-900">{t.pipelineStatus}</h2>
+          <p className="text-xs text-gray-400 mt-0.5">{t.pipelineDesc}</p>
+        </div>
+        <div className="divide-y divide-gray-100">
+          {visibleStages.map((stage, index) => {
+            const stageLabel = t.stageLabels[stage.stageKey] ?? stage.label;
+            const stageMsg = stage.isCompleted
+              ? t.stageMessages[stage.stageKey]?.completed ?? stage.message
+              : stage.isActive
+                ? t.stageMessages[stage.stageKey]?.active ?? stage.message
+                : "";
 
             return (
-              <div key={key}>
-                <div
-                  className={`flex items-start gap-3 px-4 py-3 ${
-                    isCurrent
-                      ? "bg-purple-50 dark:bg-purple-950/20"
-                      : ""
-                  }`}
-                >
-                  {/* Step number */}
-                  <div className="flex items-center justify-center w-7 h-7 rounded-full bg-muted text-xs font-bold text-muted-foreground shrink-0 mt-0.5">
-                    {index + 1}
-                  </div>
-
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <span className="font-medium text-sm">
-                        {EDITORIAL_STAGE_LABELS[key]}
-                      </span>
-                      {isCurrent && (
-                        <Badge
-                          variant="outline"
-                          className="text-xs text-purple-600 border-purple-400"
-                        >
-                          Actual
-                        </Badge>
+              <div
+                key={stage.stageKey}
+                className={`flex items-start gap-3 px-4 py-3.5 transition-colors ${
+                  stage.isActive ? "bg-blue-50" : ""
+                } ${!stage.isRevealed ? "opacity-30" : ""}`}
+              >
+                {/* Status indicator */}
+                <div className="shrink-0 mt-0.5">
+                  {stage.isCompleted ? (
+                    <div className="w-6 h-6 rounded-full bg-green-100 flex items-center justify-center">
+                      <CheckCircle2 className="w-3.5 h-3.5 text-green-500" />
+                    </div>
+                  ) : stage.isActive ? (
+                    <div className="w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center">
+                      <div className="w-2 h-2 rounded-full bg-[#1a3a6b] animate-pulse" />
+                    </div>
+                  ) : (
+                    <div className="w-6 h-6 rounded-full bg-gray-100 flex items-center justify-center">
+                      {stage.isRevealed ? (
+                        <Clock className="w-3 h-3 text-gray-300" />
+                      ) : (
+                        <Lock className="w-3 h-3 text-gray-200" />
                       )}
                     </div>
-                    <div className="flex items-center gap-2 mt-1">
-                      {STATUS_ICONS[status]}
-                      <span className="text-xs text-muted-foreground">
-                        {STATUS_LABELS[status]}
-                      </span>
-                    </div>
-                  </div>
-
-                  <span className="text-xs text-muted-foreground shrink-0 mt-1">
-                    {targetProgress}%
-                  </span>
+                  )}
                 </div>
-                {index < EDITORIAL_STAGE_KEYS.length - 1 && (
-                  <Separator />
-                )}
+
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2">
+                    <span className={`text-sm font-medium ${
+                      stage.isCompleted ? "text-gray-600" : stage.isActive ? "text-gray-900" : "text-gray-300"
+                    }`}>
+                      {stageLabel}
+                    </span>
+                    {stage.isActive && (
+                      <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-[#1a3a6b]/10 text-[#1a3a6b]">
+                        {t.current}
+                      </span>
+                    )}
+                  </div>
+                  {stage.isRevealed && stageMsg && (
+                    <p className="text-xs text-gray-400 mt-0.5 leading-relaxed">
+                      {stageMsg}
+                    </p>
+                  )}
+                </div>
+
+                <span className="text-xs text-gray-300 shrink-0 mt-0.5 tabular-nums">
+                  {stage.isCompleted ? (
+                    <span className="text-green-500">{t.stageCompleted}</span>
+                  ) : stage.isActive ? (
+                    <span className="text-[#1a3a6b]">{t.processing}</span>
+                  ) : null}
+                </span>
               </div>
             );
           })}
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
-      {/* My files (client-visible) */}
-      <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="text-base flex items-center gap-2">
-            <FileText className="w-4 h-4 text-muted-foreground" />
-            Mis archivos ({files.length})
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          {files.length === 0 ? (
-            <p className="text-sm text-muted-foreground">
-              Aún no hay archivos compartidos contigo.
-            </p>
+      {/* Upload new version */}
+      <div className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
+        <div className="flex items-start gap-3 mb-3">
+          <div className="w-10 h-10 rounded-xl bg-[#1a3a6b]/10 flex items-center justify-center shrink-0">
+            <Upload className="w-5 h-5 text-[#1a3a6b]/60" />
+          </div>
+          <div>
+            <p className="font-semibold text-sm text-gray-900">{t.uploadNewVersion}</p>
+            <p className="text-xs text-gray-400 mt-0.5">{t.uploadDesc}</p>
+          </div>
+        </div>
+
+        {uploadError && (
+          <p className="text-xs text-red-500 px-1 mb-2">{uploadError}</p>
+        )}
+        {uploadSuccess && (
+          <p className="text-xs text-green-500 px-1 mb-2 flex items-center gap-1">
+            <CheckCircle2 className="w-3.5 h-3.5" />
+            {t.uploadSuccess}
+          </p>
+        )}
+
+        <input
+          ref={fileInputRef}
+          type="file"
+          className="hidden"
+          accept=".doc,.docx,.pdf,.txt,.odt"
+          onChange={handleUpload}
+          disabled={uploading}
+        />
+        <Button
+          className="w-full h-11 bg-[#1a3a6b] hover:bg-[#2a5a9b] text-white border border-[#1a3a6b]/20 rounded-xl"
+          disabled={uploading}
+          onClick={() => fileInputRef.current?.click()}
+        >
+          {uploading ? (
+            <>
+              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              {t.uploading}
+            </>
           ) : (
-            <div className="flex flex-col gap-2">
-              {files.map((file) => (
-                <div
-                  key={file.id}
-                  className="flex items-center justify-between gap-3 p-3 rounded-lg border bg-muted/30"
-                >
-                  <div className="flex flex-col gap-0.5 min-w-0">
-                    <span className="text-sm font-medium truncate capitalize">
-                      {file.file_type.replace(/_/g, " ")}
-                    </span>
-                    <span className="text-xs text-muted-foreground">
-                      v{file.version} · {formatBytes(file.size_bytes)} ·{" "}
-                      {formatDate(file.created_at)}
-                    </span>
-                  </div>
-                </div>
-              ))}
-            </div>
+            <>
+              <Upload className="w-4 h-4 mr-2" />
+              {t.selectFile}
+            </>
           )}
-        </CardContent>
-      </Card>
+        </Button>
+        <p className="text-xs text-gray-300 text-center mt-2">{t.acceptedFormats}</p>
+      </div>
 
-      {/* Comments from editorial team */}
-      {comments.length > 0 && (
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-base flex items-center gap-2">
-              <MessageSquare className="w-4 h-4 text-muted-foreground" />
-              Notas del equipo editorial ({comments.length})
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex flex-col gap-3">
-              {comments.map((c) => (
-                <div
-                  key={c.id}
-                  className="p-3 rounded-lg border bg-muted/20 text-sm"
-                >
-                  <p className="text-foreground">{c.comment}</p>
-                  {c.stage_key && (
-                    <p className="text-xs text-muted-foreground mt-1">
-                      Etapa:{" "}
-                      {EDITORIAL_STAGE_LABELS[
-                        c.stage_key as EditorialStageKey
-                      ] ?? c.stage_key}
-                    </p>
-                  )}
-                  <p className="text-xs text-muted-foreground mt-0.5">
-                    {formatDate(c.created_at)}
+      {/* Files */}
+      {files.length > 0 && (
+        <div className="rounded-2xl border border-gray-200 bg-white overflow-hidden shadow-sm">
+          <div className="p-4 border-b border-gray-100">
+            <h2 className="text-sm font-semibold text-gray-900 flex items-center gap-2">
+              <FileText className="w-4 h-4 text-gray-400" />
+              {t.myFiles} ({files.length})
+            </h2>
+          </div>
+          <div className="divide-y divide-gray-50">
+            {files.map((file) => (
+              <div key={file.id} className="flex items-center justify-between px-4 py-3">
+                <div className="min-w-0">
+                  <p className="text-sm font-medium text-gray-700 truncate capitalize">
+                    {file.file_type.replace(/_/g, " ")}
+                  </p>
+                  <p className="text-xs text-gray-400">
+                    v{file.version} · {formatBytes(file.size_bytes)} · {formatDate(file.created_at, locale === "es" ? "es-ES" : "en-US")}
                   </p>
                 </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
+              </div>
+            ))}
+          </div>
+        </div>
       )}
 
-      {/* Exports / downloads */}
-      {projectExports.length > 0 && (
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-base flex items-center gap-2">
-              <Download className="w-4 h-4 text-muted-foreground" />
-              Descargas disponibles ({projectExports.length})
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex flex-col gap-2">
-              {projectExports.map((exp) => (
-                <div
-                  key={exp.id}
-                  className="flex items-center justify-between gap-3 p-3 rounded-lg border bg-muted/30"
-                >
-                  <div className="flex flex-col gap-0.5">
-                    <span className="text-sm font-semibold uppercase">
-                      {exp.export_type}
-                    </span>
-                    <span className="text-xs text-muted-foreground">
-                      v{exp.version} · {formatDate(exp.created_at)}
-                    </span>
+      {/* Comments — bidirectional */}
+      <div className="rounded-2xl border border-gray-200 bg-white overflow-hidden shadow-sm">
+        <div className="p-4 border-b border-gray-100">
+          <h2 className="text-sm font-semibold text-gray-900 flex items-center gap-2">
+            <MessageSquare className="w-4 h-4 text-gray-400" />
+            {t.comments} ({comments.length})
+          </h2>
+        </div>
+        <div className="max-h-80 overflow-y-auto">
+          {comments.length === 0 ? (
+            <div className="p-6 text-center">
+              <p className="text-xs text-gray-400">{t.editorialNotes}</p>
+            </div>
+          ) : (
+            <div className="divide-y divide-gray-50">
+              {comments.map((c) => {
+                const isClient = c.author_type === "client";
+                return (
+                  <div key={c.id} className={`px-4 py-3 ${isClient ? "bg-blue-50/50" : ""}`}>
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className={`text-xs font-medium ${isClient ? "text-[#1a3a6b]" : "text-gray-500"}`}>
+                        {isClient ? t.you : t.editorialTeam}
+                      </span>
+                      <span className="text-[10px] text-gray-300">
+                        {formatDate(c.created_at, locale === "es" ? "es-ES" : "en-US")}
+                      </span>
+                    </div>
+                    <p className="text-sm text-gray-600 leading-relaxed">{c.comment}</p>
                   </div>
-                  <Badge variant="default" className="text-xs shrink-0">
-                    Listo
-                  </Badge>
-                </div>
-              ))}
+                );
+              })}
             </div>
-          </CardContent>
-        </Card>
+          )}
+        </div>
+
+        {/* Comment input */}
+        <div className="p-3 border-t border-gray-100">
+          <div className="flex items-center gap-2">
+            <input
+              type="text"
+              value={commentText}
+              onChange={(e) => setCommentText(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && !e.shiftKey) {
+                  e.preventDefault();
+                  handleSendComment();
+                }
+              }}
+              placeholder={t.writeComment}
+              className="flex-1 h-10 px-3 rounded-xl bg-gray-50 border border-gray-200 text-sm text-gray-900 placeholder:text-gray-300 focus:outline-none focus:border-[#1a3a6b]/30"
+            />
+            <Button
+              size="sm"
+              onClick={handleSendComment}
+              disabled={!commentText.trim() || sendingComment}
+              className="h-10 px-3 rounded-xl bg-[#1a3a6b] hover:bg-[#2a5a9b] text-white"
+            >
+              {sendingComment ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <Send className="w-4 h-4" />
+              )}
+            </Button>
+          </div>
+        </div>
+      </div>
+
+      {/* Downloads */}
+      {projectExports.length > 0 && (
+        <div className="rounded-2xl border border-gray-200 bg-white overflow-hidden shadow-sm">
+          <div className="p-4 border-b border-gray-100">
+            <h2 className="text-sm font-semibold text-gray-900 flex items-center gap-2">
+              <Download className="w-4 h-4 text-gray-400" />
+              {t.downloads} ({projectExports.length})
+            </h2>
+          </div>
+          <div className="divide-y divide-gray-50">
+            {projectExports.map((exp) => (
+              <div key={exp.id} className="flex items-center justify-between px-4 py-3">
+                <div>
+                  <p className="text-sm font-semibold text-gray-700 uppercase">{exp.export_type}</p>
+                  <p className="text-xs text-gray-400">
+                    v{exp.version} · {formatDate(exp.created_at, locale === "es" ? "es-ES" : "en-US")}
+                  </p>
+                </div>
+                <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-green-100 text-green-600 text-xs font-medium">
+                  {t.ready}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
       )}
 
-      {/* Due date */}
-      {project.due_date && (
-        <p className="text-xs text-muted-foreground text-center">
-          Fecha estimada de entrega:{" "}
-          <strong>{formatDate(project.due_date)}</strong>
-        </p>
-      )}
+      {/* Footer */}
+      <p className="text-xs text-gray-300 text-center pb-4">
+        &copy; {new Date().getFullYear()} Reino Editorial
+      </p>
     </div>
   );
 }

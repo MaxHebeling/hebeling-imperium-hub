@@ -3,16 +3,15 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { Building2, LogOut } from "lucide-react";
+import Image from "next/image";
+import { LogOut, BookMarked, BookOpen, HelpCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/client";
 
 const navItems = [
-  { href: "/portal/overview", label: "Overview" },
-  { href: "/portal/editorial/projects", label: "Editorial" },
-  { href: "/portal/projects", label: "Projects" },
-  { href: "/portal/documents", label: "Documents" },
-  { href: "/portal/support", label: "Support" },
+  { href: "/portal/editorial/projects", label: "Mis Libros", icon: BookMarked },
+  { href: "/portal/overview", label: "Resumen", icon: BookOpen },
+  { href: "/portal/ayuda", label: "Ayuda", icon: HelpCircle },
 ];
 
 interface PortalNavProps {
@@ -31,49 +30,90 @@ export function PortalNav({ userEmail }: PortalNavProps) {
   };
 
   return (
-    <header className="sticky top-0 z-50 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+    <header className="sticky top-0 z-50 border-b border-[#1a3a6b]/10 bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/80 shadow-sm">
       <div className="container mx-auto max-w-6xl px-4">
-        <div className="flex h-16 items-center justify-between">
-          <div className="flex items-center gap-8">
-            <Link href="/portal/overview" className="flex items-center gap-3">
-              <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center">
-                <Building2 className="h-4 w-4 text-primary-foreground" />
-              </div>
-              <span className="font-semibold text-sm">Hebeling Imperium</span>
+        <div className="flex h-14 items-center justify-between">
+          <div className="flex items-center gap-6">
+            <Link href="/portal/editorial/projects" className="flex items-center gap-2">
+              <Image
+                src="/logo-reino-editorial.png"
+                alt="Reino Editorial"
+                width={32}
+                height={32}
+                className="h-8 w-8 object-contain"
+              />
+              <span className="font-bold text-sm text-[#1a3a6b] tracking-tight">Reino Editorial</span>
             </Link>
-            
+
             <nav className="hidden md:flex items-center gap-1">
               {navItems.map((item) => {
                 const isActive = pathname === item.href || pathname.startsWith(item.href + "/");
+                const Icon = item.icon;
                 return (
                   <Link
                     key={item.href}
                     href={item.href}
                     className={cn(
-                      "px-3 py-2 text-sm font-medium rounded-md transition-colors",
+                      "px-3 py-1.5 text-sm font-medium rounded-lg transition-colors flex items-center gap-1.5",
                       isActive
-                        ? "bg-accent text-accent-foreground"
-                        : "text-muted-foreground hover:text-foreground hover:bg-accent/50"
+                        ? "bg-[#1a3a6b]/10 text-[#1a3a6b]"
+                        : "text-gray-400 hover:text-gray-700 hover:bg-gray-100"
                     )}
                   >
+                    <Icon className="h-3.5 w-3.5" />
                     {item.label}
                   </Link>
                 );
               })}
             </nav>
           </div>
-          
-          <div className="flex items-center gap-4">
+
+          <div className="flex items-center gap-3">
             {userEmail && (
-              <span className="text-sm text-muted-foreground hidden sm:inline">
+              <span className="text-xs text-gray-400 hidden sm:inline truncate max-w-40">
                 {userEmail}
               </span>
             )}
-            <Button variant="ghost" size="sm" onClick={handleSignOut}>
-              <LogOut className="h-4 w-4" />
-              <span className="hidden sm:inline ml-2">Sign Out</span>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleSignOut}
+              className="text-gray-400 hover:text-gray-700 hover:bg-gray-100 h-8 px-2"
+            >
+              <LogOut className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline ml-1.5 text-xs">Salir</span>
             </Button>
           </div>
+        </div>
+      </div>
+
+      {/* Mobile bottom nav */}
+      <div className="md:hidden fixed bottom-0 left-0 right-0 z-50 border-t border-gray-200 bg-white/95 backdrop-blur px-4 pb-safe shadow-[0_-2px_10px_rgba(0,0,0,0.05)]">
+        <div className="flex items-center justify-around h-14">
+          {navItems.map((item) => {
+            const isActive = pathname === item.href || pathname.startsWith(item.href + "/");
+            const Icon = item.icon;
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={cn(
+                  "flex flex-col items-center gap-0.5 text-xs font-medium transition-colors py-1 px-3",
+                  isActive ? "text-[#1a3a6b]" : "text-gray-400"
+                )}
+              >
+                <Icon className="h-5 w-5" />
+                {item.label}
+              </Link>
+            );
+          })}
+          <button
+            onClick={handleSignOut}
+            className="flex flex-col items-center gap-0.5 text-xs font-medium text-gray-400 py-1 px-3"
+          >
+            <LogOut className="h-5 w-5" />
+            Salir
+          </button>
         </div>
       </div>
     </header>

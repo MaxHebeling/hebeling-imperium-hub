@@ -1,7 +1,7 @@
 "use client";
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { FileText, GitBranch, MessageSquare, Users, LayoutGrid, Sparkles, Download, Globe, Paintbrush } from "lucide-react";
+import { FileText, GitBranch, MessageSquare, Users, LayoutGrid, Sparkles, Download, Globe, Paintbrush, Rocket } from "lucide-react";
 import { StaffProjectSummaryTab } from "./staff-project-summary-tab";
 import { StaffPipelineTab } from "./staff-pipeline-tab";
 import { StaffFilesTab } from "./staff-files-tab";
@@ -11,6 +11,7 @@ import { AiStageAssistPanel } from "@/components/editorial/staff/ai-stage-assist
 import { ExportPanel } from "@/components/editorial/export/export-panel";
 import { DistributionPanel } from "@/components/editorial/distribution/distribution-panel";
 import { CoverGeneratorPanel } from "@/components/editorial/staff/cover-generator-panel";
+import { PipelineRunnerPanel } from "@/components/editorial/staff/pipeline-runner-panel";
 import type { StaffProjectDetail } from "@/lib/editorial/types/editorial";
 import type { EditorialStageKey } from "@/lib/editorial/types/editorial";
 import type { EditorialAiTaskKey } from "@/lib/editorial/types/ai";
@@ -76,6 +77,10 @@ export function StaffProjectTabs({ detail, exports = [], distributions = [] }: S
             <Paintbrush className="h-3.5 w-3.5 shrink-0" />
             Portada AI
           </TabsTrigger>
+          <TabsTrigger value="auto-pipeline" className="gap-1.5 px-3 text-xs sm:text-sm shrink-0">
+            <Rocket className="h-3.5 w-3.5 shrink-0" />
+            Auto Pipeline
+          </TabsTrigger>
           <TabsTrigger value="export" className="gap-1.5 px-3 text-xs sm:text-sm shrink-0">
             <Download className="h-3.5 w-3.5 shrink-0" />
             Export
@@ -129,6 +134,14 @@ export function StaffProjectTabs({ detail, exports = [], distributions = [] }: S
 
       <TabsContent value="portada" className="mt-4">
         <CoverGeneratorPanel projectId={project.id} />
+      </TabsContent>
+
+      <TabsContent value="auto-pipeline" className="mt-4">
+        <PipelineRunnerPanel
+          projectId={project.id}
+          currentStage={project.current_stage}
+          projectStatus={project.status}
+        />
       </TabsContent>
 
       <TabsContent value="export" className="mt-4">

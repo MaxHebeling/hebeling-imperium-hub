@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Building2, BookOpen, Globe, Crown, User } from "lucide-react";
+import { Building2, BookOpen, Globe, Crown, User, Briefcase } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
 const BUSINESS_UNITS = [
@@ -11,6 +11,7 @@ const BUSINESS_UNITS = [
     icon: BookOpen,
     accent: "text-purple-600 dark:text-purple-400",
     bgAccent: "bg-purple-500/10 border-purple-500/20",
+    oficinaHref: "/app/editorial/oficina",
   },
   {
     slug: "ikingdom",
@@ -20,6 +21,7 @@ const BUSINESS_UNITS = [
     icon: Globe,
     accent: "text-emerald-600 dark:text-emerald-400",
     bgAccent: "bg-emerald-500/10 border-emerald-500/20",
+    oficinaHref: "/app/editorial/oficina",
   },
   {
     slug: "imperium",
@@ -29,6 +31,7 @@ const BUSINESS_UNITS = [
     icon: Crown,
     accent: "text-amber-600 dark:text-amber-400",
     bgAccent: "bg-amber-500/10 border-amber-500/20",
+    oficinaHref: "/app/editorial/oficina",
   },
   {
     slug: "max-hebeling",
@@ -38,6 +41,7 @@ const BUSINESS_UNITS = [
     icon: User,
     accent: "text-blue-600 dark:text-blue-400",
     bgAccent: "bg-blue-500/10 border-blue-500/20",
+    oficinaHref: "/app/editorial/oficina",
   },
 ] as const;
 
@@ -75,10 +79,18 @@ export default function CompaniesPage() {
                     </CardDescription>
                   </div>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="flex items-center justify-between">
                   <span className={`text-sm font-medium ${unit.accent}`}>
                     Entrar →
                   </span>
+                  <Link
+                    href={unit.oficinaHref}
+                    onClick={(e) => e.stopPropagation()}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all bg-[#1a3a6b]/10 text-[#1a3a6b] hover:bg-[#1a3a6b] hover:text-white border border-[#1a3a6b]/20"
+                  >
+                    <Briefcase className="w-3.5 h-3.5" />
+                    Oficina
+                  </Link>
                 </CardContent>
               </Card>
             </Link>
