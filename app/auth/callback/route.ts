@@ -28,16 +28,23 @@ export async function GET(request: Request) {
           .eq("id", user.id)
           .single();
 
+        // If `next` was explicitly set to a portal route, always respect it
+        const hasExplicitPortalNext =
+          searchParams.has("next") && next.startsWith("/portal");
+
         if (profile?.role === "client") {
           return NextResponse.redirect(`${origin}${next}`);
         }
 
-        // Staff users go to the main dashboard
+        // Staff users: if they came from client-login (portal next), send them to portal
         if (
           ["superadmin", "admin", "sales", "ops"].includes(
             profile?.role ?? ""
           )
         ) {
+          if (hasExplicitPortalNext) {
+            return NextResponse.redirect(`${origin}${next}`);
+          }
           return NextResponse.redirect(`${origin}/app/companies`);
         }
       }
