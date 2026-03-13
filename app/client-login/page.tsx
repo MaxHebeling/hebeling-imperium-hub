@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Lock, Mail, Loader2, Send, CheckCircle2 } from "lucide-react";
+import { Lock, Mail, Loader2, Send, CheckCircle2, AlertCircle, RotateCcw } from "lucide-react";
 import Image from "next/image";
 import { createClient } from "@/lib/supabase/client";
 
@@ -32,6 +32,7 @@ function ClientLoginContent() {
   const [error, setError] = useState<string | null>(null);
   const [mode, setMode] = useState<LoginMode>("magic");
   const [magicLinkSent, setMagicLinkSent] = useState(false);
+  const [linkExpired, setLinkExpired] = useState(false);
 
   // Register service worker for PWA
   useEffect(() => {
@@ -44,9 +45,8 @@ function ClientLoginContent() {
   useEffect(() => {
     const urlError = searchParams.get("error");
     if (urlError === "magic_link_expired") {
-      setError(
-        "El enlace ha expirado. Solicita uno nuevo ingresando tu correo."
-      );
+      setLinkExpired(true);
+      setMode("magic");
     }
   }, [searchParams]);
 
@@ -165,8 +165,52 @@ function ClientLoginContent() {
             </p>
           </div>
 
-          {/* Magic Link Sent Success */}
-          {magicLinkSent ? (
+          {/* Expired Magic Link */}
+          {linkExpired && !magicLinkSent ? (
+            <div className="flex flex-col items-center gap-4 py-4">
+              <div className="w-16 h-16 rounded-full bg-amber-50 flex items-center justify-center">
+                <AlertCircle className="w-8 h-8 text-amber-500" />
+              </div>
+              <div className="text-center">
+                <p className="font-semibold text-gray-900">
+                  Enlace expirado
+                </p>
+                <p className="text-sm text-gray-400 mt-2">
+                  Tu enlace de acceso ya no es válido. Ingresa tu correo para recibir uno nuevo.
+                </p>
+              </div>
+              <form onSubmit={(e) => { setLinkExpired(false); handleMagicLink(e); }} className="w-full space-y-3 mt-2">
+                <div className="relative">
+                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#1a3a6b]/40" />
+                  <Input
+                    type="email"
+                    placeholder="tu@correo.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="pl-10 bg-gray-50 border-gray-200 text-gray-900 placeholder:text-gray-300 focus:border-[#1a3a6b]/50 focus:ring-[#1a3a6b]/20 h-12 rounded-xl"
+                    required
+                  />
+                </div>
+                <Button
+                  type="submit"
+                  className="w-full h-12 bg-gradient-to-r from-[#1a3a6b] to-[#2a5a9b] hover:from-[#2a5a9b] hover:to-[#3a6abf] text-white font-semibold rounded-xl shadow-lg shadow-[#1a3a6b]/20 transition-all"
+                  disabled={isLoading}
+                >
+                  {isLoading ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Enviando...
+                    </>
+                  ) : (
+                    <>
+                      <RotateCcw className="w-4 h-4 mr-2" />
+                      Reenviar enlace de acceso
+                    </>
+                  )}
+                </Button>
+              </form>
+            </div>
+          ) : magicLinkSent ? (
             <div className="flex flex-col items-center gap-4 py-4">
               <div className="w-16 h-16 rounded-full bg-green-50 flex items-center justify-center">
                 <CheckCircle2 className="w-8 h-8 text-green-500" />
