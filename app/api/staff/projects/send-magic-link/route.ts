@@ -41,11 +41,14 @@ export async function POST(request: Request) {
 
     const adminSupabase = createClient(supabaseUrl, serviceRoleKey);
 
-    // Anon client is needed for signInWithOtp which actually sends the email
-    // (admin.generateLink only generates the link but does NOT send an email)
+    // Anon client with implicit flow (no PKCE) so the magic link works.
+    // PKCE fails because the code verifier is created server-side and lost
+    // before the client clicks the link. Implicit flow avoids this entirely.
     const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
     const anonSupabase = anonKey
-      ? createClient(supabaseUrl, anonKey)
+      ? createClient(supabaseUrl, anonKey, {
+          auth: { flowType: "implicit" },
+        })
       : null;
 
     // Determine the redirect URL – send client directly to their project if available
@@ -54,7 +57,9 @@ export async function POST(request: Request) {
     const portalPath = projectId
       ? `/portal/editorial/projects/${projectId}`
       : "/portal/editorial/projects";
-    const redirectTo = `${siteUrl}/auth/callback?next=${encodeURIComponent(portalPath)}`;
+    // Use /auth/magic-callback (a client-side page) that reads hash-fragment
+    // tokens from the implicit flow and establishes the session in the browser.
+    const redirectTo = `${siteUrl}/auth/magic-callback?next=${encodeURIComponent(portalPath)}`;
 
     // Check if user already exists in profiles
     const { data: existingProfiles } = await adminSupabase
