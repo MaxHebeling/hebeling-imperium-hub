@@ -45,21 +45,30 @@ function handleInvoice(body: Record<string, unknown>) {
     );
   }
 
+  // Recalculate individual item amounts
+  const items = data.items.map((it) => ({
+    ...it,
+    amount: it.amount || it.quantity * it.unitPrice,
+  }));
+
   // Auto-calculate totals
   const subtotal =
-    data.subtotal || data.items.reduce((s, it) => s + (it.amount || it.quantity * it.unitPrice), 0);
+    data.subtotal || items.reduce((s, it) => s + it.amount, 0);
   const discount = (data.discount ?? 0);
-  const taxRate = data.taxRate ?? 0;
-  const taxAmount = data.taxAmount ?? (subtotal - discount) * taxRate;
+  // taxRate comes as percentage (e.g. 16 for 16%), convert to decimal for calculations
+  const taxRateInput = data.taxRate ?? 0;
+  const taxRateDecimal = taxRateInput > 1 ? taxRateInput / 100 : taxRateInput;
+  const taxAmount = data.taxAmount ?? (subtotal - discount) * taxRateDecimal;
   const total = data.total ?? subtotal - discount + taxAmount;
 
   const invoiceData: InvoiceData = {
     ...data,
+    items,
     invoiceNumber:
       data.invoiceNumber || `RE-INV-${String(Date.now()).slice(-6)}`,
     subtotal,
     discount,
-    taxRate,
+    taxRate: taxRateDecimal,
     taxAmount,
     total,
     amountPaid: data.amountPaid ?? 0,
