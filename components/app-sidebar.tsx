@@ -31,7 +31,6 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 
-// Company-first navigation (official Hebeling OS architecture)
 const navSections = [
   {
     titleKey: null as string | null,

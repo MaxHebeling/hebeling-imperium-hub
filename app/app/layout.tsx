@@ -6,8 +6,8 @@ import { AppTopbar } from "@/components/app-topbar";
 import { LanguageProvider } from "@/lib/i18n";
 
 export const metadata: Metadata = {
-  title: "Dashboard | Hebeling Imperium Hub",
-  description: "Staff administration portal",
+  title: "Hebeling OS | Enterprise Operating System",
+  description: "Premium enterprise operating system for Hebeling Imperium Group",
   robots: {
     index: false,
     follow: false,
