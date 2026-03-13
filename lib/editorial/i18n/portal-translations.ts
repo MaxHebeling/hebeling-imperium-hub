@@ -66,6 +66,18 @@ export const PORTAL_TRANSLATIONS = {
     // Notifications
     welcomeTitle: "¡Bienvenido a Reino Editorial!",
     welcomeMsg: "Tu libro está en las mejores manos. Aquí podrás seguir el progreso editorial en tiempo real.",
+    notifications: "Notificaciones",
+    noNotifications: "Sin notificaciones nuevas",
+    markAllRead: "Marcar todo como leído",
+    newComment: "Nuevo comentario",
+    newSuggestion: "Nueva sugerencia",
+    stageUpdate: "Actualización de etapa",
+    projectUpdate: "Actualización del proyecto",
+    fileShared: "Archivo compartido",
+    justNow: "Justo ahora",
+    minutesAgo: "hace {n} min",
+    hoursAgo: "hace {n} h",
+    daysAgo: "hace {n} d",
 
     // Language
     language: "Idioma",
@@ -159,6 +171,18 @@ export const PORTAL_TRANSLATIONS = {
     // Notifications
     welcomeTitle: "Welcome to Reino Editorial!",
     welcomeMsg: "Your book is in the best hands. Here you can follow the editorial progress in real time.",
+    notifications: "Notifications",
+    noNotifications: "No new notifications",
+    markAllRead: "Mark all as read",
+    newComment: "New comment",
+    newSuggestion: "New suggestion",
+    stageUpdate: "Stage update",
+    projectUpdate: "Project update",
+    fileShared: "File shared",
+    justNow: "Just now",
+    minutesAgo: "{n} min ago",
+    hoursAgo: "{n} h ago",
+    daysAgo: "{n} d ago",
 
     // Language
     language: "Language",

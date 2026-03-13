@@ -4,9 +4,10 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import Image from "next/image";
-import { LogOut, BookMarked, BookOpen, HelpCircle } from "lucide-react";
+import { LogOut, BookMarked, BookOpen, HelpCircle, Bell } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/client";
+import { NotificationBell } from "@/components/portal-notification-bell";
 
 const navItems = [
   { href: "/portal/editorial/projects", label: "Mis Libros", icon: BookMarked },
@@ -69,6 +70,7 @@ export function PortalNav({ userEmail }: PortalNavProps) {
           </div>
 
           <div className="flex items-center gap-3">
+            <NotificationBell />
             {userEmail && (
               <span className="text-xs text-gray-400 hidden sm:inline truncate max-w-40">
                 {userEmail}
