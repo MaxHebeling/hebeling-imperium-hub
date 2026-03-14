@@ -18,7 +18,7 @@ import {
   Headphones,
   ClipboardList,
   PenTool,
-  ChevronRight,
+  Upload,
 } from "lucide-react";
 import type { WebStageKey, WebStageStatus } from "@/lib/ikingdom/types/web-project";
 import {
@@ -99,11 +99,32 @@ interface StageData {
   notes: string | null;
 }
 
+interface FileData {
+  id: string;
+  file_name: string;
+  stage_key: string | null;
+  file_type: string;
+  mime_type: string | null;
+  size_bytes: number | null;
+  created_at: string;
+}
+
+const ALLOWED_FILE_TYPES = ".pdf,.docx,.doc,.psd,.ai,.fig,.sketch,.zip,.png,.jpg,.jpeg,.svg,.mp4,.html,.css,.js,.ts,.tsx,.jsx";
+const MAX_FILE_SIZE_MB = 100;
+
 export default function IKingdomProjectDetailPage() {
   const { projectId } = useParams<{ projectId: string }>();
   const [project, setProject] = useState<ProjectData | null>(null);
   const [stages, setStages] = useState<StageData[]>([]);
+  const [files, setFiles] = useState<FileData[]>([]);
   const [loading, setLoading] = useState(true);
+
+  const [changingStage, setChangingStage] = useState(false);
+  const [stageChangeError, setStageChangeError] = useState<string | null>(null);
+
+  const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+  const [uploadSuccess, setUploadSuccess] = useState(false);
 
   const fetchData = useCallback(async () => {
     if (!projectId) return;
@@ -114,6 +135,7 @@ export default function IKingdomProjectDetailPage() {
       if (json.success) {
         setProject(json.project);
         setStages(json.stages);
+        setFiles(json.files ?? []);
       }
     } catch {
       console.error("Error fetching project");
@@ -125,6 +147,83 @@ export default function IKingdomProjectDetailPage() {
   useEffect(() => {
     fetchData();
   }, [fetchData]);
+
+  const handleStageChange = async (targetStage: WebStageKey) => {
+    if (!project || changingStage) return;
+    if (targetStage === project.current_stage) return;
+    setChangingStage(true);
+    setStageChangeError(null);
+    try {
+      const res = await fetch(`/api/ikingdom/projects/${projectId}/stage`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ stage: targetStage }),
+      });
+      const json = await res.json();
+      if (!res.ok || !json.success) {
+        setStageChangeError(json.error ?? "Error al cambiar etapa");
+        return;
+      }
+      await fetchData();
+    } catch {
+      setStageChangeError("Error de conexión al cambiar etapa");
+    } finally {
+      setChangingStage(false);
+    }
+  };
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !project) return;
+    if (file.size > MAX_FILE_SIZE_MB * 1024 * 1024) {
+      setUploadError(`El archivo excede ${MAX_FILE_SIZE_MB}MB`);
+      return;
+    }
+    setUploading(true);
+    setUploadError(null);
+    setUploadSuccess(false);
+    try {
+      const res = await fetch(`/api/ikingdom/projects/${projectId}/upload-url`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          fileName: file.name,
+          mimeType: file.type || "application/octet-stream",
+          sizeBytes: file.size,
+          stageKey: project.current_stage,
+        }),
+      });
+      const json = await res.json();
+      if (!res.ok || !json.success) {
+        setUploadError(json.error ?? "Error al obtener URL de subida");
+        return;
+      }
+      const putRes = await fetch(json.signedUrl, {
+        method: "PUT",
+        headers: { "Content-Type": file.type || "application/octet-stream" },
+        body: file,
+      });
+      if (!putRes.ok) {
+        setUploadError("Error al subir archivo al storage");
+        return;
+      }
+      setUploadSuccess(true);
+      setTimeout(() => setUploadSuccess(false), 4000);
+      await fetchData();
+    } catch {
+      setUploadError("Error de conexión al subir archivo");
+    } finally {
+      setUploading(false);
+      e.target.value = "";
+    }
+  };
+
+  const formatBytes = (bytes: number | null) => {
+    if (!bytes) return "—";
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  };
 
   if (loading) {
     return (
@@ -267,6 +366,17 @@ export default function IKingdomProjectDetailPage() {
           </div>
         </div>
 
+        {/* Stage change error */}
+        {stageChangeError && (
+          <div
+            className="mb-4 px-4 py-3 rounded-xl text-sm font-medium flex items-center gap-2"
+            style={{ background: "#ef444420", color: "#ef4444", border: "1px solid #ef444440" }}
+          >
+            <AlertCircle className="w-4 h-4 shrink-0" />
+            {stageChangeError}
+          </div>
+        )}
+
         {/* Stage cards */}
         <div className="space-y-3">
           {WEB_STAGE_KEYS.map((key, idx) => {
@@ -276,15 +386,21 @@ export default function IKingdomProjectDetailPage() {
             const Icon = STAGE_ICONS[key];
             const StatusIcon = style.icon;
             const isCurrent = key === project.current_stage;
+            const isClickable = key !== project.current_stage && !changingStage;
 
             return (
-              <div
+              <button
                 key={key}
-                className="rounded-xl overflow-hidden transition-all duration-200"
+                type="button"
+                disabled={!isClickable}
+                onClick={() => handleStageChange(key)}
+                className="w-full text-left rounded-xl overflow-hidden transition-all duration-200"
                 style={{
                   background: isCurrent ? `${P.surface}` : P.surface,
                   border: isCurrent ? `1px solid ${P.accent}40` : `1px solid ${P.border}`,
                   boxShadow: isCurrent ? "0 0 20px rgba(0,212,170,0.1)" : undefined,
+                  opacity: changingStage ? 0.6 : 1,
+                  cursor: isClickable ? "pointer" : "default",
                 }}
               >
                 <div className="flex items-center gap-4 p-4">
@@ -393,9 +509,104 @@ export default function IKingdomProjectDetailPage() {
                     )}
                   </div>
                 )}
-              </div>
+              </button>
             );
           })}
+        </div>
+
+        {/* File upload section */}
+        <div
+          className="mt-8 rounded-xl p-5"
+          style={{ background: P.surface, border: `1px solid ${P.border}` }}
+        >
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-sm font-bold">Archivos del Proyecto</h3>
+            <label
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold transition-colors"
+              style={{
+                background: uploading ? P.surface3 : P.accent,
+                color: uploading ? P.textMuted : "#000",
+                cursor: uploading ? "not-allowed" : "pointer",
+              }}
+            >
+              {uploading ? (
+                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              ) : (
+                <Upload className="w-3.5 h-3.5" />
+              )}
+              {uploading ? "Subiendo..." : "Subir Archivo"}
+              <input
+                type="file"
+                accept={ALLOWED_FILE_TYPES}
+                onChange={handleFileUpload}
+                disabled={uploading}
+                className="hidden"
+              />
+            </label>
+          </div>
+
+          {uploadError && (
+            <div
+              className="mb-3 px-3 py-2 rounded-lg text-xs font-medium flex items-center gap-2"
+              style={{ background: "#ef444420", color: "#ef4444", border: "1px solid #ef444440" }}
+            >
+              <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+              {uploadError}
+            </div>
+          )}
+
+          {uploadSuccess && (
+            <div
+              className="mb-3 px-3 py-2 rounded-lg text-xs font-medium flex items-center gap-2"
+              style={{ background: "#00d4aa20", color: "#00d4aa", border: "1px solid #00d4aa40" }}
+            >
+              <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
+              Archivo subido correctamente
+            </div>
+          )}
+
+          {files.length === 0 ? (
+            <p className="text-xs" style={{ color: P.textSubtle }}>
+              No hay archivos subidos aún.
+            </p>
+          ) : (
+            <div className="space-y-2">
+              {files.map((f) => (
+                <div
+                  key={f.id}
+                  className="flex items-center gap-3 px-3 py-2.5 rounded-lg"
+                  style={{ background: P.surface3, border: `1px solid ${P.border}` }}
+                >
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-medium truncate">{f.file_name}</p>
+                    <div className="flex items-center gap-3 mt-0.5">
+                      <span className="text-[10px]" style={{ color: P.textSubtle }}>
+                        {formatBytes(f.size_bytes)}
+                      </span>
+                      {f.stage_key && (
+                        <span className="text-[10px]" style={{ color: P.accent }}>
+                          {WEB_STAGE_LABELS[f.stage_key as WebStageKey] ?? f.stage_key}
+                        </span>
+                      )}
+                      <span className="text-[10px]" style={{ color: P.textSubtle }}>
+                        {new Date(f.created_at).toLocaleDateString("es-ES", {
+                          day: "2-digit",
+                          month: "short",
+                          year: "numeric",
+                        })}
+                      </span>
+                    </div>
+                  </div>
+                  <span
+                    className="text-[10px] px-2 py-0.5 rounded-full font-medium shrink-0"
+                    style={{ background: P.surface, color: P.textMuted, border: `1px solid ${P.border}` }}
+                  >
+                    .{f.file_type}
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Project meta */}
