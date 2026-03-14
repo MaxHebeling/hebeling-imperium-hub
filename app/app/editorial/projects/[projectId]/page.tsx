@@ -21,6 +21,13 @@ import {
   Download,
   Ruler,
   BookCopy,
+  ChevronDown,
+  ChevronRight,
+  Star,
+  Lightbulb,
+  ShieldAlert,
+  TrendingUp,
+  Eye,
 } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -42,6 +49,7 @@ import type {
   EditorialStage,
   EditorialFile,
   EditorialExport,
+  EditorialJob,
   EditorialStageKey,
   EditorialStageStatus,
 } from "@/lib/editorial/types/editorial";
@@ -64,11 +72,22 @@ import type {
   KdpCoverDimensions,
 } from "@/lib/editorial/kdp";
 
+interface AiAnalysisResult {
+  summary: string;
+  score: number | null;
+  strengths: string[];
+  improvements: string[];
+  issues: { type: "error" | "warning" | "suggestion"; description: string; location: string | null; suggestion: string | null }[];
+  recommendations: string[];
+  metadata: Record<string, unknown> | null;
+}
+
 interface ProgressData {
   project: Pick<EditorialProject, "id" | "title" | "author_name" | "current_stage" | "status" | "progress_percent"> & { client_id?: string | null };
   stages: EditorialStage[];
   files: EditorialFile[];
   exports: EditorialExport[];
+  jobs: EditorialJob[];
 }
 
 const ALLOWED_FILE_TYPES = ".pdf,.docx,.doc,.epub,.txt";
@@ -150,6 +169,75 @@ export default function EditorialProjectDetailPage() {
   const [changingStage, setChangingStage] = useState(false);
   const [stageChangeError, setStageChangeError] = useState<string | null>(null);
 
+  // Expanded stage detail state
+  const [expandedStages, setExpandedStages] = useState<Set<string>>(new Set());
+  function toggleStageExpand(key: string) {
+    setExpandedStages((prev) => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next;
+    });
+  }
+
+  // Prompt editor state
+  const [promptEditorOpen, setPromptEditorOpen] = useState(false);
+  const [promptEditorStage, setPromptEditorStage] = useState<string>("");
+  const [promptEditorTask, setPromptEditorTask] = useState<string>("");
+  const [promptSystem, setPromptSystem] = useState("");
+  const [promptUser, setPromptUser] = useState("");
+  const [promptSaving, setPromptSaving] = useState(false);
+  const [promptSaveResult, setPromptSaveResult] = useState<{ success: boolean; message: string } | null>(null);
+  const [promptLoading, setPromptLoading] = useState(false);
+
+  async function openPromptEditor(stageKey: string) {
+    setPromptEditorStage(stageKey);
+    setPromptEditorTask("");
+    setPromptSystem("");
+    setPromptUser("");
+    setPromptSaveResult(null);
+    setPromptLoading(true);
+    setPromptEditorOpen(true);
+    try {
+      const res = await fetch(`/api/editorial/prompts?stageKey=${stageKey}`);
+      const json = await res.json();
+      if (json.success && json.prompts.length > 0) {
+        const first = json.prompts[0];
+        setPromptEditorTask(first.taskKey);
+        setPromptSystem(first.systemPrompt);
+        setPromptUser(first.userPromptTemplate);
+      }
+    } catch { /* ignore */ }
+    setPromptLoading(false);
+  }
+
+  async function handleSavePrompt() {
+    if (!promptEditorStage || !promptEditorTask) return;
+    setPromptSaving(true);
+    setPromptSaveResult(null);
+    try {
+      const res = await fetch("/api/editorial/prompts", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          stageKey: promptEditorStage,
+          taskKey: promptEditorTask,
+          systemPrompt: promptSystem,
+          userPromptTemplate: promptUser,
+        }),
+      });
+      const json = await res.json();
+      if (json.success) {
+        setPromptSaveResult({ success: true, message: "Prompt guardado correctamente" });
+      } else {
+        setPromptSaveResult({ success: false, message: json.error ?? "Error al guardar" });
+      }
+    } catch {
+      setPromptSaveResult({ success: false, message: "Error de conexión" });
+    }
+    setPromptSaving(false);
+  }
+
   // KDP format configurator state
   const [kdpTrimSizeId, setKdpTrimSizeId] = useState("6x9");
   const [kdpPaperType, setKdpPaperType] = useState<KdpPaperType>("cream");
@@ -173,6 +261,7 @@ export default function EditorialProjectDetailPage() {
           stages: json.stages,
           files: json.files,
           exports: json.exports,
+          jobs: json.jobs ?? [],
         });
       } else {
         setError(json.error ?? "Error al cargar el proyecto");
@@ -376,10 +465,27 @@ export default function EditorialProjectDetailPage() {
     );
   }
 
-  const { project, stages, files, exports: projectExports } = data;
+  const { project, stages, files, exports: projectExports, jobs } = data;
 
   // Build a stage map for quick lookup
   const stageMap = new Map(stages.map((s) => [s.stage_key, s]));
+
+  // Build a map of AI job results per stage_key (latest job per stage)
+  const stageJobMap = new Map<string, AiAnalysisResult>();
+  const stageJobStatusMap = new Map<string, EditorialJob>();
+  for (const job of jobs) {
+    if (job.stage_key) {
+      stageJobStatusMap.set(job.stage_key, job);
+      if (job.status === "succeeded" && job.output_ref) {
+        try {
+          const parsed = typeof job.output_ref === "string" ? JSON.parse(job.output_ref) : job.output_ref;
+          if (parsed && typeof parsed === "object" && "summary" in parsed) {
+            stageJobMap.set(job.stage_key, parsed as AiAnalysisResult);
+          }
+        } catch { /* ignore parse errors */ }
+      }
+    }
+  }
 
   return (
     <div className="flex flex-col gap-6 p-6 max-w-5xl mx-auto">
@@ -482,7 +588,7 @@ export default function EditorialProjectDetailPage() {
       >
         <div className="px-5 py-4" style={{ borderBottom: "1px solid var(--re-border)" }}>
           <h2 className="text-sm font-semibold" style={{ color: "var(--re-text)" }}>Pipeline Editorial</h2>
-          <p className="text-xs mt-0.5" style={{ color: "var(--re-text-muted)" }}>Haz clic en cualquier etapa para mover el proyecto a esa fase.</p>
+          <p className="text-xs mt-0.5" style={{ color: "var(--re-text-muted)" }}>Haz clic en el ojo para ver el análisis IA de cada etapa. Haz clic en la etapa para mover el proyecto.</p>
         </div>
         {stageChangeError && (
           <div className="px-5 py-2 text-xs" style={{ color: "var(--re-danger, #ef4444)", background: "#ef444410" }}>
@@ -497,90 +603,286 @@ export default function EditorialProjectDetailPage() {
             const targetProgress = EDITORIAL_STAGE_PROGRESS[key];
             const isCompleted = status === "completed" || status === "approved";
             const canNavigate = !isCurrentStage && !changingStage;
+            const aiResult = stageJobMap.get(key);
+            const aiJob = stageJobStatusMap.get(key);
+            const isExpanded = expandedStages.has(key);
+            const hasAiData = !!aiResult;
 
             return (
-              <button
-                key={key}
-                type="button"
-                disabled={isCurrentStage || changingStage}
-                onClick={() => canNavigate && handleStageChange(key)}
-                className="flex items-start gap-4 px-5 py-4 transition-colors w-full text-left group"
-                style={{
-                  background: isCurrentStage ? "#1B40C010" : "transparent",
-                  borderLeft: isCurrentStage ? "3px solid var(--re-blue-light)" : "3px solid transparent",
-                  cursor: canNavigate ? "pointer" : isCurrentStage ? "default" : "wait",
-                  opacity: changingStage && !isCurrentStage ? 0.6 : 1,
-                }}
-              >
-                {/* Step number */}
+              <div key={key}>
                 <div
-                  className="flex items-center justify-center w-7 h-7 rounded-full text-xs font-bold shrink-0 mt-0.5 transition-transform group-hover:scale-110"
+                  className="flex items-start gap-4 px-5 py-4 transition-colors w-full text-left group"
                   style={{
-                    background: isCompleted ? "#22d3a020" : isCurrentStage ? "#1B40C030" : "var(--re-surface-3)",
-                    color: isCompleted ? "var(--re-success)" : isCurrentStage ? "var(--re-blue-light)" : "var(--re-text-subtle)",
+                    background: isCurrentStage ? "#1B40C010" : "transparent",
+                    borderLeft: isCurrentStage ? "3px solid var(--re-blue-light)" : "3px solid transparent",
                   }}
                 >
-                  {changingStage && isCurrentStage ? (
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                  ) : isCompleted ? (
-                    <CheckCircle2 className="w-4 h-4" />
-                  ) : (
-                    index + 1
-                  )}
-                </div>
-
-                {/* Stage info */}
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className="font-medium text-sm" style={{ color: "var(--re-text)" }}>
-                      {EDITORIAL_STAGE_LABELS[key]}
-                    </span>
-                    {isCurrentStage && (
-                      <span
-                        className="px-1.5 py-0.5 rounded text-xs font-semibold"
-                        style={{ background: "#1B40C030", color: "var(--re-blue-light)" }}
-                      >
-                        Actual
-                      </span>
-                    )}
-                    {canNavigate && (
-                      <span
-                        className="px-1.5 py-0.5 rounded text-xs font-medium opacity-0 group-hover:opacity-100 transition-opacity"
-                        style={{ background: "var(--re-surface-3)", color: "var(--re-text-muted)" }}
-                      >
-                        {EDITORIAL_STAGE_KEYS.indexOf(key) < EDITORIAL_STAGE_KEYS.indexOf(project.current_stage as EditorialStageKey) ? "Regresar aqui" : "Avanzar aqui"}
-                      </span>
+                  {/* Step number */}
+                  <div
+                    className="flex items-center justify-center w-7 h-7 rounded-full text-xs font-bold shrink-0 mt-0.5 transition-transform group-hover:scale-110 cursor-pointer"
+                    style={{
+                      background: isCompleted ? "#22d3a020" : isCurrentStage ? "#1B40C030" : "var(--re-surface-3)",
+                      color: isCompleted ? "var(--re-success)" : isCurrentStage ? "var(--re-blue-light)" : "var(--re-text-subtle)",
+                    }}
+                    onClick={() => canNavigate && handleStageChange(key)}
+                  >
+                    {changingStage && isCurrentStage ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : isCompleted ? (
+                      <CheckCircle2 className="w-4 h-4" />
+                    ) : (
+                      index + 1
                     )}
                   </div>
-                  <div className="flex items-center gap-2">
-                    {STATUS_ICONS[status]}
-                    <span
-                      className="text-xs font-medium px-2 py-0.5 rounded-full"
-                      style={{
-                        background: isCompleted ? "#22d3a015" : status === "processing" ? "#1B40C020" : "var(--re-surface-3)",
-                        color: isCompleted ? "var(--re-success)" : status === "processing" ? "var(--re-blue-light)" : "var(--re-text-muted)",
-                      }}
-                    >
-                      {STATUS_LABELS[status]}
+
+                  {/* Stage info */}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-1">
+                      <span
+                        className="font-medium text-sm cursor-pointer"
+                        style={{ color: "var(--re-text)" }}
+                        onClick={() => canNavigate && handleStageChange(key)}
+                      >
+                        {EDITORIAL_STAGE_LABELS[key]}
+                      </span>
+                      {isCurrentStage && (
+                        <span
+                          className="px-1.5 py-0.5 rounded text-xs font-semibold"
+                          style={{ background: "#1B40C030", color: "var(--re-blue-light)" }}
+                        >
+                          Actual
+                        </span>
+                      )}
+                      {hasAiData && aiResult.score !== null && (
+                        <span
+                          className="px-1.5 py-0.5 rounded text-xs font-semibold flex items-center gap-1"
+                          style={{ background: "#F5C84215", color: "var(--re-gold, #F5C842)", border: "1px solid #F5C84230" }}
+                        >
+                          <Star className="w-3 h-3" /> {aiResult.score}/10
+                        </span>
+                      )}
+                      {canNavigate && (
+                        <span
+                          className="px-1.5 py-0.5 rounded text-xs font-medium opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+                          style={{ background: "var(--re-surface-3)", color: "var(--re-text-muted)" }}
+                          onClick={() => handleStageChange(key)}
+                        >
+                          {EDITORIAL_STAGE_KEYS.indexOf(key) < EDITORIAL_STAGE_KEYS.indexOf(project.current_stage as EditorialStageKey) ? "Regresar aquí" : "Avanzar aquí"}
+                        </span>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {STATUS_ICONS[status]}
+                      <span
+                        className="text-xs font-medium px-2 py-0.5 rounded-full"
+                        style={{
+                          background: isCompleted ? "#22d3a015" : status === "processing" ? "#1B40C020" : "var(--re-surface-3)",
+                          color: isCompleted ? "var(--re-success)" : status === "processing" ? "var(--re-blue-light)" : "var(--re-text-muted)",
+                        }}
+                      >
+                        {STATUS_LABELS[status]}
+                      </span>
+                      {hasAiData && (
+                        <span className="text-xs" style={{ color: "var(--re-text-subtle)" }}>
+                          · {aiResult.issues.length} hallazgos · {aiResult.recommendations.length} recomendaciones
+                        </span>
+                      )}
+                    </div>
+                    {stage?.started_at && (
+                      <p className="text-xs mt-1" style={{ color: "var(--re-text-subtle)" }}>
+                        Iniciado: {formatDate(stage.started_at)}
+                      </p>
+                    )}
+                    {stage?.completed_at && (
+                      <p className="text-xs" style={{ color: "var(--re-text-subtle)" }}>
+                        Completado: {formatDate(stage.completed_at)}
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Expand/view button + Progress target */}
+                  <div className="flex items-center gap-3 shrink-0">
+                    {(hasAiData || aiJob) && (
+                      <button
+                        type="button"
+                        onClick={() => toggleStageExpand(key)}
+                        className="flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-medium transition-all"
+                        style={{
+                          background: isExpanded ? "#1B40C020" : "var(--re-surface-3)",
+                          color: isExpanded ? "var(--re-blue-light)" : "var(--re-text-muted)",
+                          border: isExpanded ? "1px solid #1B40C040" : "1px solid transparent",
+                        }}
+                      >
+                        <Eye className="w-3.5 h-3.5" />
+                        {isExpanded ? <ChevronDown className="w-3 h-3" /> : <ChevronRight className="w-3 h-3" />}
+                      </button>
+                    )}
+                    <span className="text-xs" style={{ color: "var(--re-text-subtle)" }}>
+                      {targetProgress}%
                     </span>
                   </div>
-                  {stage?.started_at && (
-                    <p className="text-xs mt-1" style={{ color: "var(--re-text-subtle)" }}>
-                      Iniciado: {formatDate(stage.started_at)}
-                    </p>
-                  )}
-                  {stage?.completed_at && (
-                    <p className="text-xs" style={{ color: "var(--re-text-subtle)" }}>
-                      Completado: {formatDate(stage.completed_at)}
-                    </p>
-                  )}
                 </div>
 
-                {/* Progress target */}
-                <span className="text-xs shrink-0" style={{ color: "var(--re-text-subtle)" }}>
-                  {targetProgress}%
-                </span>
-              </button>
+                {/* Expanded AI Analysis Detail */}
+                {isExpanded && (
+                  <div
+                    className="px-5 pb-5 pt-0"
+                    style={{ background: isCurrentStage ? "#1B40C008" : "#00000008", borderLeft: isCurrentStage ? "3px solid var(--re-blue-light)" : "3px solid transparent" }}
+                  >
+                    {aiJob && !aiResult && aiJob.status === "running" && (
+                      <div className="flex items-center gap-2 py-4">
+                        <Loader2 className="w-4 h-4 animate-spin" style={{ color: "var(--re-blue-light)" }} />
+                        <span className="text-sm" style={{ color: "var(--re-text-muted)" }}>IA procesando esta etapa...</span>
+                      </div>
+                    )}
+                    {aiJob && !aiResult && aiJob.status === "failed" && (
+                      <div className="rounded-xl p-4 mt-2" style={{ background: "#ef444410", border: "1px solid #ef444430" }}>
+                        <div className="flex items-center gap-2 mb-1">
+                          <XCircle className="w-4 h-4" style={{ color: "#ef4444" }} />
+                          <span className="text-sm font-semibold" style={{ color: "#ef4444" }}>Error en el procesamiento IA</span>
+                        </div>
+                        {aiJob.error_log && (
+                          <p className="text-xs mt-1" style={{ color: "var(--re-text-muted)" }}>{aiJob.error_log}</p>
+                        )}
+                      </div>
+                    )}
+                    {aiResult && (
+                      <div className="space-y-4 mt-2">
+                        {/* Summary */}
+                        <div className="rounded-xl p-4" style={{ background: "var(--re-surface-2)", border: "1px solid var(--re-border)" }}>
+                          <h4 className="text-xs font-bold uppercase tracking-wider mb-2 flex items-center gap-1.5" style={{ color: "var(--re-blue-light)" }}>
+                            <BookOpen className="w-3.5 h-3.5" /> Resumen del Análisis
+                          </h4>
+                          <p className="text-sm leading-relaxed" style={{ color: "var(--re-text)" }}>{aiResult.summary}</p>
+                        </div>
+
+                        {/* Score + Strengths + Improvements row */}
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                          {/* Score */}
+                          {aiResult.score !== null && (
+                            <div className="rounded-xl p-4 text-center" style={{ background: "#F5C84210", border: "1px solid #F5C84230" }}>
+                              <p className="text-xs font-bold uppercase tracking-wider mb-1" style={{ color: "var(--re-gold, #F5C842)" }}>Puntuación</p>
+                              <p className="text-3xl font-black" style={{ color: "var(--re-gold, #F5C842)" }}>{aiResult.score}<span className="text-sm font-normal">/10</span></p>
+                            </div>
+                          )}
+                          {/* Strengths */}
+                          {aiResult.strengths.length > 0 && (
+                            <div className="rounded-xl p-4" style={{ background: "#22d3a010", border: "1px solid #22d3a030" }}>
+                              <p className="text-xs font-bold uppercase tracking-wider mb-2 flex items-center gap-1" style={{ color: "var(--re-success, #22d3a0)" }}>
+                                <TrendingUp className="w-3.5 h-3.5" /> Fortalezas ({aiResult.strengths.length})
+                              </p>
+                              <ul className="space-y-1">
+                                {aiResult.strengths.map((s, i) => (
+                                  <li key={i} className="text-xs flex items-start gap-1.5" style={{ color: "var(--re-text)" }}>
+                                    <span style={{ color: "var(--re-success)" }}>+</span> {s}
+                                  </li>
+                                ))}
+                              </ul>
+                            </div>
+                          )}
+                          {/* Improvements */}
+                          {aiResult.improvements.length > 0 && (
+                            <div className="rounded-xl p-4" style={{ background: "#f59e0b10", border: "1px solid #f59e0b30" }}>
+                              <p className="text-xs font-bold uppercase tracking-wider mb-2 flex items-center gap-1" style={{ color: "#f59e0b" }}>
+                                <Lightbulb className="w-3.5 h-3.5" /> Mejoras ({aiResult.improvements.length})
+                              </p>
+                              <ul className="space-y-1">
+                                {aiResult.improvements.map((imp, i) => (
+                                  <li key={i} className="text-xs flex items-start gap-1.5" style={{ color: "var(--re-text)" }}>
+                                    <span style={{ color: "#f59e0b" }}>!</span> {imp}
+                                  </li>
+                                ))}
+                              </ul>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Issues / Tracked Changes - 1x1 breakdown */}
+                        {aiResult.issues.length > 0 && (
+                          <div className="rounded-xl overflow-hidden" style={{ border: "1px solid var(--re-border)" }}>
+                            <div className="px-4 py-3" style={{ background: "var(--re-surface-2)", borderBottom: "1px solid var(--re-border)" }}>
+                              <h4 className="text-xs font-bold uppercase tracking-wider flex items-center gap-1.5" style={{ color: "var(--re-text)" }}>
+                                <ShieldAlert className="w-3.5 h-3.5" style={{ color: "#ef4444" }} />
+                                Hallazgos Detallados ({aiResult.issues.length})
+                              </h4>
+                              <p className="text-xs mt-0.5" style={{ color: "var(--re-text-muted)" }}>Cada cambio con su justificación y sugerencia de corrección</p>
+                            </div>
+                            <div className="divide-y" style={{ borderColor: "var(--re-border)" }}>
+                              {aiResult.issues.map((issue, i) => {
+                                const typeColors = {
+                                  error: { bg: "#ef444410", border: "#ef444440", text: "#ef4444", label: "Error" },
+                                  warning: { bg: "#f59e0b10", border: "#f59e0b40", text: "#f59e0b", label: "Advertencia" },
+                                  suggestion: { bg: "#3b82f610", border: "#3b82f640", text: "#3b82f6", label: "Sugerencia" },
+                                };
+                                const tc = typeColors[issue.type];
+                                return (
+                                  <div key={i} className="px-4 py-3" style={{ background: i % 2 === 0 ? "transparent" : "#00000005" }}>
+                                    <div className="flex items-start gap-3">
+                                      <span
+                                        className="px-1.5 py-0.5 rounded text-[10px] font-bold uppercase shrink-0 mt-0.5"
+                                        style={{ background: tc.bg, color: tc.text, border: `1px solid ${tc.border}` }}
+                                      >
+                                        {tc.label}
+                                      </span>
+                                      <div className="flex-1 min-w-0">
+                                        <p className="text-sm" style={{ color: "var(--re-text)" }}>{issue.description}</p>
+                                        {issue.location && (
+                                          <p className="text-xs mt-1" style={{ color: "var(--re-text-subtle)" }}>
+                                            <span className="font-medium">Ubicación:</span> {issue.location}
+                                          </p>
+                                        )}
+                                        {issue.suggestion && (
+                                          <div className="mt-2 rounded-lg px-3 py-2" style={{ background: "#22d3a008", border: "1px solid #22d3a020" }}>
+                                            <p className="text-xs font-semibold mb-0.5" style={{ color: "var(--re-success, #22d3a0)" }}>Corrección sugerida:</p>
+                                            <p className="text-xs" style={{ color: "var(--re-text)" }}>{issue.suggestion}</p>
+                                          </div>
+                                        )}
+                                      </div>
+                                    </div>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Recommendations */}
+                        {aiResult.recommendations.length > 0 && (
+                          <div className="rounded-xl p-4" style={{ background: "#1B40C008", border: "1px solid #1B40C030" }}>
+                            <h4 className="text-xs font-bold uppercase tracking-wider mb-2 flex items-center gap-1.5" style={{ color: "var(--re-blue-light)" }}>
+                              <Lightbulb className="w-3.5 h-3.5" /> Recomendaciones ({aiResult.recommendations.length})
+                            </h4>
+                            <ul className="space-y-1.5">
+                              {aiResult.recommendations.map((rec, i) => (
+                                <li key={i} className="text-xs flex items-start gap-2" style={{ color: "var(--re-text)" }}>
+                                  <span className="font-bold" style={{ color: "var(--re-blue-light)" }}>{i + 1}.</span> {rec}
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Edit Prompt button - always visible in expanded view */}
+                    <div className="mt-3 flex justify-end">
+                      <button
+                        type="button"
+                        onClick={() => openPromptEditor(key)}
+                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all"
+                        style={{
+                          background: "var(--re-surface-3)",
+                          color: "var(--re-text-muted)",
+                          border: "1px solid var(--re-border)",
+                        }}
+                      >
+                        <FileText className="w-3.5 h-3.5" />
+                        Editar Prompt IA
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
             );
           })}
         </div>
@@ -1006,6 +1308,95 @@ export default function EditorialProjectDetailPage() {
           </CardContent>
         </Card>
       )}
+
+      {/* Prompt Editor Dialog */}
+      <Dialog open={promptEditorOpen} onOpenChange={setPromptEditorOpen}>
+        <DialogContent className="sm:max-w-[700px] max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <FileText className="w-5 h-5" style={{ color: "var(--re-blue-light)" }} />
+              Editar Prompt IA — {EDITORIAL_STAGE_LABELS[promptEditorStage as EditorialStageKey] ?? promptEditorStage}
+            </DialogTitle>
+            <DialogDescription>
+              Personaliza el prompt que la IA usa para analizar el manuscrito en esta etapa. Usa {"{{content}}"} donde quieras insertar el texto del manuscrito.
+            </DialogDescription>
+          </DialogHeader>
+          {promptLoading ? (
+            <div className="flex items-center justify-center py-8">
+              <Loader2 className="w-5 h-5 animate-spin" style={{ color: "var(--re-blue-light)" }} />
+            </div>
+          ) : (
+            <div className="flex flex-col gap-4 py-2">
+              <div className="flex flex-col gap-1.5">
+                <Label className="text-xs font-semibold" style={{ color: "var(--re-text-muted)" }}>
+                  Prompt de Sistema (instrucciones para la IA)
+                </Label>
+                <textarea
+                  value={promptSystem}
+                  onChange={(e) => setPromptSystem(e.target.value)}
+                  rows={4}
+                  className="w-full px-3 py-2 rounded-lg text-sm font-mono resize-y"
+                  style={{
+                    background: "var(--re-surface-2)",
+                    color: "var(--re-text)",
+                    border: "1px solid var(--re-border)",
+                  }}
+                  placeholder="Eres un editor profesional..."
+                />
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <Label className="text-xs font-semibold" style={{ color: "var(--re-text-muted)" }}>
+                  Prompt de Usuario (instrucciones específicas + {"{{content}}"})
+                </Label>
+                <textarea
+                  value={promptUser}
+                  onChange={(e) => setPromptUser(e.target.value)}
+                  rows={12}
+                  className="w-full px-3 py-2 rounded-lg text-sm font-mono resize-y"
+                  style={{
+                    background: "var(--re-surface-2)",
+                    color: "var(--re-text)",
+                    border: "1px solid var(--re-border)",
+                  }}
+                  placeholder="Analiza el siguiente manuscrito..."
+                />
+              </div>
+              {promptSaveResult && (
+                <div
+                  className="rounded-lg px-3 py-2 text-sm"
+                  style={{
+                    background: promptSaveResult.success ? "#22d3a010" : "#ef444410",
+                    color: promptSaveResult.success ? "var(--re-success, #22d3a0)" : "var(--re-danger, #ef4444)",
+                    border: promptSaveResult.success ? "1px solid #22d3a030" : "1px solid #ef444430",
+                  }}
+                >
+                  {promptSaveResult.message}
+                </div>
+              )}
+            </div>
+          )}
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setPromptEditorOpen(false)}
+            >
+              Cancelar
+            </Button>
+            <Button
+              type="button"
+              disabled={promptSaving || promptLoading}
+              onClick={handleSavePrompt}
+            >
+              {promptSaving ? (
+                <><Loader2 className="w-4 h-4 animate-spin mr-2" /> Guardando...</>
+              ) : (
+                <><CheckCheck className="w-4 h-4 mr-2" /> Guardar Prompt</>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Invite Client Dialog */}
       <Dialog open={inviteOpen} onOpenChange={setInviteOpen}>
