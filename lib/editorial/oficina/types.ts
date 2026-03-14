@@ -40,6 +40,9 @@ export type ContractLocale = "es" | "en";
 
 export type ContractJurisdiction = "usa" | "mexico" | "argentina";
 
+/** Book format for contracts */
+export type BookFormat = "print" | "ebook" | "print_and_ebook";
+
 export interface ContractData {
   id?: string;
   type: ContractType;
@@ -47,6 +50,8 @@ export interface ContractData {
   jurisdiction: ContractJurisdiction;
   client: ClientInfo;
   projectTitle: string;
+  authorName?: string;
+  bookFormat?: BookFormat;
   services: ContractService[];
   totalAmount: number;
   currency: "USD" | "MXN" | "ARS";
@@ -55,6 +60,10 @@ export interface ContractData {
   notes?: string;
   createdAt?: string;
   status?: "draft" | "sent" | "signed" | "cancelled";
+  /** Linked project ID */
+  projectId?: string;
+  /** Linked client ID from CRM */
+  clientId?: string;
 }
 
 export interface ContractService {
@@ -88,6 +97,12 @@ export interface InvoiceData {
   notes?: string;
   status: InvoiceStatus;
   createdAt?: string;
+  /** Linked project ID */
+  projectId?: string;
+  /** Linked client ID from CRM */
+  clientId?: string;
+  /** Linked contract ID */
+  contractId?: string;
 }
 
 export interface InvoiceItem {
@@ -111,6 +126,11 @@ export interface ReceiptData {
   currency: "USD" | "MXN" | "ARS";
   paymentMethod: string;
   paymentDate: string;
+  serviceDescription?: string;
   notes?: string;
   createdAt?: string;
+  /** Linked invoice ID */
+  invoiceId?: string;
+  /** Linked project ID */
+  projectId?: string;
 }

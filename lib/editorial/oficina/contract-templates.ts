@@ -127,10 +127,24 @@ export function generateContractHTML(data: ContractData): string {
   <!-- Project -->
   <div class="section">
     <div class="section-title">${t.project}</div>
-    <div class="info-block">
-      <label>${t.projectTitle}</label>
-      <p><strong>${data.projectTitle}</strong></p>
+    <div class="info-grid">
+      <div class="info-block">
+        <label>${t.projectTitle}</label>
+        <p><strong>${data.projectTitle}</strong></p>
+      </div>
+      ${data.authorName ? `
+      <div class="info-block">
+        <label>${data.locale === "es" ? "Autor" : "Author"}</label>
+        <p><strong>${data.authorName}</strong></p>
+      </div>
+      ` : ""}
     </div>
+    ${data.bookFormat ? `
+    <div class="info-block" style="margin-top:10px;">
+      <label>${data.locale === "es" ? "Formato" : "Format"}</label>
+      <p>${data.bookFormat === "print" ? (data.locale === "es" ? "Impresion" : "Print") : data.bookFormat === "ebook" ? "eBook" : (data.locale === "es" ? "Impresion + eBook" : "Print + eBook")}</p>
+    </div>
+    ` : ""}
   </div>
 
   <!-- Services -->
