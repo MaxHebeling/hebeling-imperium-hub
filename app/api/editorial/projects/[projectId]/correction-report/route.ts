@@ -48,47 +48,41 @@ export async function GET(
       }
     }
 
-    // 3. Fetch all correction suggestions (copyediting + line_editing)
-    const { data: suggestions, error: suggestionsError } = await supabase
-      .from("editorial_ai_suggestions")
-      .select("*")
-      .eq("project_id", projectId)
-      .in("task_key", ["copyediting", "line_editing"])
-      .order("severity", { ascending: true })
-      .order("created_at", { ascending: true });
-
-    if (suggestionsError) {
-      console.error("[correction-report] error fetching suggestions", {
-        projectId,
-        error: suggestionsError,
-      });
-      return NextResponse.json(
-        { success: false, error: "Error obteniendo correcciones" },
-        { status: 500 }
-      );
-    }
-
-    // If no suggestions found, also check editorial_jobs output_ref for inline results
+    // 3. Collect corrections from all available sources
     let corrections: CorrectionEntry[] = [];
 
-    if (suggestions && suggestions.length > 0) {
-      corrections = suggestions.map((s) => ({
-        id: s.id as string,
-        kind: (s.kind as string) || "gramatica",
-        severity: s.severity as "baja" | "media" | "alta",
-        confidence: (s.confidence as number) ?? 0.8,
-        original_text: (s.original_text as string) || "",
-        suggested_text: (s.suggested_text as string) || "",
-        justification: (s.justification as string) || "",
-        location: s.location as CorrectionEntry["location"],
-      }));
-    } else {
-      // Fallback: check completed jobs for output_ref with changes
+    // 3a. Try editorial_ai_suggestions table (may not exist yet)
+    try {
+      const { data: suggestions } = await supabase
+        .from("editorial_ai_suggestions")
+        .select("*")
+        .eq("project_id", projectId)
+        .order("severity", { ascending: true })
+        .order("created_at", { ascending: true });
+
+      if (suggestions && suggestions.length > 0) {
+        corrections = suggestions.map((s) => ({
+          id: s.id as string,
+          kind: (s.kind as string) || "gramatica",
+          severity: s.severity as "baja" | "media" | "alta",
+          confidence: (s.confidence as number) ?? 0.8,
+          original_text: (s.original_text as string) || "",
+          suggested_text: (s.suggested_text as string) || "",
+          justification: (s.justification as string) || "",
+          location: s.location as CorrectionEntry["location"],
+        }));
+      }
+    } catch {
+      // Table may not exist yet — continue to fallback sources
+      console.log("[correction-report] editorial_ai_suggestions table not available, using fallback");
+    }
+
+    // 3b. Also check all completed AI jobs for issues (works with all task types)
+    if (corrections.length === 0) {
       const { data: jobs } = await supabase
         .from("editorial_jobs")
         .select("id, job_type, output_ref")
         .eq("project_id", projectId)
-        .in("job_type", ["copyediting", "line_editing"])
         .eq("status", "completed")
         .order("finished_at", { ascending: false });
 
@@ -98,8 +92,11 @@ export async function GET(
             ? safeJsonParse(job.output_ref)
             : (job.output_ref as Record<string, unknown> | null);
 
-          if (output && Array.isArray(output.changes)) {
-            for (const change of output.changes) {
+          if (!output) continue;
+
+          // Handle copyediting/line_editing format (has .changes array)
+          if (Array.isArray(output.changes)) {
+            for (const change of output.changes as Record<string, unknown>[]) {
               corrections.push({
                 id: (change.id as string) || crypto.randomUUID(),
                 kind: (change.kind as string) || "gramatica",
@@ -109,6 +106,28 @@ export async function GET(
                 suggested_text: (change.suggested_text as string) || "",
                 justification: (change.justification as string) || "",
                 location: change.location as CorrectionEntry["location"],
+              });
+            }
+          }
+
+          // Handle standard AnalysisResult format (has .issues array)
+          if (Array.isArray(output.issues)) {
+            const taskLabel = (job.job_type as string) || "otro";
+            for (const issue of output.issues as Record<string, unknown>[]) {
+              const issueType = issue.type as string;
+              const severity: "baja" | "media" | "alta" =
+                issueType === "error" ? "alta" : issueType === "warning" ? "media" : "baja";
+              const kind = mapTaskToKind(taskLabel);
+
+              corrections.push({
+                id: crypto.randomUUID(),
+                kind,
+                severity,
+                confidence: 0.8,
+                original_text: (issue.description as string) || "",
+                suggested_text: (issue.suggestion as string) || "",
+                justification: (issue.location as string) || "",
+                location: null,
               });
             }
           }
@@ -126,13 +145,12 @@ export async function GET(
       );
     }
 
-    // 4. Get summary from the latest job
+    // 4. Get summary from the latest completed job (any AI task)
     let summary: string | undefined;
     const { data: latestJob } = await supabase
       .from("editorial_jobs")
       .select("output_ref")
       .eq("project_id", projectId)
-      .in("job_type", ["copyediting", "line_editing"])
       .eq("status", "completed")
       .order("finished_at", { ascending: false })
       .limit(1)
@@ -176,6 +194,22 @@ export async function GET(
     const message = error instanceof Error ? error.message : "Error interno del servidor";
     return NextResponse.json({ success: false, error: message }, { status: 500 });
   }
+}
+
+function mapTaskToKind(taskKey: string): string {
+  const map: Record<string, string> = {
+    orthotypography_review: "ortografia",
+    style_suggestions: "estilo",
+    structure_analysis: "estructura",
+    manuscript_analysis: "estructura",
+    copyediting: "gramatica",
+    line_editing: "gramatica",
+    layout_analysis: "formato",
+    redline_diff: "formato",
+    export_validation: "formato",
+    metadata_generation: "otro",
+  };
+  return map[taskKey] ?? "otro";
 }
 
 function safeJsonParse(value: string): Record<string, unknown> | null {

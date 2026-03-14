@@ -1,4 +1,5 @@
 import { generateText, Output } from "ai";
+import { anthropic } from "@ai-sdk/anthropic";
 import { z } from "zod";
 import { getAdminClient } from "@/lib/leads/helpers";
 import type { EditorialStageKey } from "@/lib/editorial/types/editorial";
@@ -72,7 +73,7 @@ export async function runCopyeditingAgent(options: {
   });
 
   const result = await generateText({
-    model: "anthropic/claude-sonnet-4-20250514",
+    model: anthropic("claude-sonnet-4-20250514"),
     system: `
 Eres un corrector de estilo y ortotipografía de una editorial cristiana.
 Debes detectar y proponer correcciones gramaticales, ortográficas y de puntuación sin cambiar el mensaje.

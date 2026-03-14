@@ -1,4 +1,5 @@
 import { generateText, Output } from "ai";
+import { anthropic } from "@ai-sdk/anthropic";
 import { z } from "zod";
 import { getAdminClient } from "@/lib/leads/helpers";
 import type { EditorialStageKey } from "@/lib/editorial/types/editorial";
@@ -75,7 +76,7 @@ export async function runLineEditingAgent(options: {
   });
 
   const result = await generateText({
-    model: "anthropic/claude-sonnet-4-20250514",
+    model: anthropic("claude-sonnet-4-20250514"),
     system: `
 Eres un editor de línea profesional de una editorial cristiana.
 Debes proponer mejoras de redacción y legibilidad, sin cambiar el mensaje doctrinal.

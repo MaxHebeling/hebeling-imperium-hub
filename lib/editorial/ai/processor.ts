@@ -1,4 +1,5 @@
 import { generateText, Output } from "ai";
+import { anthropic } from "@ai-sdk/anthropic";
 import { z } from "zod";
 import { getAdminClient } from "@/lib/leads/helpers";
 import { markAiJobStatus } from "./jobs";
@@ -229,7 +230,7 @@ export async function processAiJob(options: ProcessJobOptions): Promise<Analysis
 
     // Call AI with structured output
     const result = await generateText({
-      model: "anthropic/claude-sonnet-4-20250514",
+      model: anthropic("claude-sonnet-4-20250514"),
       system: `${system}
 
 IMPORTANTE: Debes responder con un objeto JSON valido que siga este esquema:
