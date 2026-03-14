@@ -115,14 +115,16 @@ export default async function ReinoEditorialProjectDetailPage({
             </p>
 
             {manuscriptFiles.length === 0 ? (
-              <div className="flex items-center justify-between gap-4 rounded-lg border border-dashed border-border bg-muted/30 p-4">
-                <div className="space-y-1">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 rounded-lg border border-dashed border-border bg-muted/30 p-4 overflow-hidden">
+                <div className="space-y-1 min-w-0">
                   <p className="text-sm font-medium text-foreground">No hay manuscritos aún.</p>
                   <p className="text-xs text-muted-foreground">
                     Sube el manuscrito original para crear la primera versión y habilitar el AI Review.
                   </p>
                 </div>
-                <ReinoEditorialManuscriptUpload projectId={project.id} />
+                <div className="shrink-0">
+                  <ReinoEditorialManuscriptUpload projectId={project.id} />
+                </div>
               </div>
             ) : (
               <div className="space-y-4">
