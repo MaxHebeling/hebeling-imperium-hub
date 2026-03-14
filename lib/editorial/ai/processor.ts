@@ -249,7 +249,19 @@ IMPORTANTE: Debes responder con un objeto JSON valido que siga este esquema:
       }),
     });
 
-    const analysisResult = result.object as AnalysisResult;
+    // Try structured output first, fall back to parsing text response
+    let analysisResult: AnalysisResult;
+    if (result.object) {
+      analysisResult = result.object as AnalysisResult;
+    } else {
+      // Fallback: parse the text response as JSON
+      const text = result.text?.trim() ?? "";
+      const jsonMatch = text.match(/\{[\s\S]*\}/);
+      if (!jsonMatch) {
+        throw new Error("AI no devolvió un objeto JSON válido en la respuesta.");
+      }
+      analysisResult = AnalysisResultSchema.parse(JSON.parse(jsonMatch[0]));
+    }
 
     // Mark job as succeeded (this also sets finished_at)
     await markAiJobStatus({ jobId: options.jobId, status: "succeeded" });
