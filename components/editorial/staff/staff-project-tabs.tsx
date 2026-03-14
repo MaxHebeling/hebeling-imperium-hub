@@ -1,9 +1,10 @@
 "use client";
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { FileText, MessageSquare, Users, LayoutGrid, Download, Globe, Paintbrush, Cpu } from "lucide-react";
+import { FileText, MessageSquare, Users, LayoutGrid, Download, Globe, Paintbrush, Cpu, Clock } from "lucide-react";
 import { StaffProjectSummaryTab } from "./staff-project-summary-tab";
 import { StaffPipelineTab } from "./staff-pipeline-tab";
+import { StaffTimelineControl } from "./staff-timeline-control";
 import { StaffFilesTab } from "./staff-files-tab";
 import { StaffCommentsTab } from "./staff-comments-tab";
 import { StaffAssignmentsTab } from "./staff-assignments-tab";
@@ -51,6 +52,10 @@ export function StaffProjectTabs({ detail, exports = [], distributions = [] }: S
             <Globe className="h-3.5 w-3.5 shrink-0" />
             Distribución
           </TabsTrigger>
+          <TabsTrigger value="timeline" className="gap-1.5 px-3 text-xs sm:text-sm shrink-0">
+            <Clock className="h-3.5 w-3.5 shrink-0" />
+            Timeline
+          </TabsTrigger>
           <TabsTrigger value="comentarios" className="gap-1.5 px-3 text-xs sm:text-sm shrink-0">
             <MessageSquare className="h-3.5 w-3.5 shrink-0" />
             Comentarios
@@ -84,6 +89,10 @@ export function StaffProjectTabs({ detail, exports = [], distributions = [] }: S
 
       <TabsContent value="archivos" className="mt-4">
         <StaffFilesTab files={files} projectId={project.id} />
+      </TabsContent>
+
+      <TabsContent value="timeline" className="mt-4">
+        <StaffTimelineControl projectId={project.id} />
       </TabsContent>
 
       <TabsContent value="comentarios" className="mt-4">
