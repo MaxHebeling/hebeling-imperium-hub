@@ -53,7 +53,7 @@ export default async function AppLayout({
           userName={profile.full_name || profile.email || "User"} 
           userRole={profile.role}
         />
-        <div className="flex-1 flex flex-col">
+        <div className="flex-1 flex flex-col min-w-0">
           <AppTopbar 
             organizationName={organization?.name || "Organization"}
             userName={profile.full_name || profile.email || "User"}
