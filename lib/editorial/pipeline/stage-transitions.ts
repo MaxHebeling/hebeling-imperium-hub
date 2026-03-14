@@ -22,39 +22,43 @@ export const STAGE_CONFIG: Record<
 > = {
   ingesta: {
     autoStart: true,
-    requiresReview: true,
+    requiresReview: false,
     aiTaskKey: "manuscript_analysis",
   },
   estructura: {
-    autoStart: false,
-    requiresReview: true,
+    autoStart: true,
+    requiresReview: false,
     aiTaskKey: "structure_analysis",
   },
   estilo: {
-    autoStart: false,
-    requiresReview: true,
+    autoStart: true,
+    requiresReview: false,
     aiTaskKey: "style_suggestions",
   },
   ortotipografia: {
-    autoStart: false,
-    requiresReview: true,
+    autoStart: true,
+    requiresReview: false,
     aiTaskKey: "orthotypography_review",
   },
   maquetacion: {
-    autoStart: false,
-    requiresReview: true,
+    autoStart: true,
+    requiresReview: false,
+    aiTaskKey: "layout_analysis",
   },
   revision_final: {
-    autoStart: false,
-    requiresReview: true,
+    autoStart: true,
+    requiresReview: false,
+    aiTaskKey: "redline_diff",
   },
   export: {
-    autoStart: false,
+    autoStart: true,
     requiresReview: false,
+    aiTaskKey: "export_validation",
   },
   distribution: {
-    autoStart: false,
+    autoStart: true,
     requiresReview: false,
+    aiTaskKey: "metadata_generation",
   },
 };
 

@@ -5,6 +5,7 @@ import {
   getProjectFiles,
   getProjectComments,
   getProjectExports,
+  getProjectJobs,
 } from "@/lib/editorial/db/queries";
 
 export async function GET(
@@ -14,12 +15,13 @@ export async function GET(
   try {
     const { projectId } = await params;
 
-    const [project, stages, files, comments, exports] = await Promise.all([
+    const [project, stages, files, comments, exports, jobs] = await Promise.all([
       getEditorialProject(projectId),
       getProjectStages(projectId),
       getProjectFiles(projectId),
       getProjectComments(projectId),
       getProjectExports(projectId),
+      getProjectJobs(projectId),
     ]);
 
     if (!project) {
@@ -41,6 +43,7 @@ export async function GET(
       files,
       comments,
       exports,
+      jobs,
     });
   } catch (error) {
     console.error("[editorial/progress] error:", error);

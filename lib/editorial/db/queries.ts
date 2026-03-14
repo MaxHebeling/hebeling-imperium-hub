@@ -5,6 +5,7 @@ import type {
   EditorialFile,
   EditorialComment,
   EditorialExport,
+  EditorialJob,
   EditorialActivityLogEntry,
 } from "../types/editorial";
 
@@ -104,6 +105,18 @@ export async function getProjectExports(projectId: string): Promise<EditorialExp
     .order("created_at", { ascending: false });
   if (error) return [];
   return (data ?? []) as EditorialExport[];
+}
+
+/** All AI jobs for a project, ordered by creation date. */
+export async function getProjectJobs(projectId: string): Promise<EditorialJob[]> {
+  const supabase = getAdminClient();
+  const { data, error } = await supabase
+    .from("editorial_jobs")
+    .select("*")
+    .eq("project_id", projectId)
+    .order("created_at", { ascending: true });
+  if (error) return [];
+  return (data ?? []) as EditorialJob[];
 }
 
 // ---------------------------------------------------------------------------

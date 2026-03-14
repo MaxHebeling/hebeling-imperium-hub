@@ -211,6 +211,70 @@ MANUSCRITO:
 {{content}}`,
   },
 
+  {
+    taskKey: "typography_check",
+    stageKey: "maquetacion",
+    systemPrompt: `Eres un tipografo profesional especializado en diseno de libros.
+Tu trabajo es revisar y recomendar aspectos tipograficos.
+Responde siempre en espanol.`,
+    userPromptTemplate: `Revisa los aspectos tipograficos del siguiente manuscrito:
+
+1. **Tipografias Recomendadas**
+   - Familia tipografica para cuerpo de texto
+   - Familia tipografica para titulos y encabezados
+   - Tamano base recomendado
+   - Interlineado optimo
+
+2. **Jerarquia Tipografica**
+   - Niveles de encabezados detectados
+   - Consistencia en el uso de negritas/cursivas
+   - Uso de versalitas y mayusculas
+
+3. **Problemas Tipograficos**
+   - Lineas viudas y huerfanas potenciales
+   - Guiones y separacion de palabras
+   - Espaciado entre caracteres y palabras
+
+4. **Recomendaciones de Produccion**
+   - Formato de pagina recomendado
+   - Tipo de encuadernacion sugerido
+
+MANUSCRITO:
+{{content}}`,
+  },
+  {
+    taskKey: "page_flow_review",
+    stageKey: "maquetacion",
+    systemPrompt: `Eres un diagramador editorial experto en flujo de paginas.
+Tu trabajo es analizar como fluye el contenido pagina a pagina.
+Responde siempre en espanol.`,
+    userPromptTemplate: `Analiza el flujo de paginas del siguiente manuscrito:
+
+1. **Estructura de Paginas**
+   - Paginas preliminares necesarias (portadilla, portada, creditos, dedicatoria, indice)
+   - Inicio de capitulos (pagina impar recomendado)
+   - Paginas en blanco necesarias
+
+2. **Saltos y Transiciones**
+   - Donde deben ir los saltos de pagina
+   - Secciones que requieren paginas completas
+   - Transiciones entre capitulos
+
+3. **Elementos Especiales**
+   - Citas destacadas o epigrafes
+   - Ilustraciones o tablas
+   - Notas al pie vs notas al final
+   - Apendices
+
+4. **Estimacion Final**
+   - Total de paginas estimadas
+   - Distribucion: preliminares / contenido / finales
+   - Cuadernillos necesarios para impresion
+
+MANUSCRITO:
+{{content}}`,
+  },
+
   // REVISION FINAL
   {
     taskKey: "redline_diff",

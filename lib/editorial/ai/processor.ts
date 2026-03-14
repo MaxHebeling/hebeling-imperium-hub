@@ -8,6 +8,9 @@ import type { EditorialStageKey } from "@/lib/editorial/types/editorial";
 import { runLineEditingAgent } from "./line-editing";
 import { runCopyeditingAgent } from "./copyediting";
 import { saveSuggestionsFromLineEditing, saveSuggestionsFromCopyediting } from "./suggestions";
+import { getNextStage } from "@/lib/editorial/pipeline/stage-utils";
+import { initializeNextStage } from "@/lib/editorial/pipeline/stage-transitions";
+import { logWorkflowEvent } from "@/lib/editorial/workflow-events";
 
 // Schema for structured AI output
 const AnalysisResultSchema = z.object({
@@ -98,6 +101,36 @@ async function fetchManuscriptContent(projectId: string, fileId?: string | null)
 }
 
 /**
+ * Fetch a custom prompt override from the database (if it exists).
+ */
+async function fetchCustomPrompt(
+  stageKey: EditorialStageKey,
+  taskKey: EditorialAiTaskKey
+): Promise<{ taskKey: EditorialAiTaskKey; stageKey: EditorialStageKey; systemPrompt: string; userPromptTemplate: string } | null> {
+  try {
+    const supabase = getAdminClient();
+    const { data, error } = await supabase
+      .from("editorial_custom_prompts")
+      .select("system_prompt, user_prompt_template")
+      .eq("stage_key", stageKey)
+      .eq("task_key", taskKey)
+      .maybeSingle();
+
+    if (error || !data) return null;
+
+    return {
+      taskKey,
+      stageKey,
+      systemPrompt: data.system_prompt,
+      userPromptTemplate: data.user_prompt_template,
+    };
+  } catch {
+    // Table may not exist yet — silently fall back to default
+    return null;
+  }
+}
+
+/**
  * Process a single AI job
  */
 export async function processAiJob(options: ProcessJobOptions): Promise<AnalysisResult | null> {
@@ -169,12 +202,15 @@ export async function processAiJob(options: ProcessJobOptions): Promise<Analysis
       return null;
     }
 
-    // Get default prompt for classic manuscript_analysis and similar tasks
+    // Get prompt: check for custom override first, then fall back to default
+    const customPrompt = await fetchCustomPrompt(options.stageKey, options.taskKey);
     const defaultPrompt = getDefaultPrompt(options.stageKey, options.taskKey);
     
-    if (!defaultPrompt) {
+    if (!customPrompt && !defaultPrompt) {
       throw new Error(`No hay prompt definido para ${options.stageKey}/${options.taskKey}`);
     }
+
+    const activePrompt = customPrompt ?? defaultPrompt!;
 
     // Fetch manuscript content
     const manuscriptContent = await fetchManuscriptContent(
@@ -189,7 +225,7 @@ export async function processAiJob(options: ProcessJobOptions): Promise<Analysis
       : manuscriptContent;
 
     // Build the prompt
-    const { system, user } = buildPromptFromDefault(defaultPrompt, truncatedContent);
+    const { system, user } = buildPromptFromDefault(activePrompt, truncatedContent);
 
     // Call AI with structured output
     const result = await generateText({
@@ -225,15 +261,19 @@ IMPORTANTE: Debes responder con un objeto JSON valido que siga este esquema:
       })
       .eq("id", options.jobId);
 
-    // Also save to stage status (ai_summary)
+    // Save AI summary to stage
     await supabase
       .from("editorial_stages")
       .update({
         ai_summary: analysisResult.summary,
-        status: "review_required",
+        status: "completed",
+        completed_at: new Date().toISOString(),
       })
       .eq("project_id", options.projectId)
       .eq("stage_key", options.stageKey);
+
+    // Auto-advance: complete this stage and initialize the next one
+    await autoAdvanceToNextStage(options.projectId, options.stageKey);
 
     return analysisResult;
   } catch (error) {
@@ -246,6 +286,85 @@ IMPORTANTE: Debes responder con un objeto JSON valido que siga este esquema:
     });
 
     throw error;
+  }
+}
+
+/**
+ * Auto-advance the pipeline: after AI completes a stage, move to the next one.
+ * This creates a chain where each stage's AI completion triggers the next stage.
+ */
+async function autoAdvanceToNextStage(
+  projectId: string,
+  completedStageKey: EditorialStageKey
+): Promise<void> {
+  const supabase = getAdminClient();
+  const nextStageKey = getNextStage(completedStageKey);
+
+  if (!nextStageKey) {
+    // Last stage (distribution) completed — mark project as finished
+    await supabase
+      .from("editorial_projects")
+      .update({
+        status: "completed",
+        current_stage: completedStageKey,
+      })
+      .eq("id", projectId);
+
+    const { data: project } = await supabase
+      .from("editorial_projects")
+      .select("org_id")
+      .eq("id", projectId)
+      .single();
+
+    if (project) {
+      await logWorkflowEvent({
+        orgId: project.org_id,
+        projectId,
+        stageKey: completedStageKey,
+        eventType: "stage_completed",
+        actorId: "system",
+        payload: { autoAdvanced: true, pipelineCompleted: true },
+      });
+    }
+
+    console.log(`[AI Processor] Pipeline completed for project ${projectId}`);
+    return;
+  }
+
+  // Update project's current_stage pointer
+  await supabase
+    .from("editorial_projects")
+    .update({ current_stage: nextStageKey })
+    .eq("id", projectId);
+
+  const { data: project } = await supabase
+    .from("editorial_projects")
+    .select("org_id")
+    .eq("id", projectId)
+    .single();
+
+  if (project) {
+    await logWorkflowEvent({
+      orgId: project.org_id,
+      projectId,
+      stageKey: completedStageKey,
+      eventType: "stage_completed",
+      actorId: "system",
+      payload: { autoAdvanced: true, nextStage: nextStageKey },
+    });
+  }
+
+  // Initialize the next stage (this will auto-trigger its AI task)
+  try {
+    await initializeNextStage({
+      projectId,
+      stageKey: nextStageKey,
+      actorId: "system",
+    });
+
+    console.log(`[AI Processor] Auto-advanced ${completedStageKey} → ${nextStageKey} for project ${projectId}`);
+  } catch (err) {
+    console.error(`[AI Processor] Failed to auto-advance to ${nextStageKey}:`, err);
   }
 }
 
