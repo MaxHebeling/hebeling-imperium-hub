@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ScrollArea } from "@/components/ui/scroll-area";
+
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import {
   Brain,
@@ -231,18 +231,16 @@ function JobResultCard({ job, onRetry }: { job: AiJob; onRetry: () => void }) {
                     <h4 className="text-sm font-semibold mb-2">
                       Problemas Detectados ({job.result.issues?.length ?? 0})
                     </h4>
-                    <ScrollArea className="max-h-60">
-                      <div className="space-y-2">
-                        {job.result.issues?.slice(0, 20).map((issue: AnalysisIssue, i: number) => (
-                          <IssueItem key={i} issue={issue} />
-                        ))}
-                        {(job.result.issues?.length ?? 0) > 20 && (
-                          <p className="text-xs text-muted-foreground text-center py-2">
-                            ... y {(job.result.issues?.length ?? 0) - 20} problemas mas
-                          </p>
-                        )}
-                      </div>
-                    </ScrollArea>
+                    <div className="max-h-60 overflow-y-auto space-y-2 pr-1">
+                      {job.result.issues?.slice(0, 20).map((issue: AnalysisIssue, i: number) => (
+                        <IssueItem key={i} issue={issue} />
+                      ))}
+                      {(job.result.issues?.length ?? 0) > 20 && (
+                        <p className="text-xs text-muted-foreground text-center py-2">
+                          ... y {(job.result.issues?.length ?? 0) - 20} problemas mas
+                        </p>
+                      )}
+                    </div>
                   </div>
                 )}
 
