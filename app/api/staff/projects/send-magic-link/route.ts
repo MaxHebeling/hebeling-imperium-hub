@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { requireStaff } from "@/lib/auth/staff";
-import { createClient } from "@supabase/supabase-js";
+import { createClient as createAdminClient } from "@supabase/supabase-js";
 
 /**
  * POST /api/staff/projects/send-magic-link
@@ -39,27 +39,12 @@ export async function POST(request: Request) {
       );
     }
 
-    const adminSupabase = createClient(supabaseUrl, serviceRoleKey);
+    const adminSupabase = createAdminClient(supabaseUrl, serviceRoleKey);
 
-    // Anon client with implicit flow (no PKCE) so the magic link works.
-    // PKCE fails because the code verifier is created server-side and lost
-    // before the client clicks the link. Implicit flow avoids this entirely.
-    const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-    const anonSupabase = anonKey
-      ? createClient(supabaseUrl, anonKey, {
-          auth: { flowType: "implicit" },
-        })
-      : null;
-
-    // Determine the redirect URL – send client directly to their project if available
-    // Always use the canonical production URL so Supabase redirect allowlist matches
-    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://www.hebeling.io";
-    const portalPath = projectId
-      ? `/portal/editorial/projects/${projectId}`
-      : "/portal/editorial/projects";
-    // Use /auth/magic-callback (a client-side page) that reads hash-fragment
-    // tokens from the implicit flow and establishes the session in the browser.
-    const redirectTo = `${siteUrl}/auth/magic-callback?next=${encodeURIComponent(portalPath)}`;
+    // Determine the redirect URL
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL
+      || (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "http://localhost:3000");
+    const redirectTo = `${siteUrl}/auth/callback?next=/portal/editorial/projects`;
 
     // Check if user already exists in profiles
     const { data: existingProfiles } = await adminSupabase
@@ -81,33 +66,18 @@ export async function POST(request: Request) {
           .eq("id", userId);
       }
 
-      // Send magic link for existing users
-      // Use signInWithOtp (anon client) which actually sends the email.
-      // admin.generateLink only generates the link without sending it.
-      if (anonSupabase) {
-        const { error: otpError } = await anonSupabase.auth.signInWithOtp({
-          email,
-          options: { emailRedirectTo: redirectTo },
-        });
-        if (otpError) {
-          return NextResponse.json(
-            { success: false, error: `Error enviando link: ${otpError.message}` },
-            { status: 500 }
-          );
-        }
-      } else {
-        // Fallback: use admin generateLink (won't send email but at least won't crash)
-        const { error: linkError } = await adminSupabase.auth.admin.generateLink({
-          type: "magiclink",
-          email,
-          options: { redirectTo },
-        });
-        if (linkError) {
-          return NextResponse.json(
-            { success: false, error: `Error enviando link: ${linkError.message}` },
-            { status: 500 }
-          );
-        }
+      // Send magic link for existing users (they already have a password)
+      const { error: linkError } = await adminSupabase.auth.admin.generateLink({
+        type: "magiclink",
+        email,
+        options: { redirectTo },
+      });
+
+      if (linkError) {
+        return NextResponse.json(
+          { success: false, error: `Error enviando link: ${linkError.message}` },
+          { status: 500 }
+        );
       }
     } else {
       // New user - invite them so they set their own password
@@ -138,18 +108,11 @@ export async function POST(request: Request) {
               org_id: "reino-editorial",
             });
             // Send magic link since they already have an account
-            if (anonSupabase) {
-              await anonSupabase.auth.signInWithOtp({
-                email,
-                options: { emailRedirectTo: redirectTo },
-              });
-            } else {
-              await adminSupabase.auth.admin.generateLink({
-                type: "magiclink",
-                email,
-                options: { redirectTo },
-              });
-            }
+            await adminSupabase.auth.admin.generateLink({
+              type: "magiclink",
+              email,
+              options: { redirectTo },
+            });
           } else {
             return NextResponse.json(
               { success: false, error: "Error: usuario registrado pero no encontrado" },
