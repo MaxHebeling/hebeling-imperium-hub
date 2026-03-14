@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAdminClient } from "@/lib/leads/helpers";
-import { processAiJob } from "@/lib/editorial/ai/processor";
+import { processAiJob, fetchManuscriptContent } from "@/lib/editorial/ai/processor";
 import { requestStageAiAssist } from "@/lib/editorial/ai/stage-assist";
+import { logWorkflowEvent } from "@/lib/editorial/workflow-events";
 import type { EditorialStageKey } from "@/lib/editorial/types/editorial";
 import type { EditorialAiTaskKey } from "@/lib/editorial/types/ai";
 import type { EditorialAiJobContext } from "@/lib/editorial/types/ai";
@@ -28,10 +29,15 @@ const STAGE_PRIMARY_TASK: Partial<Record<EditorialStageKey, EditorialAiTaskKey>>
   distribution: "metadata_generation",
 };
 
+/** How many AI calls to run concurrently (avoid rate-limit bursts). */
+const PARALLEL_BATCH_SIZE = 4;
+
 /**
  * POST /api/editorial/projects/[projectId]/process-all
- * Triggers processing for the current stage. The auto-advance chain
- * in processor.ts handles moving to subsequent stages automatically.
+ *
+ * Optimised pipeline: downloads the manuscript ONCE, then processes all 8
+ * stages in parallel batches.  Each stage runs independently — no more
+ * sequential recursive chain that times out on Vercel.
  */
 export async function POST(
   req: NextRequest,
@@ -41,7 +47,7 @@ export async function POST(
   const supabase = getAdminClient();
 
   try {
-    // Get project info
+    // ── 1. Validate project ──────────────────────────────────────────
     const { data: project, error: projectError } = await supabase
       .from("editorial_projects")
       .select("id, org_id, current_stage, status")
@@ -55,9 +61,7 @@ export async function POST(
       );
     }
 
-    const currentStage = project.current_stage as EditorialStageKey;
-
-    // Get the latest file
+    // ── 2. Get latest manuscript file ────────────────────────────────
     const { data: latestFile } = await supabase
       .from("editorial_files")
       .select("id, version")
@@ -73,7 +77,7 @@ export async function POST(
       );
     }
 
-    // Check if there are already running/queued jobs for this project
+    // ── 3. Check for already-running jobs ────────────────────────────
     const { data: activeJobs } = await supabase
       .from("editorial_jobs")
       .select("id, status, stage_key")
@@ -87,61 +91,140 @@ export async function POST(
       );
     }
 
-    // Determine the primary AI task for the current stage
-    const taskKey = STAGE_PRIMARY_TASK[currentStage];
-    if (!taskKey) {
+    // ── 4. Pre-fetch manuscript content ONCE ─────────────────────────
+    const manuscriptText = await fetchManuscriptContent(projectId, latestFile.id);
+
+    // ── 5. Create jobs for ALL stages up-front ───────────────────────
+    const jobEntries: {
+      stageKey: EditorialStageKey;
+      taskKey: EditorialAiTaskKey;
+      jobId: string;
+    }[] = [];
+
+    for (const stageKey of AI_STAGES) {
+      const taskKey = STAGE_PRIMARY_TASK[stageKey];
+      if (!taskKey) continue;
+
+      try {
+        // Mark stage as processing
+        await supabase
+          .from("editorial_stages")
+          .update({ status: "processing", started_at: new Date().toISOString() })
+          .eq("project_id", projectId)
+          .eq("stage_key", stageKey);
+
+        const result = await requestStageAiAssist({
+          orgId: project.org_id,
+          projectId,
+          stageKey,
+          taskKey,
+          requestedBy: "staff",
+          sourceFileId: latestFile.id,
+          sourceFileVersion: latestFile.version,
+        });
+
+        jobEntries.push({ stageKey, taskKey, jobId: result.jobId });
+      } catch (err) {
+        console.error(`[process-all] Failed to create job for ${stageKey}:`, err);
+      }
+    }
+
+    if (jobEntries.length === 0) {
       return NextResponse.json(
-        { success: false, error: `La etapa '${currentStage}' no tiene tarea AI configurada.` },
-        { status: 400 }
+        { success: false, error: "No se pudieron crear trabajos de IA." },
+        { status: 500 }
       );
     }
 
-    // Request the AI assist for the current stage - the auto-advance chain
-    // in processor.ts will handle advancing to subsequent stages
-    const result = await requestStageAiAssist({
-      orgId: project.org_id,
-      projectId,
-      stageKey: currentStage,
-      taskKey,
-      requestedBy: "staff",
-      sourceFileId: latestFile.id,
-      sourceFileVersion: latestFile.version,
+    // ── 6. Process all jobs in parallel batches (fire-and-forget) ────
+    // We don't await this — the response returns immediately while
+    // processing continues in the background.
+    const processAllInBatches = async () => {
+      let completedCount = 0;
+
+      for (let i = 0; i < jobEntries.length; i += PARALLEL_BATCH_SIZE) {
+        const batch = jobEntries.slice(i, i + PARALLEL_BATCH_SIZE);
+
+        const results = await Promise.allSettled(
+          batch.map(async (entry) => {
+            // Get the job details
+            const { data: job } = await supabase
+              .from("editorial_jobs")
+              .select("id, project_id, stage_key, job_type, input_ref")
+              .eq("id", entry.jobId)
+              .single();
+
+            if (!job) return;
+
+            const context: EditorialAiJobContext =
+              typeof job.input_ref === "string"
+                ? JSON.parse(job.input_ref)
+                : job.input_ref;
+
+            await processAiJob({
+              jobId: job.id,
+              projectId: job.project_id,
+              stageKey: job.stage_key as EditorialStageKey,
+              taskKey: job.job_type as EditorialAiTaskKey,
+              context,
+              manuscriptText,
+              skipAutoAdvance: true,
+            });
+          })
+        );
+
+        // Count successes
+        for (const r of results) {
+          if (r.status === "fulfilled") completedCount++;
+          else console.error("[process-all] Stage failed:", r.reason);
+        }
+      }
+
+      // ── 7. After all stages complete, finalize project ─────────────
+      if (completedCount === jobEntries.length) {
+        // All stages succeeded — mark project as completed
+        await supabase
+          .from("editorial_projects")
+          .update({
+            status: "completed",
+            current_stage: "distribution",
+          })
+          .eq("id", projectId);
+
+        await logWorkflowEvent({
+          orgId: project.org_id,
+          projectId,
+          stageKey: "distribution",
+          eventType: "stage_completed",
+          actorId: null,
+          actorRole: "system",
+          payload: { autoAdvanced: true, pipelineCompleted: true, parallelMode: true },
+        });
+
+        console.log(`[process-all] Pipeline completed (parallel) for project ${projectId}: ${completedCount}/${jobEntries.length}`);
+      } else {
+        // Some stages failed — advance to last completed stage
+        const lastCompleted = jobEntries[completedCount - 1]?.stageKey ?? "ingesta";
+        await supabase
+          .from("editorial_projects")
+          .update({ current_stage: lastCompleted })
+          .eq("id", projectId);
+
+        console.log(`[process-all] Pipeline partial: ${completedCount}/${jobEntries.length} for project ${projectId}`);
+      }
+    };
+
+    // Fire and forget — don't block the HTTP response
+    processAllInBatches().catch((err) => {
+      console.error("[process-all] Pipeline error:", err);
     });
-
-    // Now process the job immediately (synchronous processing triggers the chain)
-    // We process in background - the client will poll for status
-    const jobId = result.jobId;
-
-    // Get the job details to process
-    const { data: job } = await supabase
-      .from("editorial_jobs")
-      .select("id, project_id, stage_key, job_type, input_ref")
-      .eq("id", jobId)
-      .single();
-
-    if (job) {
-      // Process asynchronously - don't await, let it run in background
-      const context: EditorialAiJobContext = typeof job.input_ref === "string"
-        ? JSON.parse(job.input_ref)
-        : job.input_ref;
-
-      // Fire and forget - the chain will auto-advance
-      processAiJob({
-        jobId: job.id,
-        projectId: job.project_id,
-        stageKey: job.stage_key as EditorialStageKey,
-        taskKey: job.job_type as EditorialAiTaskKey,
-        context,
-      }).catch((err) => {
-        console.error("[process-all] Error processing job:", err);
-      });
-    }
 
     return NextResponse.json({
       success: true,
-      message: "Procesamiento completo iniciado. La IA procesara todas las etapas automaticamente.",
-      startedAt: currentStage,
-      jobId: result.jobId,
+      message: `Procesamiento paralelo iniciado: ${jobEntries.length} etapas en lotes de ${PARALLEL_BATCH_SIZE}. ~4x mas rapido.`,
+      totalStages: jobEntries.length,
+      batchSize: PARALLEL_BATCH_SIZE,
+      jobIds: jobEntries.map((e) => e.jobId),
     });
   } catch (err) {
     console.error("[process-all] Error:", err);

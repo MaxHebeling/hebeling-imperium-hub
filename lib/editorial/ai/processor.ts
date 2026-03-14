@@ -37,12 +37,17 @@ interface ProcessJobOptions {
   stageKey: EditorialStageKey;
   taskKey: EditorialAiTaskKey;
   context: EditorialAiJobContext;
+  /** Pre-fetched manuscript text — avoids re-downloading for every stage. */
+  manuscriptText?: string;
+  /** When true, skip the auto-advance chain (caller handles orchestration). */
+  skipAutoAdvance?: boolean;
 }
 
 /**
- * Fetch manuscript content from storage
+ * Fetch manuscript content from storage.
+ * Exported so callers (e.g. process-all) can pre-fetch once and share across parallel jobs.
  */
-async function fetchManuscriptContent(projectId: string, fileId?: string | null): Promise<string> {
+export async function fetchManuscriptContent(projectId: string, fileId?: string | null): Promise<string> {
   const supabase = getAdminClient();
 
   // Get the file record
@@ -213,11 +218,12 @@ export async function processAiJob(options: ProcessJobOptions): Promise<Analysis
 
     const activePrompt = customPrompt ?? defaultPrompt!;
 
-    // Fetch manuscript content
-    const manuscriptContent = await fetchManuscriptContent(
-      options.projectId,
-      options.context.source_file_id
-    );
+    // Use pre-fetched content when available, otherwise download
+    const manuscriptContent = options.manuscriptText
+      ?? await fetchManuscriptContent(
+        options.projectId,
+        options.context.source_file_id
+      );
 
     // Truncate if too long (model context limits)
     const maxChars = 100000; // ~25k tokens approximately
@@ -286,7 +292,10 @@ IMPORTANTE: Debes responder con un objeto JSON valido que siga este esquema:
       .eq("stage_key", options.stageKey);
 
     // Auto-advance: complete this stage and initialize the next one
-    await autoAdvanceToNextStage(options.projectId, options.stageKey);
+    // (skipped when the caller orchestrates stages in parallel)
+    if (!options.skipAutoAdvance) {
+      await autoAdvanceToNextStage(options.projectId, options.stageKey);
+    }
 
     return analysisResult;
   } catch (error) {
