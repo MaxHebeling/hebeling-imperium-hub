@@ -108,24 +108,62 @@ export function ReinoEditorialManuscriptUpload({
     setErrorMessage(null);
 
     try {
-      const formData = new FormData();
-      formData.append("file", selectedFile);
-      formData.append("projectId", projectId);
-      formData.append("fileType", "manuscript_original");
-
-      const response = await fetch("/api/editorial/upload-manuscript", {
+      // Step 1: Request a presigned upload URL from the server
+      const presignRes = await fetch("/api/editorial/upload-manuscript", {
         method: "POST",
-        body: formData,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "presign",
+          projectId,
+          fileName: selectedFile.name,
+          fileSize: selectedFile.size,
+          mimeType: selectedFile.type || "application/octet-stream",
+        }),
       });
 
-      if (!response.ok) {
-        const data = await response.json().catch(() => ({}));
-        throw new Error(data.error || "Error al subir el archivo");
+      if (!presignRes.ok) {
+        const data = await presignRes.json().catch(() => ({}));
+        throw new Error(data.error || "Error al preparar la subida");
       }
 
-      const result = await response.json();
+      const { signedUrl, token, storagePath, version, mimeType } =
+        await presignRes.json();
+
+      // Step 2: Upload the file directly to Supabase Storage via the signed URL
+      const uploadRes = await fetch(signedUrl, {
+        method: "PUT",
+        headers: {
+          "Content-Type": mimeType || selectedFile.type || "application/octet-stream",
+        },
+        body: selectedFile,
+      });
+
+      if (!uploadRes.ok) {
+        throw new Error("Error al subir el archivo al almacenamiento.");
+      }
+
+      // Step 3: Register the file in the database
+      const registerRes = await fetch("/api/editorial/upload-manuscript", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "register",
+          projectId,
+          storagePath,
+          mimeType: selectedFile.type || "application/octet-stream",
+          sizeBytes: selectedFile.size,
+          version,
+        }),
+      });
+
+      if (!registerRes.ok) {
+        const data = await registerRes.json().catch(() => ({}));
+        throw new Error(data.error || "Error al registrar el archivo");
+      }
+
+      const result = await registerRes.json();
       setUploadStatus("success");
-      
+
       onUploadComplete?.({
         id: result.fileId,
         path: result.path,
