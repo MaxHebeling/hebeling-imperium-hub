@@ -32,7 +32,7 @@ const AnalysisResultSchema = z.object({
     suggestion: z.string().nullable(),
   })).describe("Lista de problemas encontrados"),
   recommendations: z.array(z.string()).describe("Recomendaciones especificas"),
-  metadata: z.record(z.unknown()).nullable().describe("Metadatos adicionales especificos de la tarea"),
+  metadata: z.record(z.string(), z.string()).nullable().describe("Metadatos adicionales especificos de la tarea"),
 });
 
 export type AnalysisResult = z.infer<typeof AnalysisResultSchema>;
