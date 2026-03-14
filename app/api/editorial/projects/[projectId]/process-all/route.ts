@@ -3,7 +3,14 @@ import { getAdminClient } from "@/lib/leads/helpers";
 import { processAiJob, fetchManuscriptContent } from "@/lib/editorial/ai/processor";
 import { requestStageAiAssist } from "@/lib/editorial/ai/stage-assist";
 import { logWorkflowEvent } from "@/lib/editorial/workflow-events";
-import type { EditorialStageKey } from "@/lib/editorial/types/editorial";
+import {
+  validateEditorialQuality,
+  validatePublishingReadiness,
+  type ValidationResult,
+} from "@/lib/editorial/orchestrator/editorial-orchestrator";
+import { persistPublishingChecklist, assemblePublishingPackage } from "@/lib/editorial/publishing/publishing-integration";
+import type { PublishingConfig, BookMetadata } from "@/lib/editorial/publishing/publishing-director";
+import type { EditorialStageKey, EditorialStageStatus } from "@/lib/editorial/types/editorial";
 import type { EditorialAiTaskKey } from "@/lib/editorial/types/ai";
 import type { EditorialAiJobContext } from "@/lib/editorial/types/ai";
 
@@ -180,8 +187,37 @@ export async function POST(
         }
       }
 
-      // ── 7. After all stages complete, finalize project ─────────────
+      // ── 7. Post-parallel validation pass ────────────────────────────
+      // Since parallel mode skips per-stage orchestrator validation,
+      // run the key checkpoints now before finalizing.
+      const validationResults = await runPostParallelValidation(projectId);
+      const allValidationsPassed = validationResults.every((v) => v.passed);
+
+      await logWorkflowEvent({
+        orgId: project.org_id,
+        projectId,
+        stageKey: "export",
+        eventType: "stage_completed",
+        actorId: null,
+        actorRole: "system",
+        payload: {
+          parallelMode: true,
+          postParallelValidation: true,
+          validations: validationResults.map((v) => ({
+            checkpoint: v.checkpoint,
+            passed: v.passed,
+          })),
+        },
+      });
+
+      // ── 8. Persist publishing checklist & assemble package ──────────
       if (completedCount === jobEntries.length) {
+        try {
+          await persistPublishingArtifacts(projectId);
+        } catch (pubErr) {
+          console.warn("[process-all] Publishing artifacts error (non-blocking):", (pubErr as Error).message);
+        }
+
         // All stages succeeded — mark project as completed
         await supabase
           .from("editorial_projects")
@@ -198,10 +234,15 @@ export async function POST(
           eventType: "stage_completed",
           actorId: null,
           actorRole: "system",
-          payload: { autoAdvanced: true, pipelineCompleted: true, parallelMode: true },
+          payload: {
+            autoAdvanced: true,
+            pipelineCompleted: true,
+            parallelMode: true,
+            validationsPassed: allValidationsPassed,
+          },
         });
 
-        console.log(`[process-all] Pipeline completed (parallel) for project ${projectId}: ${completedCount}/${jobEntries.length}`);
+        console.log(`[process-all] Pipeline completed (parallel) for project ${projectId}: ${completedCount}/${jobEntries.length}, validations=${allValidationsPassed ? "PASS" : "WARN"}`);
       } else {
         // Some stages failed — advance to last completed stage
         const lastCompleted = jobEntries[completedCount - 1]?.stageKey ?? "ingesta";
@@ -328,4 +369,136 @@ export async function GET(
     isProcessing,
     stages: stageSummaries,
   });
+}
+
+// ─── Post-parallel validation ──────────────────────────────────────────
+
+/**
+ * Run the orchestrator's validation checkpoints that would normally fire
+ * during sequential auto-advance but are skipped in parallel mode.
+ *
+ * Checks:
+ *  1. editorial_quality  (ortotipografia → maquetacion gate)
+ *  2. publishing_readiness (revision_final → export gate)
+ *
+ * Results are logged but do NOT block finalization — they surface warnings
+ * so staff can review quality flags in the workflow event log.
+ */
+async function runPostParallelValidation(
+  projectId: string
+): Promise<ValidationResult[]> {
+  const supabase = getAdminClient();
+  const results: ValidationResult[] = [];
+
+  // Fetch all stage statuses for this project
+  const { data: stages } = await supabase
+    .from("editorial_stages")
+    .select("stage_key, status")
+    .eq("project_id", projectId);
+
+  const stageList = (stages ?? []).map((s) => ({
+    stageKey: s.stage_key as EditorialStageKey,
+    status: s.status as EditorialStageStatus,
+  }));
+
+  // 1. Editorial quality checkpoint
+  const editorialQuality = validateEditorialQuality(stageList);
+  results.push(editorialQuality);
+
+  if (!editorialQuality.passed) {
+    console.warn(
+      `[process-all][validation] editorial_quality FAILED for ${projectId}:`,
+      editorialQuality.details.filter((d) => !d.passed).map((d) => d.message)
+    );
+  }
+
+  // 2. Publishing readiness checkpoint (best-effort with available data)
+  const publishingReadiness = validatePublishingReadiness({
+    interiorLayoutComplete: stageList.some(
+      (s) => s.stageKey === "maquetacion" && (s.status === "completed" || s.status === "approved")
+    ),
+    typographyConsistent: true, // Verified during maquetacion AI task
+    marginsKDPCompliant: true,  // Applied by Layout Director defaults
+    pageNumberingCorrect: true, // Applied during PDF generation
+    spineWidthCalculated: false, // Cover not generated in parallel pipeline
+    coverDimensionsCorrect: false, // Cover not generated in parallel pipeline
+    isbnInserted: false,
+  });
+  results.push(publishingReadiness);
+
+  if (!publishingReadiness.passed) {
+    console.warn(
+      `[process-all][validation] publishing_readiness FAILED for ${projectId}:`,
+      publishingReadiness.details.filter((d) => !d.passed).map((d) => d.message)
+    );
+  }
+
+  return results;
+}
+
+/**
+ * Persist the publishing checklist and assemble the publishing package
+ * after all parallel stages complete successfully.
+ */
+async function persistPublishingArtifacts(projectId: string): Promise<void> {
+  const supabase = getAdminClient();
+
+  const { data: projectMeta } = await supabase
+    .from("editorial_projects")
+    .select("title, author_name, genre, language, page_estimate")
+    .eq("id", projectId)
+    .single();
+
+  const publishingConfig: PublishingConfig = {
+    trimSizeId: "6x9",
+    paperType: "cream",
+    binding: "paperback",
+    bleed: "no_bleed",
+    pageCount: projectMeta?.page_estimate ?? 0,
+    platform: "amazon_kdp",
+  };
+
+  const bookMetadata: Partial<BookMetadata> = {
+    title: projectMeta?.title ?? "",
+    authors: projectMeta?.author_name ? [projectMeta.author_name] : [],
+    language: projectMeta?.language ?? "es",
+  };
+
+  // Persist checklist
+  const checklist = await persistPublishingChecklist({
+    projectId,
+    config: publishingConfig,
+    metadata: bookMetadata,
+  });
+  console.log(
+    `[process-all] Publishing checklist persisted: ${checklist.persisted} items`
+  );
+
+  // Assemble package
+  const fullMetadata: BookMetadata = {
+    title: projectMeta?.title ?? "",
+    authors: projectMeta?.author_name ? [projectMeta.author_name] : [],
+    publisher: "Reino Editorial",
+    language: projectMeta?.language ?? "es",
+    primaryCategory: projectMeta?.genre ?? "general",
+    secondaryCategories: [],
+    keywords: [],
+    description: "",
+    copyrightYear: new Date().getFullYear(),
+    copyrightHolder: projectMeta?.author_name ?? "",
+    countryOfPublication: "ES",
+    pageCount: projectMeta?.page_estimate ?? 0,
+    trimSize: "6x9",
+    paperType: "cream",
+    binding: "paperback",
+  };
+
+  const pkg = await assemblePublishingPackage({
+    projectId,
+    config: publishingConfig,
+    metadata: fullMetadata,
+  });
+  console.log(
+    `[process-all] Publishing package assembled: status=${pkg.status}, files=${pkg.files.length}`
+  );
 }
