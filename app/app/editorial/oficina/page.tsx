@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import {
   FileText,
   Receipt,
@@ -14,6 +14,9 @@ import {
   BookOpen,
   Users,
   LayoutDashboard,
+  Search,
+  UserPlus,
+  Loader2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { SERVICE_CATALOG } from "@/lib/editorial/oficina/company-config";
@@ -23,6 +26,21 @@ import type {
   ContractService,
   InvoiceItem,
 } from "@/lib/editorial/oficina/types";
+
+/* ------------------------------------------------------------------ */
+/*  Client type for autocomplete                                       */
+/* ------------------------------------------------------------------ */
+interface OficinaClient {
+  id: string;
+  fullName: string;
+  legalName: string | null;
+  email: string;
+  phone: string;
+  country: string;
+  address: string;
+  taxId: string;
+  currency: string;
+}
 
 /* ------------------------------------------------------------------ */
 /*  Main Oficina Page                                                 */
@@ -270,7 +288,18 @@ function ContractForm() {
       <div className="rounded-xl border border-gray-200 p-5 bg-white">
         <h3 className="text-sm font-bold text-gray-900 mb-4 uppercase tracking-wide">Datos del Cliente</h3>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <Input label="Nombre completo *" value={clientName} onChange={setClientName} placeholder="Juan Perez" />
+          <ClientAutocomplete
+            label="Nombre completo *"
+            value={clientName}
+            onChange={setClientName}
+            placeholder="Buscar cliente o escribir nuevo..."
+            onSelect={(c) => {
+              setClientName(c.fullName);
+              setClientEmail(c.email);
+              setClientAddress(c.address);
+              setClientTaxId(c.taxId);
+            }}
+          />
           <Input label="Email *" value={clientEmail} onChange={setClientEmail} placeholder="juan@email.com" />
           <Input label="Direccion" value={clientAddress} onChange={setClientAddress} placeholder="Ciudad, Pais" />
           <Input label={jurisdiction === "mexico" ? "RFC" : jurisdiction === "argentina" ? "CUIT" : "Tax ID"} value={clientTaxId} onChange={setClientTaxId} placeholder="" />
@@ -565,7 +594,18 @@ function InvoiceForm() {
       <div className="rounded-xl border border-gray-200 p-5 bg-white">
         <h3 className="text-sm font-bold text-gray-900 mb-4 uppercase tracking-wide">Datos del Cliente</h3>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <Input label="Nombre completo *" value={clientName} onChange={setClientName} placeholder="Juan Perez" />
+          <ClientAutocomplete
+            label="Nombre completo *"
+            value={clientName}
+            onChange={setClientName}
+            placeholder="Buscar cliente o escribir nuevo..."
+            onSelect={(c) => {
+              setClientName(c.fullName);
+              setClientEmail(c.email);
+              setClientAddress(c.address);
+              setClientTaxId(c.taxId);
+            }}
+          />
           <Input label="Email *" value={clientEmail} onChange={setClientEmail} placeholder="juan@email.com" />
           <Input label="Direccion" value={clientAddress} onChange={setClientAddress} placeholder="Ciudad, Pais" />
           <Input label="RFC / Tax ID" value={clientTaxId} onChange={setClientTaxId} placeholder="" />
@@ -774,6 +814,182 @@ function InvoiceForm() {
               title="Invoice Preview"
             />
           </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ================================================================== */
+/*  Client Autocomplete Component                                     */
+/* ================================================================== */
+
+function ClientAutocomplete({
+  label,
+  value,
+  onChange,
+  placeholder,
+  onSelect,
+}: {
+  label: string;
+  value: string;
+  onChange: (v: string) => void;
+  placeholder?: string;
+  onSelect: (client: OficinaClient) => void;
+}) {
+  const [suggestions, setSuggestions] = useState<OficinaClient[]>([]);
+  const [showDropdown, setShowDropdown] = useState(false);
+  const [loadingSuggestions, setLoadingSuggestions] = useState(false);
+  const [allClients, setAllClients] = useState<OficinaClient[]>([]);
+  const [hasFetched, setHasFetched] = useState(false);
+  const wrapperRef = useRef<HTMLDivElement>(null);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Load all clients on first focus
+  const loadClients = useCallback(async () => {
+    if (hasFetched) return;
+    setLoadingSuggestions(true);
+    try {
+      const res = await fetch("/api/staff/oficina/clients");
+      const json = await res.json();
+      if (json.success) {
+        setAllClients(json.clients);
+        setSuggestions(json.clients);
+      }
+    } catch { /* ignore */ }
+    setLoadingSuggestions(false);
+    setHasFetched(true);
+  }, [hasFetched]);
+
+  // Filter locally when typing
+  useEffect(() => {
+    if (!hasFetched) return;
+    if (!value.trim()) {
+      setSuggestions(allClients);
+      return;
+    }
+    const q = value.toLowerCase();
+    setSuggestions(
+      allClients.filter(
+        (c) =>
+          c.fullName.toLowerCase().includes(q) ||
+          c.email.toLowerCase().includes(q) ||
+          (c.legalName && c.legalName.toLowerCase().includes(q)) ||
+          c.taxId.toLowerCase().includes(q)
+      )
+    );
+  }, [value, allClients, hasFetched]);
+
+  // Also search server if local results are empty
+  useEffect(() => {
+    if (!hasFetched || !value.trim()) return;
+    if (suggestions.length > 0) return;
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(async () => {
+      setLoadingSuggestions(true);
+      try {
+        const res = await fetch(`/api/staff/oficina/clients?q=${encodeURIComponent(value)}`);
+        const json = await res.json();
+        if (json.success && json.clients.length > 0) {
+          setSuggestions(json.clients);
+          // Merge new results into allClients
+          setAllClients((prev) => {
+            const ids = new Set(prev.map((c) => c.id));
+            const newClients = json.clients.filter((c: OficinaClient) => !ids.has(c.id));
+            return [...prev, ...newClients];
+          });
+        }
+      } catch { /* ignore */ }
+      setLoadingSuggestions(false);
+    }, 300);
+    return () => { if (debounceRef.current) clearTimeout(debounceRef.current); };
+  }, [value, suggestions.length, hasFetched]);
+
+  // Close dropdown on outside click
+  useEffect(() => {
+    function handleClick(e: MouseEvent) {
+      if (wrapperRef.current && !wrapperRef.current.contains(e.target as Node)) {
+        setShowDropdown(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, []);
+
+  return (
+    <div ref={wrapperRef} className="relative">
+      <label className="block text-xs text-gray-500 uppercase tracking-wide mb-1 font-semibold">
+        {label}
+      </label>
+      <div className="relative">
+        <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400 pointer-events-none" />
+        <input
+          type="text"
+          className="w-full text-sm border border-gray-200 rounded-lg pl-8 pr-3 py-2 outline-none focus:border-blue-500 text-gray-900"
+          value={value}
+          onChange={(e) => {
+            onChange(e.target.value);
+            setShowDropdown(true);
+          }}
+          onFocus={() => {
+            loadClients();
+            setShowDropdown(true);
+          }}
+          placeholder={placeholder}
+          autoComplete="off"
+        />
+        {loadingSuggestions && (
+          <Loader2 className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400 animate-spin" />
+        )}
+      </div>
+
+      {/* Dropdown */}
+      {showDropdown && (
+        <div
+          className="absolute z-50 mt-1 w-full max-h-64 overflow-y-auto rounded-xl border border-gray-200 bg-white shadow-lg"
+          style={{ minWidth: 280 }}
+        >
+          {suggestions.length > 0 ? (
+            suggestions.map((c) => (
+              <button
+                key={c.id}
+                type="button"
+                className="w-full text-left px-3 py-2.5 hover:bg-blue-50 transition-colors border-b border-gray-50 last:border-b-0"
+                onClick={() => {
+                  onSelect(c);
+                  setShowDropdown(false);
+                }}
+              >
+                <p className="text-sm font-semibold text-gray-900">{c.fullName}</p>
+                <div className="flex items-center gap-3 mt-0.5">
+                  {c.email && <span className="text-xs text-gray-500">{c.email}</span>}
+                  {c.country && (
+                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-gray-100 text-gray-500 font-medium uppercase">
+                      {c.country}
+                    </span>
+                  )}
+                  {c.taxId && <span className="text-xs text-gray-400">ID: {c.taxId}</span>}
+                </div>
+              </button>
+            ))
+          ) : !loadingSuggestions && value.trim() ? (
+            <div className="px-3 py-4 text-center">
+              <UserPlus className="w-5 h-5 mx-auto text-gray-300 mb-1" />
+              <p className="text-xs text-gray-500">No se encontro &quot;{value}&quot;</p>
+              <p className="text-[10px] text-gray-400 mt-0.5">
+                Escribe el nombre del nuevo cliente y completa los datos
+              </p>
+            </div>
+          ) : loadingSuggestions ? (
+            <div className="px-3 py-4 text-center">
+              <Loader2 className="w-4 h-4 mx-auto text-gray-400 animate-spin" />
+              <p className="text-xs text-gray-400 mt-1">Buscando clientes...</p>
+            </div>
+          ) : (
+            <div className="px-3 py-4 text-center">
+              <p className="text-xs text-gray-400">Escribe para buscar clientes registrados</p>
+            </div>
+          )}
         </div>
       )}
     </div>
