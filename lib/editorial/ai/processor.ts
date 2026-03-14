@@ -369,7 +369,7 @@ async function autoAdvanceToNextStage(
     });
   }
 
-  // Initialize the next stage (this will auto-trigger its AI task)
+  // Initialize the next stage (this will queue its AI task)
   try {
     await initializeNextStage({
       projectId,
@@ -378,6 +378,33 @@ async function autoAdvanceToNextStage(
     });
 
     console.log(`[AI Processor] Auto-advanced ${completedStageKey} → ${nextStageKey} for project ${projectId}`);
+
+    // Find and process the queued job that initializeNextStage created
+    const { data: queuedJobs } = await supabase
+      .from("editorial_jobs")
+      .select("id, project_id, stage_key, job_type, input_ref")
+      .eq("project_id", projectId)
+      .eq("stage_key", nextStageKey)
+      .eq("status", "queued")
+      .order("created_at", { ascending: false })
+      .limit(1);
+
+    if (queuedJobs && queuedJobs.length > 0) {
+      const nextJob = queuedJobs[0];
+      const context: EditorialAiJobContext = typeof nextJob.input_ref === "string"
+        ? JSON.parse(nextJob.input_ref)
+        : nextJob.input_ref;
+
+      console.log(`[AI Processor] Processing queued job ${nextJob.id} for stage ${nextStageKey}`);
+
+      await processAiJob({
+        jobId: nextJob.id,
+        projectId: nextJob.project_id,
+        stageKey: nextJob.stage_key as EditorialStageKey,
+        taskKey: nextJob.job_type as EditorialAiTaskKey,
+        context,
+      });
+    }
   } catch (err) {
     console.error(`[AI Processor] Failed to auto-advance to ${nextStageKey}:`, err);
   }
