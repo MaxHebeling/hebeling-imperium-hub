@@ -5,7 +5,8 @@ import { useRouter } from "next/navigation";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Check, Circle, Loader2, Clock, CheckCircle2 } from "lucide-react";
+import { Check, Circle, Loader2, Clock, CheckCircle2, Eye, ChevronDown } from "lucide-react";
+import { AiResultsPanel } from "@/components/editorial/staff/ai-results-panel";
 import { EDITORIAL_STAGE_LABELS } from "@/lib/editorial/pipeline/constants";
 import { getNextStage } from "@/lib/editorial/pipeline/stage-utils";
 import type { EditorialFile, EditorialStageKey, StageWithApprover } from "@/lib/editorial/types/editorial";
@@ -83,6 +84,16 @@ export function StaffPipelineTab({
   const router = useRouter();
   const [isApproving, setIsApproving] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [expandedStages, setExpandedStages] = useState<Set<string>>(new Set());
+
+  function toggleStageAi(key: string) {
+    setExpandedStages((prev) => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next;
+    });
+  }
 
   const byKey = new Map(stages.map((s) => [s.stage_key, s]));
   const ordered = STAGE_ORDER.map((key) => ({
@@ -214,6 +225,9 @@ export function StaffPipelineTab({
                 isCurrent && key === "ingesta" && !hasManuscript
                   ? "Para aprobar Ingesta, sube al menos un manuscrito."
                   : null;
+              const hasAiSupport = key === "estructura" || key === "estilo" || key === "ortotipografia";
+              const isStageExpanded = expandedStages.has(key);
+              const stageHasRun = status === "approved" || status === "completed" || status === "processing" || status === "review_required" || isCurrent;
 
               return (
                 <li
@@ -231,6 +245,17 @@ export function StaffPipelineTab({
                       )}
                     </div>
                     <div className="flex items-center gap-2">
+                      {hasAiSupport && stageHasRun && (
+                        <Button
+                          size="sm"
+                          variant={isStageExpanded ? "default" : "ghost"}
+                          className="h-7 px-2 text-xs gap-1"
+                          onClick={() => toggleStageAi(key)}
+                        >
+                          {isStageExpanded ? <ChevronDown className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+                          {isStageExpanded ? "Ocultar IA" : "Ver IA"}
+                        </Button>
+                      )}
                       <Badge variant={isCurrent ? "default" : "secondary"} className="shrink-0 text-xs">
                         {statusLabel}
                       </Badge>
@@ -289,6 +314,11 @@ export function StaffPipelineTab({
                       <span>Por: {approver}</span>
                     )}
                   </div>
+                  {isStageExpanded && hasAiSupport && (
+                    <div className="mt-2 pl-6">
+                      <AiResultsPanel projectId={projectId} stageKey={key} />
+                    </div>
+                  )}
                 </li>
               );
             })}
