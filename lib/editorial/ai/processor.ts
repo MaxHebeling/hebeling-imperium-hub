@@ -1,5 +1,5 @@
 import { generateText, Output } from "ai";
-import { anthropic } from "@ai-sdk/anthropic";
+import { openai } from "@ai-sdk/openai";
 import { z } from "zod";
 import { getAdminClient } from "@/lib/leads/helpers";
 import { markAiJobStatus } from "./jobs";
@@ -234,28 +234,17 @@ export async function processAiJob(options: ProcessJobOptions): Promise<Analysis
     // Build the prompt
     const { system, user } = buildPromptFromDefault(activePrompt, truncatedContent);
 
-    // Call AI with structured output
+    // Call AI with structured output — GPT-4o for speed + quality
     const result = await generateText({
-      model: anthropic("claude-sonnet-4-20250514"),
-      system: `${system}
-
-IMPORTANTE: Debes responder con un objeto JSON valido que siga este esquema:
-{
-  "summary": "string - resumen del analisis",
-  "score": number | null - puntuacion del 1 al 10,
-  "strengths": ["string"] - lista de fortalezas,
-  "improvements": ["string"] - lista de mejoras necesarias,
-  "issues": [{ "type": "error|warning|suggestion", "description": "string", "location": "string|null", "suggestion": "string|null" }],
-  "recommendations": ["string"] - recomendaciones,
-  "metadata": {} | null - datos adicionales
-}`,
+      model: openai("gpt-4o"),
+      system,
       prompt: user,
       output: Output.object({
         schema: AnalysisResultSchema,
       }),
     });
 
-    // Try structured output first, fall back to parsing text response
+    // Extract structured result
     let analysisResult: AnalysisResult;
     if (result.object) {
       analysisResult = result.object as AnalysisResult;
