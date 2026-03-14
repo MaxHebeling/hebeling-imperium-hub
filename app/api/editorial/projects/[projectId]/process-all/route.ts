@@ -13,6 +13,11 @@ import type { PublishingConfig, BookMetadata } from "@/lib/editorial/publishing/
 import type { EditorialStageKey, EditorialStageStatus } from "@/lib/editorial/types/editorial";
 import type { EditorialAiTaskKey } from "@/lib/editorial/types/ai";
 import type { EditorialAiJobContext } from "@/lib/editorial/types/ai";
+import {
+  EditorialJobQueue,
+  buildQueueEntries,
+  type QueueEntry,
+} from "@/lib/editorial/ai/queue";
 
 const AI_STAGES: EditorialStageKey[] = [
   "ingesta",
@@ -36,8 +41,10 @@ const STAGE_PRIMARY_TASK: Partial<Record<EditorialStageKey, EditorialAiTaskKey>>
   distribution: "metadata_generation",
 };
 
-/** How many AI calls to run concurrently (avoid rate-limit bursts). */
-const PARALLEL_BATCH_SIZE = 4;
+/**
+ * Sequential queue replaces the old parallel batch approach.
+ * Jobs now run one at a time with token-aware pacing.
+ */
 
 /**
  * POST /api/editorial/projects/[projectId]/process-all
@@ -143,128 +150,135 @@ export async function POST(
       );
     }
 
-    // ── 6. Process all jobs in parallel batches (fire-and-forget) ────
-    // We don't await this — the response returns immediately while
-    // processing continues in the background.
-    const processAllInBatches = async () => {
-      let completedCount = 0;
+    // ── 6. Build queue entries with token estimates ─────────────────
+    const queueJobs = jobEntries.map((entry) => ({
+      jobId: entry.jobId,
+      projectId,
+      stageKey: entry.stageKey,
+      taskKey: entry.taskKey,
+      context: {
+        project_id: projectId,
+        stage_key: entry.stageKey,
+        source_file_id: latestFile.id,
+        source_file_version: latestFile.version,
+        requested_by: "staff",
+      } as EditorialAiJobContext,
+    }));
 
-      for (let i = 0; i < jobEntries.length; i += PARALLEL_BATCH_SIZE) {
-        const batch = jobEntries.slice(i, i + PARALLEL_BATCH_SIZE);
+    const entries = buildQueueEntries(queueJobs, manuscriptText, {
+      skipAutoAdvance: true,
+    });
 
-        const results = await Promise.allSettled(
-          batch.map(async (entry) => {
-            // Get the job details
-            const { data: job } = await supabase
-              .from("editorial_jobs")
-              .select("id, project_id, stage_key, job_type, input_ref")
-              .eq("id", entry.jobId)
-              .single();
+    // ── 7. Create queue with processor and lifecycle hooks ─────────
+    let completedCount = 0;
 
-            if (!job) return;
-
-            const context: EditorialAiJobContext =
-              typeof job.input_ref === "string"
-                ? JSON.parse(job.input_ref)
-                : job.input_ref;
-
-            await processAiJob({
-              jobId: job.id,
-              projectId: job.project_id,
-              stageKey: job.stage_key as EditorialStageKey,
-              taskKey: job.job_type as EditorialAiTaskKey,
-              context,
-              manuscriptText,
-              skipAutoAdvance: true,
-            });
-          })
-        );
-
-        // Count successes
-        for (const r of results) {
-          if (r.status === "fulfilled") completedCount++;
-          else console.error("[process-all] Stage failed:", r.reason);
-        }
-      }
-
-      // ── 7. Post-parallel validation pass ────────────────────────────
-      // Since parallel mode skips per-stage orchestrator validation,
-      // run the key checkpoints now before finalizing.
-      const validationResults = await runPostParallelValidation(projectId);
-      const allValidationsPassed = validationResults.every((v) => v.passed);
-
-      await logWorkflowEvent({
-        orgId: project.org_id,
-        projectId,
-        stageKey: "export",
-        eventType: "stage_completed",
-        actorId: null,
-        actorRole: "system",
-        payload: {
-          parallelMode: true,
-          postParallelValidation: true,
-          validations: validationResults.map((v) => ({
-            checkpoint: v.checkpoint,
-            passed: v.passed,
-          })),
-        },
+    const queue = new EditorialJobQueue(async (entry: QueueEntry) => {
+      await processAiJob({
+        jobId: entry.jobId,
+        projectId: entry.projectId,
+        stageKey: entry.stageKey,
+        taskKey: entry.taskKey,
+        context: entry.context,
+        manuscriptText: entry.manuscriptText,
+        skipAutoAdvance: entry.skipAutoAdvance,
       });
+      completedCount++;
+    });
 
-      // ── 8. Persist publishing checklist & assemble package ──────────
-      if (completedCount === jobEntries.length) {
-        try {
-          await persistPublishingArtifacts(projectId);
-        } catch (pubErr) {
-          console.warn("[process-all] Publishing artifacts error (non-blocking):", (pubErr as Error).message);
-        }
+    // When the queue is fully drained, run post-processing
+    queue.on(async (event) => {
+      if (event.type !== "queue_drained") return;
 
-        // All stages succeeded — mark project as completed
-        await supabase
-          .from("editorial_projects")
-          .update({
-            status: "completed",
-            current_stage: "distribution",
-          })
-          .eq("id", projectId);
+      try {
+        // ── Post-processing validation ──
+        const validationResults = await runPostParallelValidation(projectId);
+        const allValidationsPassed = validationResults.every((v) => v.passed);
 
         await logWorkflowEvent({
           orgId: project.org_id,
           projectId,
-          stageKey: "distribution",
+          stageKey: "export",
           eventType: "stage_completed",
           actorId: null,
           actorRole: "system",
           payload: {
-            autoAdvanced: true,
-            pipelineCompleted: true,
-            parallelMode: true,
-            validationsPassed: allValidationsPassed,
+            sequentialQueue: true,
+            postQueueValidation: true,
+            validations: validationResults.map((v) => ({
+              checkpoint: v.checkpoint,
+              passed: v.passed,
+            })),
           },
         });
 
-        console.log(`[process-all] Pipeline completed (parallel) for project ${projectId}: ${completedCount}/${jobEntries.length}, validations=${allValidationsPassed ? "PASS" : "WARN"}`);
-      } else {
-        // Some stages failed — advance to last completed stage
-        const lastCompleted = jobEntries[completedCount - 1]?.stageKey ?? "ingesta";
-        await supabase
-          .from("editorial_projects")
-          .update({ current_stage: lastCompleted })
-          .eq("id", projectId);
+        if (completedCount === jobEntries.length) {
+          try {
+            await persistPublishingArtifacts(projectId);
+          } catch (pubErr) {
+            console.warn(
+              "[process-all] Publishing artifacts error (non-blocking):",
+              (pubErr as Error).message
+            );
+          }
 
-        console.log(`[process-all] Pipeline partial: ${completedCount}/${jobEntries.length} for project ${projectId}`);
+          await supabase
+            .from("editorial_projects")
+            .update({
+              status: "completed",
+              current_stage: "distribution",
+            })
+            .eq("id", projectId);
+
+          await logWorkflowEvent({
+            orgId: project.org_id,
+            projectId,
+            stageKey: "distribution",
+            eventType: "stage_completed",
+            actorId: null,
+            actorRole: "system",
+            payload: {
+              autoAdvanced: true,
+              pipelineCompleted: true,
+              sequentialQueue: true,
+              validationsPassed: allValidationsPassed,
+            },
+          });
+
+          console.log(
+            `[process-all] Pipeline completed (sequential queue) for project ${projectId}: ${completedCount}/${jobEntries.length}, validations=${allValidationsPassed ? "PASS" : "WARN"}`
+          );
+        } else {
+          const lastCompleted =
+            jobEntries[completedCount - 1]?.stageKey ?? "ingesta";
+          await supabase
+            .from("editorial_projects")
+            .update({ current_stage: lastCompleted })
+            .eq("id", projectId);
+
+          console.log(
+            `[process-all] Pipeline partial (sequential queue): ${completedCount}/${jobEntries.length} for project ${projectId}`
+          );
+        }
+      } catch (postErr) {
+        console.error("[process-all] Post-queue error:", postErr);
       }
-    };
-
-    // Fire and forget — don't block the HTTP response
-    processAllInBatches().catch((err) => {
-      console.error("[process-all] Pipeline error:", err);
     });
+
+    // ── 8. Enqueue and let the queue drain in the background ───────
+    queue.enqueue(entries);
+
+    // Get initial snapshot for the response
+    const queueSnapshot = queue.snapshot();
 
     return NextResponse.json({
       success: true,
-      message: `Procesamiento paralelo iniciado: ${jobEntries.length} etapas en lotes de ${PARALLEL_BATCH_SIZE}. ~4x mas rapido.`,
+      message: `Cola secuencial con token-awareness iniciada: ${jobEntries.length} etapas procesandose una a una con ~25s entre cada job.`,
       totalStages: jobEntries.length,
-      batchSize: PARALLEL_BATCH_SIZE,
+      queue: {
+        pending: queueSnapshot.pending,
+        tpmLimit: queueSnapshot.tpmLimit,
+        interJobDelayMs: queueSnapshot.interJobDelayMs,
+      },
       jobIds: jobEntries.map((e) => e.jobId),
     });
   } catch (err) {
