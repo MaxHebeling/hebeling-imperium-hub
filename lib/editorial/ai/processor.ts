@@ -335,7 +335,8 @@ async function autoAdvanceToNextStage(
         projectId,
         stageKey: completedStageKey,
         eventType: "stage_completed",
-        actorId: "system",
+        actorId: null,
+        actorRole: "system",
         payload: { autoAdvanced: true, pipelineCompleted: true },
       });
     }
@@ -362,7 +363,8 @@ async function autoAdvanceToNextStage(
       projectId,
       stageKey: completedStageKey,
       eventType: "stage_completed",
-      actorId: "system",
+      actorId: null,
+      actorRole: "system",
       payload: { autoAdvanced: true, nextStage: nextStageKey },
     });
   }
@@ -372,7 +374,7 @@ async function autoAdvanceToNextStage(
     await initializeNextStage({
       projectId,
       stageKey: nextStageKey,
-      actorId: "system",
+      actorId: null,
     });
 
     console.log(`[AI Processor] Auto-advanced ${completedStageKey} → ${nextStageKey} for project ${projectId}`);
