@@ -278,6 +278,12 @@ export function generateReceiptHTML(data: ReceiptData): string {
       <span class="label">${t.paymentMethod}</span>
       <span class="value">${data.paymentMethod}</span>
     </div>
+    ${data.serviceDescription ? `
+    <div class="detail-row">
+      <span class="label">${data.locale === "es" ? "Servicio" : "Service"}</span>
+      <span class="value">${data.serviceDescription}</span>
+    </div>
+    ` : ""}
   </div>
 
   <div class="amount-box">
