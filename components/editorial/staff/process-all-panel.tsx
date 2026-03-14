@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
-import { ScrollArea } from "@/components/ui/scroll-area";
+
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import {
   Zap,
@@ -238,13 +238,11 @@ function StageResultCard({ stage }: { stage: StageSummary }) {
                 <Eye className="h-3.5 w-3.5" />
                 Hallazgos Detallados ({allIssues.length}) - Revision 1x1
               </h5>
-              <ScrollArea className="max-h-80">
-                <div className="space-y-2">
-                  {allIssues.map((issue, i) => (
-                    <IssueItem key={i} issue={issue} index={i} />
-                  ))}
-                </div>
-              </ScrollArea>
+              <div className="max-h-80 overflow-y-auto space-y-2 pr-1">
+                {allIssues.map((issue, i) => (
+                  <IssueItem key={i} issue={issue} index={i} />
+                ))}
+              </div>
             </div>
           )}
 
