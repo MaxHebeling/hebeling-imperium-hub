@@ -21,6 +21,7 @@ import {
   Eye,
   FileText,
   Brain,
+  Download,
 } from "lucide-react";
 import { EDITORIAL_STAGE_LABELS } from "@/lib/editorial/pipeline/constants";
 
@@ -490,9 +491,19 @@ export function ProcessAllPanel({ projectId, currentStage }: ProcessAllPanelProp
           </>
         )}
 
-        {/* Re-process button */}
+        {/* Action buttons: Re-process + Download Report */}
         {hasAnyResults && !isProcessing && (
-          <div className="flex justify-end pt-2">
+          <div className="flex items-center justify-between pt-2">
+            <Button
+              variant="default"
+              size="sm"
+              onClick={() => {
+                window.open(`/api/editorial/projects/${projectId}/correction-report`, "_blank");
+              }}
+            >
+              <Download className="h-4 w-4 mr-2" />
+              Descargar Reporte (.docx)
+            </Button>
             <Button
               variant="outline"
               size="sm"
