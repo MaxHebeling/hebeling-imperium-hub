@@ -46,10 +46,24 @@ export const SERVICE_CATALOG = {
       defaultPrice: 0,
     },
     {
+      key: "correccion_gramatical",
+      name: "Correccion gramatical",
+      description:
+        "Revision completa de gramatica, sintaxis y estructura de oraciones.",
+      defaultPrice: 0,
+    },
+    {
       key: "correccion_estilo",
       name: "Correccion de estilo",
       description:
         "Revision del estilo narrativo, coherencia, claridad y fluidez del texto.",
+      defaultPrice: 0,
+    },
+    {
+      key: "diseno_interior",
+      name: "Diseno interior / Maquetacion",
+      description:
+        "Composicion profesional del interior del libro con tipografia y diseno editorial.",
       defaultPrice: 0,
     },
     {
@@ -66,17 +80,24 @@ export const SERVICE_CATALOG = {
       defaultPrice: 0,
     },
     {
-      key: "publicacion",
+      key: "publicacion_amazon",
       name: "Subida de libro para venta online en formato version impresa",
       description:
         "Publicacion y configuracion del libro en plataformas de venta online para version impresa y digital.",
       defaultPrice: 0,
     },
     {
-      key: "ebook",
+      key: "ebook_conversion",
       name: "Elaboracion de eBook",
       description:
         "Conversion del manuscrito a formato EPUB y MOBI optimizado para lectores digitales.",
+      defaultPrice: 0,
+    },
+    {
+      key: "distribucion",
+      name: "Configuracion de distribucion",
+      description:
+        "Configuracion de canales de distribucion digital y fisico.",
       defaultPrice: 0,
     },
     {
@@ -138,10 +159,24 @@ export const SERVICE_CATALOG = {
       defaultPrice: 0,
     },
     {
+      key: "correccion_gramatical",
+      name: "Grammar correction",
+      description:
+        "Complete grammar, syntax, and sentence structure review.",
+      defaultPrice: 0,
+    },
+    {
       key: "correccion_estilo",
       name: "Style editing",
       description:
         "Review of narrative style, coherence, clarity, and text flow.",
+      defaultPrice: 0,
+    },
+    {
+      key: "diseno_interior",
+      name: "Interior layout design",
+      description:
+        "Professional book interior composition with typography and editorial design.",
       defaultPrice: 0,
     },
     {
@@ -158,17 +193,24 @@ export const SERVICE_CATALOG = {
       defaultPrice: 0,
     },
     {
-      key: "publicacion",
+      key: "publicacion_amazon",
       name: "Book upload for online sale in print format",
       description:
         "Publishing and configuration of the book on online sales platforms for print and digital versions.",
       defaultPrice: 0,
     },
     {
-      key: "ebook",
+      key: "ebook_conversion",
       name: "eBook creation",
       description:
         "Manuscript conversion to EPUB and MOBI formats optimized for digital readers.",
+      defaultPrice: 0,
+    },
+    {
+      key: "distribucion",
+      name: "Distribution setup",
+      description:
+        "Setup of digital and physical distribution channels.",
       defaultPrice: 0,
     },
     {

@@ -37,6 +37,8 @@ import {
 import type { PortalLocale } from "@/lib/editorial/i18n/portal-translations";
 import { getTranslations } from "@/lib/editorial/i18n/portal-translations";
 import { EditorialJourneyTimeline } from "@/components/editorial/portal/editorial-journey-timeline";
+import { ContractViewerPanel } from "@/components/editorial/portal/contract-viewer-panel";
+import { InvoiceViewerPanel } from "@/components/editorial/portal/invoice-viewer-panel";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -667,6 +669,10 @@ export default function ClientProjectDetailPage() {
           </div>
         )}
       </div>
+
+      {/* Contracts & Invoices */}
+      <ContractViewerPanel projectId={projectId} locale={locale} />
+      <InvoiceViewerPanel projectId={projectId} locale={locale} />
 
       {/* Downloads */}
       {projectExports.length > 0 && (

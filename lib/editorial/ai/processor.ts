@@ -1,5 +1,5 @@
 import { generateText, Output } from "ai";
-import { anthropic } from "@ai-sdk/anthropic";
+import { openai } from "@ai-sdk/openai";
 import { z } from "zod";
 import { getAdminClient } from "@/lib/leads/helpers";
 import { markAiJobStatus } from "./jobs";
@@ -37,12 +37,17 @@ interface ProcessJobOptions {
   stageKey: EditorialStageKey;
   taskKey: EditorialAiTaskKey;
   context: EditorialAiJobContext;
+  /** Pre-fetched manuscript text — avoids re-downloading for every stage. */
+  manuscriptText?: string;
+  /** When true, skip the auto-advance chain (caller handles orchestration). */
+  skipAutoAdvance?: boolean;
 }
 
 /**
- * Fetch manuscript content from storage
+ * Fetch manuscript content from storage.
+ * Exported so callers (e.g. process-all) can pre-fetch once and share across parallel jobs.
  */
-async function fetchManuscriptContent(projectId: string, fileId?: string | null): Promise<string> {
+export async function fetchManuscriptContent(projectId: string, fileId?: string | null): Promise<string> {
   const supabase = getAdminClient();
 
   // Get the file record
@@ -213,11 +218,12 @@ export async function processAiJob(options: ProcessJobOptions): Promise<Analysis
 
     const activePrompt = customPrompt ?? defaultPrompt!;
 
-    // Fetch manuscript content
-    const manuscriptContent = await fetchManuscriptContent(
-      options.projectId,
-      options.context.source_file_id
-    );
+    // Use pre-fetched content when available, otherwise download
+    const manuscriptContent = options.manuscriptText
+      ?? await fetchManuscriptContent(
+        options.projectId,
+        options.context.source_file_id
+      );
 
     // Truncate if too long (model context limits)
     const maxChars = 100000; // ~25k tokens approximately
@@ -228,28 +234,17 @@ export async function processAiJob(options: ProcessJobOptions): Promise<Analysis
     // Build the prompt
     const { system, user } = buildPromptFromDefault(activePrompt, truncatedContent);
 
-    // Call AI with structured output
+    // Call AI with structured output — GPT-4o for speed + quality
     const result = await generateText({
-      model: anthropic("claude-sonnet-4-20250514"),
-      system: `${system}
-
-IMPORTANTE: Debes responder con un objeto JSON valido que siga este esquema:
-{
-  "summary": "string - resumen del analisis",
-  "score": number | null - puntuacion del 1 al 10,
-  "strengths": ["string"] - lista de fortalezas,
-  "improvements": ["string"] - lista de mejoras necesarias,
-  "issues": [{ "type": "error|warning|suggestion", "description": "string", "location": "string|null", "suggestion": "string|null" }],
-  "recommendations": ["string"] - recomendaciones,
-  "metadata": {} | null - datos adicionales
-}`,
+      model: openai("gpt-4o"),
+      system,
       prompt: user,
       output: Output.object({
         schema: AnalysisResultSchema,
       }),
     });
 
-    // Try structured output first, fall back to parsing text response
+    // Extract structured result
     let analysisResult: AnalysisResult;
     if (result.object) {
       analysisResult = result.object as AnalysisResult;
@@ -286,7 +281,10 @@ IMPORTANTE: Debes responder con un objeto JSON valido que siga este esquema:
       .eq("stage_key", options.stageKey);
 
     // Auto-advance: complete this stage and initialize the next one
-    await autoAdvanceToNextStage(options.projectId, options.stageKey);
+    // (skipped when the caller orchestrates stages in parallel)
+    if (!options.skipAutoAdvance) {
+      await autoAdvanceToNextStage(options.projectId, options.stageKey);
+    }
 
     return analysisResult;
   } catch (error) {
