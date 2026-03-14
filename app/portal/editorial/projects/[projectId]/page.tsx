@@ -152,22 +152,40 @@ export default function ClientProjectDetailPage() {
     setUploadSuccess(false);
 
     try {
-      const formData = new FormData();
-      formData.append("file", file);
-
-      const res = await fetch(
-        `/api/editorial/client/projects/${projectId}/upload`,
-        { method: "POST", body: formData }
+      // Step 1: Get a signed upload URL (small JSON request, bypasses Vercel 4.5MB limit)
+      const urlRes = await fetch(
+        `/api/editorial/client/projects/${projectId}/upload-url`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            fileName: file.name,
+            mimeType: file.type,
+            sizeBytes: file.size,
+          }),
+        }
       );
-      const json = await res.json();
-
-      if (json.success) {
-        setUploadSuccess(true);
-        await fetchData();
-        setTimeout(() => setUploadSuccess(false), 4000);
-      } else {
-        setUploadError(json.error ?? "Error al subir el archivo");
+      const urlJson = await urlRes.json();
+      if (!urlJson.success) {
+        setUploadError(urlJson.error ?? "Error al preparar la subida");
+        return;
       }
+
+      // Step 2: Upload file directly to Supabase Storage using the signed URL
+      const uploadRes = await fetch(urlJson.signedUrl, {
+        method: "PUT",
+        headers: { "Content-Type": file.type },
+        body: file,
+      });
+
+      if (!uploadRes.ok) {
+        setUploadError("Error al subir el archivo al almacenamiento");
+        return;
+      }
+
+      setUploadSuccess(true);
+      await fetchData();
+      setTimeout(() => setUploadSuccess(false), 4000);
     } catch {
       setUploadError("Error de red al subir el archivo");
     } finally {

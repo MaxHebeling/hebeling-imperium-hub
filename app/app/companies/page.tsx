@@ -9,6 +9,7 @@ import {
   BarChart3,
   Users,
   Zap,
+  Globe,
 } from "lucide-react";
 
 /* ------------------------------------------------------------------ */
@@ -41,6 +42,7 @@ interface BusinessUnit {
   href: string;
   editorialHref: string | null;
   oficinaHref: string | null;
+  webProjectsHref: string | null;
   logo: string;
   logoBg: string;
   logoRounded: boolean;
@@ -60,6 +62,7 @@ const UNITS: BusinessUnit[] = [
     href: "/app/companies/reino-editorial",
     editorialHref: "/app/editorial",
     oficinaHref: "/app/editorial/oficina",
+    webProjectsHref: null,
     logo: "/logo-reino-editorial.png",
     logoBg: "#ffffff",
     logoRounded: true,
@@ -76,10 +79,11 @@ const UNITS: BusinessUnit[] = [
     name: "iKingdom",
     tagline: "Digital Solutions",
     description:
-      "Aplicaciones digitales, diagnóstico empresarial e intake de clientes.",
+      "Construcción de páginas web, aplicaciones digitales y soluciones tecnológicas para clientes.",
     href: "/app/companies/ikingdom",
     editorialHref: null,
     oficinaHref: null,
+    webProjectsHref: "/app/ikingdom/projects",
     logo: "/logo-ikingdom.png",
     logoBg: "#ffffff",
     logoRounded: false,
@@ -100,6 +104,7 @@ const UNITS: BusinessUnit[] = [
     href: "/app/companies/imperium",
     editorialHref: null,
     oficinaHref: null,
+    webProjectsHref: null,
     logo: "/logo-imperium.png",
     logoBg: "transparent",
     logoRounded: true,
@@ -119,6 +124,7 @@ const UNITS: BusinessUnit[] = [
     href: "/app/companies/max-hebeling",
     editorialHref: null,
     oficinaHref: null,
+    webProjectsHref: null,
     logo: "/logo-max-hebeling.png",
     logoBg: "#ffffff",
     logoRounded: false,
@@ -139,6 +145,7 @@ const UNITS: BusinessUnit[] = [
     href: "/app/companies/red-apostolica",
     editorialHref: null,
     oficinaHref: null,
+    webProjectsHref: null,
     logo: "/logo-red-apostolica.png",
     logoBg: "transparent",
     logoRounded: true,
@@ -379,6 +386,21 @@ export default function CompaniesPage() {
                       >
                         <Briefcase className="w-3.5 h-3.5" />
                         Oficina
+                      </Link>
+                    )}
+
+                    {u.webProjectsHref && (
+                      <Link
+                        href={u.webProjectsHref}
+                        className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold transition-all hover:opacity-80"
+                        style={{
+                          background: "#00d4aa10",
+                          color: "#00d4aa",
+                          border: "1px solid #00d4aa25",
+                        }}
+                      >
+                        <Globe className="w-3.5 h-3.5" />
+                        Web Projects
                       </Link>
                     )}
                   </div>
