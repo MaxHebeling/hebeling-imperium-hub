@@ -12,6 +12,12 @@ import { saveSuggestionsFromLineEditing, saveSuggestionsFromCopyediting } from "
 import { getNextStage } from "@/lib/editorial/pipeline/stage-utils";
 import { initializeNextStage } from "@/lib/editorial/pipeline/stage-transitions";
 import { logWorkflowEvent } from "@/lib/editorial/workflow-events";
+import {
+  getNextTransition,
+  validateEditorialQuality,
+  runErrorPreventionChecks,
+  type OrchestratorState,
+} from "@/lib/editorial/orchestrator/editorial-orchestrator";
 
 // Schema for structured AI output
 const AnalysisResultSchema = z.object({
@@ -97,9 +103,24 @@ export async function fetchManuscriptContent(projectId: string, fileId?: string 
   }
 
   if (fileName.endsWith(".pdf")) {
-    // PDF extraction would require a library like pdf-parse
-    // For now, return a placeholder message
-    return "[Contenido PDF - extraccion pendiente de implementar]";
+    try {
+      const arrayBuffer = await fileData.arrayBuffer();
+      const buffer = Buffer.from(arrayBuffer);
+      const pdfParseModule = await import("pdf-parse");
+      const pdfParse = (pdfParseModule as Record<string, unknown>).default
+        ? (pdfParseModule as Record<string, unknown>).default as (buf: Buffer) => Promise<{ text: string }>
+        : pdfParseModule as unknown as (buf: Buffer) => Promise<{ text: string }>;
+      const result = await pdfParse(buffer);
+      const text = result.text ?? "";
+      if (!text.trim()) {
+        console.warn("[editorial-ai][processor] PDF extracted but text is empty (scanned PDF?)");
+        return "[Contenido PDF - el documento parece ser un PDF escaneado sin texto extraible]";
+      }
+      return text;
+    } catch (err) {
+      console.error("[editorial-ai][processor] PDF parse error", (err as Error).message);
+      throw new Error("No se pudo extraer texto del PDF.");
+    }
   }
 
   // Default: try to read as text
@@ -301,15 +322,24 @@ export async function processAiJob(options: ProcessJobOptions): Promise<Analysis
 }
 
 /**
- * Auto-advance the pipeline: after AI completes a stage, move to the next one.
- * This creates a chain where each stage's AI completion triggers the next stage.
+ * Auto-advance the pipeline using orchestrator-based transition rules.
+ *
+ * Instead of blindly moving to the next stage, this function:
+ * 1. Looks up the orchestrator's WORKFLOW_TRANSITIONS for the completed stage
+ * 2. Runs quality validations when a checkpoint is defined
+ * 3. Respects requiresApproval gates (stops and waits for staff)
+ * 4. Runs error-prevention checks before advancing
+ * 5. Falls back to simple linear progression only when no transition is defined
  */
 async function autoAdvanceToNextStage(
   projectId: string,
   completedStageKey: EditorialStageKey
 ): Promise<void> {
   const supabase = getAdminClient();
-  const nextStageKey = getNextStage(completedStageKey);
+
+  // Look up orchestrator transition rules
+  const transition = getNextTransition(completedStageKey);
+  const nextStageKey = transition?.toStage ?? getNextStage(completedStageKey);
 
   if (!nextStageKey) {
     // Last stage (distribution) completed — mark project as finished
@@ -343,7 +373,124 @@ async function autoAdvanceToNextStage(
     return;
   }
 
-  // Update project's current_stage pointer
+  // ── Run orchestrator validation checkpoint if defined ──
+  if (transition?.validationCheckpoint) {
+    const { data: allStages } = await supabase
+      .from("editorial_stages")
+      .select("stage_key, status")
+      .eq("project_id", projectId);
+
+    const stageStatuses = (allStages ?? []).map((s) => ({
+      stageKey: s.stage_key as EditorialStageKey,
+      status: s.status as "pending" | "processing" | "completed" | "approved" | "review_required" | "failed",
+    }));
+
+    if (transition.validationCheckpoint === "editorial_quality") {
+      const validation = validateEditorialQuality(stageStatuses);
+      if (!validation.passed) {
+        const failDetails = validation.details
+          .filter((d) => !d.passed)
+          .map((d) => d.message)
+          .join("; ");
+
+        console.warn(
+          `[AI Processor] Validation checkpoint "editorial_quality" FAILED for ${completedStageKey} → ${nextStageKey}: ${failDetails}`
+        );
+
+        await logWorkflowEvent({
+          orgId: (await supabase.from("editorial_projects").select("org_id").eq("id", projectId).single()).data?.org_id ?? "",
+          projectId,
+          stageKey: completedStageKey,
+          eventType: "stage_completed",
+          actorId: null,
+          actorRole: "system",
+          payload: {
+            autoAdvanced: false,
+            blockedByValidation: transition.validationCheckpoint,
+            failDetails,
+          },
+        });
+
+        // Don't advance — stage stays completed but next stage doesn't start
+        return;
+      }
+    }
+
+    // Run error prevention checks
+    const { data: projMeta } = await supabase
+      .from("editorial_projects")
+      .select("title, author_name, genre, language, page_estimate")
+      .eq("id", projectId)
+      .single();
+
+    const blockingIssues = runErrorPreventionChecks(nextStageKey, {
+      stages: stageStatuses,
+      hasMetadata: Boolean(projMeta?.title && projMeta?.author_name),
+      hasTrimSize: true, // Preset defaults to trade_6x9
+      hasISBN: false,
+      pageCount: projMeta?.page_estimate ?? 0,
+    });
+
+    const criticalIssues = blockingIssues.filter((i) => i.severity === "critical");
+    if (criticalIssues.length > 0) {
+      console.warn(
+        `[AI Processor] Error prevention: ${criticalIssues.length} critical issue(s) block ${completedStageKey} → ${nextStageKey}`
+      );
+
+      await logWorkflowEvent({
+        orgId: (await supabase.from("editorial_projects").select("org_id").eq("id", projectId).single()).data?.org_id ?? "",
+        projectId,
+        stageKey: completedStageKey,
+        eventType: "stage_completed",
+        actorId: null,
+        actorRole: "system",
+        payload: {
+          autoAdvanced: false,
+          blockedByErrors: criticalIssues.map((i) => i.message),
+        },
+      });
+
+      return;
+    }
+  }
+
+  // ── Respect requiresApproval gate ──
+  if (transition?.requiresApproval) {
+    // Mark the current stage as completed but don't auto-advance
+    await supabase
+      .from("editorial_projects")
+      .update({ current_stage: completedStageKey })
+      .eq("id", projectId);
+
+    const { data: project } = await supabase
+      .from("editorial_projects")
+      .select("org_id")
+      .eq("id", projectId)
+      .single();
+
+    if (project) {
+      await logWorkflowEvent({
+        orgId: project.org_id,
+        projectId,
+        stageKey: completedStageKey,
+        eventType: "stage_completed",
+        actorId: null,
+        actorRole: "system",
+        payload: {
+          autoAdvanced: false,
+          requiresApproval: true,
+          nextStage: nextStageKey,
+        },
+      });
+    }
+
+    console.log(
+      `[AI Processor] Stage ${completedStageKey} completed — awaiting staff approval before advancing to ${nextStageKey}`
+    );
+    return;
+  }
+
+  // ── Advance to next stage ──
   await supabase
     .from("editorial_projects")
     .update({ current_stage: nextStageKey })
@@ -367,41 +514,43 @@ async function autoAdvanceToNextStage(
     });
   }
 
-  // Initialize the next stage (this will queue its AI task)
+  // Initialize the next stage (this will queue its AI task if autoTriggerAI)
   try {
     await initializeNextStage({
       projectId,
       stageKey: nextStageKey,
-      actorId: null,
+      actorId: undefined,
     });
 
     console.log(`[AI Processor] Auto-advanced ${completedStageKey} → ${nextStageKey} for project ${projectId}`);
 
-    // Find and process the queued job that initializeNextStage created
-    const { data: queuedJobs } = await supabase
-      .from("editorial_jobs")
-      .select("id, project_id, stage_key, job_type, input_ref")
-      .eq("project_id", projectId)
-      .eq("stage_key", nextStageKey)
-      .eq("status", "queued")
-      .order("created_at", { ascending: false })
-      .limit(1);
+    // If orchestrator says auto-trigger AI, find and process the queued job
+    if (transition?.autoTriggerAI !== false) {
+      const { data: queuedJobs } = await supabase
+        .from("editorial_jobs")
+        .select("id, project_id, stage_key, job_type, input_ref")
+        .eq("project_id", projectId)
+        .eq("stage_key", nextStageKey)
+        .eq("status", "queued")
+        .order("created_at", { ascending: false })
+        .limit(1);
 
-    if (queuedJobs && queuedJobs.length > 0) {
-      const nextJob = queuedJobs[0];
-      const context: EditorialAiJobContext = typeof nextJob.input_ref === "string"
-        ? JSON.parse(nextJob.input_ref)
-        : nextJob.input_ref;
+      if (queuedJobs && queuedJobs.length > 0) {
+        const nextJob = queuedJobs[0];
+        const context: EditorialAiJobContext = typeof nextJob.input_ref === "string"
+          ? JSON.parse(nextJob.input_ref)
+          : nextJob.input_ref;
 
-      console.log(`[AI Processor] Processing queued job ${nextJob.id} for stage ${nextStageKey}`);
+        console.log(`[AI Processor] Processing queued job ${nextJob.id} for stage ${nextStageKey}`);
 
-      await processAiJob({
-        jobId: nextJob.id,
-        projectId: nextJob.project_id,
-        stageKey: nextJob.stage_key as EditorialStageKey,
-        taskKey: nextJob.job_type as EditorialAiTaskKey,
-        context,
-      });
+        await processAiJob({
+          jobId: nextJob.id,
+          projectId: nextJob.project_id,
+          stageKey: nextJob.stage_key as EditorialStageKey,
+          taskKey: nextJob.job_type as EditorialAiTaskKey,
+          context,
+        });
+      }
     }
   } catch (err) {
     console.error(`[AI Processor] Failed to auto-advance to ${nextStageKey}:`, err);

@@ -5,6 +5,14 @@ import { extractManuscriptText } from "@/lib/editorial/files/extract-text";
 import type { ExportConfig } from "./types";
 import { DEFAULT_EXPORT_CONFIG } from "./types";
 import { getBookFormatPreset } from "./book-format-presets";
+import {
+  inferLayoutStyle,
+  getLayoutStylePreset,
+  getFontCombinationForStyle,
+  buildChapterOpenerConfig,
+  type LayoutStyleConfig,
+  type ChapterOpenerConfig,
+} from "@/lib/editorial/layout/layout-director";
 
 /** Page dimensions in PDF points (1 point = 1/72 inch) */
 const PAGE_SIZES: Record<string, { width: number; height: number }> = {
@@ -131,12 +139,31 @@ export async function generateBookPdf(options: {
         right: (config.margins?.right ?? 15) * mmToPt,
       };
 
-  const bodyFont = preset?.typography.bodyFont ?? "Helvetica";
-  const headingFont = preset?.typography.headingFont ?? "Helvetica-Bold";
-  const headingSize = preset?.typography.headingSize ?? 22;
-  const paragraphIndent = preset
-    ? preset.typography.paragraphIndent * mmToPt
-    : (config.paragraphIndent ?? 7) * mmToPt;
+  // ── Layout Director Integration ──
+  // Resolve the layout style from the project's genre using the Layout Director
+  const layoutStyle = inferLayoutStyle({
+    genre: metadata.genre ?? "general",
+    tone: "neutral",
+    audience: "general",
+    wordCount: manuscriptText.length / 5, // rough word estimate
+  });
+  const layoutPreset: LayoutStyleConfig | undefined = getLayoutStylePreset(layoutStyle);
+  const fontCombo = getFontCombinationForStyle(layoutStyle);
+  const chapterOpenerCfg: ChapterOpenerConfig = buildChapterOpenerConfig(
+    layoutPreset?.chapterOpener ?? "centered_classic"
+  );
+
+  // Use Layout Director typography when available, fall back to book-format preset, then defaults
+  const bodyFont = layoutPreset?.typography.bodyFont ?? fontCombo.bodyFont ?? preset?.typography.bodyFont ?? "Helvetica";
+  const headingFont = layoutPreset?.typography.chapterTitleFont ?? fontCombo.headingFont ?? preset?.typography.headingFont ?? "Helvetica-Bold";
+  const headingSize = layoutPreset?.typography.chapterTitleSize ?? preset?.typography.headingSize ?? 22;
+  const paragraphIndent = layoutPreset
+    ? layoutPreset.typography.paragraphIndent * mmToPt
+    : preset
+      ? preset.typography.paragraphIndent * mmToPt
+      : (config.paragraphIndent ?? 7) * mmToPt;
+  const pageNumberFont = layoutPreset?.typography.pageNumberFont ?? bodyFont;
+  const pageNumberSize = layoutPreset?.typography.pageNumberSize ?? 9;
 
   // Create PDF document
   const doc = new PDFDocument({
@@ -161,8 +188,8 @@ export async function generateBookPdf(options: {
   const chunks: Buffer[] = [];
   doc.on("data", (chunk: Buffer) => chunks.push(chunk));
 
-  const bodyFontSize = preset?.typography.bodySize ?? config.fontSize ?? 11;
-  const lineHeight = preset?.typography.lineHeight ?? config.lineHeight ?? 1.5;
+  const bodyFontSize = layoutPreset?.typography.bodySize ?? preset?.typography.bodySize ?? config.fontSize ?? 11;
+  const lineHeight = layoutPreset?.typography.bodyLineHeight ?? preset?.typography.lineHeight ?? config.lineHeight ?? 1.5;
   const contentWidth = pageSize.width - margins.left - margins.right;
 
   // ─── HALF-TITLE PAGE ───
@@ -272,23 +299,77 @@ export async function generateBookPdf(options: {
     // Each chapter starts on a new page
     doc.addPage();
 
-    // Chapter title
+    // Chapter title — rendered using Layout Director's chapter opener config
     if (chapter.title) {
-      doc.moveDown(4);
-      doc
-        .fontSize(headingSize)
-        .font(headingFont)
-        .text(chapter.title.toUpperCase(), { align: "center" });
-      doc.moveDown(1.5);
+      const topMoveDown = chapterOpenerCfg.topOffset > 0
+        ? chapterOpenerCfg.topOffset / 14 // convert mm-ish offset to moveDown units
+        : 4;
+      doc.moveDown(topMoveDown);
 
-      // Decorative separator
-      const sepY = doc.y;
-      doc
-        .moveTo(centerX - 30, sepY)
-        .lineTo(centerX + 30, sepY)
-        .lineWidth(0.5)
-        .stroke("#999999");
-      doc.moveDown(1.5);
+      // Show chapter number if configured
+      if (chapterOpenerCfg.showNumber && i > 0) {
+        let chapterNum: string;
+        switch (chapterOpenerCfg.numberFormat) {
+          case "roman": {
+            const romans = ["", "I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X",
+              "XI", "XII", "XIII", "XIV", "XV", "XVI", "XVII", "XVIII", "XIX", "XX"];
+            chapterNum = romans[i] ?? String(i);
+            break;
+          }
+          case "spelled":
+            chapterNum = `Capitulo ${i}`;
+            break;
+          default:
+            chapterNum = String(i);
+        }
+        const numAlign = chapterOpenerCfg.style === "left_modern" ? "left" as const : "center" as const;
+        doc
+          .fontSize(headingSize * 0.6)
+          .font(headingFont)
+          .fillColor("#666666")
+          .text(chapterNum, { align: numAlign });
+        doc.fillColor("#000000");
+        doc.moveDown(0.5);
+      }
+
+      // Chapter title text
+      const titleAlign = chapterOpenerCfg.style === "left_modern" ? "left" as const : "center" as const;
+      if (chapterOpenerCfg.showTitle) {
+        doc
+          .fontSize(headingSize)
+          .font(headingFont)
+          .text(chapter.title.toUpperCase(), { align: titleAlign });
+        doc.moveDown(1);
+      }
+
+      // Decorative element based on chapter opener config
+      if (chapterOpenerCfg.decorativeElement === "line") {
+        const sepY = doc.y;
+        doc
+          .moveTo(centerX - 30, sepY)
+          .lineTo(centerX + 30, sepY)
+          .lineWidth(0.5)
+          .stroke("#999999");
+        doc.moveDown(1.5);
+      } else if (chapterOpenerCfg.decorativeElement === "dots") {
+        doc
+          .fontSize(12)
+          .font(bodyFont)
+          .fillColor("#999999")
+          .text("· · ·", { align: "center" });
+        doc.fillColor("#000000");
+        doc.moveDown(1);
+      } else if (chapterOpenerCfg.decorativeElement === "ornament") {
+        doc
+          .fontSize(14)
+          .font(bodyFont)
+          .fillColor("#999999")
+          .text("§", { align: "center" });
+        doc.fillColor("#000000");
+        doc.moveDown(1);
+      } else {
+        doc.moveDown(1);
+      }
     }
 
     // Chapter content
@@ -320,8 +401,8 @@ export async function generateBookPdf(options: {
 
     const pageNum = i + 1;
     doc
-      .fontSize(9)
-      .font(bodyFont)
+      .fontSize(pageNumberSize)
+      .font(pageNumberFont)
       .fillColor("#999999");
 
     // Alternate page number position (left/right) for book feel
