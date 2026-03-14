@@ -6,13 +6,22 @@ export type ExportStatus = "queued" | "processing" | "completed" | "failed";
 
 export type ExportQuality = "draft" | "review" | "print" | "digital";
 
+export type BookPageSize =
+  | "a4"
+  | "a5"
+  | "letter"
+  | "trade_6x9"
+  | "trade_5.5x8.5"
+  | "pocket_5x8"
+  | "custom";
+
 export interface ExportConfig {
   format: ExportFormat;
   quality: ExportQuality;
   includeMetadata: boolean;
   includeCover: boolean;
   includeTableOfContents: boolean;
-  pageSize?: "a4" | "a5" | "letter" | "custom";
+  pageSize?: BookPageSize;
   customPageWidth?: number;
   customPageHeight?: number;
   margins?: {
@@ -24,6 +33,14 @@ export interface ExportConfig {
   fontFamily?: string;
   fontSize?: number;
   lineHeight?: number;
+  /** First-line paragraph indent in mm */
+  paragraphIndent?: number;
+  /** Start each chapter on recto (odd) page */
+  chapterStartRecto?: boolean;
+  /** Include running headers (book title / chapter title) */
+  runningHeaders?: boolean;
+  /** Paper type for KDP compatibility */
+  paperType?: "white" | "cream";
 }
 
 export interface EditorialExportJob {

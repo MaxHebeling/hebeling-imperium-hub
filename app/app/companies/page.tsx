@@ -13,21 +13,20 @@ import {
 } from "lucide-react";
 
 /* ------------------------------------------------------------------ */
-/*  Logo-derived palette                                               */
+/*  Hebeling OS — Dark Elegant Palette                                  */
 /* ------------------------------------------------------------------ */
 const P = {
-  navy: "#2a3a5c",
-  navyLight: "#3a4f7a",
-  gold: "#c5a55a",
-  goldLight: "#d4b87a",
-  goldDim: "#c5a55a15",
-  burgundy: "#7a2040",
-  burgundyLight: "#9a3060",
-  cream: "#faf8f5",
-  surface: "#ffffff",
-  border: "#e8e2d8",
-  txt: "#1f2937",
-  txtM: "#6b7280",
+  bg: "#0B1420",
+  bgSecondary: "#0F1B2D",
+  card: "#162235",
+  cardHover: "#1C2D44",
+  gold: "#C8A75B",
+  goldLight: "#E4C98A",
+  goldDim: "#C8A75B15",
+  maroon: "#6E1F2F",
+  border: "#1E3048",
+  txt: "#E7ECF5",
+  txtM: "#9FB2CC",
 };
 
 /* ------------------------------------------------------------------ */
@@ -66,8 +65,8 @@ const UNITS: BusinessUnit[] = [
     logo: "/logo-reino-editorial.png",
     logoBg: "#ffffff",
     logoRounded: true,
-    gradient: `linear-gradient(135deg, ${P.burgundy}, ${P.navyLight})`,
-    accent: P.burgundy,
+    gradient: `linear-gradient(135deg, ${P.maroon}, #2F6FA3)`,
+    accent: "#2F6FA3",
     stats: [
       { label: "Etapas AI", value: "8" },
       { label: "Formatos", value: "3" },
@@ -87,8 +86,8 @@ const UNITS: BusinessUnit[] = [
     logo: "/logo-ikingdom.png",
     logoBg: "#ffffff",
     logoRounded: false,
-    gradient: "linear-gradient(135deg, #1a1a1a, #444444)",
-    accent: "#1a1a1a",
+    gradient: `linear-gradient(135deg, ${P.gold}, #8B7A3D)`,
+    accent: P.gold,
     stats: [
       { label: "Apps", value: "—" },
       { label: "Clientes", value: "—" },
@@ -108,8 +107,8 @@ const UNITS: BusinessUnit[] = [
     logo: "/logo-imperium.png",
     logoBg: "transparent",
     logoRounded: true,
-    gradient: `linear-gradient(135deg, ${P.navy}, ${P.gold})`,
-    accent: P.navy,
+    gradient: `linear-gradient(135deg, #0B1C2E, ${P.gold})`,
+    accent: "#0B1C2E",
     stats: [
       { label: "Unidades", value: "4" },
       { label: "Países", value: "3" },
@@ -128,8 +127,8 @@ const UNITS: BusinessUnit[] = [
     logo: "/logo-max-hebeling.png",
     logoBg: "#ffffff",
     logoRounded: false,
-    gradient: "linear-gradient(135deg, #e8710a, #333333)",
-    accent: "#e8710a",
+    gradient: "linear-gradient(135deg, #F0652A, #8B3A15)",
+    accent: "#F0652A",
     stats: [
       { label: "Proyectos", value: "—" },
       { label: "Servicios", value: "—" },
@@ -149,8 +148,8 @@ const UNITS: BusinessUnit[] = [
     logo: "/logo-red-apostolica.png",
     logoBg: "transparent",
     logoRounded: true,
-    gradient: `linear-gradient(135deg, ${P.gold}, ${P.goldLight})`,
-    accent: P.gold,
+    gradient: `linear-gradient(135deg, #D6C28A, ${P.gold})`,
+    accent: "#D6C28A",
     stats: [
       { label: "Ministerio", value: "—" },
       { label: "Alcance", value: "Global" },
@@ -164,13 +163,13 @@ const UNITS: BusinessUnit[] = [
 /* ------------------------------------------------------------------ */
 export default function CompaniesPage() {
   return (
-    <div className="min-h-full" style={{ background: P.cream }}>
+    <div className="min-h-full" style={{ background: P.bg }}>
 
       {/* ── Hero header ──────────────────────────────────────────── */}
       <div
         className="relative overflow-hidden"
         style={{
-          background: `linear-gradient(135deg, ${P.navy} 0%, ${P.navyLight} 50%, ${P.burgundy} 100%)`,
+          background: `linear-gradient(135deg, ${P.bgSecondary} 0%, ${P.card} 50%, ${P.maroon}30 100%)`,
         }}
       >
         {/* subtle grid */}
@@ -189,7 +188,7 @@ export default function CompaniesPage() {
               className="w-16 h-16 rounded-2xl flex items-center justify-center shrink-0 shadow-lg overflow-hidden"
               style={{
                 background: `linear-gradient(135deg, ${P.gold}, ${P.goldLight})`,
-                boxShadow: `0 8px 32px ${P.gold}40`,
+                boxShadow: `0 8px 32px ${P.gold}25`,
               }}
             >
               <Image
@@ -201,12 +200,12 @@ export default function CompaniesPage() {
               />
             </div>
             <div>
-              <h1 className="text-2xl font-bold tracking-tight text-white">
+              <h1 className="text-2xl font-bold tracking-tight text-[#E7ECF5]">
                 HEBELING OS
               </h1>
               <p
                 className="text-sm mt-0.5"
-                style={{ color: `${P.goldLight}cc` }}
+                style={{ color: `${P.gold}cc` }}
               >
                 Enterprise Operating System &middot; Unidades de Negocio
               </p>
@@ -224,18 +223,18 @@ export default function CompaniesPage() {
               <div key={s.label} className="flex items-center gap-2.5">
                 <div
                   className="w-8 h-8 rounded-lg flex items-center justify-center"
-                  style={{ background: "rgba(255,255,255,0.1)" }}
+                  style={{ background: `${P.card}80` }}
                 >
-                  <s.icon className="w-4 h-4" style={{ color: P.goldLight }} />
+                  <s.icon className="w-4 h-4" style={{ color: P.gold }} />
                 </div>
                 <div>
                   <p
                     className="text-[11px] font-medium uppercase tracking-wider"
-                    style={{ color: "rgba(255,255,255,0.5)" }}
+                    style={{ color: P.txtM }}
                   >
                     {s.label}
                   </p>
-                  <p className="text-sm font-semibold text-white">{s.value}</p>
+                  <p className="text-sm font-semibold" style={{ color: P.txt }}>{s.value}</p>
                 </div>
               </div>
             ))}
@@ -249,12 +248,12 @@ export default function CompaniesPage() {
           {UNITS.map((u) => (
               <div
                 key={u.slug}
-                className="group relative rounded-2xl overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-0.5"
+                className="group relative rounded-2xl overflow-hidden transition-all duration-300 hos-card-hover"
                 style={{
-                  background: P.surface,
+                  background: P.card,
                   border: `1px solid ${P.border}`,
                   boxShadow:
-                    "0 1px 3px rgba(0,0,0,0.04), 0 4px 16px rgba(0,0,0,0.03)",
+                    "0 1px 3px rgba(0,0,0,0.2), 0 4px 16px rgba(0,0,0,0.15)",
                 }}
               >
                 {/* accent bar */}
@@ -278,16 +277,15 @@ export default function CompaniesPage() {
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
                         <h3
-                          className="text-lg font-bold tracking-tight"
-                          style={{ color: P.txt }}
+                          className="text-lg font-bold tracking-tight text-[#E7ECF5]"
                         >
                           {u.name}
                         </h3>
                         {u.featured && (
                           <span
-                            className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider"
+                            className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider animate-pulse-gold"
                             style={{
-                              background: P.goldDim,
+                              background: `${P.gold}15`,
                               color: P.gold,
                               border: `1px solid ${P.gold}30`,
                             }}
@@ -308,8 +306,7 @@ export default function CompaniesPage() {
 
                   {/* description */}
                   <p
-                    className="text-sm leading-relaxed mt-3"
-                    style={{ color: P.txtM }}
+                    className="text-sm leading-relaxed mt-3 text-[#9FB2CC]"
                   >
                     {u.description}
                   </p>
@@ -332,8 +329,7 @@ export default function CompaniesPage() {
                           {st.value}
                         </span>
                         <span
-                          className="text-[10px] font-medium"
-                          style={{ color: P.txtM }}
+                          className="text-[10px] font-medium text-[#9FB2CC]/70"
                         >
                           {st.label}
                         </span>
@@ -344,7 +340,7 @@ export default function CompaniesPage() {
                   {/* action buttons */}
                   <div
                     className="flex items-center gap-2 mt-5 pt-4"
-                    style={{ borderTop: `1px solid ${P.border}` }}
+                    style={{ borderTop: `1px solid ${P.border}60` }}
                   >
                     <Link
                       href={u.href}
@@ -364,9 +360,9 @@ export default function CompaniesPage() {
                         href={u.editorialHref}
                         className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold transition-all hover:opacity-80"
                         style={{
-                          background: `${P.navy}08`,
-                          color: P.navy,
-                          border: `1px solid ${P.navy}20`,
+                          background: `${P.maroon}20`,
+                          color: "#E7ECF5",
+                          border: `1px solid ${P.maroon}40`,
                         }}
                       >
                         <BookOpen className="w-3.5 h-3.5" />
@@ -379,9 +375,9 @@ export default function CompaniesPage() {
                         href={u.oficinaHref}
                         className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold transition-all hover:opacity-80"
                         style={{
-                          background: `${P.gold}10`,
+                          background: `${P.gold}15`,
                           color: P.gold,
-                          border: `1px solid ${P.gold}25`,
+                          border: `1px solid ${P.gold}30`,
                         }}
                       >
                         <Briefcase className="w-3.5 h-3.5" />
@@ -413,7 +409,7 @@ export default function CompaniesPage() {
         <div className="text-center mt-8">
           <p
             className="text-xs font-medium"
-            style={{ color: `${P.txtM}80` }}
+            style={{ color: `${P.txtM}60` }}
           >
             HEBELING OS v1.0 &middot; Enterprise Operating System &middot;{" "}
             &copy; {new Date().getFullYear()} Max Hebeling

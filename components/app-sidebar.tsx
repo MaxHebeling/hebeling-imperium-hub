@@ -6,9 +6,9 @@ import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 import {
+  LayoutDashboard,
   Users,
   Settings,
-  ClipboardList,
   CreditCard,
   Building2,
   PanelLeftClose,
@@ -26,35 +26,41 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 
+/* ─────────────────────────────────────────────────────────────
+   Hebeling OS — Sidebar Navigation Structure
+   Sections: COMMAND · BUSINESS · FINANCE · RESOURCES · SYSTEM
+   ───────────────────────────────────────────────────────────── */
 const navSections = [
+  {
+    titleKey: null as string | null,
+    items: [
+      { href: "/app/companies", labelKey: "companies", icon: LayoutDashboard },
+    ],
+  },
   {
     titleKey: "empresas" as const,
     items: [
       { href: "/app/companies", labelKey: "companies", icon: Building2 },
+      { href: "/app/crm", labelKey: "crm", icon: Users },
     ],
   },
   {
-    titleKey: "infraestructuraCompartida" as const,
+    titleKey: "finance" as const,
     items: [
-      { href: "/app/crm", labelKey: "crm", icon: Users },
       { href: "/app/finance-vault", labelKey: "billing", icon: CreditCard },
+    ],
+  },
+  {
+    titleKey: "assets" as const,
+    items: [
       { href: "/app/documents", labelKey: "files", icon: FolderOpen },
     ],
   },
   {
-    titleKey: null as string | null,
+    titleKey: "system" as const,
     items: [
       { href: "/app/settings", labelKey: "settings", icon: Settings },
     ],
-  },
-];
-
-// External links
-const externalLinks = [
-  {
-    href: "https://ikingdom.org/apply?brand=ikingdom",
-    labelKey: "applyForm",
-    icon: ClipboardList,
   },
 ];
 
@@ -71,9 +77,9 @@ export function AppSidebar({ userName, userRole }: AppSidebarProps) {
   const getRoleBadgeColor = (role: string) => {
     switch (role) {
       case "superadmin":
-        return "bg-amber-500/20 text-amber-400 border-amber-500/30";
+        return "bg-[#C8A75B]/20 text-[#C8A75B] border-[#C8A75B]/30";
       case "admin":
-        return "bg-blue-500/20 text-blue-400 border-blue-500/30";
+        return "bg-[#2F6FA3]/20 text-[#4F8DC4] border-[#2F6FA3]/30";
       case "sales":
         return "bg-emerald-500/20 text-emerald-400 border-emerald-500/30";
       case "ops":
@@ -110,7 +116,7 @@ export function AppSidebar({ userName, userRole }: AppSidebarProps) {
               isCollapsed && "justify-center"
             )}
           >
-            <div className="h-10 w-10 rounded-lg overflow-hidden flex items-center justify-center bg-sidebar-accent/50">
+            <div className="h-10 w-10 rounded-lg overflow-hidden flex items-center justify-center bg-sidebar-accent/50 ring-1 ring-[#C8A75B]/20">
               <Image
                 src="/logo.png"
                 alt="Hebeling Imperium"
@@ -124,8 +130,8 @@ export function AppSidebar({ userName, userRole }: AppSidebarProps) {
                 <h2 className="font-semibold text-sidebar-foreground text-sm tracking-tight truncate">
                   Hebeling OS
                 </h2>
-                <p className="text-xs text-muted-foreground truncate">
-                  Operating System
+                <p className="text-[10px] text-[#C8A75B]/70 font-medium uppercase tracking-widest truncate">
+                  Enterprise
                 </p>
               </div>
             )}
@@ -133,12 +139,12 @@ export function AppSidebar({ userName, userRole }: AppSidebarProps) {
         </div>
 
         {/* Navigation */}
-        <nav className="flex-1 overflow-y-auto p-2 space-y-4">
+        <nav className="flex-1 overflow-y-auto p-2 space-y-1">
           {navSections.map((section, sectionIndex) => (
             <div key={section.titleKey ?? `section-${sectionIndex}`}>
               {!isCollapsed && section.titleKey && (
-                <div className="px-3 py-2">
-                  <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/70">
+                <div className="px-3 pt-4 pb-1.5">
+                  <span className="text-[10px] font-semibold uppercase tracking-[0.15em] text-[#9FB2CC]/50">
                     {getTranslatedSectionTitle(section.titleKey)}
                   </span>
                 </div>
@@ -154,17 +160,21 @@ export function AppSidebar({ userName, userRole }: AppSidebarProps) {
                       key={item.href}
                       href={item.href}
                       className={cn(
-                        "flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 group",
+                        "flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 group relative",
                         isActive
-                          ? "bg-sidebar-accent text-sidebar-accent-foreground"
-                          : "text-muted-foreground hover:bg-sidebar-accent/50 hover:text-sidebar-foreground",
+                          ? "bg-[#C8A75B]/10 text-[#E7ECF5]"
+                          : "text-[#9FB2CC] hover:bg-sidebar-accent/50 hover:text-[#E7ECF5]",
                         isCollapsed && "justify-center px-2"
                       )}
                     >
+                      {/* Gold active indicator */}
+                      {isActive && (
+                        <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 bg-[#C8A75B] rounded-r-full" />
+                      )}
                       <item.icon
                         className={cn(
-                          "h-4 w-4 shrink-0",
-                          isActive && "text-sidebar-primary"
+                          "h-4 w-4 shrink-0 transition-colors",
+                          isActive ? "text-[#C8A75B]" : "text-[#9FB2CC]/70 group-hover:text-[#9FB2CC]"
                         )}
                       />
                       {!isCollapsed && (
@@ -173,7 +183,7 @@ export function AppSidebar({ userName, userRole }: AppSidebarProps) {
                             {getTranslatedNavLabel(item.labelKey)}
                           </span>
                           {isActive && (
-                            <ChevronRight className="h-3 w-3 ml-auto opacity-50" />
+                            <ChevronRight className="h-3 w-3 ml-auto text-[#C8A75B]/50" />
                           )}
                         </>
                       )}
@@ -184,7 +194,7 @@ export function AppSidebar({ userName, userRole }: AppSidebarProps) {
                     return (
                       <Tooltip key={item.href}>
                         <TooltipTrigger asChild>{linkContent}</TooltipTrigger>
-                        <TooltipContent side="right" className="font-medium">
+                        <TooltipContent side="right" className="font-medium bg-[#162235] border-[#1E3048] text-[#E7ECF5]">
                           {getTranslatedNavLabel(item.labelKey)}
                         </TooltipContent>
                       </Tooltip>
@@ -197,30 +207,6 @@ export function AppSidebar({ userName, userRole }: AppSidebarProps) {
             </div>
           ))}
 
-          {/* External Links */}
-          {!isCollapsed && (
-            <div className="pt-2 border-t border-sidebar-border/50">
-              <div className="px-3 py-2">
-                <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/70">
-                  {t.sidebar.external}
-                </span>
-              </div>
-              {externalLinks.map((item) => (
-                <a
-                  key={item.href}
-                  href={item.href}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 text-muted-foreground hover:bg-sidebar-accent/50 hover:text-sidebar-foreground"
-                >
-                  <item.icon className="h-4 w-4 shrink-0" />
-                  <span className="truncate">
-                    {getTranslatedNavLabel(item.labelKey)}
-                  </span>
-                </a>
-              ))}
-            </div>
-          )}
         </nav>
 
         {/* Footer - Collapse Toggle & User */}
@@ -232,7 +218,7 @@ export function AppSidebar({ userName, userRole }: AppSidebarProps) {
               size="sm"
               onClick={() => setIsCollapsed(!isCollapsed)}
               className={cn(
-                "text-muted-foreground hover:text-sidebar-foreground",
+                "text-[#9FB2CC]/60 hover:text-[#E7ECF5] hover:bg-sidebar-accent/50",
                 isCollapsed ? "w-10 h-10 p-0" : "w-full justify-start gap-2"
               )}
             >
@@ -250,8 +236,8 @@ export function AppSidebar({ userName, userRole }: AppSidebarProps) {
           {/* User Info */}
           {!isCollapsed && (
             <div className="p-3 border-t border-sidebar-border/50">
-              <div className="flex items-center gap-3 px-2 py-1.5 rounded-lg bg-sidebar-accent/30">
-                <div className="h-8 w-8 rounded-full bg-gradient-to-br from-primary/80 to-primary flex items-center justify-center text-primary-foreground text-xs font-semibold shrink-0">
+              <div className="flex items-center gap-3 px-2 py-2 rounded-lg bg-[#0F1B2D]/50 ring-1 ring-[#1E3048]/50">
+                <div className="h-8 w-8 rounded-full bg-gradient-to-br from-[#C8A75B] to-[#6E1F2F] flex items-center justify-center text-[#0B1420] text-xs font-bold shrink-0">
                   {userName
                     .split(" ")
                     .map((n) => n[0])
@@ -260,7 +246,7 @@ export function AppSidebar({ userName, userRole }: AppSidebarProps) {
                     .slice(0, 2)}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-sidebar-foreground truncate">
+                  <p className="text-sm font-medium text-[#E7ECF5] truncate">
                     {userName}
                   </p>
                   <Badge

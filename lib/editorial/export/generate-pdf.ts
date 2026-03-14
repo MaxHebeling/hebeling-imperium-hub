@@ -1,10 +1,10 @@
 import PDFDocument from "pdfkit";
 import { getAdminClient } from "@/lib/leads/helpers";
-import { EDITORIAL_BUCKETS } from "@/lib/editorial/storage/buckets";
 import { getLatestManuscriptForProject } from "@/lib/editorial/files/get-latest-manuscript";
 import { extractManuscriptText } from "@/lib/editorial/files/extract-text";
 import type { ExportConfig } from "./types";
 import { DEFAULT_EXPORT_CONFIG } from "./types";
+import { getBookFormatPreset } from "./book-format-presets";
 
 /** Page dimensions in PDF points (1 point = 1/72 inch) */
 const PAGE_SIZES: Record<string, { width: number; height: number }> = {
@@ -13,6 +13,9 @@ const PAGE_SIZES: Record<string, { width: number; height: number }> = {
   letter: { width: 612, height: 792 },
   // Trade paperback (6x9 inches) — standard book size
   trade: { width: 432, height: 648 },
+  trade_6x9: { width: 432, height: 648 },
+  "trade_5.5x8.5": { width: 396, height: 612 },
+  pocket_5x8: { width: 360, height: 576 },
 };
 
 interface BookMetadata {
@@ -107,14 +110,33 @@ export async function generateBookPdf(options: {
   // Parse chapters
   const chapters = parseChapters(manuscriptText);
 
-  // Page setup
-  const pageSize = PAGE_SIZES[config.pageSize ?? "trade"] ?? PAGE_SIZES.trade;
-  const margins = {
-    top: (config.margins?.top ?? 20) * 2.835, // mm to points
-    bottom: (config.margins?.bottom ?? 20) * 2.835,
-    left: (config.margins?.left ?? 15) * 2.835,
-    right: (config.margins?.right ?? 15) * 2.835,
-  };
+  // Page setup — try book format preset first, then fall back to config
+  const preset = config.pageSize ? getBookFormatPreset(config.pageSize) : undefined;
+  const pageSize = preset
+    ? { width: preset.widthPt, height: preset.heightPt }
+    : PAGE_SIZES[config.pageSize ?? "trade"] ?? PAGE_SIZES.trade;
+
+  const mmToPt = 2.835;
+  const margins = preset
+    ? {
+        top: preset.margins.top * mmToPt,
+        bottom: preset.margins.bottom * mmToPt,
+        left: preset.margins.interior * mmToPt,
+        right: preset.margins.exterior * mmToPt,
+      }
+    : {
+        top: (config.margins?.top ?? 20) * mmToPt,
+        bottom: (config.margins?.bottom ?? 20) * mmToPt,
+        left: (config.margins?.left ?? 15) * mmToPt,
+        right: (config.margins?.right ?? 15) * mmToPt,
+      };
+
+  const bodyFont = preset?.typography.bodyFont ?? "Helvetica";
+  const headingFont = preset?.typography.headingFont ?? "Helvetica-Bold";
+  const headingSize = preset?.typography.headingSize ?? 22;
+  const paragraphIndent = preset
+    ? preset.typography.paragraphIndent * mmToPt
+    : (config.paragraphIndent ?? 7) * mmToPt;
 
   // Create PDF document
   const doc = new PDFDocument({
@@ -139,21 +161,21 @@ export async function generateBookPdf(options: {
   const chunks: Buffer[] = [];
   doc.on("data", (chunk: Buffer) => chunks.push(chunk));
 
-  const bodyFontSize = config.fontSize ?? 11;
-  const lineHeight = config.lineHeight ?? 1.5;
+  const bodyFontSize = preset?.typography.bodySize ?? config.fontSize ?? 11;
+  const lineHeight = preset?.typography.lineHeight ?? config.lineHeight ?? 1.5;
   const contentWidth = pageSize.width - margins.left - margins.right;
 
   // ─── HALF-TITLE PAGE ───
   doc.moveDown(8);
   doc
     .fontSize(24)
-    .font("Helvetica")
+    .font(bodyFont)
     .text(metadata.title, { align: "center" });
   if (metadata.subtitle) {
     doc.moveDown(0.5);
     doc
       .fontSize(14)
-      .font("Helvetica")
+      .font(bodyFont)
       .text(metadata.subtitle, { align: "center" });
   }
 
@@ -162,14 +184,14 @@ export async function generateBookPdf(options: {
   doc.moveDown(6);
   doc
     .fontSize(28)
-    .font("Helvetica-Bold")
+    .font(headingFont)
     .text(metadata.title.toUpperCase(), { align: "center" });
 
   if (metadata.subtitle) {
     doc.moveDown(0.8);
     doc
       .fontSize(16)
-      .font("Helvetica")
+      .font(bodyFont)
       .text(metadata.subtitle, { align: "center" });
   }
 
@@ -185,13 +207,13 @@ export async function generateBookPdf(options: {
   doc.moveDown(2);
   doc
     .fontSize(18)
-    .font("Helvetica")
+    .font(bodyFont)
     .text(metadata.authorName ?? "Autor desconocido", { align: "center" });
 
   doc.moveDown(8);
   doc
     .fontSize(10)
-    .font("Helvetica")
+    .font(bodyFont)
     .fillColor("#666666")
     .text("Reino Editorial", { align: "center" });
   doc.fillColor("#000000");
@@ -201,7 +223,7 @@ export async function generateBookPdf(options: {
   doc.moveDown(20);
   doc
     .fontSize(8)
-    .font("Helvetica")
+    .font(bodyFont)
     .fillColor("#666666");
   doc.text(`${metadata.title}`, { align: "center" });
   if (metadata.authorName) {
@@ -222,8 +244,8 @@ export async function generateBookPdf(options: {
     doc.moveDown(3);
     doc
       .fontSize(20)
-      .font("Helvetica-Bold")
-      .text("CONTENIDO", { align: "center" });
+      .font(headingFont)
+      .text(metadata.language === "en" ? "CONTENTS" : "CONTENIDO", { align: "center" });
     doc.moveDown(2);
 
     // We'll fill in page numbers after rendering chapters
@@ -233,7 +255,7 @@ export async function generateBookPdf(options: {
         tocEntries.push({ title: chapter.title, yPos: doc.y });
         doc
           .fontSize(11)
-          .font("Helvetica")
+          .font(bodyFont)
           .text(chapter.title, margins.left, doc.y, {
             width: contentWidth,
             continued: false,
@@ -254,8 +276,8 @@ export async function generateBookPdf(options: {
     if (chapter.title) {
       doc.moveDown(4);
       doc
-        .fontSize(22)
-        .font("Helvetica-Bold")
+        .fontSize(headingSize)
+        .font(headingFont)
         .text(chapter.title.toUpperCase(), { align: "center" });
       doc.moveDown(1.5);
 
@@ -278,14 +300,14 @@ export async function generateBookPdf(options: {
 
       doc
         .fontSize(bodyFontSize)
-        .font("Helvetica")
+        .font(bodyFont)
         .text(cleanText, {
           align: "justify",
           lineGap: (lineHeight - 1) * bodyFontSize,
-          indent: 20,
+          indent: paragraphIndent,
           width: contentWidth,
         });
-      doc.moveDown(0.5);
+      doc.moveDown(0.4);
     }
   }
 
@@ -299,7 +321,7 @@ export async function generateBookPdf(options: {
     const pageNum = i + 1;
     doc
       .fontSize(9)
-      .font("Helvetica")
+      .font(bodyFont)
       .fillColor("#999999");
 
     // Alternate page number position (left/right) for book feel

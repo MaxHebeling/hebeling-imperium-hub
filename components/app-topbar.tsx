@@ -105,21 +105,21 @@ export function AppTopbar({ organizationName, userName, userRole = "admin" }: Ap
   };
 
   return (
-    <header className="h-16 border-b border-border/40 bg-card/50 backdrop-blur-md px-6 flex items-center justify-between sticky top-0 z-40">
+    <header className="h-14 border-b border-[#1E3048]/60 bg-[#0B1420]/80 backdrop-blur-xl px-6 flex items-center justify-between sticky top-0 z-40">
       {/* Left Section - Breadcrumbs */}
       <div className="flex items-center gap-2">
         <nav className="flex items-center gap-1 text-sm">
           {breadcrumbs.map((crumb, index) => (
             <div key={crumb.path} className="flex items-center gap-1">
               {index > 0 && (
-                <ChevronRight className="h-3.5 w-3.5 text-muted-foreground/50" />
+                <ChevronRight className="h-3 w-3 text-[#9FB2CC]/30" />
               )}
               {crumb.isLast ? (
-                <span className="font-medium text-foreground">{crumb.label}</span>
+                <span className="font-medium text-[#E7ECF5] text-sm">{crumb.label}</span>
               ) : (
                 <Link
                   href={crumb.path}
-                  className="text-muted-foreground hover:text-foreground transition-colors"
+                  className="text-[#9FB2CC]/70 hover:text-[#E7ECF5] transition-colors text-sm"
                 >
                   {crumb.label}
                 </Link>
@@ -132,12 +132,12 @@ export function AppTopbar({ organizationName, userName, userRole = "admin" }: Ap
       {/* Center Section - Global Search */}
       <div className="hidden md:flex flex-1 max-w-md mx-8">
         <div className="relative w-full">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#9FB2CC]/50" />
           <Input
             placeholder={t.topbar.search}
-            className="pl-9 h-9 bg-background/50 border-border/50 focus:border-primary/50 focus:ring-primary/20"
+            className="pl-9 h-9 bg-[#0F1B2D]/80 border-[#1E3048]/60 text-[#E7ECF5] placeholder:text-[#9FB2CC]/40 focus:border-[#C8A75B]/40 focus:ring-[#C8A75B]/10"
           />
-          <kbd className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none hidden sm:inline-flex h-5 select-none items-center gap-1 rounded border border-border/50 bg-muted/50 px-1.5 font-mono text-[10px] font-medium text-muted-foreground">
+          <kbd className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none hidden sm:inline-flex h-5 select-none items-center gap-1 rounded border border-[#1E3048]/60 bg-[#162235]/50 px-1.5 font-mono text-[10px] font-medium text-[#9FB2CC]/50">
             <span className="text-xs">Ctrl</span>K
           </kbd>
         </div>
@@ -151,16 +151,16 @@ export function AppTopbar({ organizationName, userName, userRole = "admin" }: Ap
             <Button
               variant="ghost"
               size="icon"
-              className="relative h-9 w-9 text-muted-foreground hover:text-foreground"
+              className="relative h-9 w-9 text-[#9FB2CC]/70 hover:text-[#E7ECF5] hover:bg-[#162235]/50"
             >
               <Bell className="h-4 w-4" />
-              <span className="absolute top-1.5 right-1.5 h-2 w-2 bg-amber-500 rounded-full" />
+              <span className="absolute top-1.5 right-1.5 h-2 w-2 bg-[#C8A75B] rounded-full animate-pulse" />
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-80">
-            <DropdownMenuLabel className="flex items-center justify-between">
+          <DropdownMenuContent align="end" className="w-80 bg-[#162235] border-[#1E3048]">
+            <DropdownMenuLabel className="flex items-center justify-between text-[#E7ECF5]">
               <span>{t.topbar.notifications}</span>
-              <Badge variant="secondary" className="text-xs">3 {t.topbar.new}</Badge>
+              <Badge variant="secondary" className="text-xs bg-[#C8A75B]/20 text-[#C8A75B] border-[#C8A75B]/30">3 {t.topbar.new}</Badge>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <div className="max-h-64 overflow-y-auto">
@@ -178,7 +178,7 @@ export function AppTopbar({ organizationName, userName, userRole = "admin" }: Ap
               </DropdownMenuItem>
             </div>
             <DropdownMenuSeparator />
-            <DropdownMenuItem className="justify-center text-primary cursor-pointer">
+            <DropdownMenuItem className="justify-center text-[#C8A75B] cursor-pointer hover:text-[#E4C98A]">
               {t.topbar.viewAllNotifications}
             </DropdownMenuItem>
           </DropdownMenuContent>
@@ -189,7 +189,7 @@ export function AppTopbar({ organizationName, userName, userRole = "admin" }: Ap
           <DropdownMenuTrigger asChild>
             <Button
               variant="ghost"
-              className="h-9 px-3 gap-2 text-muted-foreground hover:text-foreground"
+              className="h-9 px-3 gap-2 text-[#9FB2CC]/70 hover:text-[#E7ECF5] hover:bg-[#162235]/50"
             >
               <Building2 className="h-4 w-4" />
               <span className="hidden lg:inline text-sm font-medium truncate max-w-[120px]">
@@ -198,15 +198,15 @@ export function AppTopbar({ organizationName, userName, userRole = "admin" }: Ap
               <ChevronDown className="h-3 w-3" />
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-56">
-            <DropdownMenuLabel>{t.topbar.organizations}</DropdownMenuLabel>
-            <DropdownMenuSeparator />
+          <DropdownMenuContent align="end" className="w-56 bg-[#162235] border-[#1E3048]">
+            <DropdownMenuLabel className="text-[#E7ECF5]">{t.topbar.organizations}</DropdownMenuLabel>
+            <DropdownMenuSeparator className="bg-[#1E3048]" />
             <DropdownMenuItem className="flex items-center gap-2 cursor-pointer">
-              <div className="h-6 w-6 rounded bg-primary/10 flex items-center justify-center">
-                <Building2 className="h-3.5 w-3.5 text-primary" />
+              <div className="h-6 w-6 rounded bg-[#C8A75B]/10 flex items-center justify-center">
+                <Building2 className="h-3.5 w-3.5 text-[#C8A75B]" />
               </div>
               <span className="font-medium">{organizationName}</span>
-              <Badge variant="secondary" className="ml-auto text-xs">{t.topbar.current}</Badge>
+              <Badge variant="secondary" className="ml-auto text-xs bg-[#C8A75B]/10 text-[#C8A75B]">{t.topbar.current}</Badge>
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem asChild>
@@ -226,27 +226,27 @@ export function AppTopbar({ organizationName, userName, userRole = "admin" }: Ap
           <DropdownMenuTrigger asChild>
             <Button
               variant="ghost"
-              className="h-9 px-2 gap-2 hover:bg-accent/50"
+              className="h-9 px-2 gap-2 hover:bg-[#162235]/50"
             >
-              <div className="h-7 w-7 rounded-full bg-gradient-to-br from-primary/80 to-primary flex items-center justify-center text-primary-foreground text-xs font-semibold">
+              <div className="h-7 w-7 rounded-full bg-gradient-to-br from-[#C8A75B] to-[#6E1F2F] flex items-center justify-center text-[#0B1420] text-xs font-bold">
                 {getInitials(userName)}
               </div>
               <div className="hidden lg:flex flex-col items-start">
-                <span className="text-sm font-medium text-foreground leading-none">
+                <span className="text-sm font-medium text-[#E7ECF5] leading-none">
                   {userName}
                 </span>
-                <span className="text-xs text-muted-foreground capitalize leading-none mt-0.5">
+                <span className="text-[10px] text-[#C8A75B]/70 capitalize leading-none mt-0.5">
                   {userRole}
                 </span>
               </div>
-              <ChevronDown className="h-3 w-3 text-muted-foreground" />
+              <ChevronDown className="h-3 w-3 text-[#9FB2CC]/50" />
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-56">
+          <DropdownMenuContent align="end" className="w-56 bg-[#162235] border-[#1E3048]">
             <DropdownMenuLabel className="font-normal">
               <div className="flex flex-col space-y-1">
-                <p className="text-sm font-medium">{userName}</p>
-                <p className="text-xs text-muted-foreground capitalize flex items-center gap-1.5">
+                <p className="text-sm font-medium text-[#E7ECF5]">{userName}</p>
+                <p className="text-xs text-[#9FB2CC] capitalize flex items-center gap-1.5">
                   <Shield className="h-3 w-3" />
                   {userRole}
                 </p>
