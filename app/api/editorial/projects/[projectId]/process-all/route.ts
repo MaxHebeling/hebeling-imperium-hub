@@ -60,9 +60,9 @@ export async function POST(
     // Get the latest file
     const { data: latestFile } = await supabase
       .from("editorial_files")
-      .select("id, version_number")
+      .select("id, version")
       .eq("project_id", projectId)
-      .order("version_number", { ascending: false })
+      .order("version", { ascending: false })
       .limit(1)
       .single();
 
@@ -105,7 +105,7 @@ export async function POST(
       taskKey,
       requestedBy: "staff",
       sourceFileId: latestFile.id,
-      sourceFileVersion: latestFile.version_number,
+      sourceFileVersion: latestFile.version,
     });
 
     // Now process the job immediately (synchronous processing triggers the chain)
