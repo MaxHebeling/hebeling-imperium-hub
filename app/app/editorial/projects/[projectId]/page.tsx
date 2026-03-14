@@ -19,6 +19,8 @@ import {
   Send,
   CheckCheck,
   Download,
+  Ruler,
+  BookCopy,
 } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -48,6 +50,19 @@ import {
   EDITORIAL_STAGE_LABELS,
   EDITORIAL_STAGE_PROGRESS,
 } from "@/lib/editorial/pipeline/constants";
+import {
+  KDP_TRIM_SIZES,
+  KDP_PAPER_SPECS,
+  KDP_PAPER_LABELS,
+  KDP_BINDING_LABELS,
+  KDP_BLEED_LABELS,
+} from "@/lib/editorial/kdp";
+import type {
+  KdpPaperType,
+  KdpBindingType,
+  KdpBleedOption,
+  KdpCoverDimensions,
+} from "@/lib/editorial/kdp";
 
 interface ProgressData {
   project: Pick<EditorialProject, "id" | "title" | "author_name" | "current_stage" | "status" | "progress_percent"> & { client_id?: string | null };
@@ -134,6 +149,16 @@ export default function EditorialProjectDetailPage() {
   // Stage control state (staff can move to any stage)
   const [changingStage, setChangingStage] = useState(false);
   const [stageChangeError, setStageChangeError] = useState<string | null>(null);
+
+  // KDP format configurator state
+  const [kdpTrimSizeId, setKdpTrimSizeId] = useState("6x9");
+  const [kdpPaperType, setKdpPaperType] = useState<KdpPaperType>("cream");
+  const [kdpBinding, setKdpBinding] = useState<KdpBindingType>("paperback");
+  const [kdpBleed, setKdpBleed] = useState<KdpBleedOption>("no_bleed");
+  const [kdpPageCount, setKdpPageCount] = useState<number>(200);
+  const [kdpResult, setKdpResult] = useState<KdpCoverDimensions | null>(null);
+  const [kdpError, setKdpError] = useState<string | null>(null);
+  const [kdpCalculating, setKdpCalculating] = useState(false);
 
   const fetchData = useCallback(async () => {
     if (!projectId) return;
@@ -264,6 +289,35 @@ export default function EditorialProjectDetailPage() {
       setStageChangeError("Error de conexión al cambiar etapa");
     } finally {
       setChangingStage(false);
+    }
+  }
+
+  async function handleKdpCalculate() {
+    setKdpCalculating(true);
+    setKdpError(null);
+    setKdpResult(null);
+    try {
+      const res = await fetch("/api/editorial/kdp-calculator", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          trimSizeId: kdpTrimSizeId,
+          paperType: kdpPaperType,
+          binding: kdpBinding,
+          bleed: kdpBleed,
+          pageCount: kdpPageCount,
+        }),
+      });
+      const json = await res.json();
+      if (json.success) {
+        setKdpResult(json.dimensions);
+      } else {
+        setKdpError(json.error ?? "Error al calcular dimensiones");
+      }
+    } catch {
+      setKdpError("Error de conexión");
+    } finally {
+      setKdpCalculating(false);
     }
   }
 
@@ -659,6 +713,267 @@ export default function EditorialProjectDetailPage() {
           <p className="text-xs mt-2 text-center" style={{ color: "var(--re-text-subtle)" }}>
             El documento incluye errores agrupados por tipo y severidad, listo para enviar al autor.
           </p>
+        </div>
+      </div>
+
+      {/* KDP Format Configurator */}
+      <div
+        className="rounded-2xl overflow-hidden"
+        style={{ background: "var(--re-surface)", border: "1px solid var(--re-border)" }}
+      >
+        <div className="px-5 py-4 flex items-center gap-2" style={{ borderBottom: "1px solid var(--re-border)" }}>
+          <BookCopy className="w-4 h-4" style={{ color: "var(--re-gold, #F5C842)" }} />
+          <div>
+            <h2 className="text-sm font-semibold" style={{ color: "var(--re-text)" }}>Formato Amazon KDP</h2>
+            <p className="text-xs mt-0.5" style={{ color: "var(--re-text-muted)" }}>
+              Calcula las dimensiones exactas de la portada, lomo y sangrado para Amazon KDP.
+            </p>
+          </div>
+        </div>
+
+        <div className="px-5 py-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+            {/* Trim Size */}
+            <div className="flex flex-col gap-1.5">
+              <Label className="text-xs font-medium" style={{ color: "var(--re-text-muted)" }}>
+                Tamaño de corte (Trim Size)
+              </Label>
+              <select
+                value={kdpTrimSizeId}
+                onChange={(e) => setKdpTrimSizeId(e.target.value)}
+                className="w-full px-3 py-2 rounded-lg text-sm"
+                style={{
+                  background: "var(--re-surface-2)",
+                  color: "var(--re-text)",
+                  border: "1px solid var(--re-border)",
+                }}
+              >
+                {KDP_TRIM_SIZES.map((ts) => (
+                  <option key={ts.id} value={ts.id}>
+                    {ts.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Paper Type */}
+            <div className="flex flex-col gap-1.5">
+              <Label className="text-xs font-medium" style={{ color: "var(--re-text-muted)" }}>
+                Tipo de papel
+              </Label>
+              <select
+                value={kdpPaperType}
+                onChange={(e) => setKdpPaperType(e.target.value as KdpPaperType)}
+                className="w-full px-3 py-2 rounded-lg text-sm"
+                style={{
+                  background: "var(--re-surface-2)",
+                  color: "var(--re-text)",
+                  border: "1px solid var(--re-border)",
+                }}
+              >
+                {KDP_PAPER_SPECS.map((ps) => (
+                  <option key={ps.type} value={ps.type}>
+                    {ps.label} ({ps.ppi} PPI, {ps.minPages}-{ps.maxPages} págs)
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Binding */}
+            <div className="flex flex-col gap-1.5">
+              <Label className="text-xs font-medium" style={{ color: "var(--re-text-muted)" }}>
+                Encuadernación
+              </Label>
+              <select
+                value={kdpBinding}
+                onChange={(e) => setKdpBinding(e.target.value as KdpBindingType)}
+                className="w-full px-3 py-2 rounded-lg text-sm"
+                style={{
+                  background: "var(--re-surface-2)",
+                  color: "var(--re-text)",
+                  border: "1px solid var(--re-border)",
+                }}
+              >
+                {(["paperback", "hardcover"] as KdpBindingType[]).map((b) => (
+                  <option key={b} value={b}>
+                    {KDP_BINDING_LABELS[b]}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Bleed */}
+            <div className="flex flex-col gap-1.5">
+              <Label className="text-xs font-medium" style={{ color: "var(--re-text-muted)" }}>
+                Sangrado (Bleed)
+              </Label>
+              <select
+                value={kdpBleed}
+                onChange={(e) => setKdpBleed(e.target.value as KdpBleedOption)}
+                className="w-full px-3 py-2 rounded-lg text-sm"
+                style={{
+                  background: "var(--re-surface-2)",
+                  color: "var(--re-text)",
+                  border: "1px solid var(--re-border)",
+                }}
+              >
+                {(["no_bleed", "bleed"] as KdpBleedOption[]).map((bl) => (
+                  <option key={bl} value={bl}>
+                    {KDP_BLEED_LABELS[bl]}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Page Count */}
+            <div className="flex flex-col gap-1.5 sm:col-span-2">
+              <Label className="text-xs font-medium" style={{ color: "var(--re-text-muted)" }}>
+                Número de páginas (par)
+              </Label>
+              <div className="flex items-center gap-3">
+                <Input
+                  type="number"
+                  min={24}
+                  max={828}
+                  step={2}
+                  value={kdpPageCount}
+                  onChange={(e) => setKdpPageCount(Number(e.target.value))}
+                  className="w-32"
+                />
+                <input
+                  type="range"
+                  min={24}
+                  max={828}
+                  step={2}
+                  value={kdpPageCount}
+                  onChange={(e) => setKdpPageCount(Number(e.target.value))}
+                  className="flex-1"
+                />
+                <span className="text-sm font-medium" style={{ color: "var(--re-text)" }}>
+                  {kdpPageCount} págs
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Calculate button */}
+          <button
+            onClick={handleKdpCalculate}
+            disabled={kdpCalculating}
+            className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all w-full justify-center"
+            style={{
+              background: "linear-gradient(135deg, #F5C842 0%, #e6a817 100%)",
+              color: "#000",
+              boxShadow: "0 0 16px #F5C84240",
+              opacity: kdpCalculating ? 0.7 : 1,
+            }}
+          >
+            {kdpCalculating ? (
+              <><Loader2 className="w-4 h-4 animate-spin" /> Calculando...</>
+            ) : (
+              <><Ruler className="w-4 h-4" /> Calcular Dimensiones de Portada</>
+            )}
+          </button>
+
+          {/* Error */}
+          {kdpError && (
+            <div
+              className="mt-3 rounded-lg px-3 py-2 text-xs"
+              style={{ color: "var(--re-danger, #ef4444)", background: "#ef444410", border: "1px solid #ef444430" }}
+            >
+              {kdpError}
+            </div>
+          )}
+
+          {/* Results */}
+          {kdpResult && (
+            <div className="mt-4 space-y-3">
+              <div
+                className="rounded-xl p-4"
+                style={{ background: "var(--re-surface-2)", border: "1px solid var(--re-border)" }}
+              >
+                <h3 className="text-xs font-bold uppercase tracking-wider mb-3" style={{ color: "var(--re-gold, #F5C842)" }}>
+                  Dimensiones de Portada Completa
+                </h3>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                  <div>
+                    <p className="text-[10px] uppercase tracking-wider" style={{ color: "var(--re-text-subtle)" }}>Ancho total</p>
+                    <p className="text-sm font-bold" style={{ color: "var(--re-text)" }}>
+                      {kdpResult.fullWidthIn}&quot; ({kdpResult.fullWidthMm} mm)
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-[10px] uppercase tracking-wider" style={{ color: "var(--re-text-subtle)" }}>Alto total</p>
+                    <p className="text-sm font-bold" style={{ color: "var(--re-text)" }}>
+                      {kdpResult.fullHeightIn}&quot; ({kdpResult.fullHeightMm} mm)
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-[10px] uppercase tracking-wider" style={{ color: "var(--re-text-subtle)" }}>Resolución (300 DPI)</p>
+                    <p className="text-sm font-bold" style={{ color: "var(--re-text)" }}>
+                      {kdpResult.fullWidthPx} x {kdpResult.fullHeightPx} px
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div
+                className="rounded-xl p-4"
+                style={{ background: "var(--re-surface-2)", border: "1px solid var(--re-border)" }}
+              >
+                <h3 className="text-xs font-bold uppercase tracking-wider mb-3" style={{ color: "var(--re-cyan, #2DD4D4)" }}>
+                  Lomo (Spine)
+                </h3>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                  <div>
+                    <p className="text-[10px] uppercase tracking-wider" style={{ color: "var(--re-text-subtle)" }}>Ancho del lomo</p>
+                    <p className="text-sm font-bold" style={{ color: "var(--re-text)" }}>
+                      {kdpResult.spineWidthIn}&quot; ({kdpResult.spineWidthMm} mm)
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-[10px] uppercase tracking-wider" style={{ color: "var(--re-text-subtle)" }}>Sangrado por lado</p>
+                    <p className="text-sm font-bold" style={{ color: "var(--re-text)" }}>
+                      {kdpResult.bleedIn}&quot; ({(kdpResult.bleedIn * 25.4).toFixed(2)} mm)
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-[10px] uppercase tracking-wider" style={{ color: "var(--re-text-subtle)" }}>Texto en lomo</p>
+                    <p className="text-sm font-bold" style={{ color: kdpResult.spineTextRecommended ? "var(--re-success, #22d3a0)" : "var(--re-danger, #ef4444)" }}>
+                      {kdpResult.spineTextRecommended ? "Recomendado" : "No recomendado (lomo < 0.5\")"}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div
+                className="rounded-xl p-4"
+                style={{ background: "var(--re-surface-2)", border: "1px solid var(--re-border)" }}
+              >
+                <h3 className="text-xs font-bold uppercase tracking-wider mb-3" style={{ color: "var(--re-blue-light, #1B40C0)" }}>
+                  Configuración Usada
+                </h3>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
+                  <div>
+                    <p style={{ color: "var(--re-text-subtle)" }}>Trim Size</p>
+                    <p className="font-medium" style={{ color: "var(--re-text)" }}>{kdpResult.trimSize.label}</p>
+                  </div>
+                  <div>
+                    <p style={{ color: "var(--re-text-subtle)" }}>Papel</p>
+                    <p className="font-medium" style={{ color: "var(--re-text)" }}>{KDP_PAPER_LABELS[kdpResult.paperType]}</p>
+                  </div>
+                  <div>
+                    <p style={{ color: "var(--re-text-subtle)" }}>Encuadernación</p>
+                    <p className="font-medium" style={{ color: "var(--re-text)" }}>{KDP_BINDING_LABELS[kdpResult.binding]}</p>
+                  </div>
+                  <div>
+                    <p style={{ color: "var(--re-text-subtle)" }}>Páginas</p>
+                    <p className="font-medium" style={{ color: "var(--re-text)" }}>{kdpResult.pageCount}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
