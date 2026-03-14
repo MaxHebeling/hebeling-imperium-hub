@@ -48,7 +48,7 @@ export async function requestAiTask(options: {
       project_id: options.projectId,
       stage_key: options.stageKey,
       job_type: options.taskKey,
-      provider: null,
+      provider: "openai",
       status: "queued",
       input_ref: JSON.stringify(context),
     })
