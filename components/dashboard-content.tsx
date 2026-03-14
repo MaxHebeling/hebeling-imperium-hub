@@ -88,18 +88,19 @@ function formatTimeAgo(dateString: string, t: ReturnType<typeof useLanguage>["t"
   return date.toLocaleDateString();
 }
 
+/* Hebeling OS Design System — Company accent colors */
 const brandColors: Record<string, string> = {
-  ikingdom: "from-amber-500/20 to-amber-600/10 border-amber-500/30 hover:border-amber-500/50",
-  "editorial-reino": "from-emerald-500/20 to-emerald-600/10 border-emerald-500/30 hover:border-emerald-500/50",
-  imperiug: "from-blue-500/20 to-blue-600/10 border-blue-500/30 hover:border-blue-500/50",
-  "max-hebeling": "from-purple-500/20 to-purple-600/10 border-purple-500/30 hover:border-purple-500/50",
+  ikingdom: "from-[#C8A75B]/15 to-[#C8A75B]/5 border-[#C8A75B]/20 hover:border-[#C8A75B]/40",
+  "editorial-reino": "from-[#2F6FA3]/15 to-[#2F6FA3]/5 border-[#2F6FA3]/20 hover:border-[#2F6FA3]/40",
+  imperiug: "from-[#0B1C2E]/30 to-[#0B1C2E]/15 border-[#C8A75B]/20 hover:border-[#C8A75B]/40",
+  "max-hebeling": "from-[#F0652A]/15 to-[#F0652A]/5 border-[#F0652A]/20 hover:border-[#F0652A]/40",
 };
 
 const brandStatusColors: Record<string, string> = {
-  ikingdom: "bg-amber-500",
-  "editorial-reino": "bg-emerald-500",
-  imperiug: "bg-blue-500",
-  "max-hebeling": "bg-purple-500",
+  ikingdom: "bg-[#C8A75B]",
+  "editorial-reino": "bg-[#2F6FA3]",
+  imperiug: "bg-[#C8A75B]",
+  "max-hebeling": "bg-[#F0652A]",
 };
 
 export function DashboardContent({ metrics, brands, activities, deals }: DashboardContentProps) {
@@ -115,23 +116,23 @@ export function DashboardContent({ metrics, brands, activities, deals }: Dashboa
   };
 
   const stats = [
-    { label: t.dashboard.brands, value: metrics.totalBrands, icon: Building2, href: "/app/settings", color: "text-amber-400" },
-    { label: t.dashboard.leads, value: metrics.totalLeads, icon: Target, href: "/app/crm", color: "text-blue-400" },
-    { label: t.dashboard.clients, value: metrics.totalTenants, icon: Users, href: "/app/crm", color: "text-emerald-400" },
-    { label: t.dashboard.projects, value: metrics.totalProjects, icon: FolderKanban, href: "/app/projects", color: "text-purple-400" },
-    { label: t.dashboard.websites, value: metrics.totalWebsites, icon: Globe, href: "/app/websites", color: "text-cyan-400" },
-    { label: t.dashboard.documents, value: metrics.totalDocuments, icon: FileText, href: "/app/documents", color: "text-orange-400" },
-    { label: t.dashboard.deals, value: metrics.totalDeals, icon: Handshake, href: "/app/deals", color: "text-pink-400" },
-    { label: t.dashboard.tickets, value: metrics.totalTickets, icon: Ticket, href: "/app/crm", color: "text-indigo-400" },
+    { label: t.dashboard.brands, value: metrics.totalBrands, icon: Building2, href: "/app/settings", color: "text-[#C8A75B]" },
+    { label: t.dashboard.leads, value: metrics.totalLeads, icon: Target, href: "/app/crm", color: "text-[#2F6FA3]" },
+    { label: t.dashboard.clients, value: metrics.totalTenants, icon: Users, href: "/app/crm", color: "text-[#4F8DC4]" },
+    { label: t.dashboard.projects, value: metrics.totalProjects, icon: FolderKanban, href: "/app/projects", color: "text-[#E4C98A]" },
+    { label: t.dashboard.websites, value: metrics.totalWebsites, icon: Globe, href: "/app/websites", color: "text-[#9FB2CC]" },
+    { label: t.dashboard.documents, value: metrics.totalDocuments, icon: FileText, href: "/app/documents", color: "text-[#F0652A]" },
+    { label: t.dashboard.deals, value: metrics.totalDeals, icon: Handshake, href: "/app/deals", color: "text-[#D6C28A]" },
+    { label: t.dashboard.tickets, value: metrics.totalTickets, icon: Ticket, href: "/app/crm", color: "text-[#6E1F2F]" },
   ];
 
   const quickActions = [
-    { label: t.dashboard.newLead, icon: Plus, href: "/app/crm", color: "bg-blue-500/10 hover:bg-blue-500/20 border-blue-500/20" },
-    { label: t.dashboard.newDeal, icon: Handshake, href: "/app/deals", color: "bg-emerald-500/10 hover:bg-emerald-500/20 border-emerald-500/20" },
-    { label: t.dashboard.newClient, icon: Users, href: "/app/crm", color: "bg-purple-500/10 hover:bg-purple-500/20 border-purple-500/20" },
-    { label: t.dashboard.newProject, icon: FolderKanban, href: "/app/projects", color: "bg-amber-500/10 hover:bg-amber-500/20 border-amber-500/20" },
-    { label: t.dashboard.newWebsite, icon: Globe, href: "/app/websites", color: "bg-cyan-500/10 hover:bg-cyan-500/20 border-cyan-500/20" },
-    { label: t.dashboard.uploadDocument, icon: Upload, href: "/app/documents", color: "bg-orange-500/10 hover:bg-orange-500/20 border-orange-500/20" },
+    { label: t.dashboard.newLead, icon: Plus, href: "/app/crm", color: "bg-[#2F6FA3]/10 hover:bg-[#2F6FA3]/20 border-[#2F6FA3]/20" },
+    { label: t.dashboard.newDeal, icon: Handshake, href: "/app/deals", color: "bg-[#C8A75B]/10 hover:bg-[#C8A75B]/20 border-[#C8A75B]/20" },
+    { label: t.dashboard.newClient, icon: Users, href: "/app/crm", color: "bg-[#4F8DC4]/10 hover:bg-[#4F8DC4]/20 border-[#4F8DC4]/20" },
+    { label: t.dashboard.newProject, icon: FolderKanban, href: "/app/projects", color: "bg-[#E4C98A]/10 hover:bg-[#E4C98A]/20 border-[#E4C98A]/20" },
+    { label: t.dashboard.newWebsite, icon: Globe, href: "/app/websites", color: "bg-[#9FB2CC]/10 hover:bg-[#9FB2CC]/20 border-[#9FB2CC]/20" },
+    { label: t.dashboard.uploadDocument, icon: Upload, href: "/app/documents", color: "bg-[#F0652A]/10 hover:bg-[#F0652A]/20 border-[#F0652A]/20" },
   ];
 
   return (
@@ -167,10 +168,10 @@ export function DashboardContent({ metrics, brands, activities, deals }: Dashboa
       </div>
 
       {/* Quick Actions Panel */}
-      <Card className="bg-card/30 border-border/40 backdrop-blur-sm">
+      <Card className="bg-[#162235]/60 border-[#1E3048]/60 backdrop-blur-sm">
         <CardHeader className="pb-3">
-          <CardTitle className="text-base font-medium flex items-center gap-2">
-            <Zap className="h-4 w-4 text-amber-400" />
+          <CardTitle className="text-base font-medium flex items-center gap-2 text-[#E7ECF5]">
+            <Zap className="h-4 w-4 text-[#C8A75B]" />
             {t.dashboard.quickActions}
           </CardTitle>
         </CardHeader>
@@ -196,7 +197,7 @@ export function DashboardContent({ metrics, brands, activities, deals }: Dashboa
       <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3">
         {stats.map((stat) => (
           <Link key={stat.label} href={stat.href}>
-            <Card className="bg-card/40 border-border/40 hover:bg-card/60 hover:border-border/60 transition-all duration-200 cursor-pointer group h-full">
+            <Card className="bg-[#162235]/50 border-[#1E3048]/50 hover:bg-[#1C2D44]/60 hover:border-[#C8A75B]/20 transition-all duration-200 cursor-pointer group h-full">
               <CardContent className="p-4">
                 <div className="flex items-center justify-between mb-2">
                   <stat.icon className={`h-4 w-4 ${stat.color}`} />
@@ -217,12 +218,12 @@ export function DashboardContent({ metrics, brands, activities, deals }: Dashboa
         {/* Left Column - Brands & Pipeline */}
         <div className="xl:col-span-2 space-y-6">
           {/* Brands Portfolio */}
-          <Card className="bg-card/40 border-border/40">
+          <Card className="bg-[#162235]/50 border-[#1E3048]/50">
             <CardHeader>
               <div className="flex items-center justify-between">
                 <div>
                   <CardTitle className="text-lg font-medium flex items-center gap-2">
-                    <Sparkles className="h-4 w-4 text-amber-400" />
+                    <Sparkles className="h-4 w-4 text-[#C8A75B]" />
                     {t.dashboard.brandsPortfolio}
                   </CardTitle>
                   <CardDescription>{t.dashboard.brandsPortfolioDesc}</CardDescription>
@@ -278,21 +279,21 @@ export function DashboardContent({ metrics, brands, activities, deals }: Dashboa
           </Card>
 
           {/* Pipeline / Operational Snapshot */}
-          <Card className="bg-card/40 border-border/40">
+          <Card className="bg-[#162235]/50 border-[#1E3048]/50">
             <CardHeader>
-              <CardTitle className="text-lg font-medium flex items-center gap-2">
-                <Activity className="h-4 w-4 text-blue-400" />
+              <CardTitle className="text-lg font-medium flex items-center gap-2 text-[#E7ECF5]">
+                <Activity className="h-4 w-4 text-[#2F6FA3]" />
                 {t.dashboard.dealPipeline}
               </CardTitle>
               <CardDescription>{t.dashboard.dealsByStage}</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                <PipelineStage label={t.dashboard.lead} count={dealStages.lead} total={deals.length} color="bg-slate-500" />
-                <PipelineStage label={t.dashboard.qualified} count={dealStages.qualified} total={deals.length} color="bg-blue-500" />
-                <PipelineStage label={t.dashboard.proposal} count={dealStages.proposal} total={deals.length} color="bg-amber-500" />
-                <PipelineStage label={t.dashboard.negotiation} count={dealStages.negotiation} total={deals.length} color="bg-purple-500" />
-                <PipelineStage label={t.dashboard.closedWon} count={dealStages.closed} total={deals.length} color="bg-emerald-500" />
+                  <PipelineStage label={t.dashboard.lead} count={dealStages.lead} total={deals.length} color="bg-[#9FB2CC]" />
+                  <PipelineStage label={t.dashboard.qualified} count={dealStages.qualified} total={deals.length} color="bg-[#2F6FA3]" />
+                  <PipelineStage label={t.dashboard.proposal} count={dealStages.proposal} total={deals.length} color="bg-[#C8A75B]" />
+                  <PipelineStage label={t.dashboard.negotiation} count={dealStages.negotiation} total={deals.length} color="bg-[#6E1F2F]" />
+                  <PipelineStage label={t.dashboard.closedWon} count={dealStages.closed} total={deals.length} color="bg-[#2A9D8F]" />
               </div>
             </CardContent>
           </Card>
@@ -301,12 +302,12 @@ export function DashboardContent({ metrics, brands, activities, deals }: Dashboa
         {/* Right Column - Activity & Priority */}
         <div className="space-y-6">
           {/* Activity Feed */}
-          <Card className="bg-card/40 border-border/40">
+          <Card className="bg-[#162235]/50 border-[#1E3048]/50">
             <CardHeader>
               <div className="flex items-center justify-between">
                 <div>
-                  <CardTitle className="text-lg font-medium flex items-center gap-2">
-                    <Activity className="h-4 w-4 text-blue-400" />
+                  <CardTitle className="text-lg font-medium flex items-center gap-2 text-[#E7ECF5]">
+                    <Activity className="h-4 w-4 text-[#C8A75B]" />
                     {t.dashboard.recentActivity}
                   </CardTitle>
                   <CardDescription>{t.dashboard.recentActivityDesc}</CardDescription>
@@ -351,10 +352,10 @@ export function DashboardContent({ metrics, brands, activities, deals }: Dashboa
           </Card>
 
           {/* Priority Panel */}
-          <Card className="bg-card/40 border-border/40">
+          <Card className="bg-[#162235]/50 border-[#1E3048]/50">
             <CardHeader>
-              <CardTitle className="text-lg font-medium flex items-center gap-2">
-                <AlertTriangle className="h-4 w-4 text-amber-400" />
+              <CardTitle className="text-lg font-medium flex items-center gap-2 text-[#E7ECF5]">
+                <AlertTriangle className="h-4 w-4 text-[#C8A75B]" />
                 {t.dashboard.priorityItems}
               </CardTitle>
               <CardDescription>{t.dashboard.priorityItemsDesc}</CardDescription>
@@ -383,7 +384,7 @@ export function DashboardContent({ metrics, brands, activities, deals }: Dashboa
       </div>
 
       {/* Command Center Block */}
-      <Card className="bg-gradient-to-br from-card/60 to-card/40 border-border/40 overflow-hidden">
+      <Card className="bg-gradient-to-br from-[#162235]/60 to-[#0F1B2D]/40 border-[#1E3048]/40 overflow-hidden">
         <CardContent className="p-0">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-0">
             {/* Left - Info */}
@@ -481,7 +482,7 @@ function PipelineStage({
         <span className="text-muted-foreground">{label}</span>
         <span className="font-medium text-foreground">{count}</span>
       </div>
-      <div className="h-2 bg-muted/30 rounded-full overflow-hidden">
+      <div className="h-2 bg-[#0F1B2D] rounded-full overflow-hidden">
         <div
           className={`h-full rounded-full transition-all duration-500 ${color}`}
           style={{ width: `${percentage}%` }}
@@ -515,7 +516,7 @@ function PriorityItem({
   const Icon = icons[priority];
 
   return (
-    <div className="flex items-center justify-between p-3 rounded-lg bg-muted/20 border border-border/30">
+    <div className="flex items-center justify-between p-3 rounded-lg bg-[#0F1B2D]/50 border border-[#1E3048]/30">
       <div className="flex items-center gap-3">
         <Icon className={`h-4 w-4 ${priorityStyles[priority].split(" ")[2]}`} />
         <span className="text-sm text-foreground">{label}</span>

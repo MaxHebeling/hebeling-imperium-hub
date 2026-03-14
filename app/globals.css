@@ -40,51 +40,104 @@
   --sidebar-ring: oklch(0.4 0.02 240);
 }
 
-/* Dark mode - Hebeling Imperium Palette: Navy / Gold / Crimson */
+/* ═══════════════════════════════════════════════════════════════
+   HEBELING OS — Enterprise Dark Theme
+   Derived from the Hebeling OS crest:
+     Background Primary:  #0B1420
+     Background Secondary: #0F1B2D
+     Surface Card:        #162235
+     Gold Accent:         #C8A75B
+     Maroon Crest:        #6E1F2F
+   ═══════════════════════════════════════════════════════════════ */
 .dark {
-  /* Background: deep steel-navy from logo */
-  --background: #1C2B42;
-  --foreground: #F0E6CC;
-  /* Cards: slightly lighter navy */
-  --card: #243450;
-  --card-foreground: #F0E6CC;
-  --popover: #1C2B42;
-  --popover-foreground: #F0E6CC;
-  /* Primary: gold from logo crown/H */
-  --primary: #C8A84B;
-  --primary-foreground: #1C2B42;
-  /* Secondary: crimson/burgundy shield */
-  --secondary: #7D1A3C;
-  --secondary-foreground: #F0E6CC;
-  --muted: #243450;
-  --muted-foreground: #8FA3BF;
-  /* Accent: gold hover state */
-  --accent: #2D3F5A;
-  --accent-foreground: #C8A84B;
+  /* ── Core backgrounds ── */
+  --background: #0B1420;
+  --foreground: #E7ECF5;
+
+  /* ── Cards / surfaces ── */
+  --card: #162235;
+  --card-foreground: #E7ECF5;
+  --popover: #0F1B2D;
+  --popover-foreground: #E7ECF5;
+
+  /* ── Primary: Gold from crest ── */
+  --primary: #C8A75B;
+  --primary-foreground: #0B1420;
+
+  /* ── Secondary: Maroon crest ── */
+  --secondary: #6E1F2F;
+  --secondary-foreground: #E7ECF5;
+
+  /* ── Muted / subdued ── */
+  --muted: #162235;
+  --muted-foreground: #9FB2CC;
+
+  /* ── Accent: lighter surface for hover states ── */
+  --accent: #1C2D44;
+  --accent-foreground: #C8A75B;
+
+  /* ── Destructive ── */
   --destructive: #C0392B;
-  --destructive-foreground: #F0E6CC;
-  --border: #2D3F5A;
-  --input: #243450;
-  --ring: #C8A84B;
-  --chart-1: #C8A84B;
-  --chart-2: #7D1A3C;
-  --chart-3: #4A7FB5;
+  --destructive-foreground: #E7ECF5;
+
+  /* ── Borders & inputs ── */
+  --border: #1E3048;
+  --input: #162235;
+  --ring: #C8A75B;
+
+  /* ── Charts ── */
+  --chart-1: #C8A75B;
+  --chart-2: #6E1F2F;
+  --chart-3: #2F6FA3;
   --chart-4: #2A9D8F;
-  --chart-5: #E76F51;
-  /* Sidebar: darkest navy */
-  --sidebar: #152236;
-  --sidebar-foreground: #F0E6CC;
-  --sidebar-primary: #C8A84B;
-  --sidebar-primary-foreground: #152236;
-  --sidebar-accent: #1C2B42;
-  --sidebar-accent-foreground: #C8A84B;
-  --sidebar-border: #243450;
-  --sidebar-ring: #C8A84B;
+  --chart-5: #F0652A;
+
+  /* ── Sidebar: deepest layer ── */
+  --sidebar: #080F1A;
+  --sidebar-foreground: #E7ECF5;
+  --sidebar-primary: #C8A75B;
+  --sidebar-primary-foreground: #080F1A;
+  --sidebar-accent: #0F1B2D;
+  --sidebar-accent-foreground: #C8A75B;
+  --sidebar-border: #162235;
+  --sidebar-ring: #C8A75B;
+
   --radius: 0.625rem;
+
+  /* ═══════════════════════════════════════════════════════
+     Hebeling OS Design System — Custom Properties
+     ═══════════════════════════════════════════════════════ */
+
+  /* ── Multi-company accent colors ── */
+  --hos-gold:           #C8A75B;
+  --hos-gold-highlight: #E4C98A;
+  --hos-maroon:         #6E1F2F;
+
+  /* Reino Editorial */
+  --company-reino-blue:      #2F6FA3;
+  --company-reino-blue-light:#4F8DC4;
+  --company-reino-accent:    #C8A75B;
+
+  /* iKingdom */
+  --company-ikingdom-gold:       #C8A75B;
+  --company-ikingdom-gold-light: #E3C98B;
+
+  /* Imperium Group */
+  --company-imperium-navy:  #0B1C2E;
+  --company-imperium-gold:  #C8A75B;
+
+  /* Max Hebeling */
+  --company-max-orange:     #F0652A;
+  --company-max-dark:       #1E1E1E;
+
+  /* Red Apostólica */
+  --company-apostolica-gold: #D6C28A;
+  --company-apostolica-navy: #0B1C2E;
 }
 
 @theme inline {
-  --font-sans: var(--font-poppins), 'Poppins', system-ui, sans-serif;
+  --font-sans: var(--font-inter), 'Inter', system-ui, sans-serif;
+  --font-heading: var(--font-playfair), 'Playfair Display', Georgia, serif;
   --font-mono: 'Geist Mono', 'Geist Mono Fallback', monospace;
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -231,20 +284,64 @@
   background: var(--re-blue-light); 
 }
 
-/* Premium animations */
+/* ═══════════════════════════════════════════════════════════════
+   HEBELING OS — Global Scrollbar (dark elegant)
+   ═══════════════════════════════════════════════════════════════ */
+.dark ::-webkit-scrollbar { width: 6px; height: 6px; }
+.dark ::-webkit-scrollbar-track { background: #0B1420; }
+.dark ::-webkit-scrollbar-thumb { background: #1E3048; border-radius: 3px; }
+.dark ::-webkit-scrollbar-thumb:hover { background: #C8A75B40; }
+
+/* ═══════════════════════════════════════════════════════════════
+   HEBELING OS — Animations & Microinteractions
+   ═══════════════════════════════════════════════════════════════ */
 @layer components {
   @keyframes fade-up {
-    from {
-      opacity: 0;
-      transform: translateY(20px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
+    from { opacity: 0; transform: translateY(20px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes fade-in {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+  }
+  @keyframes slide-in-right {
+    from { opacity: 0; transform: translateX(10px); }
+    to   { opacity: 1; transform: translateX(0); }
+  }
+  @keyframes pulse-gold {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(200, 167, 91, 0.3); }
+    50%      { box-shadow: 0 0 0 6px rgba(200, 167, 91, 0); }
+  }
+  @keyframes shimmer {
+    0%   { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
   }
 
-  .animate-fade-up {
-    animation: fade-up 0.8s ease-out forwards;
+  .animate-fade-up       { animation: fade-up 0.6s ease-out forwards; }
+  .animate-fade-in       { animation: fade-in 0.4s ease-out forwards; }
+  .animate-slide-in      { animation: slide-in-right 0.3s ease-out forwards; }
+  .animate-pulse-gold    { animation: pulse-gold 2s ease-in-out infinite; }
+
+  /* Hover elevation for cards */
+  .hos-card-hover {
+    transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+  }
+  .hos-card-hover:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(200, 167, 91, 0.1);
+  }
+
+  /* Loading skeleton shimmer */
+  .hos-skeleton {
+    background: linear-gradient(90deg, #162235 25%, #1C2D44 50%, #162235 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s ease-in-out infinite;
+    border-radius: 0.5rem;
+  }
+
+  /* Gold accent glow on focus */
+  .hos-focus-gold:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 2px #0B1420, 0 0 0 4px #C8A75B;
   }
 }

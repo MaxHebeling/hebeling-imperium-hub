@@ -1,24 +1,28 @@
 import type { Metadata, Viewport } from 'next'
-import { Poppins } from 'next/font/google'
+import { Inter, Playfair_Display } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
 import { Toaster } from '@/components/ui/toaster'
 import './globals.css'
 
-const poppins = Poppins({ 
+const inter = Inter({
   subsets: ["latin"],
   weight: ["300", "400", "500", "600", "700"],
-  variable: "--font-poppins",
+  variable: "--font-inter",
+});
+
+const playfair = Playfair_Display({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+  variable: "--font-playfair",
 });
 
 export const metadata: Metadata = {
-  title: 'Hebeling Imperium Group Hub',
-  description: 'Staff and client management platform',
-  generator: 'v0.app',
-  // Force dev server restart - fixed turbopack caching issue
+  title: 'Hebeling OS | Enterprise Operating System',
+  description: 'Premium enterprise operating system for Hebeling Imperium Group',
 }
 
 export const viewport: Viewport = {
-  themeColor: '#182433',
+  themeColor: '#0B1420',
 }
 
 export default function RootLayout({
@@ -28,7 +32,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="dark">
-      <body className={`${poppins.variable} font-sans antialiased`}>
+      <body className={`${inter.variable} ${playfair.variable} font-sans antialiased`}>
         {children}
         <Toaster />
         <Analytics />
