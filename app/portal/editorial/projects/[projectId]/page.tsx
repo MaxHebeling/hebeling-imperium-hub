@@ -36,6 +36,7 @@ import {
 } from "@/lib/editorial/pipeline/client-delays";
 import type { PortalLocale } from "@/lib/editorial/i18n/portal-translations";
 import { getTranslations } from "@/lib/editorial/i18n/portal-translations";
+import { EditorialJourneyTimeline } from "@/components/editorial/portal/editorial-journey-timeline";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -371,81 +372,8 @@ export default function ClientProjectDetailPage() {
         )}
       </div>
 
-      {/* Pipeline stages with delays */}
-      <div className="rounded-2xl border border-gray-200 bg-white overflow-hidden shadow-sm">
-        <div className="p-4 border-b border-gray-100">
-          <h2 className="text-sm font-semibold text-gray-900">{t.pipelineStatus}</h2>
-          <p className="text-xs text-gray-400 mt-0.5">{t.pipelineDesc}</p>
-        </div>
-        <div className="divide-y divide-gray-100">
-          {visibleStages.map((stage, index) => {
-            const stageLabel = t.stageLabels[stage.stageKey] ?? stage.label;
-            const stageMsg = stage.isCompleted
-              ? t.stageMessages[stage.stageKey]?.completed ?? stage.message
-              : stage.isActive
-                ? t.stageMessages[stage.stageKey]?.active ?? stage.message
-                : "";
-
-            return (
-              <div
-                key={stage.stageKey}
-                className={`flex items-start gap-3 px-4 py-3.5 transition-colors ${
-                  stage.isActive ? "bg-blue-50" : ""
-                } ${!stage.isRevealed ? "opacity-30" : ""}`}
-              >
-                {/* Status indicator */}
-                <div className="shrink-0 mt-0.5">
-                  {stage.isCompleted ? (
-                    <div className="w-6 h-6 rounded-full bg-green-100 flex items-center justify-center">
-                      <CheckCircle2 className="w-3.5 h-3.5 text-green-500" />
-                    </div>
-                  ) : stage.isActive ? (
-                    <div className="w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center">
-                      <div className="w-2 h-2 rounded-full bg-[#1a3a6b] animate-pulse" />
-                    </div>
-                  ) : (
-                    <div className="w-6 h-6 rounded-full bg-gray-100 flex items-center justify-center">
-                      {stage.isRevealed ? (
-                        <Clock className="w-3 h-3 text-gray-300" />
-                      ) : (
-                        <Lock className="w-3 h-3 text-gray-200" />
-                      )}
-                    </div>
-                  )}
-                </div>
-
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2">
-                    <span className={`text-sm font-medium ${
-                      stage.isCompleted ? "text-gray-600" : stage.isActive ? "text-gray-900" : "text-gray-300"
-                    }`}>
-                      {stageLabel}
-                    </span>
-                    {stage.isActive && (
-                      <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-[#1a3a6b]/10 text-[#1a3a6b]">
-                        {t.current}
-                      </span>
-                    )}
-                  </div>
-                  {stage.isRevealed && stageMsg && (
-                    <p className="text-xs text-gray-400 mt-0.5 leading-relaxed">
-                      {stageMsg}
-                    </p>
-                  )}
-                </div>
-
-                <span className="text-xs text-gray-300 shrink-0 mt-0.5 tabular-nums">
-                  {stage.isCompleted ? (
-                    <span className="text-green-500">{t.stageCompleted}</span>
-                  ) : stage.isActive ? (
-                    <span className="text-[#1a3a6b]">{t.processing}</span>
-                  ) : null}
-                </span>
-              </div>
-            );
-          })}
-        </div>
-      </div>
+      {/* Editorial Journey Timeline (dual timeline system) */}
+      <EditorialJourneyTimeline projectId={projectId} locale={locale} />
 
       {/* Upload new version */}
       <div className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
