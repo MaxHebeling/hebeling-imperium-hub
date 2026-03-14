@@ -249,7 +249,19 @@ IMPORTANTE: Debes responder con un objeto JSON valido que siga este esquema:
       }),
     });
 
-    const analysisResult = result.object as AnalysisResult;
+    // Try structured output first, fall back to parsing text response
+    let analysisResult: AnalysisResult;
+    if (result.object) {
+      analysisResult = result.object as AnalysisResult;
+    } else {
+      // Fallback: parse the text response as JSON
+      const text = result.text?.trim() ?? "";
+      const jsonMatch = text.match(/\{[\s\S]*\}/);
+      if (!jsonMatch) {
+        throw new Error("AI no devolvió un objeto JSON válido en la respuesta.");
+      }
+      analysisResult = AnalysisResultSchema.parse(JSON.parse(jsonMatch[0]));
+    }
 
     // Mark job as succeeded (this also sets finished_at)
     await markAiJobStatus({ jobId: options.jobId, status: "succeeded" });
@@ -323,7 +335,8 @@ async function autoAdvanceToNextStage(
         projectId,
         stageKey: completedStageKey,
         eventType: "stage_completed",
-        actorId: "system",
+        actorId: null,
+        actorRole: "system",
         payload: { autoAdvanced: true, pipelineCompleted: true },
       });
     }
@@ -350,20 +363,48 @@ async function autoAdvanceToNextStage(
       projectId,
       stageKey: completedStageKey,
       eventType: "stage_completed",
-      actorId: "system",
+      actorId: null,
+      actorRole: "system",
       payload: { autoAdvanced: true, nextStage: nextStageKey },
     });
   }
 
-  // Initialize the next stage (this will auto-trigger its AI task)
+  // Initialize the next stage (this will queue its AI task)
   try {
     await initializeNextStage({
       projectId,
       stageKey: nextStageKey,
-      actorId: "system",
+      actorId: null,
     });
 
     console.log(`[AI Processor] Auto-advanced ${completedStageKey} → ${nextStageKey} for project ${projectId}`);
+
+    // Find and process the queued job that initializeNextStage created
+    const { data: queuedJobs } = await supabase
+      .from("editorial_jobs")
+      .select("id, project_id, stage_key, job_type, input_ref")
+      .eq("project_id", projectId)
+      .eq("stage_key", nextStageKey)
+      .eq("status", "queued")
+      .order("created_at", { ascending: false })
+      .limit(1);
+
+    if (queuedJobs && queuedJobs.length > 0) {
+      const nextJob = queuedJobs[0];
+      const context: EditorialAiJobContext = typeof nextJob.input_ref === "string"
+        ? JSON.parse(nextJob.input_ref)
+        : nextJob.input_ref;
+
+      console.log(`[AI Processor] Processing queued job ${nextJob.id} for stage ${nextStageKey}`);
+
+      await processAiJob({
+        jobId: nextJob.id,
+        projectId: nextJob.project_id,
+        stageKey: nextJob.stage_key as EditorialStageKey,
+        taskKey: nextJob.job_type as EditorialAiTaskKey,
+        context,
+      });
+    }
   } catch (err) {
     console.error(`[AI Processor] Failed to auto-advance to ${nextStageKey}:`, err);
   }

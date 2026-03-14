@@ -136,9 +136,9 @@ export async function initializeNextStage(options: {
           // Get the latest file for this project to use as source
           const { data: latestFile } = await supabase
             .from("editorial_files")
-            .select("id, version_number")
+            .select("id, version")
             .eq("project_id", options.projectId)
-            .order("version_number", { ascending: false })
+            .order("version", { ascending: false })
             .limit(1)
             .single();
 
@@ -149,7 +149,7 @@ export async function initializeNextStage(options: {
             taskKey: aiTaskKey,
             requestedBy: options.actorId ?? "system",
             sourceFileId: latestFile?.id,
-            sourceFileVersion: latestFile?.version_number,
+            sourceFileVersion: latestFile?.version,
           });
 
           await logWorkflowEvent({
