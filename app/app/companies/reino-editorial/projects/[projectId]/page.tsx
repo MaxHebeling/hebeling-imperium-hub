@@ -2,8 +2,6 @@ import Link from "next/link";
 import { unstable_noStore as noStore } from "next/cache";
 import { getStaffProject } from "@/lib/editorial/staff/services";
 import { StaffProjectHeader } from "@/components/editorial/staff/staff-project-header";
-import { StaffProjectTabs } from "@/components/editorial/staff/staff-project-tabs";
-import { PipelineProgressBar } from "@/components/editorial/staff/pipeline-progress-bar";
 import { getProjectAlertsWithRecalc } from "@/lib/editorial/alerts/detection";
 import { getProjectExports } from "@/lib/editorial/export/services";
 import { getProjectDistributions } from "@/lib/editorial/distribution/services";
@@ -12,13 +10,11 @@ import type { EditorialExportJob } from "@/lib/editorial/export/types";
 import type { ProjectDistribution } from "@/lib/editorial/distribution/types";
 import { StaffAlertsPanel } from "@/components/editorial/staff/staff-alerts-panel";
 import { StaffEmptyState } from "@/components/editorial/staff/staff-empty-state";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { BookOpen } from "lucide-react";
 import { DeleteEditorialProjectButton } from "@/components/editorial/delete-editorial-project-button";
-import { ReinoEditorialManuscriptUpload } from "@/components/editorial/reino-editorial-manuscript-upload";
-import { StaffProjectAiReview } from "@/components/editorial/staff/project-ai-review";
-import { StaffManuscriptAiCta } from "@/components/editorial/staff/staff-manuscript-ai-cta";
+import { EditorialPipelineWorkspace } from "@/components/editorial/pipeline/editorial-pipeline-workspace";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -81,10 +77,11 @@ export default async function ReinoEditorialProjectDetailPage({
       .filter((f) => f.file_type === "manuscript_original")
       .sort((a, b) => b.version - a.version || b.created_at.localeCompare(a.created_at));
 
-    const latestManuscript = manuscriptFiles[0] ?? null;
+    const hasManuscript = manuscriptFiles.length > 0;
 
     return (
       <div className="space-y-6 pb-8 px-8 pt-6">
+        {/* Compact header */}
         <div className="flex flex-col gap-4">
           <StaffProjectHeader
             projectId={project.id}
@@ -105,147 +102,18 @@ export default async function ReinoEditorialProjectDetailPage({
           </div>
         </div>
 
-        {/* Pipeline progress bar */}
-        <PipelineProgressBar projectId={project.id} />
-
+        {/* Alerts */}
         <StaffAlertsPanel projectId={project.id} alerts={alerts} />
 
-        {/* Manuscript section – dedicated uploader for original manuscrito */}
-        <Card className="bg-card/80 backdrop-blur-sm shadow-sm hover:shadow-md transition-shadow duration-200">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-base">Manuscript</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <p className="text-sm text-muted-foreground">
-              Sube el manuscrito original para iniciar la ingesta y permitir que el Reino Editorial AI Engine lo procese.
-            </p>
-
-            {manuscriptFiles.length === 0 ? (
-              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 rounded-lg border border-dashed border-border bg-muted/30 p-4 overflow-hidden">
-                <div className="space-y-1 min-w-0">
-                  <p className="text-sm font-medium text-foreground">No hay manuscritos aún.</p>
-                  <p className="text-xs text-muted-foreground">
-                    Sube el manuscrito original para crear la primera versión y habilitar el AI Review.
-                  </p>
-                </div>
-                <div className="shrink-0">
-                  <ReinoEditorialManuscriptUpload projectId={project.id} />
-                </div>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                <div className="flex flex-col gap-3 rounded-lg border border-border bg-muted/20 p-4 md:flex-row md:items-center md:justify-between">
-                  <div className="space-y-1">
-                    <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                      Manuscript actual
-                    </p>
-                    <p className="text-sm text-foreground">
-                      Archivo:{" "}
-                      <span className="font-medium">
-                        {latestManuscript?.storage_path.split("/").pop() ?? "—"}
-                      </span>
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      Versión{" "}
-                      <span className="font-semibold">
-                        v{latestManuscript?.version ?? 1}
-                      </span>
-                      {" · "}
-                      Subido el{" "}
-                      {latestManuscript
-                        ? new Date(latestManuscript.created_at).toLocaleString("es-ES", {
-                            dateStyle: "short",
-                            timeStyle: "short",
-                          })
-                        : "—"}
-                      {typeof latestManuscript?.size_bytes === "number" && (
-                        <>
-                          {" · "}
-                          {(latestManuscript.size_bytes / (1024 * 1024)).toFixed(2)} MB
-                        </>
-                      )}
-                    </p>
-                  </div>
-                  <div className="flex justify-end">
-                    <ReinoEditorialManuscriptUpload projectId={project.id} />
-                  </div>
-                </div>
-
-                <StaffManuscriptAiCta
-                  projectId={project.id}
-                  hasLatestManuscript={Boolean(latestManuscript)}
-                />
-
-                {manuscriptFiles.length > 1 && (
-                  <div className="space-y-2">
-                    <p className="text-xs font-medium text-muted-foreground">
-                      Historial de versiones recientes
-                    </p>
-                    <div className="overflow-x-auto rounded-md border border-border">
-                      <table className="min-w-full text-xs">
-                        <thead className="bg-muted/50">
-                          <tr className="text-left">
-                            <th className="px-3 py-2 font-medium text-muted-foreground">Versión</th>
-                            <th className="px-3 py-2 font-medium text-muted-foreground">Archivo</th>
-                            <th className="px-3 py-2 font-medium text-muted-foreground">Fecha</th>
-                            <th className="px-3 py-2 font-medium text-muted-foreground">Tamaño</th>
-                            <th className="px-3 py-2 font-medium text-muted-foreground">Estado</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {manuscriptFiles.slice(0, 10).map((file) => {
-                            const isCurrent = file.id === latestManuscript?.id;
-                            const label = file.storage_path.split("/").pop() ?? file.storage_path;
-                            return (
-                              <tr key={file.id} className="border-t border-border/60">
-                                <td className="px-3 py-2 font-mono text-[11px]">
-                                  v{file.version}
-                                </td>
-                                <td className="px-3 py-2">
-                                  <span className="text-xs text-foreground">{label}</span>
-                                </td>
-                                <td className="px-3 py-2 text-xs text-muted-foreground">
-                                  {new Date(file.created_at).toLocaleString("es-ES", {
-                                    dateStyle: "short",
-                                    timeStyle: "short",
-                                  })}
-                                </td>
-                                <td className="px-3 py-2 text-xs text-muted-foreground">
-                                  {typeof file.size_bytes === "number"
-                                    ? `${(file.size_bytes / (1024 * 1024)).toFixed(2)} MB`
-                                    : "—"}
-                                </td>
-                                <td className="px-3 py-2 text-xs">
-                                  {isCurrent ? (
-                                    <span className="inline-flex rounded-full bg-emerald-600/10 px-2 py-0.5 text-[11px] font-medium text-emerald-700">
-                                      Current
-                                    </span>
-                                  ) : (
-                                    <span className="inline-flex rounded-full bg-muted px-2 py-0.5 text-[11px] font-medium text-muted-foreground">
-                                      Previous
-                                    </span>
-                                  )}
-                                </td>
-                              </tr>
-                            );
-                          })}
-                        </tbody>
-                      </table>
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* AI Review – análisis editorial automático del manuscrito */}
-        <StaffProjectAiReview projectId={project.id} />
-
-        {/* Main dashboard sections: overview, files, activity, AI engine, etc. */}
-        <div id="files" className="space-y-6">
-          <StaffProjectTabs detail={detail} exports={exports} distributions={distributions} />
-        </div>
+        {/* Single progressive pipeline workspace — replaces all fragmented tabs */}
+        <EditorialPipelineWorkspace
+          projectId={project.id}
+          projectTitle={project.title}
+          files={files}
+          exports={exports}
+          distributions={distributions}
+          hasManuscript={hasManuscript}
+        />
       </div>
     );
   } catch (error) {
