@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { requireStaff } from "@/lib/auth/staff";
 import { getAdminClient } from "@/lib/leads/helpers";
 import { processAiJob, fetchManuscriptContent } from "@/lib/editorial/ai/processor";
 import { requestStageAiAssist } from "@/lib/editorial/ai/stage-assist";
@@ -18,6 +19,9 @@ import {
   buildQueueEntries,
   type QueueEntry,
 } from "@/lib/editorial/ai/queue";
+
+// Allow up to 5 minutes for the full pipeline to process on Vercel Pro/Enterprise.
+export const maxDuration = 300;
 
 const AI_STAGES: EditorialStageKey[] = [
   "ingesta",
@@ -61,6 +65,8 @@ export async function POST(
   const supabase = getAdminClient();
 
   try {
+    await requireStaff();
+
     // ── 1. Validate project ──────────────────────────────────────────
     const { data: project, error: projectError } = await supabase
       .from("editorial_projects")
@@ -283,8 +289,12 @@ export async function POST(
     });
   } catch (err) {
     console.error("[process-all] Error:", err);
+    const message = err instanceof Error ? err.message : "Error interno del servidor";
+    if (message === "UNAUTHORIZED" || message === "FORBIDDEN") {
+      return NextResponse.json({ success: false, error: "No autorizado" }, { status: 401 });
+    }
     return NextResponse.json(
-      { success: false, error: "Error interno del servidor" },
+      { success: false, error: message },
       { status: 500 }
     );
   }
@@ -298,6 +308,12 @@ export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ projectId: string }> }
 ) {
+  try {
+    await requireStaff();
+  } catch {
+    return NextResponse.json({ success: false, error: "No autorizado" }, { status: 401 });
+  }
+
   const { projectId } = await params;
   const supabase = getAdminClient();
 

@@ -39,6 +39,7 @@ export async function POST(request: NextRequest) {
       target_audience: body.target_audience?.trim() || body.description?.trim() || undefined,
       client_id: body.client_id ?? undefined,
       created_by: user.id,
+      service_type: body.service_type ?? undefined,
     });
 
     await logEditorialActivity(project.id, "project_created", {

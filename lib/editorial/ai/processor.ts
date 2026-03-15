@@ -1,7 +1,7 @@
 import { generateText, Output } from "ai";
 import { openai } from "@ai-sdk/openai";
 import { z } from "zod";
-import { getAdminClient } from "@/lib/leads/helpers";
+import { getAdminClient, ORG_ID } from "@/lib/leads/helpers";
 import { markAiJobStatus } from "./jobs";
 import { getDefaultPrompt, buildPromptFromDefault } from "./default-prompts";
 import type { EditorialAiTaskKey, EditorialAiJobContext } from "@/lib/editorial/types/ai";
@@ -129,6 +129,8 @@ export async function fetchManuscriptContent(projectId: string, fileId?: string 
 
 /**
  * Fetch a custom prompt override from the database (if it exists).
+ * Uses the `editorial_ai_prompt_templates` table (script 019_ai_jobs.sql).
+ * Falls back to null so the caller can use the built-in default prompt.
  */
 async function fetchCustomPrompt(
   stageKey: EditorialStageKey,
@@ -137,22 +139,36 @@ async function fetchCustomPrompt(
   try {
     const supabase = getAdminClient();
     const { data, error } = await supabase
-      .from("editorial_custom_prompts")
-      .select("system_prompt, user_prompt_template")
+      .from("editorial_ai_prompt_templates")
+      .select("prompt_text")
+      .eq("org_id", ORG_ID)
       .eq("stage_key", stageKey)
       .eq("task_key", taskKey)
+      .eq("is_active", true)
+      .order("version", { ascending: false })
+      .limit(1)
       .maybeSingle();
 
     if (error || !data) return null;
 
+    // The table stores a single prompt_text. Use the default system prompt
+    // and treat prompt_text as the user prompt template.
+    const defaultPrompt = getDefaultPrompt(stageKey, taskKey);
+    if (!defaultPrompt) {
+      console.warn(
+        `[fetchCustomPrompt] No default system prompt found for ${stageKey}/${taskKey}. ` +
+        `Skipping custom prompt override to avoid empty system prompt.`
+      );
+      return null;
+    }
     return {
       taskKey,
       stageKey,
-      systemPrompt: data.system_prompt,
-      userPromptTemplate: data.user_prompt_template,
+      systemPrompt: defaultPrompt.systemPrompt,
+      userPromptTemplate: data.prompt_text,
     };
   } catch {
-    // Table may not exist yet — silently fall back to default
+    // Table may not be migrated yet — silently fall back to default
     return null;
   }
 }
