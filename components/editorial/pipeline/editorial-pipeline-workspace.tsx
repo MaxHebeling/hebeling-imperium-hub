@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { Loader2 } from "lucide-react";
+import { Loader2, AlertTriangle, RefreshCw } from "lucide-react";
 import type { ProjectWorkflowDetail, WorkflowPhaseKey } from "@/lib/editorial/types/workflow";
 import type { EditorialFile } from "@/lib/editorial/types/editorial";
 import type { EditorialExportJob } from "@/lib/editorial/export/types";
@@ -32,9 +32,11 @@ export function EditorialPipelineWorkspace({
 }: EditorialPipelineWorkspaceProps) {
   const [detail, setDetail] = useState<ProjectWorkflowDetail | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [selectedPhase, setSelectedPhase] = useState<WorkflowPhaseKey | null>(null);
 
   const fetchWorkflow = useCallback(async () => {
+    setError(null);
     try {
       const res = await fetch(`/api/editorial/projects/${projectId}/workflow`);
       const json = await res.json();
@@ -44,9 +46,11 @@ export function EditorialPipelineWorkspace({
         if (!selectedPhase && json.data.workflow?.current_phase) {
           setSelectedPhase(json.data.workflow.current_phase as WorkflowPhaseKey);
         }
+      } else {
+        setError(json.error ?? "No se pudo cargar el flujo editorial.");
       }
     } catch {
-      // Silently fail — workspace is supplementary
+      setError("Error de red al cargar el flujo editorial. Verifica tu conexión.");
     } finally {
       setLoading(false);
     }
@@ -65,7 +69,25 @@ export function EditorialPipelineWorkspace({
       <div className="rounded-2xl border border-border/40 bg-card/60 backdrop-blur-md p-8">
         <div className="flex items-center justify-center gap-2">
           <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
-          <span className="text-sm text-muted-foreground">Loading editorial pipeline...</span>
+          <span className="text-sm text-muted-foreground">Cargando flujo editorial...</span>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="rounded-2xl border border-destructive/40 bg-destructive/5 backdrop-blur-md p-8 text-center">
+        <div className="flex flex-col items-center gap-3">
+          <AlertTriangle className="h-6 w-6 text-destructive" />
+          <p className="text-sm text-destructive">{error}</p>
+          <button
+            onClick={() => { setLoading(true); fetchWorkflow(); }}
+            className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
+          >
+            <RefreshCw className="h-3 w-3" />
+            Reintentar
+          </button>
         </div>
       </div>
     );
@@ -75,7 +97,7 @@ export function EditorialPipelineWorkspace({
     return (
       <div className="rounded-2xl border border-border/40 bg-card/60 backdrop-blur-md p-8 text-center">
         <p className="text-sm text-muted-foreground">
-          No workflow data available. The professional workflow may need to be initialized.
+          No hay datos de flujo disponibles. El flujo profesional se inicializará automáticamente.
         </p>
       </div>
     );

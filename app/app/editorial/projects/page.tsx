@@ -135,7 +135,7 @@ export default function EditorialProjectsPage() {
     setCreating(true);
     setCreateError(null);
     try {
-      const res = await fetch("/api/editorial/projects/create", {
+      const res = await fetch("/api/editorial/projects", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -148,7 +148,8 @@ export default function EditorialProjectsPage() {
         }),
       });
       const json = await res.json();
-      if (json.success) {
+      // Authenticated endpoint returns { projectId } on success (HTTP 201)
+      if (res.ok && json.projectId) {
         setDialogOpen(false);
         setForm(INITIAL_FORM);
         await fetchProjects();
