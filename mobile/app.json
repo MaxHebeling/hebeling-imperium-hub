@@ -1,0 +1,50 @@
+{
+  "expo": {
+    "name": "Reino Editorial",
+    "slug": "reino-editorial",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#1a3a6b"
+    },
+    "assetBundlePatterns": ["**/*"],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.reinoeditorial.app",
+      "infoPlist": {
+        "CFBundleDisplayName": "Reino Editorial",
+        "NSCameraUsageDescription": "Para capturar documentos relacionados con tu libro.",
+        "NSPhotoLibraryUsageDescription": "Para seleccionar imágenes para tu portada."
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#1a3a6b"
+      },
+      "package": "com.reinoeditorial.app",
+      "permissions": ["NOTIFICATIONS", "CAMERA", "READ_EXTERNAL_STORAGE"]
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/notification-icon.png",
+          "color": "#1a3a6b"
+        }
+      ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "reino-editorial"
+      }
+    }
+  }
+}
