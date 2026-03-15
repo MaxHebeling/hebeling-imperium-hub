@@ -41,7 +41,6 @@ export async function createEditorialProject(
       status: "created",
       progress_percent: 0,
       created_by: input.created_by ?? null,
-      service_type: input.service_type ?? null,
     })
     .select()
     .single();
