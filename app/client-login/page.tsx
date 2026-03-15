@@ -50,8 +50,8 @@ function ClientLoginContent() {
 
   useEffect(() => {
     const urlError = searchParams.get("error");
-    if (urlError === "magic_link_expired") {
-      setError("Tu enlace de acceso anterior ha expirado. Inicia sesion con tu correo y contrasena.");
+    if (urlError === "expired" || urlError === "magic_link_expired") {
+      setError("Tu enlace de acceso ha expirado. Por favor inicia sesion con tu correo y contrasena.");
     }
   }, [searchParams]);
 
@@ -224,7 +224,7 @@ function ClientLoginContent() {
       <div className="w-full max-w-sm relative z-10">
         <div className="text-center mb-10">
           <Image
-            src="/logo-editorial-reino.png"
+            src="/logo-reino-editorial.png"
             alt="Reino Editorial"
             width={180}
             height={60}
