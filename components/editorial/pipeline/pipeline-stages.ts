@@ -29,9 +29,11 @@ export interface UIPipelineStage {
   stageFilter?: WorkflowStageKey[];
   /** Expected outputs for this stage */
   outputs: string[];
+  /** Primary output artifact name */
+  mainArtifact: string;
 }
 
-export type UIStageStatus = "completed" | "active" | "pending" | "blocked";
+export type UIStageStatus = "completed" | "active" | "needs_review" | "pending" | "blocked";
 
 export interface UISubstage {
   stageKey: string;
@@ -53,6 +55,8 @@ export interface UIStageData {
   completedCount: number;
   totalCount: number;
   isCurrent: boolean;
+  /** Editor who approved / is working on this stage (from DB approved_by) */
+  assignedEditor: string | null;
 }
 
 // ─── The 11 UI stages ───────────────────────────────────────────────────
@@ -72,6 +76,7 @@ export const UI_PIPELINE_STAGES: UIPipelineStage[] = [
       "Editorial admission decision",
       "Project configuration",
     ],
+    mainArtifact: "Original Manuscript",
   },
   {
     id: "ai-analysis",
@@ -87,6 +92,7 @@ export const UI_PIPELINE_STAGES: UIPipelineStage[] = [
       "Grammar findings",
       "AI recommendations",
     ],
+    mainArtifact: "AI Editorial Report",
   },
   {
     id: "structural-editing",
@@ -101,6 +107,7 @@ export const UI_PIPELINE_STAGES: UIPipelineStage[] = [
       "Change report",
       "Structural approval",
     ],
+    mainArtifact: "Structural Edit",
   },
   {
     id: "line-editing",
@@ -115,6 +122,7 @@ export const UI_PIPELINE_STAGES: UIPipelineStage[] = [
       "Voice consistency report",
       "Style refinement notes",
     ],
+    mainArtifact: "Line-Edited Manuscript",
   },
   {
     id: "copyediting",
@@ -131,6 +139,7 @@ export const UI_PIPELINE_STAGES: UIPipelineStage[] = [
       "Final locked text",
       "Master manuscript",
     ],
+    mainArtifact: "Master Manuscript",
   },
   {
     id: "book-specs",
@@ -146,6 +155,7 @@ export const UI_PIPELINE_STAGES: UIPipelineStage[] = [
       "Layout parameters",
       "Pagination estimate",
     ],
+    mainArtifact: "Book Spec Sheet",
   },
   {
     id: "layout",
@@ -157,6 +167,7 @@ export const UI_PIPELINE_STAGES: UIPipelineStage[] = [
     dbPhases: ["book_production"],
     stageFilter: ["layout_analysis_task", "book_layout"],
     outputs: ["Layout analysis", "Formatted interior PDF"],
+    mainArtifact: "Interior PDF",
   },
   {
     id: "cover-design",
@@ -168,6 +179,7 @@ export const UI_PIPELINE_STAGES: UIPipelineStage[] = [
     dbPhases: ["book_production"],
     stageFilter: ["cover_design", "cover_approval", "proof_generation"],
     outputs: ["Cover design", "Cover approval", "Print-ready proof"],
+    mainArtifact: "Cover Design",
   },
   {
     id: "final-proof",
@@ -182,6 +194,7 @@ export const UI_PIPELINE_STAGES: UIPipelineStage[] = [
       "Proof corrections",
       "Production approval",
     ],
+    mainArtifact: "Final Proof",
   },
   {
     id: "publishing",
@@ -197,6 +210,7 @@ export const UI_PIPELINE_STAGES: UIPipelineStage[] = [
       "Pricing configuration",
       "Distribution setup",
     ],
+    mainArtifact: "Publishing Package",
   },
   {
     id: "distribution",
@@ -211,6 +225,7 @@ export const UI_PIPELINE_STAGES: UIPipelineStage[] = [
       "Platform publishing",
       "Marketplace activation",
     ],
+    mainArtifact: "Live Listings",
   },
 ];
 
@@ -260,6 +275,7 @@ export function mapWorkflowToUIStages(
     const totalCount = substages.length;
     const allCompleted = totalCount > 0 && completedCount === totalCount;
     const hasBlocked = substages.some((s) => s.status === "blocked");
+    const hasNeedsReview = substages.some((s) => s.status === "needs_review");
 
     // Check if the current workflow stage falls within this UI stage
     const currentPhaseMatches = uiStage.dbPhases.includes(
@@ -270,11 +286,29 @@ export function mapWorkflowToUIStages(
       (!uiStage.stageFilter ||
         uiStage.stageFilter.includes(detail.workflow.current_stage));
 
+    // Derive the assigned editor from approved_by on any sub-stage in this UI stage
+    let assignedEditor: string | null = null;
+    for (const dbPhaseKey of uiStage.dbPhases) {
+      const dbPhase = detail.phases.find(
+        (p) => p.phase.phase_key === dbPhaseKey
+      );
+      if (!dbPhase) continue;
+      for (const s of dbPhase.stages) {
+        if (s.status?.approved_by) {
+          assignedEditor = s.status.approved_by;
+          break;
+        }
+      }
+      if (assignedEditor) break;
+    }
+
     let status: UIStageStatus;
     if (allCompleted) {
       status = "completed";
     } else if (hasBlocked) {
       status = "blocked";
+    } else if (hasNeedsReview && currentStageMatches) {
+      status = "needs_review";
     } else if (currentStageMatches) {
       status = "active";
     } else {
@@ -288,6 +322,7 @@ export function mapWorkflowToUIStages(
       completedCount,
       totalCount,
       isCurrent: currentStageMatches,
+      assignedEditor,
     };
   });
 }
