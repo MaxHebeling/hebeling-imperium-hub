@@ -34,8 +34,8 @@ export function StaffProjectTabs({ detail, exports = [], distributions = [] }: S
 
   return (
     <Tabs defaultValue="resumen" className="w-full">
-      <div className="overflow-x-auto -mx-1 px-1 scrollbar-thin md:overflow-visible">
-        <TabsList className="inline-flex h-10 min-w-max rounded-lg bg-muted/60 p-1 md:w-full">
+      <div className="overflow-x-auto -mx-1 px-1 scrollbar-none">
+        <TabsList className="inline-flex h-10 min-w-max rounded-lg bg-muted/60 p-1">
           <TabsTrigger value="resumen" className="gap-1.5 px-3 text-xs sm:text-sm shrink-0">
             <LayoutGrid className="h-3.5 w-3.5 shrink-0" />
             Resumen

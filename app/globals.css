@@ -344,4 +344,13 @@
     outline: none;
     box-shadow: 0 0 0 2px #0B1420, 0 0 0 4px #C8A75B;
   }
+
+  /* Hide scrollbar but keep scrolling — SaaS-style tab bars */
+  .scrollbar-none {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scrollbar-none::-webkit-scrollbar {
+    display: none;
+  }
 }
