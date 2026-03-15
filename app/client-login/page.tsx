@@ -108,15 +108,11 @@ function ClientLoginContent() {
       return;
     }
 
-    if (profile.role === "client") {
+    if (profile.role === "client" || ["superadmin", "admin"].includes(profile.role)) {
       router.push("/portal/editorial/projects");
       router.refresh();
-    } else if (["superadmin", "admin", "sales", "ops"].includes(profile.role)) {
-      setError("Esta es el area de clientes. Usa el portal de staff.");
-      await supabase.auth.signOut();
-      setIsLoading(false);
     } else {
-      setError("Rol no valido. Contacta a tu editor.");
+      setError("No tienes acceso al portal. Contacta a tu editor.");
       await supabase.auth.signOut();
       setIsLoading(false);
     }
