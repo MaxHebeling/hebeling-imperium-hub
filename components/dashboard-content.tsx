@@ -14,7 +14,6 @@ import {
   Clock,
   ArrowUpRight,
   Activity,
-  Sparkles,
   Plus,
   FileText,
   Upload,
@@ -223,7 +222,7 @@ export function DashboardContent({ metrics, brands, activities, deals }: Dashboa
               <div className="flex items-center justify-between">
                 <div>
                   <CardTitle className="text-lg font-medium flex items-center gap-2">
-                    <Sparkles className="h-4 w-4 text-[#C8A75B]" />
+                    <Zap className="h-4 w-4 text-[#C8A75B]" />
                     {t.dashboard.brandsPortfolio}
                   </CardTitle>
                   <CardDescription>{t.dashboard.brandsPortfolioDesc}</CardDescription>

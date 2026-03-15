@@ -15,7 +15,7 @@ import {
   FileText,
   DollarSign,
   BarChart3,
-  Sparkles,
+  Zap,
   ArrowRight,
   Calendar,
 } from "lucide-react";
@@ -100,7 +100,7 @@ export function StaffDashboardEnhanced({ projects, metrics, companySlug }: Staff
         <Card className="border-border/50 hover:shadow-md transition-shadow">
           <CardContent className="pt-4 pb-3 px-4">
             <div className="flex items-center justify-between mb-2">
-              <Sparkles className="h-5 w-5 text-amber-500/70" />
+              <Zap className="h-5 w-5 text-amber-500/70" />
               <Badge className="bg-amber-500/10 text-amber-600 text-[10px]">IA</Badge>
             </div>
             <p className="text-3xl font-bold">{metrics.aiTasksThisMonth}</p>

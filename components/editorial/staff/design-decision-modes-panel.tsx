@@ -15,7 +15,7 @@ import {
   Palette,
   Layout,
   Type,
-  Sparkles,
+  Zap,
   Shield,
   Eye,
 } from "lucide-react";
@@ -157,7 +157,7 @@ export function DesignDecisionModesPanel() {
           {/* AI Configuration */}
           <div>
             <h3 className="text-sm font-semibold mb-3 flex items-center gap-2">
-              <Sparkles className="h-4 w-4" />
+              <Zap className="h-4 w-4" />
               Asistencia IA
             </h3>
             <div className="grid gap-4 sm:grid-cols-2">

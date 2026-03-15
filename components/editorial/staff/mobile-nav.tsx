@@ -3,12 +3,12 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { LayoutDashboard, BookOpen, ClipboardList, Sparkles } from "lucide-react";
+import { LayoutDashboard, BookOpen, ClipboardList, Zap } from "lucide-react";
 
 const navItems = [
   { href: "/staff/dashboard", label: "Panel", icon: LayoutDashboard },
   { href: "/staff/books", label: "Libros", icon: BookOpen },
-  { href: "/staff/ai", label: "AI", icon: Sparkles },
+  { href: "/staff/ai", label: "AI", icon: Zap },
   { href: "/staff/operations", label: "Operaciones", icon: ClipboardList },
 ] as const;
 

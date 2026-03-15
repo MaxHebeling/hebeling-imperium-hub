@@ -6,7 +6,7 @@ import { es } from "date-fns/locale";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Sparkles } from "lucide-react";
+import { Loader2, Zap } from "lucide-react";
 import type { EditorialManuscriptAnalysis } from "@/lib/editorial/ai/openai";
 
 type AiStatus = "idle" | "processing" | "completed" | "failed";
@@ -197,7 +197,7 @@ export function StaffProjectAiReview({ projectId }: { projectId: string }) {
       <CardHeader className="flex flex-row items-center justify-between space-y-0">
         <div className="space-y-1">
           <CardTitle className="flex items-center gap-2 text-base">
-            <Sparkles className="h-4 w-4 text-purple-500" />
+            <Zap className="h-4 w-4 text-purple-500" />
             AI Review
           </CardTitle>
           <p className="text-xs text-muted-foreground">

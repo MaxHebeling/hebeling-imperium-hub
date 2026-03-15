@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
-import { Bell, Check, MessageSquare, Sparkles, ArrowRight, BookOpen, FileText, PartyPopper } from "lucide-react";
+import { Bell, Check, MessageSquare, Zap, ArrowRight, BookOpen, FileText, PartyPopper } from "lucide-react";
 import type { EditorialNotification, NotificationType } from "@/lib/editorial/notifications/types";
 
 /** Icon + color mapping per notification type. */
@@ -11,7 +11,7 @@ const TYPE_CONFIG: Record<NotificationType, { icon: typeof Bell; color: string }
   stage_completed: { icon: Check, color: "text-green-500" },
   comment_staff: { icon: MessageSquare, color: "text-purple-500" },
   comment_client: { icon: MessageSquare, color: "text-indigo-500" },
-  suggestion: { icon: Sparkles, color: "text-orange-500" },
+  suggestion: { icon: Zap, color: "text-orange-500" },
   project_update: { icon: BookOpen, color: "text-cyan-500" },
   file_shared: { icon: FileText, color: "text-teal-500" },
   project_completed: { icon: PartyPopper, color: "text-emerald-500" },

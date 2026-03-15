@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { BookMarked, LayoutDashboard, BookOpen, LogOut, ClipboardList, Sparkles } from "lucide-react";
+import { BookMarked, LayoutDashboard, BookOpen, LogOut, ClipboardList, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { createClient } from "@/lib/supabase/client";
@@ -12,7 +12,7 @@ import { useRouter } from "next/navigation";
 const navItems = [
   { href: "/staff/dashboard", label: "Panel", icon: LayoutDashboard },
   { href: "/staff/books", label: "Libros", icon: BookOpen },
-  { href: "/staff/ai", label: "AI", icon: Sparkles },
+  { href: "/staff/ai", label: "AI", icon: Zap },
   { href: "/staff/operations", label: "Operaciones", icon: ClipboardList },
 ] as const;
 
