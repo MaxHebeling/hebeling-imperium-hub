@@ -32,7 +32,7 @@ const STATUS_CONFIG: Record<
     text: "text-emerald-400",
     connector: "bg-emerald-500/50",
     selectedRing: "ring-emerald-400",
-    label: "Completed",
+    label: "Completado",
   },
   active: {
     ring: "ring-blue-500/40",
@@ -40,7 +40,7 @@ const STATUS_CONFIG: Record<
     text: "text-blue-400",
     connector: "bg-border/60",
     selectedRing: "ring-blue-400",
-    label: "In Progress",
+    label: "En progreso",
   },
   needs_review: {
     ring: "ring-amber-500/40",
@@ -48,7 +48,7 @@ const STATUS_CONFIG: Record<
     text: "text-amber-400",
     connector: "bg-border/60",
     selectedRing: "ring-amber-400",
-    label: "Needs Review",
+    label: "Requiere revisión",
   },
   pending: {
     ring: "ring-border/40",
@@ -56,7 +56,7 @@ const STATUS_CONFIG: Record<
     text: "text-muted-foreground/60",
     connector: "bg-border/40",
     selectedRing: "ring-foreground/40",
-    label: "Not Started",
+    label: "Pendiente",
   },
   blocked: {
     ring: "ring-red-500/40",
@@ -120,7 +120,7 @@ export function PipelineStageBar({
           <div className="flex items-center gap-2.5">
             <BookOpen className="h-4 w-4 text-blue-400" />
             <h3 className="text-sm font-semibold tracking-tight">
-              Book Production Progress
+              Progreso de Producción Editorial
             </h3>
           </div>
           <span className="text-2xl font-bold tabular-nums tracking-tight">
@@ -136,22 +136,22 @@ export function PipelineStageBar({
         <div className="flex items-center gap-4 mt-2.5 text-[11px] text-muted-foreground">
           <span className="flex items-center gap-1">
             <CheckCircle2 className="h-3 w-3 text-emerald-500" />
-            {completedCount} completed
+            {completedCount} completadas
           </span>
           {activeCount > 0 && (
             <span className="flex items-center gap-1">
               <Loader2 className="h-3 w-3 text-blue-500" />
-              {activeCount} in progress
+              {activeCount} en progreso
             </span>
           )}
           {blockedCount > 0 && (
             <span className="flex items-center gap-1">
               <AlertTriangle className="h-3 w-3 text-red-500" />
-              {blockedCount} error
+              {blockedCount} errores
             </span>
           )}
           <span className="ml-auto">
-            {stages.length - completedCount} remaining
+            {stages.length - completedCount} restantes
           </span>
         </div>
       </div>
