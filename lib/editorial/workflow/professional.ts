@@ -285,6 +285,12 @@ export async function getProjectWorkflow(projectId: string): Promise<ProjectWork
     .maybeSingle();
 
   if (error) {
+    // If the table doesn't exist, return null so we can fall back to legacy
+    const msg = error.message ?? "";
+    if (msg.includes("schema cache") || msg.includes("does not exist") || error.code === "PGRST204" || error.code === "42P01") {
+      console.warn("[Workflow] editorial_project_workflow table not found — using legacy fallback");
+      return null;
+    }
     console.error("[Workflow] Error fetching project workflow:", error);
     return null;
   }
@@ -317,6 +323,12 @@ export async function initializeProjectWorkflow(
     .single();
 
   if (wfError || !workflow) {
+    // If table doesn't exist, return a synthetic workflow from legacy data
+    const msg = wfError?.message ?? "";
+    if (msg.includes("schema cache") || msg.includes("does not exist") || wfError?.code === "PGRST204" || wfError?.code === "42P01") {
+      console.warn("[Workflow] editorial_project_workflow table not found — returning legacy-based workflow");
+      return buildLegacyProjectWorkflow(projectId);
+    }
     throw new Error(`Failed to initialize workflow: ${wfError?.message}`);
   }
 
@@ -350,6 +362,11 @@ export async function getProjectWorkflowStages(
     .order("created_at", { ascending: true });
 
   if (error) {
+    const msg = error.message ?? "";
+    if (msg.includes("schema cache") || msg.includes("does not exist") || error.code === "PGRST204" || error.code === "42P01") {
+      console.warn("[Workflow] editorial_project_workflow_stages table not found — returning empty");
+      return [];
+    }
     console.error("[Workflow] Error fetching workflow stages:", error);
     return [];
   }
@@ -357,15 +374,177 @@ export async function getProjectWorkflowStages(
   return (data ?? []) as ProjectWorkflowStage[];
 }
 
-/** Get full workflow detail for a project (for API/UI). */
+// ─── Legacy fallback: maps from editorial_stages ─────────────────────────
+
+/**
+ * Map from legacy 8-stage `editorial_stages.stage_key` to the new 11-phase workflow.
+ * Returns the workflow phase + first stage for that legacy key.
+ */
+const LEGACY_TO_PHASE_MAP: Record<string, { phase: WorkflowPhaseKey; stage: WorkflowStageKey }> = {
+  ingesta:        { phase: "intake",            stage: "manuscript_upload" },
+  estructura:     { phase: "editorial_analysis", stage: "manuscript_analysis" },
+  estilo:         { phase: "line_editing",       stage: "line_editing_task" },
+  ortotipografia: { phase: "copyediting",        stage: "grammar_correction" },
+  maquetacion:    { phase: "book_production",    stage: "layout_analysis_task" },
+  revision_final: { phase: "final_proof",        stage: "final_proof_task" },
+  export:         { phase: "publishing_prep",    stage: "metadata_generation_task" },
+  distribution:   { phase: "distribution",       stage: "distribution_publish" },
+};
+
+/**
+ * Build a synthetic ProjectWorkflow from editorial_projects (legacy).
+ * Used when the professional workflow tables don't exist in the DB.
+ */
+async function buildLegacyProjectWorkflow(projectId: string): Promise<ProjectWorkflow> {
+  const supabase = getAdminClient();
+  const { data: project } = await supabase
+    .from("editorial_projects")
+    .select("id, current_stage, status, progress_percent, created_at, updated_at")
+    .eq("id", projectId)
+    .maybeSingle();
+
+  const legacyStage = project?.current_stage ?? "ingesta";
+  const mapped = LEGACY_TO_PHASE_MAP[legacyStage] ?? LEGACY_TO_PHASE_MAP.ingesta;
+
+  return {
+    id: projectId,
+    project_id: projectId,
+    current_phase: mapped.phase,
+    current_stage: mapped.stage,
+    status: (project?.status === "completed" ? "completed" : "active") as ProjectWorkflow["status"],
+    progress_percent: project?.progress_percent ?? 0,
+    created_at: project?.created_at ?? new Date().toISOString(),
+    updated_at: project?.updated_at ?? new Date().toISOString(),
+  };
+}
+
+/**
+ * Build synthetic ProjectWorkflowStage[] from editorial_stages (legacy).
+ * Maps legacy stage statuses to the new 40-stage workflow model.
+ */
+async function buildLegacyWorkflowStages(
+  projectId: string,
+  currentPhase: WorkflowPhaseKey
+): Promise<ProjectWorkflowStage[]> {
+  const supabase = getAdminClient();
+  const { data: legacyStages } = await supabase
+    .from("editorial_stages")
+    .select("*")
+    .eq("project_id", projectId)
+    .order("created_at", { ascending: true });
+
+  // Build a lookup of legacy status by stage_key
+  const legacyStatusMap: Record<string, { status: string; started_at: string | null; completed_at: string | null; approved_by: string | null }> = {};
+  for (const ls of legacyStages ?? []) {
+    legacyStatusMap[ls.stage_key] = {
+      status: ls.status,
+      started_at: ls.started_at,
+      completed_at: ls.completed_at,
+      approved_by: ls.approved_by,
+    };
+  }
+
+  // Map legacy status to workflow status
+  function mapLegacyStatus(legacyStatus: string): WorkflowStageStatus {
+    switch (legacyStatus) {
+      case "completed":
+      case "approved":
+        return "completed";
+      case "processing":
+      case "queued":
+        return "processing";
+      case "review_required":
+        return "needs_review";
+      case "failed":
+        return "blocked";
+      default:
+        return "pending";
+    }
+  }
+
+  const currentPhaseOrder = getPhaseByKey(currentPhase)?.order ?? 1;
+  const result: ProjectWorkflowStage[] = [];
+
+  for (const phaseDef of WORKFLOW_PHASES) {
+    for (const stageDef of phaseDef.stages) {
+      // Find any legacy stage that maps to this workflow stage
+      const legacyKey = stageDef.legacyStageKey;
+      const legacyData = legacyKey ? legacyStatusMap[legacyKey] : undefined;
+
+      let status: WorkflowStageStatus = "pending";
+      let started_at: string | null = null;
+      let completed_at: string | null = null;
+      let approved_by: string | null = null;
+
+      if (phaseDef.order < currentPhaseOrder) {
+        // Phases before current are completed
+        status = "completed";
+        started_at = legacyData?.started_at ?? null;
+        completed_at = legacyData?.completed_at ?? null;
+        approved_by = legacyData?.approved_by ?? null;
+      } else if (phaseDef.key === currentPhase) {
+        // Current phase: use legacy data if available
+        if (legacyData) {
+          status = mapLegacyStatus(legacyData.status);
+          started_at = legacyData.started_at;
+          completed_at = legacyData.completed_at;
+          approved_by = legacyData.approved_by;
+        } else {
+          status = "pending";
+        }
+      }
+      // else: future phases stay "pending"
+
+      result.push({
+        id: `legacy-${phaseDef.key}-${stageDef.key}`,
+        project_id: projectId,
+        phase_key: phaseDef.key,
+        stage_key: stageDef.key,
+        status,
+        started_at,
+        completed_at,
+        approved_by,
+        approved_at: approved_by ? (completed_at ?? null) : null,
+        notes: null,
+        created_at: new Date().toISOString(),
+      });
+    }
+  }
+
+  return result;
+}
+
+/** Get full workflow detail for a project (for API/UI). Falls back to legacy tables if professional workflow tables don't exist. */
 export async function getProjectWorkflowDetail(
   projectId: string
 ): Promise<ProjectWorkflowDetail | null> {
-  const workflow = await getProjectWorkflow(projectId);
-  if (!workflow) return null;
+  let workflow = await getProjectWorkflow(projectId);
+  let stageStatuses: ProjectWorkflowStage[];
+  let usedLegacyFallback = false;
 
-  const stageStatuses = await getProjectWorkflowStages(projectId);
-  const bookSpecs = await getBookSpecifications(projectId);
+  if (!workflow) {
+    // Try legacy fallback: build from editorial_projects + editorial_stages
+    try {
+      workflow = await buildLegacyProjectWorkflow(projectId);
+      usedLegacyFallback = true;
+    } catch {
+      return null;
+    }
+  }
+
+  if (usedLegacyFallback) {
+    stageStatuses = await buildLegacyWorkflowStages(projectId, workflow.current_phase);
+  } else {
+    stageStatuses = await getProjectWorkflowStages(projectId);
+  }
+
+  // Book specs may not exist (table might be missing) — gracefully handle
+  let bookSpecs: BookSpecifications | null = null;
+  try {
+    bookSpecs = await getBookSpecifications(projectId);
+  } catch {
+    // Table doesn't exist, that's fine
+  }
 
   const phases = WORKFLOW_PHASES.map((phaseDef) => {
     const stagesWithStatus = phaseDef.stages.map((stageDef) => {
@@ -394,7 +573,7 @@ export async function getProjectWorkflowDetail(
     const isComplete = stagesWithStatus.every(
       (s) => s.status?.status === "completed"
     );
-    const isCurrent = workflow.current_phase === phaseDef.key;
+    const isCurrent = workflow!.current_phase === phaseDef.key;
 
     return {
       phase: {
@@ -411,7 +590,7 @@ export async function getProjectWorkflowDetail(
     };
   });
 
-  return { workflow, phases, bookSpecs };
+  return { workflow: workflow!, phases, bookSpecs };
 }
 
 // ─── Stage transitions ──────────────────────────────────────────────────
