@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Lock, Mail, Loader2, UserPlus, Eye, EyeOff } from "lucide-react";
+import { Lock, Mail, Loader2, UserPlus, Eye, EyeOff, Phone, Calendar } from "lucide-react";
 import Image from "next/image";
 import { createClient } from "@/lib/supabase/client";
 
@@ -33,6 +33,9 @@ function ClientLoginContent() {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [fullName, setFullName] = useState("");
+  const [phone, setPhone] = useState("");
+  const [dateOfBirth, setDateOfBirth] = useState("");
+  const [acceptTerms, setAcceptTerms] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -57,6 +60,9 @@ function ClientLoginContent() {
     setPassword("");
     setConfirmPassword("");
     setFullName("");
+    setPhone("");
+    setDateOfBirth("");
+    setAcceptTerms(false);
     setError(null);
     setSuccess(null);
     setShowPassword(false);
@@ -134,12 +140,23 @@ function ClientLoginContent() {
       return;
     }
 
+    if (!acceptTerms) {
+      setError("Debes aceptar los terminos y condiciones.");
+      setIsLoading(false);
+      return;
+    }
+
     const supabase = createClient();
     const { error: signUpError } = await supabase.auth.signUp({
       email,
       password,
       options: {
-        data: { full_name: fullName, role: "client" },
+        data: {
+          full_name: fullName,
+          role: "client",
+          phone: phone || undefined,
+          date_of_birth: dateOfBirth || undefined,
+        },
         emailRedirectTo: window.location.origin + "/auth/callback?next=/portal/editorial/projects",
       },
     });
@@ -271,6 +288,20 @@ function ClientLoginContent() {
                 </div>
               </div>
               <div className="space-y-2">
+                <Label htmlFor="reg-phone" className="text-sm font-medium text-gray-600">Telefono</Label>
+                <div className="relative">
+                  <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#1a3a6b]/40" />
+                  <Input id="reg-phone" type="tel" placeholder="+1 (555) 000-0000" value={phone} onChange={(e) => setPhone(e.target.value)} className="pl-10 bg-gray-50 border-gray-200 text-gray-900 placeholder:text-gray-300 focus:border-[#1a3a6b]/50 focus:ring-[#1a3a6b]/20 h-12 rounded-xl" required />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="reg-dob" className="text-sm font-medium text-gray-600">Fecha de nacimiento</Label>
+                <div className="relative">
+                  <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#1a3a6b]/40" />
+                  <Input id="reg-dob" type="date" value={dateOfBirth} onChange={(e) => setDateOfBirth(e.target.value)} className="pl-10 bg-gray-50 border-gray-200 text-gray-900 placeholder:text-gray-300 focus:border-[#1a3a6b]/50 focus:ring-[#1a3a6b]/20 h-12 rounded-xl" required />
+                </div>
+              </div>
+              <div className="space-y-2">
                 <Label htmlFor="reg-password" className="text-sm font-medium text-gray-600">Contrasena</Label>
                 <div className="relative">
                   <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#1a3a6b]/40" />
@@ -290,7 +321,11 @@ function ClientLoginContent() {
                   </button>
                 </div>
               </div>
-              <Button type="submit" className="w-full h-12 mt-2 bg-gradient-to-r from-[#1a3a6b] to-[#2a5a9b] hover:from-[#2a5a9b] hover:to-[#3a6abf] text-white font-semibold rounded-xl shadow-lg shadow-[#1a3a6b]/20 transition-all" disabled={isLoading}>
+              <label className="flex items-start gap-2.5 cursor-pointer mt-1">
+                <input type="checkbox" checked={acceptTerms} onChange={(e) => setAcceptTerms(e.target.checked)} className="mt-0.5 h-4 w-4 rounded border-gray-300 text-[#1a3a6b] focus:ring-[#1a3a6b]/20" />
+                <span className="text-xs text-gray-500 leading-relaxed">Acepto los <a href="https://editorialreino.com/terminos" target="_blank" rel="noopener noreferrer" className="text-[#1a3a6b]/70 hover:text-[#1a3a6b] underline">terminos y condiciones</a> de Reino Editorial</span>
+              </label>
+              <Button type="submit" className="w-full h-12 mt-2 bg-gradient-to-r from-[#1a3a6b] to-[#2a5a9b] hover:from-[#2a5a9b] hover:to-[#3a6abf] text-white font-semibold rounded-xl shadow-lg shadow-[#1a3a6b]/20 transition-all" disabled={isLoading || !acceptTerms}>
                 {isLoading ? (<><Loader2 className="w-4 h-4 mr-2 animate-spin" />Creando cuenta...</>) : (<><UserPlus className="w-4 h-4 mr-2" />Crear mi cuenta</>)}
               </Button>
             </form>
