@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { requireStaff } from "@/lib/auth/staff";
 import {
   getProjectWorkflowDetail,
   initializeProjectWorkflow,
@@ -16,6 +17,7 @@ export async function GET(
   { params }: { params: Promise<{ projectId: string }> }
 ) {
   try {
+    await requireStaff();
     const { projectId } = await params;
     let detail = await getProjectWorkflowDetail(projectId);
 
@@ -29,6 +31,9 @@ export async function GET(
   } catch (error) {
     console.error("[workflow/GET] error:", error);
     const message = error instanceof Error ? error.message : "Internal server error";
+    if (message === "UNAUTHORIZED" || message === "FORBIDDEN") {
+      return NextResponse.json({ success: false, error: "No autorizado" }, { status: 401 });
+    }
     return NextResponse.json({ success: false, error: message }, { status: 500 });
   }
 }
@@ -43,6 +48,7 @@ export async function POST(
   { params }: { params: Promise<{ projectId: string }> }
 ) {
   try {
+    await requireStaff();
     const { projectId } = await params;
     const body = await request.json();
     const { action } = body as { action: string };
@@ -99,6 +105,9 @@ export async function POST(
   } catch (error) {
     console.error("[workflow/POST] error:", error);
     const message = error instanceof Error ? error.message : "Internal server error";
+    if (message === "UNAUTHORIZED" || message === "FORBIDDEN") {
+      return NextResponse.json({ success: false, error: "No autorizado" }, { status: 401 });
+    }
     return NextResponse.json({ success: false, error: message }, { status: 500 });
   }
 }

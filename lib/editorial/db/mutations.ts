@@ -7,6 +7,7 @@ import type {
 } from "../types/editorial";
 import { EDITORIAL_STAGE_KEYS } from "../pipeline/constants";
 import { calculateProgressPercent } from "../pipeline/progress";
+import { initializeProjectWorkflow } from "../workflow/professional";
 
 export interface CreateEditorialProjectInput {
   title: string;
@@ -40,6 +41,7 @@ export async function createEditorialProject(
       status: "created",
       progress_percent: 0,
       created_by: input.created_by ?? null,
+      service_type: input.service_type ?? null,
     })
     .select()
     .single();
@@ -98,6 +100,18 @@ export async function createEditorialProject(
       });
       // Do not throw: project itself was created successfully.
     }
+  }
+
+  // Initialize the professional workflow (11-phase system) so both the legacy
+  // 6-stage view and the new workflow view start from the same known state.
+  try {
+    await initializeProjectWorkflow(project.id, "intake", "manuscript_upload");
+  } catch (wfErr) {
+    console.error("[editorial] Failed to initialize professional workflow", {
+      projectId: project.id,
+      error: wfErr instanceof Error ? wfErr.message : wfErr,
+    });
+    // Do not throw: the project and stages were created successfully.
   }
 
   return project as EditorialProject;

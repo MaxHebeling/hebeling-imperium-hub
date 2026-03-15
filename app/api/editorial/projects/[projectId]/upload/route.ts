@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { requireStaff } from "@/lib/auth/staff";
 import { uploadManuscript } from "@/lib/editorial/storage/upload";
 import { registerManuscriptFile, logEditorialActivity } from "@/lib/editorial/db/mutations";
 import { getEditorialProject, getLatestFileVersion } from "@/lib/editorial/db/queries";
@@ -8,6 +9,7 @@ export async function POST(
   { params }: { params: Promise<{ projectId: string }> }
 ) {
   try {
+    const staff = await requireStaff();
     const { projectId } = await params;
 
     const project = await getEditorialProject(projectId);
@@ -36,7 +38,7 @@ export async function POST(
       storagePath,
       mimeType,
       sizeBytes,
-      undefined,
+      staff.userId,
       version,
       "client" // staff uploads of manuscripts are also visible to the client
     );
@@ -50,6 +52,9 @@ export async function POST(
   } catch (error) {
     console.error("[editorial/upload] error:", error);
     const message = error instanceof Error ? error.message : "Internal server error";
+    if (message === "UNAUTHORIZED" || message === "FORBIDDEN") {
+      return NextResponse.json({ success: false, error: "No autorizado" }, { status: 401 });
+    }
     return NextResponse.json({ success: false, error: message }, { status: 500 });
   }
 }
