@@ -1,7 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { Sparkles, Loader2, CheckCircle2, AlertCircle } from "lucide-react";
+import { Zap, Loader2, CheckCircle2, AlertCircle } from "lucide-react";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
@@ -53,7 +53,7 @@ export function StaffManuscriptAiCta({
     <div className="flex flex-col gap-1 text-xs text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
       <div className="space-y-0.5">
         <p className="font-medium text-foreground text-xs flex items-center gap-1.5">
-          <Sparkles className="h-3 w-3 text-purple-500" />
+          <Zap className="h-3 w-3 text-purple-500" />
           Análisis Editorial IA
         </p>
         <p className="text-[11px] text-muted-foreground">
