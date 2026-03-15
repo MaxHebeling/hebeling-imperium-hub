@@ -217,6 +217,19 @@ export async function POST(
           },
         });
 
+        // Sync legacy stages → professional workflow stages (non-blocking)
+        try {
+          const completedLegacyStages = jobEntries
+            .slice(0, completedCount)
+            .map((e) => e.stageKey);
+          await syncWorkflowStages(projectId, completedLegacyStages);
+        } catch (syncErr) {
+          console.warn(
+            "[process-all] Workflow sync error (non-blocking):",
+            (syncErr as Error).message
+          );
+        }
+
         if (completedCount === jobEntries.length) {
           try {
             await persistPublishingArtifacts(projectId);
@@ -464,6 +477,113 @@ async function runPostParallelValidation(
   }
 
   return results;
+}
+
+// ─── Legacy → Professional workflow sync ──────────────────────────────────
+
+/**
+ * Map from legacy 8-stage keys to professional workflow phase+stage keys.
+ * When the AI pipeline completes a legacy stage, we mark the corresponding
+ * professional workflow sub-stages as completed so both progress systems
+ * stay in sync.
+ */
+const LEGACY_TO_WORKFLOW_MAP: Record<string, { phase: string; stages: string[] }> = {
+  ingesta: { phase: "intake", stages: ["manuscript_upload", "technical_validation"] },
+  estructura: { phase: "editorial_analysis", stages: ["manuscript_analysis", "structure_analysis"] },
+  estilo: { phase: "line_editing", stages: ["line_editing_task", "voice_consistency"] },
+  ortotipografia: { phase: "copyediting", stages: ["grammar_correction", "copyediting_review", "orthotypography"] },
+  maquetacion: { phase: "book_production", stages: ["layout_analysis_task"] },
+  revision_final: { phase: "final_proof", stages: ["final_proof_task"] },
+  export: { phase: "publishing_prep", stages: ["metadata_generation_task"] },
+  distribution: { phase: "distribution", stages: ["export_validation_task", "distribution_publish"] },
+};
+
+/**
+ * Sync completed legacy editorial_stages into editorial_project_workflow_stages.
+ * This ensures the 11-stage UI pipeline reflects AI pipeline progress.
+ * Non-blocking — errors are logged but don't break the pipeline.
+ */
+async function syncWorkflowStages(projectId: string, completedLegacyStages: string[]): Promise<void> {
+  const supabase = getAdminClient();
+
+  try {
+    // Check if the professional workflow tables exist by querying the project workflow
+    const { data: workflow } = await supabase
+      .from("editorial_project_workflow")
+      .select("id, current_phase, current_stage")
+      .eq("project_id", projectId)
+      .single();
+
+    if (!workflow) {
+      // Professional workflow tables may not exist yet — skip silently
+      return;
+    }
+
+    const now = new Date().toISOString();
+
+    // Mark corresponding workflow stages as completed
+    for (const legacyKey of completedLegacyStages) {
+      const mapping = LEGACY_TO_WORKFLOW_MAP[legacyKey];
+      if (!mapping) continue;
+
+      for (const stageKey of mapping.stages) {
+        await supabase
+          .from("editorial_project_workflow_stages")
+          .upsert(
+            {
+              project_id: projectId,
+              phase_key: mapping.phase,
+              stage_key: stageKey,
+              status: "completed",
+              started_at: now,
+              completed_at: now,
+            },
+            { onConflict: "project_id,phase_key,stage_key" }
+          );
+      }
+    }
+
+    // Determine the furthest completed phase and update the workflow tracker
+    const phaseOrder = [
+      "intake", "editorial_analysis", "structural_editing", "line_editing",
+      "copyediting", "text_finalization", "book_specifications",
+      "book_production", "final_proof", "publishing_prep", "distribution",
+    ];
+
+    let furthestPhaseIdx = 0;
+    let furthestStage = "manuscript_upload";
+
+    for (const legacyKey of completedLegacyStages) {
+      const mapping = LEGACY_TO_WORKFLOW_MAP[legacyKey];
+      if (!mapping) continue;
+      const idx = phaseOrder.indexOf(mapping.phase);
+      if (idx > furthestPhaseIdx) {
+        furthestPhaseIdx = idx;
+        furthestStage = mapping.stages[mapping.stages.length - 1];
+      }
+    }
+
+    // Calculate progress based on completed phases
+    const progressPercent = Math.round(((furthestPhaseIdx + 1) / phaseOrder.length) * 100);
+
+    await supabase
+      .from("editorial_project_workflow")
+      .update({
+        current_phase: phaseOrder[furthestPhaseIdx],
+        current_stage: furthestStage,
+        progress_percent: progressPercent,
+        status: completedLegacyStages.length >= AI_STAGES.length ? "completed" : "active",
+        updated_at: now,
+      })
+      .eq("project_id", projectId);
+
+    console.log(
+      `[process-all] Synced workflow stages for ${projectId}: ${completedLegacyStages.length} legacy stages → phase=${phaseOrder[furthestPhaseIdx]}, progress=${progressPercent}%`
+    );
+  } catch (err) {
+    // Non-blocking — the professional workflow tables may not exist
+    console.warn("[process-all] Workflow sync skipped (non-blocking):", (err as Error).message);
+  }
 }
 
 /**
