@@ -5,16 +5,22 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import Image from "next/image";
-import { LogOut, BookMarked, BookOpen, HelpCircle, Bell, Download } from "lucide-react";
+import { LogOut, BookMarked, FileText, MessageSquare, User, Download, Globe } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/client";
 import { NotificationBell } from "@/components/portal-notification-bell";
+import type { PortalLocale } from "@/lib/editorial/i18n/portal-translations";
+import { getTranslations } from "@/lib/editorial/i18n/portal-translations";
 
-const navItems = [
-  { href: "/portal/editorial/projects", label: "Mis Libros", icon: BookMarked },
-  { href: "/portal/overview", label: "Resumen", icon: BookOpen },
-  { href: "/portal/ayuda", label: "Ayuda", icon: HelpCircle },
-];
+function getNavItems(locale: PortalLocale) {
+  const t = getTranslations(locale);
+  return [
+    { href: "/portal/editorial/projects", label: t.myBooks, icon: BookMarked },
+    { href: "/portal/updates", label: t.updates, icon: MessageSquare },
+    { href: "/portal/notifications", label: t.notifications, icon: FileText },
+    { href: "/portal/author-dashboard", label: t.authorPanel, icon: User },
+  ];
+}
 
 interface PortalNavProps {
   userEmail?: string | null;
@@ -25,6 +31,21 @@ export function PortalNav({ userEmail }: PortalNavProps) {
   const router = useRouter();
   const [installPrompt, setInstallPrompt] = useState<Event | null>(null);
   const [showInstallBanner, setShowInstallBanner] = useState(false);
+  const [locale, setLocale] = useState<PortalLocale>("es");
+
+  const t = getTranslations(locale);
+  const navItems = getNavItems(locale);
+
+  useEffect(() => {
+    const saved = localStorage.getItem("reino-locale") as PortalLocale | null;
+    if (saved === "en" || saved === "es") setLocale(saved);
+  }, []);
+
+  const toggleLocale = () => {
+    const next: PortalLocale = locale === "es" ? "en" : "es";
+    setLocale(next);
+    localStorage.setItem("reino-locale", next);
+  };
 
   useEffect(() => {
     const handler = (e: Event) => {
@@ -67,7 +88,7 @@ export function PortalNav({ userEmail }: PortalNavProps) {
                 height={32}
                 className="h-8 w-8 object-contain"
               />
-              <span className="font-bold text-sm text-[#1a3a6b] tracking-tight">Reino Editorial</span>
+              <span className="font-bold text-sm text-[#1a3a6b] tracking-tight hidden sm:inline">Reino Editorial</span>
             </Link>
 
             <nav className="hidden md:flex items-center gap-1">
@@ -93,7 +114,17 @@ export function PortalNav({ userEmail }: PortalNavProps) {
             </nav>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
+            {/* Language toggle */}
+            <button
+              onClick={toggleLocale}
+              className="flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-medium text-gray-500 hover:text-gray-700 hover:bg-gray-100 transition-colors"
+              title={t.language}
+            >
+              <Globe className="h-3.5 w-3.5" />
+              <span className="uppercase">{locale}</span>
+            </button>
+
             <NotificationBell />
             {userEmail && (
               <span className="text-xs text-gray-400 hidden sm:inline truncate max-w-40">
@@ -107,7 +138,7 @@ export function PortalNav({ userEmail }: PortalNavProps) {
               className="text-gray-400 hover:text-gray-700 hover:bg-gray-100 h-8 px-2"
             >
               <LogOut className="h-3.5 w-3.5" />
-              <span className="hidden sm:inline ml-1.5 text-xs">Salir</span>
+              <span className="hidden sm:inline ml-1.5 text-xs">{t.signOut}</span>
             </Button>
           </div>
         </div>
@@ -138,7 +169,7 @@ export function PortalNav({ userEmail }: PortalNavProps) {
             className="flex flex-col items-center gap-0.5 text-xs font-medium text-gray-400 py-1 px-3"
           >
             <LogOut className="h-5 w-5" />
-            Salir
+            {t.signOut}
           </button>
         </div>
       </div>
@@ -152,21 +183,21 @@ export function PortalNav({ userEmail }: PortalNavProps) {
             <Download className="w-5 h-5 text-[#1a3a6b]" />
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-semibold text-[#1a3a6b]">Instalar App</p>
-            <p className="text-xs text-gray-500">Accede m\u00e1s r\u00e1pido desde tu celular</p>
+            <p className="text-sm font-semibold text-[#1a3a6b]">{t.downloadApp}</p>
+            <p className="text-xs text-gray-500">{t.downloadAppDesc}</p>
           </div>
           <div className="flex items-center gap-1.5 shrink-0">
             <button
               onClick={() => setShowInstallBanner(false)}
               className="text-xs text-gray-400 hover:text-gray-600 px-2 py-1"
             >
-              Ahora no
+              {locale === "es" ? "Ahora no" : "Not now"}
             </button>
             <button
               onClick={handleInstall}
               className="text-xs font-semibold text-white bg-[#1a3a6b] px-3 py-1.5 rounded-lg hover:bg-[#1a3a6b]/90 transition-colors"
             >
-              Instalar
+              {locale === "es" ? "Instalar" : "Install"}
             </button>
           </div>
         </div>

@@ -126,6 +126,42 @@ export const PORTAL_TRANSLATIONS = {
     comingSoon: "Proximamente",
     notifyMe: "Avisame cuando este disponible",
 
+    // Premium Portal
+    welcomeBack: "Bienvenido de vuelta",
+    welcomeBackName: "Bienvenido, {name}",
+    portalSubtitle: "Aqui puedes seguir el progreso editorial de tu libro.",
+    dayOf12: "Dia {n} de 12",
+    nextStep: "Proximo paso",
+    estimatedCompletion: "Finalizacion estimada",
+    yourBookIs: "Tu libro esta actualmente en:",
+    projectUpdates: "Actualizaciones de tu proyecto",
+    noUpdatesYet: "Aun no hay actualizaciones para mostrar.",
+    updatesDesc: "Recibe informacion sobre el avance de tu libro.",
+    allFiles: "Todos los archivos",
+    allFilesDesc: "Documentos y entregables de tu proyecto editorial.",
+    noFilesAvailable: "Aun no hay archivos disponibles.",
+    downloadFile: "Descargar",
+    previewFile: "Ver",
+    notificationsPage: "Centro de Notificaciones",
+    notificationsDesc: "Todas tus notificaciones en un solo lugar.",
+    viewAll: "Ver todo",
+    recentUpdates: "Actualizaciones recientes",
+    editorialProcess: "Proceso Editorial",
+    editorialProcessDesc: "Tu libro avanza por un proceso editorial profesional de 12 dias.",
+    stageDetail: "Detalle de etapa",
+
+    // Stage descriptions for client (non-technical, editorial)
+    stageDescriptions: {
+      ingesta: "Estamos revisando y validando tu manuscrito original para iniciar el proceso editorial.",
+      estructura: "Estamos analizando la organizacion de tu contenido para mejorar claridad y coherencia.",
+      estilo: "Nuestro equipo trabaja en perfeccionar la redaccion, fluidez y consistencia del texto.",
+      ortotipografia: "Revisamos la ortografia, gramatica y tipografia de tu manuscrito con atencion profesional.",
+      maquetacion: "Estamos disenando el interior de tu libro con un formato elegante y profesional.",
+      revision_final: "Tu libro esta en revision final exhaustiva antes de su entrega.",
+      export: "Estamos preparando los archivos finales de tu libro para su publicacion.",
+      distribution: "Tu libro esta siendo preparado para su distribucion y disponibilidad comercial.",
+    },
+
     // Delays
     stageMessages: {
       ingesta: { active: "Tu manuscrito está siendo revisado por nuestro equipo editorial.", completed: "Revisión inicial completada." },
@@ -272,6 +308,42 @@ export const PORTAL_TRANSLATIONS = {
     downloadAppDesc: "Take your book with you and follow the progress from your phone.",
     comingSoon: "Coming soon",
     notifyMe: "Notify me when available",
+
+    // Premium Portal
+    welcomeBack: "Welcome back",
+    welcomeBackName: "Welcome, {name}",
+    portalSubtitle: "Here you can follow the editorial progress of your book.",
+    dayOf12: "Day {n} of 12",
+    nextStep: "Next step",
+    estimatedCompletion: "Estimated completion",
+    yourBookIs: "Your book is currently in:",
+    projectUpdates: "Project updates",
+    noUpdatesYet: "No updates to show yet.",
+    updatesDesc: "Receive information about the progress of your book.",
+    allFiles: "All files",
+    allFilesDesc: "Documents and deliverables from your editorial project.",
+    noFilesAvailable: "No files available yet.",
+    downloadFile: "Download",
+    previewFile: "View",
+    notificationsPage: "Notification Center",
+    notificationsDesc: "All your notifications in one place.",
+    viewAll: "View all",
+    recentUpdates: "Recent updates",
+    editorialProcess: "Editorial Process",
+    editorialProcessDesc: "Your book goes through a professional 12-day editorial process.",
+    stageDetail: "Stage detail",
+
+    // Stage descriptions for client (non-technical, editorial)
+    stageDescriptions: {
+      ingesta: "We are reviewing and validating your original manuscript to begin the editorial process.",
+      estructura: "We are analyzing the structure of your content to improve clarity and coherence.",
+      estilo: "Our team is working on refining the writing, flow, and consistency of your text.",
+      ortotipografia: "We are reviewing the spelling, grammar, and typography of your manuscript with professional attention.",
+      maquetacion: "We are designing the interior of your book with an elegant and professional format.",
+      revision_final: "Your book is undergoing a comprehensive final review before delivery.",
+      export: "We are preparing the final files for your book for publication.",
+      distribution: "Your book is being prepared for distribution and commercial availability.",
+    },
 
     // Delays
     stageMessages: {
