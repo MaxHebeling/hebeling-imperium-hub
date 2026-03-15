@@ -154,10 +154,17 @@ async function fetchCustomPrompt(
     // The table stores a single prompt_text. Use the default system prompt
     // and treat prompt_text as the user prompt template.
     const defaultPrompt = getDefaultPrompt(stageKey, taskKey);
+    if (!defaultPrompt) {
+      console.warn(
+        `[fetchCustomPrompt] No default system prompt found for ${stageKey}/${taskKey}. ` +
+        `Skipping custom prompt override to avoid empty system prompt.`
+      );
+      return null;
+    }
     return {
       taskKey,
       stageKey,
-      systemPrompt: defaultPrompt?.systemPrompt ?? "",
+      systemPrompt: defaultPrompt.systemPrompt,
       userPromptTemplate: data.prompt_text,
     };
   } catch {

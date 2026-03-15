@@ -1,6 +1,10 @@
--- Migration: Add export and distribution stages to editorial_stage_key enum
--- This script adds the new pipeline stages to support the Export and Distribution workflow
-
--- Alter the editorial_stage_key enum type to include new values
-ALTER TYPE editorial_stage_key ADD VALUE 'export' BEFORE 'revision_final';
-ALTER TYPE editorial_stage_key ADD VALUE 'distribution' AFTER 'export';
+-- ⚠️  DO NOT RUN THIS SCRIPT — IT IS INCORRECT AND WILL FAIL.
+--
+-- `current_stage` in editorial_projects is a TEXT column with a CHECK constraint,
+-- NOT a PostgreSQL enum type.  There is no `editorial_stage_key` enum to ALTER.
+--
+-- The correct fix is in:
+--   supabase/migrations/20260315_fix_editorial_stage_constraint.sql
+--
+-- That migration drops the old 6-value CHECK constraint and re-adds it with
+-- all 8 values (adding 'export' and 'distribution').

@@ -294,7 +294,7 @@ export async function POST(
       return NextResponse.json({ success: false, error: "No autorizado" }, { status: 401 });
     }
     return NextResponse.json(
-      { success: false, error: "Error interno del servidor" },
+      { success: false, error: message },
       { status: 500 }
     );
   }
