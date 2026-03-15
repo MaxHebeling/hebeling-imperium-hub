@@ -8,6 +8,8 @@ import type { EditorialExportJob } from "@/lib/editorial/export/types";
 import type { ProjectDistribution } from "@/lib/editorial/distribution/types";
 import { PipelineStageBar } from "./pipeline-stage-bar";
 import { StageWorkspacePanel } from "./stage-workspace-panel";
+import { AiPipelineRunner } from "./ai-pipeline-runner";
+import { AiSupervisorPanel } from "./ai-supervisor-panel";
 import { mapWorkflowToUIStages } from "./pipeline-stages";
 import type { UIStageData } from "./pipeline-stages";
 
@@ -120,6 +122,13 @@ export function EditorialPipelineWorkspace({
 
   return (
     <div className="space-y-4">
+      {/* AI Pipeline Runner — Botón global "Ejecutar Pipeline IA Completo" */}
+      <AiPipelineRunner
+        projectId={projectId}
+        hasManuscript={hasManuscript}
+        onPipelineComplete={fetchWorkflow}
+      />
+
       {/* Pipeline stage bar */}
       <PipelineStageBar
         stages={uiStages}
@@ -143,6 +152,12 @@ export function EditorialPipelineWorkspace({
           hasManuscript={hasManuscript}
         />
       )}
+
+      {/* Supervisor IA Editorial */}
+      <AiSupervisorPanel
+        projectId={projectId}
+        projectMode
+      />
     </div>
   );
 }

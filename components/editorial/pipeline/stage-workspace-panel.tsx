@@ -45,15 +45,16 @@ import { ReinoEditorialManuscriptUpload } from "@/components/editorial/reino-edi
 import type { EditorialFile } from "@/lib/editorial/types/editorial";
 import type { EditorialExportJob } from "@/lib/editorial/export/types";
 import type { ProjectDistribution } from "@/lib/editorial/distribution/types";
+import { StageDocumentCenter } from "./stage-document-center";
 
 // --- Status helpers ---
 
 const STATUS_LABEL: Record<string, string> = {
-  pending: "Pending",
-  processing: "In Progress",
-  needs_review: "Needs Review",
-  completed: "Completed",
-  blocked: "Blocked",
+  pending: "Pendiente",
+  processing: "En progreso",
+  needs_review: "Requiere revisión",
+  completed: "Completado",
+  blocked: "Bloqueado",
 };
 
 const STATUS_COLORS: Record<string, string> = {
@@ -65,11 +66,11 @@ const STATUS_COLORS: Record<string, string> = {
 };
 
 const STAGE_STATUS_BADGE: Record<UIStageStatus, { label: string; cls: string }> = {
-  completed: { label: "Complete", cls: "bg-emerald-500/10 text-emerald-400 border-emerald-500/30" },
-  active: { label: "Active", cls: "bg-blue-500/10 text-blue-400 border-blue-500/30" },
-  needs_review: { label: "Needs Review", cls: "bg-amber-500/10 text-amber-400 border-amber-500/30" },
-  pending: { label: "Upcoming", cls: "bg-muted/60 text-muted-foreground border-border/40" },
-  blocked: { label: "Blocked", cls: "bg-red-500/10 text-red-400 border-red-500/30" },
+  completed: { label: "Completado", cls: "bg-emerald-500/10 text-emerald-400 border-emerald-500/30" },
+  active: { label: "Activo", cls: "bg-blue-500/10 text-blue-400 border-blue-500/30" },
+  needs_review: { label: "Requiere revisión", cls: "bg-amber-500/10 text-amber-400 border-amber-500/30" },
+  pending: { label: "Pendiente", cls: "bg-muted/60 text-muted-foreground border-border/40" },
+  blocked: { label: "Bloqueado", cls: "bg-red-500/10 text-red-400 border-red-500/30" },
 };
 
 function formatDate(dateStr: string | null) {
@@ -201,7 +202,7 @@ export function StageWorkspacePanel({
                 ) : (
                   <ArrowRight className="h-3.5 w-3.5" />
                 )}
-                Advance
+                Avanzar
               </Button>
             )}
           </div>
@@ -213,7 +214,7 @@ export function StageWorkspacePanel({
         <div className="rounded-xl bg-muted/20 border border-border/20 px-3 py-2.5">
           <div className="flex items-center gap-1.5 mb-1">
             <BarChart3 className="h-3 w-3 text-blue-400" />
-            <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">Progress</span>
+            <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">Progreso</span>
           </div>
           <div className="flex items-end gap-1.5">
             <span className="text-lg font-bold tabular-nums">{stageProgressPercent}%</span>
@@ -229,18 +230,18 @@ export function StageWorkspacePanel({
         <div className="rounded-xl bg-muted/20 border border-border/20 px-3 py-2.5">
           <div className="flex items-center gap-1.5 mb-1">
             <FileOutput className="h-3 w-3 text-indigo-400" />
-            <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">Artifact</span>
+            <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">Documento</span>
           </div>
           <span className="text-xs font-semibold leading-tight">{stage.mainArtifact}</span>
         </div>
         <div className="rounded-xl bg-muted/20 border border-border/20 px-3 py-2.5">
           <div className="flex items-center gap-1.5 mb-1">
             <Loader2 className="h-3 w-3 text-amber-400" />
-            <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">Active</span>
+            <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">Activos</span>
           </div>
           <span className="text-lg font-bold tabular-nums">{activeSubstages}</span>
           {pendingSubstages > 0 && (
-            <span className="text-[10px] text-muted-foreground ml-1.5">{pendingSubstages} queued</span>
+            <span className="text-[10px] text-muted-foreground ml-1.5">{pendingSubstages} en cola</span>
           )}
         </div>
         <div className="rounded-xl bg-muted/20 border border-border/20 px-3 py-2.5">
@@ -248,7 +249,7 @@ export function StageWorkspacePanel({
             <User2 className="h-3 w-3 text-purple-400" />
             <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">Editor</span>
           </div>
-          <span className="text-xs font-semibold">{assignedEditor ?? "Unassigned"}</span>
+          <span className="text-xs font-semibold">{assignedEditor ?? "Sin asignar"}</span>
         </div>
       </div>
 
@@ -322,12 +323,12 @@ export function StageWorkspacePanel({
                       )}
                       {sub.humanRequired && (
                         <span className="flex items-center gap-0.5">
-                          <User className="h-3 w-3 text-amber-400/70" /> Human
+                          <User className="h-3 w-3 text-amber-400/70" /> Humano
                         </span>
                       )}
                       {sub.requiresApproval && (
                         <span className="flex items-center gap-0.5">
-                          <ShieldCheck className="h-3 w-3 text-purple-400/70" /> Approval
+                          <ShieldCheck className="h-3 w-3 text-purple-400/70" /> Aprobación
                         </span>
                       )}
                       {sub.startedAt && (
@@ -352,7 +353,7 @@ export function StageWorkspacePanel({
                             ) : (
                               <Play className="h-3 w-3" />
                             )}
-                            Start
+                            Iniciar
                           </Button>
                         )}
                         {sub.status === "processing" && (
@@ -370,7 +371,7 @@ export function StageWorkspacePanel({
                             ) : (
                               <Check className="h-3 w-3" />
                             )}
-                            Complete
+                            Completar
                           </Button>
                         )}
                       </div>
@@ -392,7 +393,7 @@ export function StageWorkspacePanel({
             className="flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-muted-foreground/60 hover:text-muted-foreground transition-colors w-full"
           >
             <FileText className="h-3 w-3" />
-            <span>Outputs</span>
+            <span>Documentos esperados</span>
             {showOutputs ? (
               <ChevronUp className="h-3 w-3 ml-auto" />
             ) : (
@@ -415,6 +416,15 @@ export function StageWorkspacePanel({
         </div>
       )}
 
+      {/* Document Center — Archivos de la Etapa */}
+      <div className="px-6 pb-4">
+        <StageDocumentCenter
+          projectId={projectId}
+          stageKey={stage.id}
+          dbStageKeys={stage.dbPhases as string[]}
+        />
+      </div>
+
       {/* Integrated tools & panels */}
       <StageTools
         stageId={stage.id}
@@ -429,13 +439,13 @@ export function StageWorkspacePanel({
       {/* Legend */}
       <div className="px-6 py-3 border-t border-border/20 flex flex-wrap gap-4 text-[10px] text-muted-foreground/60">
         <span className="flex items-center gap-1">
-          <Bot className="h-3 w-3 text-blue-400/60" /> AI Stage
+          <Bot className="h-3 w-3 text-blue-400/60" /> Etapa IA
         </span>
         <span className="flex items-center gap-1">
-          <User className="h-3 w-3 text-amber-400/60" /> Human Required
+          <User className="h-3 w-3 text-amber-400/60" /> Requiere humano
         </span>
         <span className="flex items-center gap-1">
-          <ShieldCheck className="h-3 w-3 text-purple-400/60" /> Approval Required
+          <ShieldCheck className="h-3 w-3 text-purple-400/60" /> Requiere aprobación
         </span>
       </div>
     </div>
@@ -480,7 +490,7 @@ function StageTools({
       <div className="flex items-center gap-2 pt-2">
         <div className="h-px flex-1 bg-border/30" />
         <span className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/50">
-          Tools & Actions
+          Herramientas y acciones
         </span>
         <div className="h-px flex-1 bg-border/30" />
       </div>
@@ -504,9 +514,9 @@ function getToolsForStage(
         <div className="space-y-4">
           <div className="flex items-center justify-between rounded-lg border border-dashed border-border/50 bg-muted/20 p-4">
             <div className="space-y-1">
-              <p className="text-sm font-medium">Manuscript Upload</p>
+              <p className="text-sm font-medium">Subir Manuscrito</p>
               <p className="text-xs text-muted-foreground">
-                Upload the original manuscript to begin the editorial process.
+                Sube el manuscrito original para iniciar el proceso editorial.
               </p>
             </div>
             <ReinoEditorialManuscriptUpload projectId={projectId} />
