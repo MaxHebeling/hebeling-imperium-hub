@@ -57,6 +57,61 @@ const STATUS_LABEL: Record<string, string> = {
   blocked: "Bloqueado",
 };
 
+// Sub-stage name translations (DB stores English names)
+const SUBSTAGE_LABEL_ES: Record<string, string> = {
+  // Phase 1: Intake
+  manuscript_upload: "Subida del Manuscrito",
+  technical_validation: "Validación Técnica",
+  editorial_admission: "Admisión Editorial",
+  project_setup: "Configuración del Proyecto",
+  // Phase 2: Editorial Analysis
+  manuscript_analysis: "Análisis del Manuscrito",
+  structure_analysis: "Análisis Estructural",
+  style_analysis: "Análisis de Estilo",
+  problem_detection: "Detección de Problemas",
+  // Phase 3: Structural Editing
+  structural_editing: "Edición Estructural",
+  structural_report: "Reporte Estructural",
+  structural_approval: "Aprobación Estructural",
+  // Phase 4: Line Editing
+  line_editing_task: "Edición de Línea",
+  voice_consistency: "Consistencia de Voz",
+  style_refinement: "Refinamiento de Estilo",
+  // Phase 5: Copyediting
+  grammar_correction: "Corrección Gramatical",
+  copyediting_review: "Revisión de Estilo",
+  orthotypography: "Ortotipografía",
+  references_validation: "Validación de Referencias",
+  // Phase 6: Text Finalization
+  final_text_lock: "Bloqueo Final del Texto",
+  master_manuscript: "Manuscrito Maestro",
+  editorial_approval: "Aprobación Editorial",
+  // Phase 7: Book Specifications
+  book_format_selection: "Selección de Formato",
+  amazon_kdp_configuration: "Configuración Amazon KDP",
+  layout_parameters: "Parámetros de Maquetación",
+  pagination_estimation: "Estimación de Paginación",
+  // Phase 8: Book Production
+  layout_analysis_task: "Análisis de Maquetación",
+  book_layout: "Maquetación del Libro",
+  cover_design: "Diseño de Portada",
+  cover_approval: "Aprobación de Portada",
+  proof_generation: "Generación de Prueba",
+  // Phase 9: Final Proof
+  final_proof_task: "Prueba Final",
+  proof_corrections: "Correcciones de Prueba",
+  production_approval: "Aprobación de Producción",
+  // Phase 10: Publishing Preparation
+  metadata_generation_task: "Generación de Metadatos",
+  isbn_registration: "Registro de ISBN",
+  pricing_strategy: "Estrategia de Precios",
+  distribution_setup: "Configuración de Distribución",
+  // Phase 11: Distribution
+  export_validation_task: "Validación de Exportación",
+  distribution_publish: "Publicación en Plataformas",
+  marketplace_activation: "Activación en Marketplaces",
+};
+
 const STATUS_COLORS: Record<string, string> = {
   pending: "bg-muted/60 text-muted-foreground border-border/40",
   processing: "bg-blue-500/10 text-blue-400 border-blue-500/30",
@@ -301,7 +356,7 @@ export function StageWorkspacePanel({
                             : "text-foreground"
                         )}
                       >
-                        {sub.name}
+                        {SUBSTAGE_LABEL_ES[sub.stageKey] ?? sub.name}
                       </span>
                     </div>
                     <Badge
