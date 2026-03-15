@@ -1,16 +1,11 @@
 import { CompanySecondaryNav } from "@/components/company-secondary-nav";
 
 const REINO_NAV_ITEMS = [
-  { href: "/app/companies/reino-editorial/overview", label: "Overview" },
-  { href: "/app/companies/reino-editorial/projects", label: "Projects" },
-  { href: "/app/companies/reino-editorial/pipeline", label: "Pipeline" },
-  { href: "/app/companies/reino-editorial/ai", label: "AI Review" },
-  { href: "/app/companies/reino-editorial/authors", label: "Authors" },
-  { href: "/app/companies/reino-editorial/staff", label: "Staff" },
-  { href: "/app/companies/reino-editorial/marketplace", label: "Marketplace" },
-  { href: "/app/companies/reino-editorial/distribution", label: "Distribution" },
-  { href: "/app/companies/reino-editorial/operations", label: "Operations" },
-  { href: "/app/companies/reino-editorial/reports", label: "Reports" },
+  { href: "/app/companies/reino-editorial/overview", label: "Panel" },
+  { href: "/app/companies/reino-editorial/projects", label: "Proyectos" },
+  { href: "/app/companies/reino-editorial/authors", label: "Autores" },
+  { href: "/app/companies/reino-editorial/staff", label: "Equipo" },
+  { href: "/app/companies/reino-editorial/reports", label: "Reportes" },
 ];
 
 export default function ReinoEditorialLayout({
