@@ -12,20 +12,19 @@ import {
   Clock,
   AlertCircle,
   Circle,
-  ChevronRight,
   Play,
   CheckCircle2,
+  FileText,
+  ChevronDown,
+  ChevronUp,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import type {
-  ProjectWorkflowDetail,
-  WorkflowPhaseKey,
-  WorkflowStageKey,
-} from "@/lib/editorial/types/workflow";
+import type { ProjectWorkflow } from "@/lib/editorial/types/workflow";
+import type { UIStageData, UIStageStatus } from "./pipeline-stages";
 
-// ─── Existing panels integrated into stages ──────────────────────────
+// --- Existing panels integrated into stages ---
 
 import { StaffProjectAiReview } from "@/components/editorial/staff/project-ai-review";
 import { BookSpecsPanel } from "@/components/editorial/staff/book-specs-panel";
@@ -44,7 +43,7 @@ import type { EditorialFile } from "@/lib/editorial/types/editorial";
 import type { EditorialExportJob } from "@/lib/editorial/export/types";
 import type { ProjectDistribution } from "@/lib/editorial/distribution/types";
 
-// ─── Status helpers ──────────────────────────────────────────────────
+// --- Status helpers ---
 
 const STATUS_LABEL: Record<string, string> = {
   pending: "Pending",
@@ -62,6 +61,13 @@ const STATUS_COLORS: Record<string, string> = {
   blocked: "bg-red-500/10 text-red-400 border-red-500/30",
 };
 
+const STAGE_STATUS_BADGE: Record<UIStageStatus, { label: string; cls: string }> = {
+  completed: { label: "Complete", cls: "bg-emerald-500/10 text-emerald-400 border-emerald-500/30" },
+  active: { label: "Active", cls: "bg-blue-500/10 text-blue-400 border-blue-500/30" },
+  pending: { label: "Upcoming", cls: "bg-muted/60 text-muted-foreground border-border/40" },
+  blocked: { label: "Blocked", cls: "bg-red-500/10 text-red-400 border-red-500/30" },
+};
+
 function formatDate(dateStr: string | null) {
   if (!dateStr) return null;
   return new Date(dateStr).toLocaleDateString("es-ES", {
@@ -72,31 +78,13 @@ function formatDate(dateStr: string | null) {
   });
 }
 
-// ─── Phase descriptions ──────────────────────────────────────────────
-
-const PHASE_DESCRIPTIONS: Record<WorkflowPhaseKey, string> = {
-  intake: "Upload and validate the original manuscript. Configure project settings and editorial admission.",
-  editorial_analysis: "AI-powered analysis of manuscript structure, style, and potential issues.",
-  structural_editing: "Structural editing with AI suggestions. Review and approve structural changes.",
-  line_editing: "Line-by-line editing for voice consistency, style refinement, and flow.",
-  copyediting: "Grammar correction, orthotypography review, and references validation.",
-  text_finalization: "Lock the final text, create master manuscript, and obtain editorial approval.",
-  book_specifications: "Configure book format, Amazon KDP settings, layout parameters, and pagination.",
-  book_production: "Interior layout, cover design, and proof generation.",
-  final_proof: "Final proof review, corrections, and production approval.",
-  publishing_prep: "Generate metadata, register ISBN, set pricing strategy, and configure distribution.",
-  distribution: "Export validation, publish to platforms, and activate on marketplaces.",
-};
-
-// ─── Props ───────────────────────────────────────────────────────────
+// --- Props ---
 
 interface StageWorkspacePanelProps {
   projectId: string;
-  phaseKey: WorkflowPhaseKey;
-  phaseData: ProjectWorkflowDetail["phases"][number];
-  workflow: ProjectWorkflowDetail["workflow"];
+  stageData: UIStageData;
+  workflow: ProjectWorkflow;
   onRefresh: () => Promise<void>;
-  // Data for integrated panels
   files?: EditorialFile[];
   exports?: EditorialExportJob[];
   distributions?: ProjectDistribution[];
@@ -104,12 +92,11 @@ interface StageWorkspacePanelProps {
   hasManuscript?: boolean;
 }
 
-// ─── Component ───────────────────────────────────────────────────────
+// --- Component ---
 
 export function StageWorkspacePanel({
   projectId,
-  phaseKey,
-  phaseData,
+  stageData,
   workflow,
   onRefresh,
   files = [],
@@ -122,9 +109,10 @@ export function StageWorkspacePanel({
   const [advancing, setAdvancing] = useState(false);
   const [updatingStage, setUpdatingStage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [showOutputs, setShowOutputs] = useState(false);
 
-  const { phase, stages, isComplete, isCurrent } = phaseData;
-  const completedCount = stages.filter((s) => s.status?.status === "completed").length;
+  const { stage, status, substages, completedCount, totalCount, isCurrent } = stageData;
+  const badge = STAGE_STATUS_BADGE[status];
 
   async function handleAdvance() {
     setAdvancing(true);
@@ -149,7 +137,7 @@ export function StageWorkspacePanel({
     }
   }
 
-  async function handleUpdateStage(stageKey: string, status: string) {
+  async function handleUpdateStage(stageKey: string, dbPhaseKey: string, newStatus: string) {
     setUpdatingStage(stageKey);
     setError(null);
     try {
@@ -158,9 +146,9 @@ export function StageWorkspacePanel({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           action: "update_stage",
-          phaseKey,
+          phaseKey: dbPhaseKey,
           stageKey,
-          status,
+          status: newStatus,
         }),
       });
       const json = await res.json();
@@ -177,39 +165,27 @@ export function StageWorkspacePanel({
 
   return (
     <div className="rounded-2xl border border-border/40 bg-card/60 backdrop-blur-md shadow-sm overflow-hidden animate-in fade-in slide-in-from-top-2 duration-300">
-      {/* Phase header */}
+      {/* Stage header */}
       <div className="px-6 py-5 border-b border-border/30">
         <div className="flex items-start justify-between gap-4">
           <div className="space-y-1.5 min-w-0">
             <div className="flex items-center gap-3">
               <h2 className="text-lg font-semibold tracking-tight">
-                {phase.order}. {phase.name}
+                {stage.order}. {stage.label}
               </h2>
-              {isComplete && (
-                <Badge className="bg-emerald-500/10 text-emerald-400 border-emerald-500/30 border text-xs">
-                  Complete
-                </Badge>
-              )}
-              {isCurrent && !isComplete && (
-                <Badge className="bg-blue-500/10 text-blue-400 border-blue-500/30 border text-xs">
-                  Active
-                </Badge>
-              )}
-              {!isCurrent && !isComplete && (
-                <Badge className="bg-muted/60 text-muted-foreground border-border/40 border text-xs">
-                  Upcoming
-                </Badge>
-              )}
+              <Badge className={cn("border text-xs font-medium", badge.cls)}>
+                {badge.label}
+              </Badge>
             </div>
             <p className="text-sm text-muted-foreground leading-relaxed">
-              {PHASE_DESCRIPTIONS[phaseKey]}
+              {stage.description}
             </p>
           </div>
           <div className="flex items-center gap-3 shrink-0">
             <div className="text-right">
               <div className="text-xs text-muted-foreground">Stages</div>
               <div className="text-sm font-bold tabular-nums">
-                {completedCount}/{stages.length}
+                {completedCount}/{totalCount}
               </div>
             </div>
             {isCurrent && workflow.status !== "completed" && (
@@ -239,131 +215,164 @@ export function StageWorkspacePanel({
       )}
 
       {/* Sub-stages list */}
-      <div className="px-6 py-4">
-        <div className="space-y-1">
-          {stages.map(({ definition: stageDef, status: stageStatus }, i) => {
-            const isCurrentStage = isCurrent && workflow.current_stage === stageDef.stage_key;
-            const stStatus = stageStatus?.status ?? "pending";
-            const isUpdating = updatingStage === stageDef.stage_key;
+      {substages.length > 0 && (
+        <div className="px-6 py-4">
+          <div className="space-y-1">
+            {substages.map((sub, i) => {
+              const isCurrentSub = isCurrent && workflow.current_stage === sub.stageKey;
+              const isUpdating = updatingStage === sub.stageKey;
 
-            return (
-              <div
-                key={stageDef.stage_key}
-                className={cn(
-                  "flex items-center justify-between gap-3 rounded-lg px-3 py-2.5 transition-all duration-200",
-                  isCurrentStage
-                    ? "bg-blue-500/5 border border-blue-500/20"
-                    : "hover:bg-muted/30",
-                  i < stages.length - 1 && !isCurrentStage && "border-b border-border/20"
-                )}
-              >
-                <div className="flex items-center gap-3 min-w-0">
-                  {/* Status icon */}
-                  <div className="shrink-0">
-                    {stStatus === "completed" ? (
-                      <CheckCircle2 className="h-4 w-4 text-emerald-500" />
-                    ) : stStatus === "processing" ? (
-                      <Loader2 className="h-4 w-4 text-blue-500 animate-spin" />
-                    ) : stStatus === "blocked" ? (
-                      <AlertCircle className="h-4 w-4 text-red-500" />
-                    ) : stStatus === "needs_review" ? (
-                      <Clock className="h-4 w-4 text-amber-500" />
-                    ) : (
-                      <Circle className="h-4 w-4 text-muted-foreground/30" />
-                    )}
+              return (
+                <div
+                  key={sub.stageKey}
+                  className={cn(
+                    "flex items-center justify-between gap-3 rounded-lg px-3 py-2.5 transition-all duration-200",
+                    isCurrentSub
+                      ? "bg-blue-500/5 border border-blue-500/20"
+                      : "hover:bg-muted/30",
+                    i < substages.length - 1 && !isCurrentSub && "border-b border-border/20"
+                  )}
+                >
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="shrink-0">
+                      {sub.status === "completed" ? (
+                        <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+                      ) : sub.status === "processing" ? (
+                        <Loader2 className="h-4 w-4 text-blue-500 animate-spin" />
+                      ) : sub.status === "blocked" ? (
+                        <AlertCircle className="h-4 w-4 text-red-500" />
+                      ) : sub.status === "needs_review" ? (
+                        <Clock className="h-4 w-4 text-amber-500" />
+                      ) : (
+                        <Circle className="h-4 w-4 text-muted-foreground/30" />
+                      )}
+                    </div>
+
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span
+                          className={cn(
+                            "text-sm font-medium",
+                            sub.status === "completed"
+                              ? "text-muted-foreground"
+                              : "text-foreground"
+                          )}
+                        >
+                          {sub.name}
+                        </span>
+                        <div className="flex items-center gap-1">
+                          {sub.isAiStage && (
+                            <Bot className="h-3 w-3 text-blue-400/70" />
+                          )}
+                          {sub.humanRequired && (
+                            <User className="h-3 w-3 text-amber-400/70" />
+                          )}
+                          {sub.requiresApproval && (
+                            <ShieldCheck className="h-3 w-3 text-purple-400/70" />
+                          )}
+                        </div>
+                      </div>
+                      {sub.startedAt && (
+                        <span className="text-[10px] text-muted-foreground/60">
+                          Started {formatDate(sub.startedAt)}
+                        </span>
+                      )}
+                    </div>
                   </div>
 
-                  {/* Stage info */}
-                  <div className="min-w-0">
-                    <div className="flex items-center gap-2">
-                      <span className={cn(
-                        "text-sm font-medium",
-                        stStatus === "completed" ? "text-muted-foreground" : "text-foreground"
-                      )}>
-                        {stageDef.name}
-                      </span>
-                      {/* Type indicators */}
-                      <div className="flex items-center gap-1">
-                        {stageDef.is_ai_stage && (
-                          <Bot className="h-3 w-3 text-blue-400/70" />
+                  <div className="flex items-center gap-2 shrink-0">
+                    <Badge
+                      className={cn(
+                        "text-[10px] border font-medium",
+                        STATUS_COLORS[sub.status] ?? STATUS_COLORS.pending
+                      )}
+                    >
+                      {STATUS_LABEL[sub.status] ?? sub.status}
+                    </Badge>
+
+                    {isCurrentSub && sub.status !== "completed" && (
+                      <div className="flex gap-1 ml-1">
+                        {sub.status === "pending" && (
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="h-7 px-2.5 text-xs gap-1 hover:bg-blue-500/10 hover:text-blue-400"
+                            disabled={isUpdating}
+                            onClick={() =>
+                              handleUpdateStage(sub.stageKey, sub.dbPhaseKey, "processing")
+                            }
+                          >
+                            {isUpdating ? (
+                              <Loader2 className="h-3 w-3 animate-spin" />
+                            ) : (
+                              <Play className="h-3 w-3" />
+                            )}
+                            Start
+                          </Button>
                         )}
-                        {stageDef.human_required && (
-                          <User className="h-3 w-3 text-amber-400/70" />
-                        )}
-                        {stageDef.requires_approval && (
-                          <ShieldCheck className="h-3 w-3 text-purple-400/70" />
+                        {sub.status === "processing" && (
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="h-7 px-2.5 text-xs gap-1 hover:bg-emerald-500/10 hover:text-emerald-400"
+                            disabled={isUpdating}
+                            onClick={() =>
+                              handleUpdateStage(sub.stageKey, sub.dbPhaseKey, "completed")
+                            }
+                          >
+                            {isUpdating ? (
+                              <Loader2 className="h-3 w-3 animate-spin" />
+                            ) : (
+                              <Check className="h-3 w-3" />
+                            )}
+                            Complete
+                          </Button>
                         )}
                       </div>
-                    </div>
-                    {stageStatus?.started_at && (
-                      <span className="text-[10px] text-muted-foreground/60">
-                        Started {formatDate(stageStatus.started_at)}
-                      </span>
                     )}
                   </div>
                 </div>
-
-                <div className="flex items-center gap-2 shrink-0">
-                  <Badge
-                    className={cn(
-                      "text-[10px] border font-medium",
-                      STATUS_COLORS[stStatus] ?? STATUS_COLORS.pending
-                    )}
-                  >
-                    {STATUS_LABEL[stStatus] ?? stStatus}
-                  </Badge>
-
-                  {/* Action buttons for current stage */}
-                  {isCurrentStage && stStatus !== "completed" && (
-                    <div className="flex gap-1 ml-1">
-                      {stStatus === "pending" && (
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          className="h-7 px-2.5 text-xs gap-1 hover:bg-blue-500/10 hover:text-blue-400"
-                          disabled={isUpdating}
-                          onClick={() =>
-                            handleUpdateStage(stageDef.stage_key, "processing")
-                          }
-                        >
-                          {isUpdating ? (
-                            <Loader2 className="h-3 w-3 animate-spin" />
-                          ) : (
-                            <Play className="h-3 w-3" />
-                          )}
-                          Start
-                        </Button>
-                      )}
-                      {stStatus === "processing" && (
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          className="h-7 px-2.5 text-xs gap-1 hover:bg-emerald-500/10 hover:text-emerald-400"
-                          disabled={isUpdating}
-                          onClick={() =>
-                            handleUpdateStage(stageDef.stage_key, "completed")
-                          }
-                        >
-                          {isUpdating ? (
-                            <Loader2 className="h-3 w-3 animate-spin" />
-                          ) : (
-                            <Check className="h-3 w-3" />
-                          )}
-                          Complete
-                        </Button>
-                      )}
-                    </div>
-                  )}
-                </div>
-              </div>
-            );
-          })}
+              );
+            })}
+          </div>
         </div>
-      </div>
+      )}
 
-      {/* Phase-specific integrated content */}
-      <PhaseContent
-        phaseKey={phaseKey}
+      {/* Outputs */}
+      {stage.outputs.length > 0 && (
+        <div className="px-6 pb-3">
+          <button
+            type="button"
+            onClick={() => setShowOutputs((v) => !v)}
+            className="flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-muted-foreground/60 hover:text-muted-foreground transition-colors w-full"
+          >
+            <FileText className="h-3 w-3" />
+            <span>Outputs</span>
+            {showOutputs ? (
+              <ChevronUp className="h-3 w-3 ml-auto" />
+            ) : (
+              <ChevronDown className="h-3 w-3 ml-auto" />
+            )}
+          </button>
+          {showOutputs && (
+            <ul className="mt-2 space-y-1">
+              {stage.outputs.map((output) => (
+                <li
+                  key={output}
+                  className="flex items-center gap-2 text-xs text-muted-foreground"
+                >
+                  <div className="h-1 w-1 rounded-full bg-muted-foreground/40 shrink-0" />
+                  {output}
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      )}
+
+      {/* Integrated tools & panels */}
+      <StageTools
+        stageId={stage.id}
         projectId={projectId}
         files={files}
         exports={exports}
@@ -388,10 +397,10 @@ export function StageWorkspacePanel({
   );
 }
 
-// ─── Phase-specific content ──────────────────────────────────────────
+// --- Stage-specific tools & panels ---
 
-interface PhaseContentProps {
-  phaseKey: WorkflowPhaseKey;
+interface StageToolsProps {
+  stageId: string;
   projectId: string;
   files: EditorialFile[];
   exports: EditorialExportJob[];
@@ -400,17 +409,17 @@ interface PhaseContentProps {
   hasManuscript: boolean;
 }
 
-function PhaseContent({
-  phaseKey,
+function StageTools({
+  stageId,
   projectId,
   files,
   exports,
   distributions,
   projectTitle,
   hasManuscript,
-}: PhaseContentProps) {
-  const content = getPhaseContent(
-    phaseKey,
+}: StageToolsProps) {
+  const content = getToolsForStage(
+    stageId,
     projectId,
     files,
     exports,
@@ -435,8 +444,8 @@ function PhaseContent({
   );
 }
 
-function getPhaseContent(
-  phaseKey: WorkflowPhaseKey,
+function getToolsForStage(
+  stageId: string,
   projectId: string,
   files: EditorialFile[],
   exports: EditorialExportJob[],
@@ -444,8 +453,8 @@ function getPhaseContent(
   projectTitle: string,
   hasManuscript: boolean
 ): React.ReactNode {
-  switch (phaseKey) {
-    case "intake":
+  switch (stageId) {
+    case "manuscript":
       return (
         <div className="space-y-4">
           <div className="flex items-center justify-between rounded-lg border border-dashed border-border/50 bg-muted/20 p-4">
@@ -467,18 +476,15 @@ function getPhaseContent(
         </div>
       );
 
-    case "editorial_analysis":
+    case "ai-analysis":
       return <StaffProjectAiReview projectId={projectId} />;
 
-    case "structural_editing":
-    case "line_editing":
+    case "structural-editing":
+    case "line-editing":
     case "copyediting":
       return <CorrectionReportPanel projectId={projectId} />;
 
-    case "text_finalization":
-      return null;
-
-    case "book_specifications":
+    case "book-specs":
       return (
         <div className="space-y-4">
           <BookSpecsPanel projectId={projectId} />
@@ -486,18 +492,16 @@ function getPhaseContent(
         </div>
       );
 
-    case "book_production":
-      return (
-        <div className="space-y-4">
-          <InteriorDesignPanel projectId={projectId} />
-          <CoverGeneratorPanel projectId={projectId} />
-        </div>
-      );
+    case "layout":
+      return <InteriorDesignPanel projectId={projectId} />;
 
-    case "final_proof":
+    case "cover-design":
+      return <CoverGeneratorPanel projectId={projectId} />;
+
+    case "final-proof":
       return null;
 
-    case "publishing_prep":
+    case "publishing":
       return (
         <div className="space-y-4">
           <MetadataIsbnPanel projectId={projectId} />
