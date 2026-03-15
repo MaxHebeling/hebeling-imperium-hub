@@ -1,7 +1,7 @@
 "use client";
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { FileText, MessageSquare, Users, LayoutGrid, Download, Globe, Paintbrush, Cpu, Clock, Smartphone, LayoutTemplate, Shield, Hash, FileSignature, ClipboardList } from "lucide-react";
+import { FileText, MessageSquare, Users, LayoutGrid, Download, Globe, Paintbrush, Cpu, Clock, Smartphone, LayoutTemplate, Shield, Hash, FileSignature, ClipboardList, Workflow, BookOpen } from "lucide-react";
 import { StaffProjectSummaryTab } from "./staff-project-summary-tab";
 import { StaffPipelineTab } from "./staff-pipeline-tab";
 import { StaffTimelineControl } from "./staff-timeline-control";
@@ -17,6 +17,8 @@ import { KdpValidationPanel } from "@/components/editorial/staff/kdp-validation-
 import { MetadataIsbnPanel } from "@/components/editorial/staff/metadata-isbn-panel";
 import { ContractCenterPanel } from "@/components/editorial/staff/contract-center-panel";
 import { CorrectionReportPanel } from "@/components/editorial/staff/correction-report-panel";
+import { WorkflowProfessionalPanel } from "@/components/editorial/staff/workflow-professional-panel";
+import { BookSpecsPanel } from "@/components/editorial/staff/book-specs-panel";
 import type { StaffProjectDetail } from "@/lib/editorial/types/editorial";
 import type { EditorialExportJob } from "@/lib/editorial/export/types";
 import type { ProjectDistribution } from "@/lib/editorial/distribution/types";
@@ -37,6 +39,10 @@ export function StaffProjectTabs({ detail, exports = [], distributions = [] }: S
           <TabsTrigger value="resumen" className="gap-1.5 px-3 text-xs sm:text-sm shrink-0">
             <LayoutGrid className="h-3.5 w-3.5 shrink-0" />
             Resumen
+          </TabsTrigger>
+          <TabsTrigger value="workflow" className="gap-1.5 px-3 text-xs sm:text-sm shrink-0">
+            <Workflow className="h-3.5 w-3.5 shrink-0" />
+            Workflow
           </TabsTrigger>
           <TabsTrigger value="motor-editorial" className="gap-1.5 px-3 text-xs sm:text-sm shrink-0">
             <Cpu className="h-3.5 w-3.5 shrink-0" />
@@ -65,6 +71,10 @@ export function StaffProjectTabs({ detail, exports = [], distributions = [] }: S
           <TabsTrigger value="interior" className="gap-1.5 px-3 text-xs sm:text-sm shrink-0">
             <LayoutTemplate className="h-3.5 w-3.5 shrink-0" />
             Interior
+          </TabsTrigger>
+          <TabsTrigger value="book-specs" className="gap-1.5 px-3 text-xs sm:text-sm shrink-0">
+            <BookOpen className="h-3.5 w-3.5 shrink-0" />
+            Libro
           </TabsTrigger>
           <TabsTrigger value="kdp" className="gap-1.5 px-3 text-xs sm:text-sm shrink-0">
             <Shield className="h-3.5 w-3.5 shrink-0" />
@@ -104,6 +114,10 @@ export function StaffProjectTabs({ detail, exports = [], distributions = [] }: S
           createdByEmail={created_by_email}
           activity={detail.activity}
         />
+      </TabsContent>
+
+      <TabsContent value="workflow" className="mt-4">
+        <WorkflowProfessionalPanel projectId={project.id} />
       </TabsContent>
 
       <TabsContent value="motor-editorial" className="mt-4">
@@ -159,6 +173,10 @@ export function StaffProjectTabs({ detail, exports = [], distributions = [] }: S
           projectTitle={project.title}
           distributions={distributions}
         />
+      </TabsContent>
+
+      <TabsContent value="book-specs" className="mt-4">
+        <BookSpecsPanel projectId={project.id} />
       </TabsContent>
 
       <TabsContent value="interior" className="mt-4">
