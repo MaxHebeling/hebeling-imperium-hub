@@ -2,14 +2,16 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { Loader2, AlertTriangle, RefreshCw } from "lucide-react";
-import type { ProjectWorkflowDetail, WorkflowPhaseKey } from "@/lib/editorial/types/workflow";
+import type { ProjectWorkflowDetail } from "@/lib/editorial/types/workflow";
 import type { EditorialFile } from "@/lib/editorial/types/editorial";
 import type { EditorialExportJob } from "@/lib/editorial/export/types";
 import type { ProjectDistribution } from "@/lib/editorial/distribution/types";
 import { PipelineStageBar } from "./pipeline-stage-bar";
 import { StageWorkspacePanel } from "./stage-workspace-panel";
+import { mapWorkflowToUIStages } from "./pipeline-stages";
+import type { UIStageData } from "./pipeline-stages";
 
-// ─── Props ───────────────────────────────────────────────────────────
+// --- Props ---
 
 interface EditorialPipelineWorkspaceProps {
   projectId: string;
@@ -20,7 +22,7 @@ interface EditorialPipelineWorkspaceProps {
   hasManuscript: boolean;
 }
 
-// ─── Component ───────────────────────────────────────────────────────
+// --- Component ---
 
 export function EditorialPipelineWorkspace({
   projectId,
@@ -33,7 +35,7 @@ export function EditorialPipelineWorkspace({
   const [detail, setDetail] = useState<ProjectWorkflowDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [selectedPhase, setSelectedPhase] = useState<WorkflowPhaseKey | null>(null);
+  const [selectedStageId, setSelectedStageId] = useState<string | null>(null);
 
   const fetchWorkflow = useCallback(async () => {
     setError(null);
@@ -42,10 +44,6 @@ export function EditorialPipelineWorkspace({
       const json = await res.json();
       if (json.success && json.data) {
         setDetail(json.data);
-        // Auto-select current phase on first load
-        if (!selectedPhase && json.data.workflow?.current_phase) {
-          setSelectedPhase(json.data.workflow.current_phase as WorkflowPhaseKey);
-        }
       } else {
         setError(json.error ?? "No se pudo cargar el flujo editorial.");
       }
@@ -54,14 +52,27 @@ export function EditorialPipelineWorkspace({
     } finally {
       setLoading(false);
     }
-  }, [projectId, selectedPhase]);
+  }, [projectId]);
 
   useEffect(() => {
     fetchWorkflow();
   }, [fetchWorkflow]);
 
-  function handleSelectPhase(phaseKey: WorkflowPhaseKey) {
-    setSelectedPhase((prev) => (prev === phaseKey ? null : phaseKey));
+  // Compute UI stages from workflow data
+  const uiStages: UIStageData[] = detail ? mapWorkflowToUIStages(detail) : [];
+
+  // Auto-select the active stage on first load
+  useEffect(() => {
+    if (uiStages.length > 0 && !selectedStageId) {
+      const activeStage = uiStages.find((s) => s.status === "active");
+      if (activeStage) {
+        setSelectedStageId(activeStage.stage.id);
+      }
+    }
+  }, [uiStages, selectedStageId]);
+
+  function handleSelectStage(stageId: string) {
+    setSelectedStageId((prev) => (prev === stageId ? null : stageId));
   }
 
   if (loading) {
@@ -103,27 +114,26 @@ export function EditorialPipelineWorkspace({
     );
   }
 
-  const selectedPhaseData = selectedPhase
-    ? detail.phases.find((p) => p.phase.phase_key === selectedPhase)
+  const selectedStageData = selectedStageId
+    ? uiStages.find((s) => s.stage.id === selectedStageId)
     : null;
 
   return (
     <div className="space-y-4">
       {/* Pipeline stage bar */}
       <PipelineStageBar
-        phases={detail.phases}
-        selectedPhase={selectedPhase}
-        onSelectPhase={handleSelectPhase}
+        stages={uiStages}
+        selectedStageId={selectedStageId}
+        onSelectStage={handleSelectStage}
         progressPercent={detail.workflow.progress_percent}
       />
 
       {/* Stage workspace panel */}
-      {selectedPhase && selectedPhaseData && (
+      {selectedStageId && selectedStageData && (
         <StageWorkspacePanel
-          key={selectedPhase}
+          key={selectedStageId}
           projectId={projectId}
-          phaseKey={selectedPhase}
-          phaseData={selectedPhaseData}
+          stageData={selectedStageData}
           workflow={detail.workflow}
           onRefresh={fetchWorkflow}
           files={files}

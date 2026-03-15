@@ -7,48 +7,17 @@ import {
   AlertTriangle,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import type { ProjectWorkflowDetail, WorkflowPhaseKey } from "@/lib/editorial/types/workflow";
-
-// ─── Phase labels (short, for the pipeline bar) ──────────────────────
-
-const PHASE_LABELS: Record<WorkflowPhaseKey, string> = {
-  intake: "Manuscript",
-  editorial_analysis: "AI Analysis",
-  structural_editing: "Structural",
-  line_editing: "Line Edit",
-  copyediting: "Copyedit",
-  text_finalization: "Finalization",
-  book_specifications: "Book Specs",
-  book_production: "Production",
-  final_proof: "Final Proof",
-  publishing_prep: "Publishing",
-  distribution: "Distribution",
-};
-
-// ─── Phase status ────────────────────────────────────────────────────
-
-type PhaseStatus = "completed" | "active" | "pending" | "blocked";
-
-function getPhaseStatus(
-  phase: ProjectWorkflowDetail["phases"][number]
-): PhaseStatus {
-  if (phase.isComplete) return "completed";
-  if (phase.isCurrent) return "active";
-  const hasBlocked = phase.stages.some((s) => s.status?.status === "blocked");
-  if (hasBlocked) return "blocked";
-  return "pending";
-}
+import type { UIStageData, UIStageStatus } from "./pipeline-stages";
 
 // ─── Status visual config ────────────────────────────────────────────
 
 const STATUS_CONFIG: Record<
-  PhaseStatus,
+  UIStageStatus,
   {
     ring: string;
     bg: string;
     text: string;
     connector: string;
-    iconColor: string;
     selectedRing: string;
   }
 > = {
@@ -57,7 +26,6 @@ const STATUS_CONFIG: Record<
     bg: "bg-emerald-500/10",
     text: "text-emerald-400",
     connector: "bg-emerald-500/50",
-    iconColor: "text-emerald-500",
     selectedRing: "ring-emerald-400",
   },
   active: {
@@ -65,7 +33,6 @@ const STATUS_CONFIG: Record<
     bg: "bg-blue-500/10",
     text: "text-blue-400",
     connector: "bg-border/60",
-    iconColor: "text-blue-500",
     selectedRing: "ring-blue-400",
   },
   pending: {
@@ -73,20 +40,24 @@ const STATUS_CONFIG: Record<
     bg: "bg-muted/30",
     text: "text-muted-foreground/60",
     connector: "bg-border/40",
-    iconColor: "text-muted-foreground/40",
     selectedRing: "ring-foreground/40",
   },
   blocked: {
-    ring: "ring-amber-500/40",
-    bg: "bg-amber-500/10",
-    text: "text-amber-400",
+    ring: "ring-red-500/40",
+    bg: "bg-red-500/10",
+    text: "text-red-400",
     connector: "bg-border/60",
-    iconColor: "text-amber-500",
-    selectedRing: "ring-amber-400",
+    selectedRing: "ring-red-400",
   },
 };
 
-function PhaseIcon({ status, size = "sm" }: { status: PhaseStatus; size?: "sm" | "md" }) {
+function StageIcon({
+  status,
+  size = "sm",
+}: {
+  status: UIStageStatus;
+  size?: "sm" | "md";
+}) {
   const cls = size === "md" ? "h-5 w-5" : "h-4 w-4";
   switch (status) {
     case "completed":
@@ -94,7 +65,7 @@ function PhaseIcon({ status, size = "sm" }: { status: PhaseStatus; size?: "sm" |
     case "active":
       return <Loader2 className={cn(cls, "text-blue-500 animate-spin")} />;
     case "blocked":
-      return <AlertTriangle className={cn(cls, "text-amber-500")} />;
+      return <AlertTriangle className={cn(cls, "text-red-500")} />;
     default:
       return <Circle className={cn(cls, "text-muted-foreground/40")} />;
   }
@@ -103,20 +74,22 @@ function PhaseIcon({ status, size = "sm" }: { status: PhaseStatus; size?: "sm" |
 // ─── Props ───────────────────────────────────────────────────────────
 
 interface PipelineStageBarProps {
-  phases: ProjectWorkflowDetail["phases"];
-  selectedPhase: WorkflowPhaseKey | null;
-  onSelectPhase: (phaseKey: WorkflowPhaseKey) => void;
+  stages: UIStageData[];
+  selectedStageId: string | null;
+  onSelectStage: (stageId: string) => void;
   progressPercent: number;
 }
 
 // ─── Component ───────────────────────────────────────────────────────
 
 export function PipelineStageBar({
-  phases,
-  selectedPhase,
-  onSelectPhase,
+  stages,
+  selectedStageId,
+  onSelectStage,
   progressPercent,
 }: PipelineStageBarProps) {
+  const completedCount = stages.filter((s) => s.status === "completed").length;
+
   return (
     <div className="rounded-2xl border border-border/40 bg-card/60 backdrop-blur-md p-5 shadow-sm">
       {/* Progress header */}
@@ -127,39 +100,39 @@ export function PipelineStageBar({
           </span>
           <div className="h-4 w-px bg-border/60" />
           <span className="text-xs text-muted-foreground">
-            {phases.filter((p) => p.isComplete).length} of {phases.length} phases complete
+            {completedCount} of {stages.length} stages complete
           </span>
         </div>
         <div className="flex items-center gap-2">
-          <div className="h-1.5 w-24 rounded-full bg-muted/60 overflow-hidden">
+          <div className="h-1.5 w-28 rounded-full bg-muted/60 overflow-hidden">
             <div
               className="h-full rounded-full bg-gradient-to-r from-blue-600 to-indigo-500 transition-all duration-700 ease-out"
               style={{ width: `${progressPercent}%` }}
             />
           </div>
-          <span className="text-sm font-bold tabular-nums">{progressPercent}%</span>
+          <span className="text-sm font-bold tabular-nums">
+            {progressPercent}%
+          </span>
         </div>
       </div>
 
       {/* Pipeline nodes */}
       <div className="overflow-x-auto scrollbar-none -mx-1 px-1 pb-1">
         <div className="flex items-start min-w-max">
-          {phases.map((phaseData, index) => {
-            const phaseKey = phaseData.phase.phase_key as WorkflowPhaseKey;
-            const status = getPhaseStatus(phaseData);
-            const config = STATUS_CONFIG[status];
-            const isLast = index === phases.length - 1;
-            const isSelected = selectedPhase === phaseKey;
-            const completedStages = phaseData.stages.filter(
-              (s) => s.status?.status === "completed"
-            ).length;
+          {stages.map((stageData, index) => {
+            const config = STATUS_CONFIG[stageData.status];
+            const isLast = index === stages.length - 1;
+            const isSelected = selectedStageId === stageData.stage.id;
 
             return (
-              <div key={phaseKey} className="flex items-start flex-1 min-w-0">
-                {/* Phase node */}
+              <div
+                key={stageData.stage.id}
+                className="flex items-start flex-1 min-w-0"
+              >
+                {/* Stage node */}
                 <button
                   type="button"
-                  onClick={() => onSelectPhase(phaseKey)}
+                  onClick={() => onSelectStage(stageData.stage.id)}
                   className={cn(
                     "flex flex-col items-center gap-2 group cursor-pointer relative transition-all duration-200",
                     "hover:scale-105 focus-visible:outline-none"
@@ -175,7 +148,10 @@ export function PipelineStageBar({
                       isSelected && "ring-[3px] shadow-lg"
                     )}
                   >
-                    <PhaseIcon status={status} size={isSelected ? "md" : "sm"} />
+                    <StageIcon
+                      status={stageData.status}
+                      size={isSelected ? "md" : "sm"}
+                    />
                   </div>
 
                   {/* Label */}
@@ -186,15 +162,16 @@ export function PipelineStageBar({
                         isSelected ? "text-foreground" : config.text
                       )}
                     >
-                      {PHASE_LABELS[phaseKey] ?? phaseData.phase.name}
+                      {stageData.stage.shortLabel}
                     </span>
-                    {/* Sub-stage count */}
-                    <span className="text-[9px] text-muted-foreground/60 tabular-nums">
-                      {completedStages}/{phaseData.stages.length}
-                    </span>
+                    {stageData.totalCount > 0 && (
+                      <span className="text-[9px] text-muted-foreground/60 tabular-nums">
+                        {stageData.completedCount}/{stageData.totalCount}
+                      </span>
+                    )}
                   </div>
 
-                  {/* Selected indicator */}
+                  {/* Selected indicator dot */}
                   {isSelected && (
                     <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 w-1.5 h-1.5 rounded-full bg-foreground/80" />
                   )}
