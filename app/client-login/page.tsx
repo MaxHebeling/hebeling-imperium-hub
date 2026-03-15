@@ -147,7 +147,7 @@ function ClientLoginContent() {
     }
 
     const supabase = createClient();
-    const { error: signUpError } = await supabase.auth.signUp({
+    const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
       email,
       password,
       options: {
@@ -157,7 +157,6 @@ function ClientLoginContent() {
           phone: phone || undefined,
           date_of_birth: dateOfBirth || undefined,
         },
-        emailRedirectTo: window.location.origin + "/auth/callback?next=/portal/editorial/projects",
       },
     });
 
@@ -171,6 +170,27 @@ function ClientLoginContent() {
       return;
     }
 
+    // With autoconfirm enabled, user is immediately confirmed — log them in
+    if (signUpData?.user && signUpData?.session) {
+      // Create client profile in profiles table
+      try {
+        await supabase.from("profiles").upsert({
+          id: signUpData.user.id,
+          email: email,
+          full_name: fullName,
+          role: "client",
+          phone: phone || null,
+          date_of_birth: dateOfBirth || null,
+        }, { onConflict: "id" });
+      } catch {
+        // Profile creation is non-blocking — may already exist via trigger
+      }
+      router.push("/portal/editorial/projects");
+      router.refresh();
+      return;
+    }
+
+    // Fallback: if autoconfirm is disabled, show confirmation message
     setSuccess("Cuenta creada con exito. Revisa tu correo para confirmar tu cuenta y luego inicia sesion.");
     setIsLoading(false);
   };
