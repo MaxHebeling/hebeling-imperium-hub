@@ -271,9 +271,21 @@ export async function processAiJob(options: ProcessJobOptions): Promise<Analysis
     // Build the prompt
     const { system, user } = buildPromptFromDefault(activePrompt, truncatedContent);
 
-    // Call AI with structured output — GPT-4o for speed + quality
+    // Select model based on task complexity:
+    // - Critical editorial stages (structure, style, orthotypography, redline) → GPT-4o (best quality)
+    // - Simpler stages (metadata, export validation, layout analysis) → GPT-4o-mini (3-5x faster)
+    const FAST_TASKS: EditorialAiTaskKey[] = [
+      "metadata_generation",
+      "export_validation",
+      "layout_analysis",
+      "quality_scoring",
+      "typography_check",
+      "page_flow_review",
+    ];
+    const modelId = FAST_TASKS.includes(options.taskKey) ? "gpt-4o-mini" : "gpt-4o";
+
     const result = await generateText({
-      model: openai("gpt-4o"),
+      model: openai(modelId),
       system,
       prompt: user,
       output: Output.object({

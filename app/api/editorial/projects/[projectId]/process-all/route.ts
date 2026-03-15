@@ -278,7 +278,7 @@ export async function POST(
 
     return NextResponse.json({
       success: true,
-      message: `Cola secuencial con token-awareness iniciada: ${jobEntries.length} etapas procesandose una a una con ~25s entre cada job.`,
+      message: `Cola optimizada iniciada: ${jobEntries.length} etapas con ~5s entre jobs y modelo rápido para tareas simples.`,
       totalStages: jobEntries.length,
       queue: {
         pending: queueSnapshot.pending,
