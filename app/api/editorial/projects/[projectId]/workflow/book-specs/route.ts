@@ -4,6 +4,7 @@ import {
   upsertBookSpecifications,
   estimatePageCount,
 } from "@/lib/editorial/workflow/professional";
+import { KDP_PAPER_SPECS } from "@/lib/editorial/kdp/constants";
 
 /**
  * GET /api/editorial/projects/[projectId]/workflow/book-specs
@@ -48,8 +49,11 @@ export async function POST(
 
     // Auto-calculate spine width if estimated_pages is available
     if (body.estimated_pages && !body.spine_width_in) {
-      const ppi = body.paper_type === "cream" ? 0.0025 : 0.002252;
-      body.spine_width_in = +(body.estimated_pages * ppi).toFixed(4);
+      const paperSpec = KDP_PAPER_SPECS.find(
+        (p) => p.type === (body.paper_type ?? "cream")
+      );
+      const ppi = paperSpec?.ppi ?? 434; // default to cream (434 PPI)
+      body.spine_width_in = +(body.estimated_pages / ppi).toFixed(4);
     }
 
     const specs = await upsertBookSpecifications(

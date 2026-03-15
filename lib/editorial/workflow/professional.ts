@@ -497,6 +497,16 @@ export async function advanceWorkflow(
     return null;
   }
 
+  // Gate: block entry into book_production unless book specifications exist
+  if (next.phaseKey === "book_production") {
+    const specs = await getBookSpecifications(projectId);
+    if (!specs) {
+      throw new Error(
+        "Cannot enter Book Production: book specifications must be configured first (editorial_book_specifications)."
+      );
+    }
+  }
+
   // Update workflow pointer
   const progress = calculateWorkflowProgress(next.phaseKey, next.stageKey);
   const supabase = getAdminClient();
