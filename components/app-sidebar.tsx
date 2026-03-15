@@ -6,11 +6,9 @@ import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 import {
-  LayoutDashboard,
   Users,
   Settings,
   CreditCard,
-  Building2,
   PanelLeftClose,
   PanelLeft,
   ChevronRight,
@@ -32,32 +30,29 @@ import {
    ───────────────────────────────────────────────────────────── */
 const navSections = [
   {
-    titleKey: null as string | null,
-    items: [
-      { href: "/app/companies", labelKey: "companies", icon: LayoutDashboard },
-    ],
-  },
-  {
     titleKey: "empresas" as const,
+    titleHref: "/app/companies" as string | null,
     items: [
-      { href: "/app/companies", labelKey: "companies", icon: Building2 },
       { href: "/app/crm", labelKey: "crm", icon: Users },
     ],
   },
   {
     titleKey: "finance" as const,
+    titleHref: null as string | null,
     items: [
       { href: "/app/finance-vault", labelKey: "billing", icon: CreditCard },
     ],
   },
   {
     titleKey: "assets" as const,
+    titleHref: null as string | null,
     items: [
       { href: "/app/documents", labelKey: "files", icon: FolderOpen },
     ],
   },
   {
     titleKey: "system" as const,
+    titleHref: null as string | null,
     items: [
       { href: "/app/settings", labelKey: "settings", icon: Settings },
     ],
@@ -144,9 +139,18 @@ export function AppSidebar({ userName, userRole }: AppSidebarProps) {
             <div key={section.titleKey ?? `section-${sectionIndex}`}>
               {!isCollapsed && section.titleKey && (
                 <div className="px-3 pt-4 pb-1.5">
-                  <span className="text-[10px] font-semibold uppercase tracking-[0.15em] text-[#9FB2CC]/50">
-                    {getTranslatedSectionTitle(section.titleKey)}
-                  </span>
+                  {section.titleHref ? (
+                    <Link
+                      href={section.titleHref}
+                      className="text-[10px] font-semibold uppercase tracking-[0.15em] text-[#9FB2CC]/50 hover:text-[#9FB2CC] transition-colors"
+                    >
+                      {getTranslatedSectionTitle(section.titleKey)}
+                    </Link>
+                  ) : (
+                    <span className="text-[10px] font-semibold uppercase tracking-[0.15em] text-[#9FB2CC]/50">
+                      {getTranslatedSectionTitle(section.titleKey)}
+                    </span>
+                  )}
                 </div>
               )}
               <div className="space-y-0.5">
