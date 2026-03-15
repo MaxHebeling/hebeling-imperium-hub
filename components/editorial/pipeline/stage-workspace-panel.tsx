@@ -17,6 +17,9 @@ import {
   FileText,
   ChevronDown,
   ChevronUp,
+  FileOutput,
+  BarChart3,
+  User2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
@@ -64,6 +67,7 @@ const STATUS_COLORS: Record<string, string> = {
 const STAGE_STATUS_BADGE: Record<UIStageStatus, { label: string; cls: string }> = {
   completed: { label: "Complete", cls: "bg-emerald-500/10 text-emerald-400 border-emerald-500/30" },
   active: { label: "Active", cls: "bg-blue-500/10 text-blue-400 border-blue-500/30" },
+  needs_review: { label: "Needs Review", cls: "bg-amber-500/10 text-amber-400 border-amber-500/30" },
   pending: { label: "Upcoming", cls: "bg-muted/60 text-muted-foreground border-border/40" },
   blocked: { label: "Blocked", cls: "bg-red-500/10 text-red-400 border-red-500/30" },
 };
@@ -111,8 +115,11 @@ export function StageWorkspacePanel({
   const [error, setError] = useState<string | null>(null);
   const [showOutputs, setShowOutputs] = useState(false);
 
-  const { stage, status, substages, completedCount, totalCount, isCurrent } = stageData;
+  const { stage, status, substages, completedCount, totalCount, isCurrent, assignedEditor } = stageData;
   const badge = STAGE_STATUS_BADGE[status];
+  const stageProgressPercent = totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0;
+  const pendingSubstages = substages.filter((s) => s.status === "pending").length;
+  const activeSubstages = substages.filter((s) => s.status === "processing" || s.status === "needs_review").length;
 
   async function handleAdvance() {
     setAdvancing(true);
@@ -182,12 +189,6 @@ export function StageWorkspacePanel({
             </p>
           </div>
           <div className="flex items-center gap-3 shrink-0">
-            <div className="text-right">
-              <div className="text-xs text-muted-foreground">Stages</div>
-              <div className="text-sm font-bold tabular-nums">
-                {completedCount}/{totalCount}
-              </div>
-            </div>
             {isCurrent && workflow.status !== "completed" && (
               <Button
                 size="sm"
@@ -207,6 +208,50 @@ export function StageWorkspacePanel({
         </div>
       </div>
 
+      {/* Dashboard metrics row */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 px-6 py-4 border-b border-border/20">
+        <div className="rounded-xl bg-muted/20 border border-border/20 px-3 py-2.5">
+          <div className="flex items-center gap-1.5 mb-1">
+            <BarChart3 className="h-3 w-3 text-blue-400" />
+            <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">Progress</span>
+          </div>
+          <div className="flex items-end gap-1.5">
+            <span className="text-lg font-bold tabular-nums">{stageProgressPercent}%</span>
+            <span className="text-[10px] text-muted-foreground mb-0.5">{completedCount}/{totalCount}</span>
+          </div>
+          <div className="h-1 rounded-full bg-muted/60 mt-1.5 overflow-hidden">
+            <div
+              className="h-full rounded-full bg-gradient-to-r from-blue-600 to-indigo-500 transition-all duration-500"
+              style={{ width: `${stageProgressPercent}%` }}
+            />
+          </div>
+        </div>
+        <div className="rounded-xl bg-muted/20 border border-border/20 px-3 py-2.5">
+          <div className="flex items-center gap-1.5 mb-1">
+            <FileOutput className="h-3 w-3 text-indigo-400" />
+            <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">Artifact</span>
+          </div>
+          <span className="text-xs font-semibold leading-tight">{stage.mainArtifact}</span>
+        </div>
+        <div className="rounded-xl bg-muted/20 border border-border/20 px-3 py-2.5">
+          <div className="flex items-center gap-1.5 mb-1">
+            <Loader2 className="h-3 w-3 text-amber-400" />
+            <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">Active</span>
+          </div>
+          <span className="text-lg font-bold tabular-nums">{activeSubstages}</span>
+          {pendingSubstages > 0 && (
+            <span className="text-[10px] text-muted-foreground ml-1.5">{pendingSubstages} queued</span>
+          )}
+        </div>
+        <div className="rounded-xl bg-muted/20 border border-border/20 px-3 py-2.5">
+          <div className="flex items-center gap-1.5 mb-1">
+            <User2 className="h-3 w-3 text-purple-400" />
+            <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">Editor</span>
+          </div>
+          <span className="text-xs font-semibold">{assignedEditor ?? "Unassigned"}</span>
+        </div>
+      </div>
+
       {error && (
         <div className="mx-6 mt-4 rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive flex items-center gap-2">
           <AlertCircle className="h-4 w-4 shrink-0" />
@@ -214,11 +259,11 @@ export function StageWorkspacePanel({
         </div>
       )}
 
-      {/* Sub-stages list */}
+      {/* Sub-stages cards */}
       {substages.length > 0 && (
         <div className="px-6 py-4">
-          <div className="space-y-1">
-            {substages.map((sub, i) => {
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+            {substages.map((sub) => {
               const isCurrentSub = isCurrent && workflow.current_stage === sub.stageKey;
               const isUpdating = updatingStage === sub.stageKey;
 
@@ -226,77 +271,77 @@ export function StageWorkspacePanel({
                 <div
                   key={sub.stageKey}
                   className={cn(
-                    "flex items-center justify-between gap-3 rounded-lg px-3 py-2.5 transition-all duration-200",
+                    "rounded-xl border px-3.5 py-3 transition-all duration-200",
                     isCurrentSub
-                      ? "bg-blue-500/5 border border-blue-500/20"
-                      : "hover:bg-muted/30",
-                    i < substages.length - 1 && !isCurrentSub && "border-b border-border/20"
+                      ? "bg-blue-500/5 border-blue-500/25 shadow-sm shadow-blue-500/5"
+                      : "bg-muted/10 border-border/25 hover:bg-muted/20"
                   )}
                 >
-                  <div className="flex items-center gap-3 min-w-0">
-                    <div className="shrink-0">
-                      {sub.status === "completed" ? (
-                        <CheckCircle2 className="h-4 w-4 text-emerald-500" />
-                      ) : sub.status === "processing" ? (
-                        <Loader2 className="h-4 w-4 text-blue-500 animate-spin" />
-                      ) : sub.status === "blocked" ? (
-                        <AlertCircle className="h-4 w-4 text-red-500" />
-                      ) : sub.status === "needs_review" ? (
-                        <Clock className="h-4 w-4 text-amber-500" />
-                      ) : (
-                        <Circle className="h-4 w-4 text-muted-foreground/30" />
-                      )}
-                    </div>
-
-                    <div className="min-w-0">
-                      <div className="flex items-center gap-2">
-                        <span
-                          className={cn(
-                            "text-sm font-medium",
-                            sub.status === "completed"
-                              ? "text-muted-foreground"
-                              : "text-foreground"
-                          )}
-                        >
-                          {sub.name}
-                        </span>
-                        <div className="flex items-center gap-1">
-                          {sub.isAiStage && (
-                            <Bot className="h-3 w-3 text-blue-400/70" />
-                          )}
-                          {sub.humanRequired && (
-                            <User className="h-3 w-3 text-amber-400/70" />
-                          )}
-                          {sub.requiresApproval && (
-                            <ShieldCheck className="h-3 w-3 text-purple-400/70" />
-                          )}
-                        </div>
+                  <div className="flex items-start justify-between gap-2 mb-2">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <div className="shrink-0">
+                        {sub.status === "completed" ? (
+                          <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+                        ) : sub.status === "processing" ? (
+                          <Loader2 className="h-4 w-4 text-blue-500 animate-spin" />
+                        ) : sub.status === "blocked" ? (
+                          <AlertCircle className="h-4 w-4 text-red-500" />
+                        ) : sub.status === "needs_review" ? (
+                          <Clock className="h-4 w-4 text-amber-500" />
+                        ) : (
+                          <Circle className="h-4 w-4 text-muted-foreground/30" />
+                        )}
                       </div>
-                      {sub.startedAt && (
-                        <span className="text-[10px] text-muted-foreground/60">
-                          Started {formatDate(sub.startedAt)}
-                        </span>
-                      )}
+                      <span
+                        className={cn(
+                          "text-sm font-medium truncate",
+                          sub.status === "completed"
+                            ? "text-muted-foreground"
+                            : "text-foreground"
+                        )}
+                      >
+                        {sub.name}
+                      </span>
                     </div>
-                  </div>
-
-                  <div className="flex items-center gap-2 shrink-0">
                     <Badge
                       className={cn(
-                        "text-[10px] border font-medium",
+                        "text-[10px] border font-medium shrink-0",
                         STATUS_COLORS[sub.status] ?? STATUS_COLORS.pending
                       )}
                     >
                       {STATUS_LABEL[sub.status] ?? sub.status}
                     </Badge>
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2 text-[10px] text-muted-foreground/60">
+                      {sub.isAiStage && (
+                        <span className="flex items-center gap-0.5">
+                          <Bot className="h-3 w-3 text-blue-400/70" /> AI
+                        </span>
+                      )}
+                      {sub.humanRequired && (
+                        <span className="flex items-center gap-0.5">
+                          <User className="h-3 w-3 text-amber-400/70" /> Human
+                        </span>
+                      )}
+                      {sub.requiresApproval && (
+                        <span className="flex items-center gap-0.5">
+                          <ShieldCheck className="h-3 w-3 text-purple-400/70" /> Approval
+                        </span>
+                      )}
+                      {sub.startedAt && (
+                        <span className="ml-1">{formatDate(sub.startedAt)}</span>
+                      )}
+                    </div>
 
                     {isCurrentSub && sub.status !== "completed" && (
-                      <div className="flex gap-1 ml-1">
+                      <div className="flex gap-1">
                         {sub.status === "pending" && (
                           <Button
                             size="sm"
                             variant="ghost"
-                            className="h-7 px-2.5 text-xs gap-1 hover:bg-blue-500/10 hover:text-blue-400"
+                            className="h-6 px-2 text-[10px] gap-1 hover:bg-blue-500/10 hover:text-blue-400"
                             disabled={isUpdating}
                             onClick={() =>
                               handleUpdateStage(sub.stageKey, sub.dbPhaseKey, "processing")
@@ -314,7 +359,7 @@ export function StageWorkspacePanel({
                           <Button
                             size="sm"
                             variant="ghost"
-                            className="h-7 px-2.5 text-xs gap-1 hover:bg-emerald-500/10 hover:text-emerald-400"
+                            className="h-6 px-2 text-[10px] gap-1 hover:bg-emerald-500/10 hover:text-emerald-400"
                             disabled={isUpdating}
                             onClick={() =>
                               handleUpdateStage(sub.stageKey, sub.dbPhaseKey, "completed")
