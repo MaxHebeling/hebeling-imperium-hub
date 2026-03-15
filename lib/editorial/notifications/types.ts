@@ -10,7 +10,8 @@ export type NotificationType =
   | "suggestion"
   | "project_update"
   | "file_shared"
-  | "project_completed";
+  | "project_completed"
+  | "birthday";
 
 /** A single notification record. */
 export interface EditorialNotification {

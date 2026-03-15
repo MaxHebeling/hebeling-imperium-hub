@@ -84,6 +84,48 @@ export const PORTAL_TRANSLATIONS = {
     spanish: "Español",
     english: "English",
 
+    // Registration
+    fullName: "Nombre completo",
+    emailAddress: "Correo electronico",
+    phone: "Telefono",
+    dateOfBirth: "Fecha de nacimiento",
+    passwordLabel: "Contrasena",
+    confirmPassword: "Confirmar contrasena",
+    acceptTerms: "Acepto los terminos y condiciones de Reino Editorial",
+    createAccount: "Crear mi cuenta",
+    alreadyHaveAccount: "Ya tengo cuenta",
+    dontHaveAccount: "No tengo cuenta",
+    forgotPassword: "Olvide mi contrasena",
+    resetPassword: "Restablecer contrasena",
+    login: "Iniciar sesion",
+    register: "Registrarse",
+    enterYourEmail: "Ingresa tu correo",
+
+    // Author Dashboard
+    authorDashboard: "Panel del Autor",
+    myBook: "Mi Libro",
+    myFiles: "Mis Archivos",
+    updates: "Actualizaciones",
+    authorPanel: "Panel del Autor",
+
+    // Birthday
+    birthdayTitle: "Reino Editorial te desea un feliz cumpleanos",
+    birthdayMsg: "Hoy es un dia especial para ti. Todo el equipo de Reino Editorial te desea lo mejor.",
+
+    // Communication Preferences
+    communicationPreferences: "Preferencias de comunicacion",
+    birthdayEmailEnabled: "Felicitacion por correo electronico",
+    birthdayPhoneEnabled: "Felicitacion por telefono/SMS",
+    birthdayNotificationEnabled: "Felicitacion en el portal",
+    savePreferences: "Guardar preferencias",
+    preferencesSaved: "Preferencias guardadas correctamente",
+
+    // App Download
+    downloadApp: "Descarga la app de Reino Editorial",
+    downloadAppDesc: "Lleva tu libro contigo y sigue el progreso desde tu telefono.",
+    comingSoon: "Proximamente",
+    notifyMe: "Avisame cuando este disponible",
+
     // Delays
     stageMessages: {
       ingesta: { active: "Tu manuscrito está siendo revisado por nuestro equipo editorial.", completed: "Revisión inicial completada." },
@@ -188,6 +230,48 @@ export const PORTAL_TRANSLATIONS = {
     language: "Language",
     spanish: "Español",
     english: "English",
+
+    // Registration
+    fullName: "Full name",
+    emailAddress: "Email address",
+    phone: "Phone number",
+    dateOfBirth: "Date of birth",
+    passwordLabel: "Password",
+    confirmPassword: "Confirm password",
+    acceptTerms: "I accept the terms and conditions of Reino Editorial",
+    createAccount: "Create my account",
+    alreadyHaveAccount: "Already have an account",
+    dontHaveAccount: "Don't have an account",
+    forgotPassword: "Forgot my password",
+    resetPassword: "Reset password",
+    login: "Sign in",
+    register: "Sign up",
+    enterYourEmail: "Enter your email",
+
+    // Author Dashboard
+    authorDashboard: "Author Dashboard",
+    myBook: "My Book",
+    myFiles: "My Files",
+    updates: "Updates",
+    authorPanel: "Author Dashboard",
+
+    // Birthday
+    birthdayTitle: "Reino Editorial wishes you a happy birthday",
+    birthdayMsg: "Today is a special day for you. The entire Reino Editorial team wishes you the very best.",
+
+    // Communication Preferences
+    communicationPreferences: "Communication preferences",
+    birthdayEmailEnabled: "Birthday email greeting",
+    birthdayPhoneEnabled: "Birthday phone/SMS greeting",
+    birthdayNotificationEnabled: "Birthday portal notification",
+    savePreferences: "Save preferences",
+    preferencesSaved: "Preferences saved successfully",
+
+    // App Download
+    downloadApp: "Download the Reino Editorial app",
+    downloadAppDesc: "Take your book with you and follow the progress from your phone.",
+    comingSoon: "Coming soon",
+    notifyMe: "Notify me when available",
 
     // Delays
     stageMessages: {
