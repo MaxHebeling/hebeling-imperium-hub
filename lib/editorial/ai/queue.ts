@@ -17,7 +17,7 @@ import type { EditorialStageKey } from "@/lib/editorial/types/editorial";
 // ─── Configuration ──────────────────────────────────────────────────────
 
 /** Minimum pause (ms) between consecutive job executions. */
-const MIN_INTER_JOB_DELAY_MS = 25_000; // 25 seconds
+const MIN_INTER_JOB_DELAY_MS = 5_000; // 5 seconds — optimized for speed
 
 /** OpenAI TPM limit for gpt-4o (Tier 1 default). Adjust per your plan. */
 const OPENAI_TPM_LIMIT = 800_000;
@@ -26,7 +26,7 @@ const OPENAI_TPM_LIMIT = 800_000;
 const TPM_PAUSE_THRESHOLD = 0.85;
 
 /** Cooldown (ms) to wait when the TPM threshold is hit before retrying. */
-const TPM_COOLDOWN_MS = 60_000; // 60 seconds
+const TPM_COOLDOWN_MS = 30_000; // 30 seconds
 
 /** Maximum retry attempts for a single job before marking it as failed. */
 const MAX_RETRIES = 3;
