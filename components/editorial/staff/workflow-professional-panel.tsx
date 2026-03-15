@@ -174,7 +174,7 @@ export function WorkflowProfessionalPanel({ projectId }: WorkflowProfessionalPan
   return (
     <div className="space-y-4">
       {/* Header with progress */}
-      <Card>
+      <Card className="bg-card/80 backdrop-blur-sm shadow-sm">
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between">
             <div>
@@ -221,13 +221,13 @@ export function WorkflowProfessionalPanel({ projectId }: WorkflowProfessionalPan
           return (
             <Card
               key={phase.phase_key}
-              className={
+              className={`bg-card/80 backdrop-blur-sm transition-all duration-200 hover:shadow-md ${
                 isCurrent
                   ? "border-primary/50 shadow-sm"
                   : isComplete
                     ? "opacity-75"
                     : ""
-              }
+              }`}
             >
               <button
                 type="button"
@@ -389,7 +389,7 @@ export function WorkflowProfessionalPanel({ projectId }: WorkflowProfessionalPan
                         size="sm"
                         onClick={handleAdvance}
                         disabled={advancing}
-                        className="gap-1.5"
+                        className="gap-1.5 hos-btn-primary border-0"
                       >
                         {advancing ? (
                           <Loader2 className="h-3.5 w-3.5 animate-spin" />

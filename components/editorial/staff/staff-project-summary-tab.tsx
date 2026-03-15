@@ -52,26 +52,26 @@ export function StaffProjectSummaryTab({
   const responsible = createdByName ?? createdByEmail;
 
   return (
-    <div className="space-y-4 pt-2">
+    <div className="space-y-6 pt-2">
       {project.subtitle && (
         <p className="text-sm text-muted-foreground">{project.subtitle}</p>
       )}
-      <Card>
+      <Card className="bg-card/80 backdrop-blur-sm shadow-sm hover:shadow-md transition-shadow duration-200">
         <CardHeader>
           <CardTitle className="text-base">Ficha</CardTitle>
           <CardDescription>Datos del proyecto.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-3 text-sm">
-          <div className="grid gap-2 sm:grid-cols-2">
+          <div className="grid gap-3 sm:grid-cols-2">
             <Row label="Idioma" value={project.language} />
-            <Row label="Género" value={project.genre} />
-            <Row label="Público" value={project.target_audience} />
+            <Row label="Genero" value={project.genre} />
+            <Row label="Publico" value={project.target_audience} />
             <Row label="Palabras" value={project.word_count != null ? project.word_count.toLocaleString() : null} />
-            <Row label="Páginas (est.)" value={project.page_estimate != null ? String(project.page_estimate) : null} />
+            <Row label="Paginas (est.)" value={project.page_estimate != null ? String(project.page_estimate) : null} />
             <Row label="Entrega" value={formatDate(project.due_date)} />
           </div>
           {responsible && (
-            <div className="flex items-center gap-2 pt-2 border-t border-border">
+            <div className="flex items-center gap-2 pt-3 border-t border-border/50">
               <User className="h-4 w-4 text-muted-foreground shrink-0" />
               <span className="text-muted-foreground">Responsable: {responsible}</span>
             </div>
@@ -79,10 +79,10 @@ export function StaffProjectSummaryTab({
         </CardContent>
       </Card>
 
-      <Card>
+      <Card className="bg-card/80 backdrop-blur-sm shadow-sm hover:shadow-md transition-shadow duration-200">
         <CardHeader>
           <CardTitle className="text-base">Actividad</CardTitle>
-          <CardDescription>Últimos eventos del proyecto.</CardDescription>
+          <CardDescription>Ultimos eventos del proyecto.</CardDescription>
         </CardHeader>
         <CardContent>
           {activity.length === 0 ? (
@@ -92,7 +92,7 @@ export function StaffProjectSummaryTab({
               {activity.slice(0, 8).map((a) => (
                 <li
                   key={a.id}
-                  className="flex items-center justify-between gap-3 rounded-md border border-border px-3 py-2 text-sm"
+                  className="flex items-center justify-between gap-3 rounded-lg border border-border/50 px-4 py-3 text-sm transition-colors duration-150 hover:bg-muted/30"
                 >
                   <div className="min-w-0">
                     <p className="truncate">

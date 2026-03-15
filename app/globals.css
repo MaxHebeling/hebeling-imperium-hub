@@ -353,4 +353,48 @@
   .scrollbar-none::-webkit-scrollbar {
     display: none;
   }
+
+  /* ═══════════════════════════════════════════════════════
+     Enterprise UI — Glass card styles
+     ═══════════════════════════════════════════════════════ */
+  .hos-glass-card {
+    background: rgba(22, 34, 53, 0.6);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(30, 48, 72, 0.5);
+    border-radius: 0.75rem;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15), 0 1px 3px rgba(0, 0, 0, 0.1);
+    transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+  }
+  .hos-glass-card:hover {
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.25), 0 1px 3px rgba(0, 0, 0, 0.1);
+    border-color: rgba(200, 167, 91, 0.15);
+  }
+
+  /* ═══════════════════════════════════════════════════════
+     Enterprise UI — Primary action button (gradient)
+     ═══════════════════════════════════════════════════════ */
+  .hos-btn-primary {
+    background: linear-gradient(135deg, #4f46e5 0%, #3b82f6 100%);
+    color: #fff;
+    box-shadow: 0 4px 14px rgba(79, 70, 229, 0.3), 0 1px 3px rgba(0, 0, 0, 0.1);
+    transition: transform 0.15s ease, box-shadow 0.2s ease, opacity 0.15s ease;
+  }
+  .hos-btn-primary:hover {
+    transform: scale(1.02);
+    box-shadow: 0 6px 20px rgba(79, 70, 229, 0.4), 0 2px 6px rgba(0, 0, 0, 0.15);
+  }
+  .hos-btn-primary:active {
+    transform: scale(0.98);
+  }
+
+  /* ═══════════════════════════════════════════════════════
+     Enterprise UI — Card hover lift (microinteraction)
+     ═══════════════════════════════════════════════════════ */
+  .hos-lift {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+  .hos-lift:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 24px rgba(0, 0, 0, 0.2);
+  }
 }

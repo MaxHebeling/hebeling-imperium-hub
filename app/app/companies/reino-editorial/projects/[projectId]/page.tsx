@@ -3,6 +3,7 @@ import { unstable_noStore as noStore } from "next/cache";
 import { getStaffProject } from "@/lib/editorial/staff/services";
 import { StaffProjectHeader } from "@/components/editorial/staff/staff-project-header";
 import { StaffProjectTabs } from "@/components/editorial/staff/staff-project-tabs";
+import { PipelineProgressBar } from "@/components/editorial/staff/pipeline-progress-bar";
 import { getProjectAlertsWithRecalc } from "@/lib/editorial/alerts/detection";
 import { getProjectExports } from "@/lib/editorial/export/services";
 import { getProjectDistributions } from "@/lib/editorial/distribution/services";
@@ -83,7 +84,7 @@ export default async function ReinoEditorialProjectDetailPage({
     const latestManuscript = manuscriptFiles[0] ?? null;
 
     return (
-      <div className="space-y-6 pb-6 px-6 pt-4">
+      <div className="space-y-6 pb-8 px-8 pt-6">
         <div className="flex flex-col gap-4">
           <StaffProjectHeader
             projectId={project.id}
@@ -94,6 +95,8 @@ export default async function ReinoEditorialProjectDetailPage({
             status={project.status}
             createdByName={created_by_name}
             createdByEmail={created_by_email}
+            language={project.language}
+            genre={project.genre}
             backHref="/app/companies/reino-editorial/projects"
             backLabel="Volver a proyectos"
           />
@@ -102,10 +105,13 @@ export default async function ReinoEditorialProjectDetailPage({
           </div>
         </div>
 
+        {/* Pipeline progress bar */}
+        <PipelineProgressBar projectId={project.id} />
+
         <StaffAlertsPanel projectId={project.id} alerts={alerts} />
 
         {/* Manuscript section – dedicated uploader for original manuscrito */}
-        <Card>
+        <Card className="bg-card/80 backdrop-blur-sm shadow-sm hover:shadow-md transition-shadow duration-200">
           <CardHeader className="pb-2">
             <CardTitle className="text-base">Manuscript</CardTitle>
           </CardHeader>
@@ -237,7 +243,7 @@ export default async function ReinoEditorialProjectDetailPage({
         <StaffProjectAiReview projectId={project.id} />
 
         {/* Main dashboard sections: overview, files, activity, AI engine, etc. */}
-        <div id="files">
+        <div id="files" className="space-y-6">
           <StaffProjectTabs detail={detail} exports={exports} distributions={distributions} />
         </div>
       </div>
