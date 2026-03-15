@@ -97,6 +97,8 @@ export async function middleware(request: NextRequest) {
 
   const isHubHost =
     hostname.startsWith("hub.") ||
+    hostname === "hebeling.io" ||
+    hostname === "www.hebeling.io" ||
     (isLocal && appHint !== "clients") ||
     (isPreview && appHint !== "clients");
 
