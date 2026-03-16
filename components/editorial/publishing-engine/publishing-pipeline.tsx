@@ -135,14 +135,29 @@ export function PublishingPipeline({ projectId }: { projectId: string }) {
   const handleRunAI = async () => {
     setRunningAI(true);
     try {
-      await fetch(`/api/editorial/projects/${projectId}/process-all`, {
+      // The process-all endpoint now processes ALL stages synchronously
+      // and only returns after everything is complete (up to 5 min).
+      // We poll in the background while waiting for the response.
+      const pollInterval = setInterval(fetchData, 5000);
+
+      const res = await fetch(`/api/editorial/projects/${projectId}/process-all`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({}),
       });
-      // Start polling
-      setTimeout(fetchData, 2000);
-    } catch {
+
+      clearInterval(pollInterval);
+
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({ error: "Error del servidor" }));
+        setError(data.error ?? "Error al procesar pipeline");
+      }
+
+      // Final refresh to get all completed results
+      await fetchData();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Error de conexión");
+    } finally {
       setRunningAI(false);
     }
   };
