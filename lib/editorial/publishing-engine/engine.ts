@@ -24,6 +24,9 @@ import type {
   AmazonFormatConfig,
   AuthorTimelineDay,
 } from "./types";
+import { processAiJob, fetchManuscriptContent } from "@/lib/editorial/ai/processor";
+import type { EditorialAiTaskKey } from "@/lib/editorial/types/ai";
+import type { EditorialStageKey } from "@/lib/editorial/types/editorial";
 
 // ─── Get full pipeline state for a project ──────────────────────────
 
@@ -288,7 +291,9 @@ export async function advanceToPhase(
 
 export async function executePhaseAi(
   projectId: string,
-  phaseKey: PublishingPhaseKey
+  phaseKey: PublishingPhaseKey,
+  /** Pre-fetched manuscript text to avoid re-downloading per phase */
+  manuscriptText?: string
 ): Promise<{
   success: boolean;
   result?: PhaseState;
@@ -303,8 +308,9 @@ export async function executePhaseAi(
     };
 
   const supabase = getAdminClient();
+  const startTime = Date.now();
 
-  // Create a job
+  // Create a job row
   const { data: job, error: jobError } = await supabase
     .from("editorial_jobs")
     .insert({
@@ -315,7 +321,9 @@ export async function executePhaseAi(
       provider:
         phase.aiProvider === "internal"
           ? "openai"
-          : phase.aiProvider,
+          : phase.aiProvider === "human"
+            ? "openai"
+            : phase.aiProvider,
     })
     .select()
     .single();
@@ -327,23 +335,87 @@ export async function executePhaseAi(
     };
   }
 
-  return {
-    success: true,
-    result: {
-      key: phase.key,
+  // Mark stage as processing
+  await supabase
+    .from("editorial_stages")
+    .update({
       status: "processing",
-      order: phase.order,
-      label: phase.label,
-      summary: null,
-      score: null,
-      findings: [],
-      aiProvider: phase.aiProvider,
-      processingTimeMs: null,
-      startedAt: new Date().toISOString(),
-      completedAt: null,
-      jobId: job.id,
-    },
-  };
+      started_at: new Date().toISOString(),
+    })
+    .eq("project_id", projectId)
+    .eq("stage_key", phase.legacyStageKey);
+
+  // ── Actually execute the AI job inline ──
+  try {
+    const analysisResult = await processAiJob({
+      jobId: job.id as string,
+      projectId,
+      stageKey: phase.legacyStageKey as EditorialStageKey,
+      taskKey: phase.aiTaskKey as EditorialAiTaskKey,
+      context: {
+        project_id: projectId,
+        stage_key: phase.legacyStageKey as EditorialStageKey,
+        source_file_id: null,
+        source_file_version: null,
+        requested_by: "system",
+      },
+      manuscriptText,
+      skipAutoAdvance: true, // We handle advancement ourselves
+    });
+
+    const elapsed = Date.now() - startTime;
+    const findings: PhaseFinding[] = [];
+
+    if (analysisResult?.issues) {
+      for (const issue of analysisResult.issues) {
+        findings.push({
+          type: issue.type ?? "suggestion",
+          description: issue.description ?? "",
+          location: issue.location ?? null,
+          correction: issue.suggestion ?? null,
+          confidence: null,
+        });
+      }
+    }
+
+    return {
+      success: true,
+      result: {
+        key: phase.key,
+        status: "completed",
+        order: phase.order,
+        label: phase.label,
+        summary: analysisResult?.summary ?? "Procesado correctamente.",
+        score: analysisResult?.score ?? null,
+        findings,
+        aiProvider: phase.aiProvider,
+        processingTimeMs: elapsed,
+        startedAt: new Date(startTime).toISOString(),
+        completedAt: new Date().toISOString(),
+        jobId: job.id as string,
+      },
+    };
+  } catch (err) {
+    const errorMsg = err instanceof Error ? err.message : "Error desconocido al ejecutar IA";
+    return {
+      success: false,
+      error: errorMsg,
+      result: {
+        key: phase.key,
+        status: "failed",
+        order: phase.order,
+        label: phase.label,
+        summary: null,
+        score: null,
+        findings: [],
+        aiProvider: phase.aiProvider,
+        processingTimeMs: Date.now() - startTime,
+        startedAt: new Date(startTime).toISOString(),
+        completedAt: new Date().toISOString(),
+        jobId: job.id as string,
+      },
+    };
+  }
 }
 
 // ─── Run full AI pipeline ────────────────────────────────────────
@@ -356,6 +428,7 @@ export async function runFullAiPipeline(
     phaseKey: PublishingPhaseKey;
     success: boolean;
     error?: string;
+    durationMs?: number;
   }>;
 }> {
   const aiPhases = PUBLISHING_PHASES.filter(
@@ -365,18 +438,63 @@ export async function runFullAiPipeline(
     phaseKey: PublishingPhaseKey;
     success: boolean;
     error?: string;
+    durationMs?: number;
   }> = [];
 
+  // Pre-fetch manuscript once and share across all phases
+  let manuscriptText: string | undefined;
+  try {
+    manuscriptText = await fetchManuscriptContent(projectId);
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : "No se pudo obtener el manuscrito";
+    return {
+      success: false,
+      results: [{ phaseKey: aiPhases[0]?.key ?? "manuscript_received", success: false, error: msg }],
+    };
+  }
+
+  // Mark project as processing
+  const supabase = getAdminClient();
+  await supabase
+    .from("editorial_projects")
+    .update({ status: "processing" })
+    .eq("id", projectId);
+
+  // Execute each AI phase sequentially (with the pre-fetched manuscript)
   for (const phase of aiPhases) {
-    const result = await executePhaseAi(projectId, phase.key);
+    const phaseStart = Date.now();
+    const result = await executePhaseAi(projectId, phase.key, manuscriptText);
     results.push({
       phaseKey: phase.key,
       success: result.success,
       error: result.error,
+      durationMs: Date.now() - phaseStart,
     });
+
+    // Update progress after each phase
+    const progress = calculateProgressPercent(phase.key);
+    await supabase
+      .from("editorial_projects")
+      .update({
+        current_stage: phase.legacyStageKey,
+        progress_percent: progress,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", projectId);
   }
 
-  return { success: results.every((r) => r.success), results };
+  // Mark project as completed if all succeeded
+  const allSucceeded = results.every((r) => r.success);
+  await supabase
+    .from("editorial_projects")
+    .update({
+      status: allSucceeded ? "completed" : "active",
+      progress_percent: allSucceeded ? 100 : undefined,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", projectId);
+
+  return { success: allSucceeded, results };
 }
 
 // ─── Save prompt override for a phase ────────────────────────────

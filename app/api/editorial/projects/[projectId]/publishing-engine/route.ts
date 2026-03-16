@@ -40,6 +40,7 @@ export async function GET(
         description: p.description,
         aiAgent: p.aiAgent,
         aiProvider: p.aiProvider,
+        aiTaskKey: p.aiTaskKey,
         requiresHumanReview: p.requiresHumanReview,
         isAiAutomated: p.isAiAutomated,
         outputs: p.outputs,
