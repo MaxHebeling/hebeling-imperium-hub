@@ -1,5 +1,4 @@
 import { generateText, Output } from "ai";
-import { openai } from "@ai-sdk/openai";
 import { z } from "zod";
 import { getAdminClient, ORG_ID } from "@/lib/leads/helpers";
 import { markAiJobStatus } from "./jobs";
@@ -282,10 +281,10 @@ export async function processAiJob(options: ProcessJobOptions): Promise<Analysis
       "typography_check",
       "page_flow_review",
     ];
-    const modelId = FAST_TASKS.includes(options.taskKey) ? "gpt-4o-mini" : "gpt-4o";
+    const modelId = FAST_TASKS.includes(options.taskKey) ? "openai/gpt-4o-mini" : "openai/gpt-4o";
 
     const result = await generateText({
-      model: openai(modelId),
+      model: modelId,
       system,
       prompt: user,
       output: Output.object({
