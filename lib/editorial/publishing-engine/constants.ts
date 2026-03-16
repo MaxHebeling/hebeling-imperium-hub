@@ -56,8 +56,8 @@ export const PUBLISHING_PHASES: PublishingPhaseDefinition[] = [
     shortLabel: "Corrección",
     description:
       "Corrección de ortografía, gramática, puntuación y errores tipográficos. Genera documento corregido descargable.",
-    aiProvider: "openai",
-    aiProviderLabel: "OpenAI GPT-4o",
+    aiProvider: "languagetool",
+    aiProviderLabel: "LanguageTool + OpenAI GPT-4o",
     legacyStageKey: "ortotipografia",
     aiTaskKey: "orthotypography_review",
     requiresHumanReview: true,
@@ -133,8 +133,8 @@ export const PUBLISHING_PHASES: PublishingPhaseDefinition[] = [
     shortLabel: "Portada",
     description:
       "La IA analiza concepto del libro, mensaje central, género y público objetivo. Genera portada completa (front, back, spine) respetando trim size y 300 DPI.",
-    aiProvider: "openai",
-    aiProviderLabel: "DALL-E 3",
+    aiProvider: "stability",
+    aiProviderLabel: "Stability AI + DALL-E 3",
     legacyStageKey: "revision_final",
     aiTaskKey: null,
     requiresHumanReview: true,
