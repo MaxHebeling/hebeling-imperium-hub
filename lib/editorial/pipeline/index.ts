@@ -1,3 +1,11 @@
+/**
+ * Editorial pipeline barrel exports.
+ *
+ * Exposes stage keys, labels, progress values, status helpers, and transition
+ * utilities for the 8-stage editorial workflow:
+ *   ingesta → estructura → estilo → ortotipografía
+ *   → maquetación → revisión_final → exportación → distribución
+ */
 export {
   EDITORIAL_STAGE_KEYS,
   EDITORIAL_STAGE_LABELS,
