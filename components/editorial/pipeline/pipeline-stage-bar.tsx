@@ -132,6 +132,17 @@ function computeNextAction(stages: UIStageData[]): {
 
 // ─── AI Pipeline inline labels ───────────────────────────────────────
 
+const AI_STAGE_KEYS = [
+  "ingesta",
+  "estructura",
+  "estilo",
+  "ortotipografia",
+  "maquetacion",
+  "revision_final",
+  "export",
+  "distribution",
+] as const;
+
 const AI_STAGE_LABELS: Record<string, string> = {
   ingesta: "Análisis del manuscrito",
   estructura: "Edición estructural",
@@ -181,7 +192,7 @@ export function PipelineStageBar({
     { stageKey: string; status: string }[]
   >([]);
   const [aiIsProcessing, setAiIsProcessing] = useState(false);
-  const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const abortRef = useRef(false);
 
   const fetchAiProgress = useCallback(async () => {
     try {
@@ -192,31 +203,11 @@ export function PipelineStageBar({
       if (json.success) {
         setAiStages(json.stages ?? []);
         setAiIsProcessing(json.isProcessing ?? false);
-        if (!json.isProcessing && aiRunning) {
-          setAiRunning(false);
-          if (pollingRef.current) {
-            clearInterval(pollingRef.current);
-            pollingRef.current = null;
-          }
-          onPipelineComplete?.();
-        }
       }
     } catch {
       // Ignore polling errors
     }
-  }, [projectId, aiRunning, onPipelineComplete]);
-
-  useEffect(() => {
-    if (aiRunning && !pollingRef.current) {
-      pollingRef.current = setInterval(fetchAiProgress, 5000);
-    }
-    return () => {
-      if (pollingRef.current) {
-        clearInterval(pollingRef.current);
-        pollingRef.current = null;
-      }
-    };
-  }, [aiRunning, fetchAiProgress]);
+  }, [projectId]);
 
   // Initial fetch to detect already-running pipeline
   useEffect(() => {
@@ -224,26 +215,95 @@ export function PipelineStageBar({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  /**
+   * Stage-by-stage pipeline execution.
+   *
+   * Instead of calling POST /process-all (which processes all 8 stages in
+   * one HTTP request and times out on Vercel), we call POST /process-stage
+   * for each stage sequentially. Each call completes within ~10-30s, well
+   * within Vercel's timeout. The UI updates after each stage completes.
+   */
   async function handleStartPipeline() {
     setAiStarting(true);
     setAiError(null);
-    try {
-      const res = await fetch(
-        `/api/editorial/projects/${projectId}/process-all`,
-        { method: "POST" }
+    abortRef.current = false;
+
+    // Initialize UI stages as all pending
+    const initialStages = AI_STAGE_KEYS.map((key) => ({
+      stageKey: key,
+      status: "pending" as string,
+    }));
+    setAiStages(initialStages);
+    setAiIsProcessing(true);
+    setAiStarting(false);
+    setAiRunning(true);
+
+    let completedCount = 0;
+    let failedCount = 0;
+
+    for (const stageKey of AI_STAGE_KEYS) {
+      if (abortRef.current) break;
+
+      // Update current stage to "processing"
+      setAiStages((prev) =>
+        prev.map((s) =>
+          s.stageKey === stageKey ? { ...s, status: "processing" } : s
+        )
       );
-      const json = await res.json();
-      if (json.success) {
-        setAiRunning(true);
-        fetchAiProgress();
-      } else {
-        setAiError(json.error ?? "No se pudo iniciar el pipeline IA.");
+
+      try {
+        const res = await fetch(
+          `/api/editorial/projects/${projectId}/process-stage`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ stageKey }),
+          }
+        );
+        const json = await res.json();
+
+        if (json.success) {
+          completedCount++;
+          // Mark stage as completed
+          setAiStages((prev) =>
+            prev.map((s) =>
+              s.stageKey === stageKey ? { ...s, status: "completed" } : s
+            )
+          );
+        } else {
+          failedCount++;
+          // Mark stage as failed but continue
+          setAiStages((prev) =>
+            prev.map((s) =>
+              s.stageKey === stageKey ? { ...s, status: "failed" } : s
+            )
+          );
+          console.error(`[pipeline] Stage ${stageKey} failed: ${json.error}`);
+          // Don't stop — continue processing remaining stages
+        }
+      } catch (err) {
+        failedCount++;
+        setAiStages((prev) =>
+          prev.map((s) =>
+            s.stageKey === stageKey ? { ...s, status: "failed" } : s
+          )
+        );
+        console.error(`[pipeline] Stage ${stageKey} network error:`, err);
       }
-    } catch {
-      setAiError("Error de red al iniciar el pipeline IA.");
-    } finally {
-      setAiStarting(false);
     }
+
+    // Pipeline finished
+    setAiIsProcessing(false);
+    setAiRunning(false);
+
+    if (failedCount > 0 && completedCount === 0) {
+      setAiError(`El pipeline falló: ${failedCount} etapas con error.`);
+    } else if (failedCount > 0) {
+      setAiError(`Pipeline parcial: ${completedCount} completadas, ${failedCount} con error.`);
+    }
+
+    // Refresh the workflow data so the parent sees updated progress
+    onPipelineComplete?.();
   }
 
   // AI progress stats
