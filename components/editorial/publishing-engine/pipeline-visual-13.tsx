@@ -179,18 +179,24 @@ export function PipelineVisual13({ projectId, onPhaseSelect }: Props) {
 
   // ── Advance to phase ──
   const handleAdvance = async (targetPhase: string) => {
+    console.log("[v0] handleAdvance called with targetPhase:", targetPhase);
+    setError(null);
     try {
       const res = await fetch(`/api/editorial/projects/${projectId}/publishing-engine`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ action: "approve", targetPhase }),
       });
+      console.log("[v0] Response status:", res.status);
       const json = await res.json();
+      console.log("[v0] Response JSON:", json);
       if (!res.ok || !json.success) {
-        console.error("[v0] Error al aprobar fase:", json.error ?? json);
-        setError(json.error ?? "Error al aprobar la fase");
+        const errorMsg = json.error ?? "Error al aprobar la fase";
+        console.error("[v0] Error al aprobar fase:", errorMsg);
+        setError(errorMsg);
         return;
       }
+      console.log("[v0] Aprobacion exitosa, refrescando datos...");
       await fetchData();
     } catch (err) {
       console.error("[v0] Error en handleAdvance:", err);
