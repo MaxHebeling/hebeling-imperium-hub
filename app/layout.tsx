@@ -36,6 +36,7 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark">
       <head>
+        <meta name="facebook-domain-verification" content="hcz89foxj2tw19osjlonjey79sq7vb" />
         <GoogleTagManager />
         <GoogleAnalytics />
         <MetaPixel />
