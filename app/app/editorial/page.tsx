@@ -49,7 +49,7 @@ export default function EditorialPage() {
               className="text-base max-w-xl"
               style={{ color: "var(--re-text-muted)" }}
             >
-              Pipeline de produccion editorial inteligente con IA en cada fase del proceso.
+              Pipeline de producción editorial inteligente con IA en cada fase del proceso.
             </p>
           </div>
         </div>
@@ -104,7 +104,7 @@ export default function EditorialPage() {
           className="text-sm leading-relaxed"
           style={{ color: "var(--re-text-muted)" }}
         >
-          El flujo editorial es orquestado automaticamente por <strong>n8n</strong> a traves de 8 etapas secuenciales. 
+          El flujo editorial es orquestado automáticamente por <strong>n8n</strong> a través de 8 etapas secuenciales. 
           Cada etapa utiliza modelos de IA (GPT-4 y Claude) para analizar, corregir y mejorar el manuscrito. 
           El staff puede supervisar el progreso, ver los resultados de cada etapa y descargar reportes de correcciones.
         </p>
@@ -207,7 +207,7 @@ export default function EditorialPage() {
               className="font-semibold text-base"
               style={{ color: "var(--re-text)" }}
             >
-              Acciones Rapidas
+              Acciones Rápidas
             </p>
             <p
               className="text-sm mt-0.5"
@@ -299,7 +299,7 @@ const PIPELINE_STAGES = [
     key: "estructura",
     label: "Estructura",
     icon: FileSearch,
-    description: "Analisis y reorganizacion de la estructura narrativa.",
+    description: "Análisis y reorganización de la estructura narrativa.",
     color: "var(--re-blue)",
     progress: 25,
   },
@@ -307,45 +307,45 @@ const PIPELINE_STAGES = [
     key: "estilo",
     label: "Estilo",
     icon: PenTool,
-    description: "Mejora y homogeneizacion del estilo de escritura.",
+    description: "Mejora y homogeneización del estilo de escritura.",
     color: "var(--re-gold)",
     progress: 40,
   },
   {
     key: "ortotipografia",
-    label: "Ortotipografia",
+    label: "Ortotipografía",
     icon: Type,
-    description: "Correccion ortografica, gramatical y tipografica.",
+    description: "Corrección ortográfica, gramatical y tipográfica.",
     color: "var(--re-cyan)",
     progress: 55,
   },
   {
     key: "maquetacion",
-    label: "Maquetacion",
+    label: "Maquetación",
     icon: Palette,
-    description: "Diseno y composicion del interior del libro.",
+    description: "Diseño y composición del interior del libro.",
     color: "var(--re-blue)",
     progress: 70,
   },
   {
     key: "revision_final",
-    label: "Revision Final",
+    label: "Revisión Final",
     icon: ShieldCheck,
-    description: "Revision integral y aprobacion para exportacion.",
+    description: "Revisión integral y aprobación para exportación.",
     color: "var(--re-gold)",
     progress: 85,
   },
   {
     key: "export",
-    label: "Export",
+    label: "Exportación",
     icon: FileOutput,
-    description: "Generacion de PDF, EPUB y MOBI en alta calidad.",
+    description: "Generación de PDF, EPUB y MOBI en alta calidad.",
     color: "var(--re-cyan)",
     progress: 95,
   },
   {
     key: "distribution",
-    label: "Distribucion",
+    label: "Distribución",
     icon: Send,
     description: "Amazon, Apple Books, Kobo y canales directos.",
     color: "var(--re-success)",

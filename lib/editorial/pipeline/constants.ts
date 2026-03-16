@@ -18,7 +18,7 @@ export const EDITORIAL_STAGE_LABELS: Record<EditorialStageKey, string> = {
   ortotipografia: "Ortotipografía",
   maquetacion: "Maquetación",
   revision_final: "Revisión Final",
-  export: "Export",
+  export: "Exportación",
   distribution: "Distribución",
 };
 

@@ -2,12 +2,21 @@
  * n8n Cloud client for Reino Editorial pipeline integration.
  *
  * This module provides helpers to trigger n8n workflows from HEBELING OS.
- * The actual editorial AI processing runs in n8n Cloud, not in Vercel serverless.
+ * The editorial pipeline is triggered via webhook to n8n Cloud.
+ *
+ * Required environment variable:
+ *   N8N_WEBHOOK_URL=https://<instance>.app.n8n.cloud/webhook/editorial-ai-process
+ *
+ * Import the workflow from:
+ *   n8n-workflows/editorial-ai-process.json
  */
+
+/** Webhook path used by the n8n workflow (WF-02). */
+export const N8N_WEBHOOK_PATH = "editorial-ai-process";
 
 const N8N_WEBHOOK_URL =
   process.env.N8N_WEBHOOK_URL ||
-  "https://maxhebeling.app.n8n.cloud/webhook/editorial-ai-process";
+  `https://maxhebeling.app.n8n.cloud/webhook/${N8N_WEBHOOK_PATH}`;
 
 export interface N8nTriggerPayload {
   action: string;
@@ -17,6 +26,8 @@ export interface N8nTriggerPayload {
   language: string;
   genre: string | null;
   current_stage: string;
+  /** Pre-extracted manuscript text (up to 50,000 characters). */
+  manuscript_text?: string;
   manuscript_file: {
     id: string;
     file_name: string;
@@ -28,6 +39,8 @@ export interface N8nTriggerPayload {
   triggered_by: string;
   triggered_at: string;
   supabase_url: string | undefined;
+  supabase_anon_key?: string;
+  supabase_service_key?: string;
 }
 
 export interface N8nTriggerResult {
@@ -38,7 +51,8 @@ export interface N8nTriggerResult {
 }
 
 /**
- * Trigger the n8n manuscript intake webhook.
+ * Trigger the editorial AI pipeline webhook in n8n Cloud.
+ * Corresponds to WF-02 (editorial-ai-process.json).
  */
 export async function triggerManuscriptIntake(
   payload: N8nTriggerPayload
