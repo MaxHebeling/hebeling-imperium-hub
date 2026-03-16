@@ -3,18 +3,15 @@ import { unstable_noStore as noStore } from "next/cache";
 import { getStaffProject } from "@/lib/editorial/staff/services";
 import { StaffProjectHeader } from "@/components/editorial/staff/staff-project-header";
 import { getProjectAlertsWithRecalc } from "@/lib/editorial/alerts/detection";
-import { getProjectExports } from "@/lib/editorial/export/services";
-import { getProjectDistributions } from "@/lib/editorial/distribution/services";
 import type { EditorialProjectAlert } from "@/lib/editorial/alerts/types";
-import type { EditorialExportJob } from "@/lib/editorial/export/types";
-import type { ProjectDistribution } from "@/lib/editorial/distribution/types";
 import { StaffAlertsPanel } from "@/components/editorial/staff/staff-alerts-panel";
 import { StaffEmptyState } from "@/components/editorial/staff/staff-empty-state";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { BookOpen } from "lucide-react";
 import { DeleteEditorialProjectButton } from "@/components/editorial/delete-editorial-project-button";
-import { EditorialPipelineWorkspace } from "@/components/editorial/pipeline/editorial-pipeline-workspace";
+import { PipelineVisual13 } from "@/components/editorial/publishing-engine/pipeline-visual-13";
+import { ReinoEditorialManuscriptUpload } from "@/components/editorial/reino-editorial-manuscript-upload";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -61,16 +58,13 @@ export default async function ReinoEditorialProjectDetailPage({
       );
     }
 
-    // Load additional data independently to avoid one failure breaking the whole page
-    const [alerts, exports, distributions] = (await Promise.allSettled([
-      getProjectAlertsWithRecalc(projectId),
-      getProjectExports(projectId),
-      getProjectDistributions(projectId),
-    ]).then((results) => [
-      (results[0]?.status === "fulfilled" ? results[0].value : []) as EditorialProjectAlert[],
-      (results[1]?.status === "fulfilled" ? results[1].value : []) as EditorialExportJob[],
-      (results[2]?.status === "fulfilled" ? results[2].value : []) as ProjectDistribution[],
-    ])) as [EditorialProjectAlert[], EditorialExportJob[], ProjectDistribution[]];
+    // Load alerts
+    let alerts: EditorialProjectAlert[] = [];
+    try {
+      alerts = await getProjectAlertsWithRecalc(projectId);
+    } catch {
+      // non-blocking
+    }
 
     const { project, created_by_name, created_by_email, files } = detail;
     const manuscriptFiles = files
@@ -105,15 +99,35 @@ export default async function ReinoEditorialProjectDetailPage({
         {/* Alerts */}
         <StaffAlertsPanel projectId={project.id} alerts={alerts} />
 
-        {/* Single progressive pipeline workspace — replaces all fragmented tabs */}
-        <EditorialPipelineWorkspace
-          projectId={project.id}
-          projectTitle={project.title}
-          files={files}
-          exports={exports}
-          distributions={distributions}
-          hasManuscript={hasManuscript}
-        />
+        {/* Manuscript upload section */}
+        {!hasManuscript ? (
+          <div className="rounded-xl border border-dashed border-gray-300 bg-gray-50/50 p-6">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <div className="space-y-1">
+                <p className="text-sm font-medium text-gray-900">No hay manuscritos aún</p>
+                <p className="text-xs text-gray-500">
+                  Sube el manuscrito original para iniciar el pipeline editorial con IA.
+                </p>
+              </div>
+              <ReinoEditorialManuscriptUpload projectId={project.id} />
+            </div>
+          </div>
+        ) : (
+          <div className="flex items-center justify-between rounded-xl border border-gray-200 bg-white p-4">
+            <div className="space-y-0.5">
+              <p className="text-sm font-medium text-gray-900">
+                Manuscrito: {manuscriptFiles[0]?.storage_path?.split("/").pop() ?? "—"}
+              </p>
+              <p className="text-xs text-gray-500">
+                Versión v{manuscriptFiles[0]?.version ?? 1} · {manuscriptFiles.length} archivo(s)
+              </p>
+            </div>
+            <ReinoEditorialManuscriptUpload projectId={project.id} />
+          </div>
+        )}
+
+        {/* 13-Phase Pipeline Visual — the main editorial engine UI */}
+        <PipelineVisual13 projectId={project.id} />
       </div>
     );
   } catch (error) {
