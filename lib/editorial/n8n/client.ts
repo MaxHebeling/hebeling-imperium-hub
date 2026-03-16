@@ -7,7 +7,7 @@
 
 const N8N_WEBHOOK_URL =
   process.env.N8N_WEBHOOK_URL ||
-  "https://maxhebeling.app.n8n.cloud/webhook/manuscript-intake";
+  "https://maxhebeling.app.n8n.cloud/webhook/editorial-ai-process";
 
 export interface N8nTriggerPayload {
   action: string;
