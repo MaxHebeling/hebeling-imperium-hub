@@ -1,5 +1,11 @@
 {
+  "updatedAt": "2026-03-16T21:25:58.024Z",
+  "createdAt": "2026-03-16T10:59:19.752Z",
+  "id": "zuZupbzThhhxxhcy",
   "name": "HEBELING OS Pipeline",
+  "description": null,
+  "active": true,
+  "isArchived": false,
   "nodes": [
     {
       "parameters": {
@@ -156,9 +162,10 @@
       "type": "n8n-nodes-base.extractFromFile",
       "typeVersion": 1.1,
       "position": [
-        912,
-        208
-      ]
+        1136,
+        300
+      ],
+      "disabled": false
     },
     {
       "parameters": {
@@ -226,15 +233,22 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "={{ \"https://uukzadxejimzowtctgwn.supabase.co/storage/v1/object/editorial-manuscripts/\" + ($binary.manuscript_file.fileName || \"manuscript_\" + Date.now() + \".txt\") }}",
-        "authentication": "genericCredentialType",
-        "genericAuthType": "httpHeaderAuth",
+        "url": "={{ \"https://uukzadxejimzowtctgwn.supabase.co/storage/v1/object/editorial-manuscripts/\" + $(\"Create Project Record\").item.json.id + \"-\" + ($binary.manuscript_file.fileName || \"manuscript.txt\") }}",
+        "authentication": "none",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
             {
               "name": "Content-Type",
-              "value": "application/octet-stream"
+              "value": "={{ $binary.manuscript_file.mimeType || \"application/octet-stream\" }}"
+            },
+            {
+              "name": "apikey",
+              "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV1a3phZHhlamltem93dGN0Z3duIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3Mjc2MDU4OCwiZXhwIjoyMDg4MzM2NTg4fQ.F0znp91t-vDnmOOVFCwwYIeKSLb99zLVP4gT9KG1qA4"
+            },
+            {
+              "name": "Authorization",
+              "value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV1a3phZHhlamltem93dGN0Z3duIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3Mjc2MDU4OCwiZXhwIjoyMDg4MzM2NTg4fQ.F0znp91t-vDnmOOVFCwwYIeKSLb99zLVP4gT9KG1qA4"
             }
           ]
         },
@@ -249,29 +263,18 @@
       "typeVersion": 4.4,
       "position": [
         1360,
-        208
+        100
       ],
-      "credentials": {
-        "httpHeaderAuth": {
-          "id": "p2gv2pfJYdt19JgX",
-          "name": "Header Auth account"
-        }
-      },
       "disabled": true
     },
     {
       "parameters": {
         "method": "PATCH",
-        "url": "={{\"https://uukzadxejimzowtctgwn.supabase.co/rest/v1/editorial_projects?id=eq.\" + $(\"Create Project Record\").item.json.id}}",
-        "authentication": "genericCredentialType",
-        "genericAuthType": "httpHeaderAuth",
+        "url": "={{ \"https://uukzadxejimzowtctgwn.supabase.co/rest/v1/editorial_projects?id=eq.\" + $(\"Create Project Record\").item.json.id }}",
+        "authentication": "none",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
-            {
-              "name": "apikey",
-              "value": "={{  $credentials.supabaseServiceRoleKey }}"
-            },
             {
               "name": "Content-Type",
               "value": "application/json"
@@ -279,28 +282,30 @@
             {
               "name": "Prefer",
               "value": "return=representation"
+            },
+            {
+              "name": "apikey",
+              "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV1a3phZHhlamltem93dGN0Z3duIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3Mjc2MDU4OCwiZXhwIjoyMDg4MzM2NTg4fQ.F0znp91t-vDnmOOVFCwwYIeKSLb99zLVP4gT9KG1qA4"
+            },
+            {
+              "name": "Authorization",
+              "value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV1a3phZHhlamltem93dGN0Z3duIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3Mjc2MDU4OCwiZXhwIjoyMDg4MzM2NTg4fQ.F0znp91t-vDnmOOVFCwwYIeKSLb99zLVP4gT9KG1qA4"
             }
           ]
         },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ manuscript_url: $(\"Manuscript Upload Webhook\").item.json.body.file_url, updated_at: $now.toISO() }) }}"
+        "jsonBody": "={{ JSON.stringify({ manuscript_path: $(\"Create Project Record\").item.json.id + \"-\" + ($(\"Download Manuscript File\").item.binary.manuscript_file.fileName || \"manuscript.txt\"), manuscript_url: \"https://uukzadxejimzowtctgwn.supabase.co/storage/v1/object/public/editorial-manuscripts/\" + $(\"Create Project Record\").item.json.id + \"-\" + ($(\"Download Manuscript File\").item.binary.manuscript_file.fileName || \"manuscript.txt\"), updated_at: $now.toISO() }) }}"
       },
       "id": "1a5d2165-e47c-478a-8b7c-7b34c608bb35",
       "name": "Update Project with File Path",
       "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.2,
+      "typeVersion": 4.4,
       "position": [
         1584,
-        208
+        100
       ],
-      "credentials": {
-        "httpHeaderAuth": {
-          "id": "p2gv2pfJYdt19JgX",
-          "name": "Header Auth account"
-        }
-      },
-      "disabled": false
+      "disabled": true
     },
     {
       "parameters": {
@@ -448,6 +453,21 @@
         912,
         400
       ]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// Fork binary data to both Extract and Store paths\n// Both downstream nodes receive the same item with binary data\nreturn [$input.item];"
+      },
+      "id": "binary-duplicator-node",
+      "name": "Duplicate Binary",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        912,
+        208
+      ],
+      "disabled": true
     }
   ],
   "connections": {
@@ -506,22 +526,6 @@
       "main": [
         [
           {
-            "node": "Update Project with File Path",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Store Manuscript in Supabase Storage": {
-      "main": [
-        []
-      ]
-    },
-    "Update Project with File Path": {
-      "main": [
-        [
-          {
             "node": "Create Workflow Stage Record",
             "type": "main",
             "index": 0
@@ -530,22 +534,6 @@
       ]
     },
     "Create Workflow Stage Record": {
-      "main": [
-        [
-          {
-            "node": "Notify Team - New Manuscript",
-            "type": "main",
-            "index": 0
-          },
-          {
-            "node": "Send Confirmation Email to Author",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Send Confirmation Email to Author": {
       "main": [
         [
           {
@@ -568,7 +556,6 @@
       ]
     }
   },
-  "active": true,
   "settings": {
     "availableInMCP": false,
     "timeSavedMode": "fixed",
@@ -577,5 +564,665 @@
     "binaryMode": "separate"
   },
   "staticData": null,
-  "tags": []
+  "meta": null,
+  "pinData": {
+    "Manuscript Upload Webhook": [
+      {
+        "json": {
+          "headers": {
+            "host": "maxhebeling.app.n8n.cloud",
+            "user-agent": "curl/7.81.0",
+            "content-length": "292",
+            "accept": "*/*",
+            "accept-encoding": "gzip, br",
+            "cdn-loop": "cloudflare; loops=1; subreqs=1",
+            "cf-connecting-ip": "52.183.72.253",
+            "cf-ew-via": "15",
+            "cf-ipcountry": "US",
+            "cf-ray": "9dd64fba9e31ba27-SEA",
+            "cf-visitor": "{\"scheme\":\"https\"}",
+            "cf-worker": "n8n.cloud",
+            "content-type": "application/json",
+            "x-forwarded-for": "52.183.72.253, 162.158.42.118",
+            "x-forwarded-host": "maxhebeling.app.n8n.cloud",
+            "x-forwarded-port": "443",
+            "x-forwarded-proto": "https",
+            "x-forwarded-server": "traefik-prod-users-gwc-117-865ffd457-56gnc",
+            "x-is-trusted": "yes",
+            "x-real-ip": "52.183.72.253"
+          },
+          "params": {},
+          "query": {},
+          "body": {
+            "file_url": "https://www.gutenberg.org/files/1342/1342-0.txt",
+            "manuscript_title": "Prueba Final Pipeline v6",
+            "author_name": "Test Author Final",
+            "author_email": "author@example.com",
+            "service_plan": "standard",
+            "editorial_style": "tradicional",
+            "trim_size": "6x9"
+          },
+          "webhookUrl": "https://maxhebeling.app.n8n.cloud/webhook/manuscript-intake",
+          "executionMode": "production"
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ]
+  },
+  "versionId": "eedca4c8-44b0-4fda-8edf-e84df0560927",
+  "activeVersionId": "eedca4c8-44b0-4fda-8edf-e84df0560927",
+  "versionCounter": 80,
+  "triggerCount": 1,
+  "tags": [],
+  "parentFolder": null,
+  "activeVersion": {
+    "updatedAt": "2026-03-16T21:27:52.000Z",
+    "createdAt": "2026-03-16T21:25:02.607Z",
+    "versionId": "eedca4c8-44b0-4fda-8edf-e84df0560927",
+    "workflowId": "zuZupbzThhhxxhcy",
+    "nodes": [
+      {
+        "parameters": {
+          "respondWith": "json",
+          "responseBody": "={{ { \"success\": true, \"project_id\": $(\"Create Project Record\").item.json.id, \"status\": \"intake_complete\", \"message\": \"Manuscript received and project initialized successfully\", \"next_stage\": \"content_parsing\", \"tracking_url\": \"https://hebeling.os/projects/\" + $(\"Create Project Record\").item.json.id } }}",
+          "options": {
+            "responseCode": 201
+          }
+        },
+        "id": "47a5f5bf-597e-450f-bc99-79888684ff7d",
+        "name": "Respond Success",
+        "type": "n8n-nodes-base.respondToWebhook",
+        "typeVersion": 1.5,
+        "position": [
+          2256,
+          304
+        ]
+      },
+      {
+        "parameters": {
+          "content": "## REINO EDITORIAL AI ENGINE\n### WF-01: Manuscript Intake Workflow\n\n**Purpose:** Receive manuscripts from HEBELING OS, validate file types, store in Supabase, and initialize editorial projects.\n\n**Trigger:** Webhook from HEBELING OS client portal\n\n**Process Flow:**\n1. Receive manuscript metadata + file URL\n2. Validate file type (DOCX, PDF, TXT, MD)\n3. Download and extract text content\n4. Create project record in Supabase\n5. Store file in Supabase Storage\n6. Initialize workflow stage tracking\n7. Notify team via Slack\n8. Send confirmation email to author\n9. Respond to HEBELING OS with project ID\n\n**Next Workflow:** WF-03 Content Extraction",
+          "height": 380,
+          "width": 600,
+          "color": 2
+        },
+        "id": "629f928c-3ef2-4d38-8ec0-d183401d86d1",
+        "name": "Sticky Note d9232a93",
+        "type": "n8n-nodes-base.stickyNote",
+        "typeVersion": 1,
+        "position": [
+          128,
+          608
+        ]
+      },
+      {
+        "parameters": {
+          "content": "## Database Tables Used\n\n**editorial_projects**\n- Stores project metadata\n- Tracks workflow stage\n- Progress percentage\n\n**editorial_workflow_stages**\n- Stage completion tracking\n- Timestamps for each stage\n\n**editorial_audit_logs**\n- Error logging\n- System events",
+          "height": 280,
+          "width": 300,
+          "color": 4
+        },
+        "id": "82c39a21-bcd5-4e86-989a-6867aea996dd",
+        "name": "Sticky Note a0c53e8e",
+        "type": "n8n-nodes-base.stickyNote",
+        "typeVersion": 1,
+        "position": [
+          800,
+          608
+        ]
+      },
+      {
+        "parameters": {
+          "content": "## File Validation\n\nSupported formats:\n\u2713 DOCX (Microsoft Word)\n\u2713 PDF (Portable Document)\n\u2713 TXT (Plain Text)\n\u2713 MD (Markdown)\n\nInvalid files are rejected with 400 error response.",
+          "height": 200,
+          "width": 300,
+          "color": 5
+        },
+        "id": "081a5593-8b6e-4f36-a24f-71e986211ade",
+        "name": "Sticky Note 4c518c13",
+        "type": "n8n-nodes-base.stickyNote",
+        "typeVersion": 1,
+        "position": [
+          1200,
+          608
+        ]
+      },
+      {
+        "parameters": {
+          "content": "## Integration Points\n\n**HEBELING OS \u2192 n8n**\nWebhook trigger with manuscript metadata\n\n**n8n \u2192 Supabase**\n- Project creation\n- File storage\n- Stage tracking\n\n**n8n \u2192 Notifications**\n- Slack (team)\n- Gmail (author)\n\n**Response \u2192 HEBELING OS**\nProject ID + tracking URL",
+          "height": 280,
+          "width": 340,
+          "color": 3
+        },
+        "id": "f90680b4-5cf8-4917-9949-aacb8516302d",
+        "name": "Sticky Note 4ce61df4",
+        "type": "n8n-nodes-base.stickyNote",
+        "typeVersion": 1,
+        "position": [
+          1600,
+          608
+        ]
+      },
+      {
+        "parameters": {
+          "httpMethod": "POST",
+          "path": "manuscript-intake",
+          "responseMode": "responseNode",
+          "options": {}
+        },
+        "id": "6e3551f9-a244-4fa4-8a07-476eb1155a3b",
+        "name": "Manuscript Upload Webhook",
+        "type": "n8n-nodes-base.webhook",
+        "typeVersion": 2.1,
+        "position": [
+          240,
+          304
+        ],
+        "webhookId": "3f355c77-098b-486e-b48c-69ee63c1a869"
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "conditions": [
+              {
+                "leftValue": "={{ $json.body.file_url }}",
+                "operator": {
+                  "type": "string",
+                  "operation": "regex"
+                },
+                "rightValue": "={{ \"\\.(docx|pdf|txt|md)$\" }}"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "id": "41bae97c-4172-4903-a5fd-fcd65242cbcb",
+        "name": "Validate File Type",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.3,
+        "position": [
+          464,
+          304
+        ]
+      },
+      {
+        "parameters": {
+          "url": "={{ $json.body.file_url }}",
+          "options": {
+            "response": {
+              "response": {
+                "responseFormat": "file",
+                "outputPropertyName": "manuscript_file"
+              }
+            }
+          }
+        },
+        "id": "989a73b9-0a87-44c7-81a5-52a76a92d4fd",
+        "name": "Download Manuscript File",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.4,
+        "position": [
+          688,
+          208
+        ]
+      },
+      {
+        "parameters": {
+          "operation": "text",
+          "binaryPropertyName": "manuscript_file",
+          "options": {}
+        },
+        "id": "9c133592-a583-4fa0-97f7-2bfcf5cc07e2",
+        "name": "Extract Text Content",
+        "type": "n8n-nodes-base.extractFromFile",
+        "typeVersion": 1.1,
+        "position": [
+          1136,
+          300
+        ],
+        "disabled": false
+      },
+      {
+        "parameters": {
+          "tableId": "editorial_projects",
+          "fieldsUi": {
+            "fieldValues": [
+              {
+                "fieldId": "title",
+                "fieldValue": "={{ $(\"Manuscript Upload Webhook\").item.json.body.manuscript_title }}"
+              },
+              {
+                "fieldId": "author_name",
+                "fieldValue": "={{ $(\"Manuscript Upload Webhook\").item.json.body.author_name }}"
+              },
+              {
+                "fieldId": "language",
+                "fieldValue": "={{ $(\"Manuscript Upload Webhook\").item.json.body.language || \"es\" }}"
+              },
+              {
+                "fieldId": "genre",
+                "fieldValue": "={{ $(\"Manuscript Upload Webhook\").item.json.body.editorial_style || \"general\" }}"
+              },
+              {
+                "fieldId": "current_stage",
+                "fieldValue": "ingesta"
+              },
+              {
+                "fieldId": "progress_percent",
+                "fieldValue": "5"
+              },
+              {
+                "fieldId": "status",
+                "fieldValue": "active"
+              },
+              {
+                "fieldId": "org_id",
+                "fieldValue": "4059832a-ff39-43e6-984f-d9e866dfb8a4"
+              },
+              {
+                "fieldId": "created_by",
+                "fieldValue": "dacfc512-c585-40e7-bd3d-d75c84692823"
+              },
+              {
+                "fieldId": "created_at",
+                "fieldValue": "={{ $now.toISO() }}"
+              }
+            ]
+          }
+        },
+        "id": "bc7c5551-63f5-460a-a022-f50a0743282d",
+        "name": "Create Project Record",
+        "type": "n8n-nodes-base.supabase",
+        "typeVersion": 1,
+        "position": [
+          1136,
+          208
+        ],
+        "credentials": {
+          "supabaseApi": {
+            "id": "vJbTIVngHDiMXBWb",
+            "name": "Supabase account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "={{ \"https://uukzadxejimzowtctgwn.supabase.co/storage/v1/object/editorial-manuscripts/\" + $(\"Create Project Record\").item.json.id + \"-\" + ($binary.manuscript_file.fileName || \"manuscript.txt\") }}",
+          "authentication": "none",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "Content-Type",
+                "value": "={{ $binary.manuscript_file.mimeType || \"application/octet-stream\" }}"
+              },
+              {
+                "name": "apikey",
+                "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV1a3phZHhlamltem93dGN0Z3duIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3Mjc2MDU4OCwiZXhwIjoyMDg4MzM2NTg4fQ.F0znp91t-vDnmOOVFCwwYIeKSLb99zLVP4gT9KG1qA4"
+              },
+              {
+                "name": "Authorization",
+                "value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV1a3phZHhlamltem93dGN0Z3duIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3Mjc2MDU4OCwiZXhwIjoyMDg4MzM2NTg4fQ.F0znp91t-vDnmOOVFCwwYIeKSLb99zLVP4gT9KG1qA4"
+              }
+            ]
+          },
+          "sendBody": true,
+          "contentType": "binaryData",
+          "inputDataFieldName": "manuscript_file",
+          "options": {}
+        },
+        "id": "fc16cb50-f74a-48a1-87a1-40c94302bfa6",
+        "name": "Store Manuscript in Supabase Storage",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.4,
+        "position": [
+          1360,
+          100
+        ],
+        "disabled": true
+      },
+      {
+        "parameters": {
+          "method": "PATCH",
+          "url": "={{ \"https://uukzadxejimzowtctgwn.supabase.co/rest/v1/editorial_projects?id=eq.\" + $(\"Create Project Record\").item.json.id }}",
+          "authentication": "none",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "name": "Prefer",
+                "value": "return=representation"
+              },
+              {
+                "name": "apikey",
+                "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV1a3phZHhlamltem93dGN0Z3duIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3Mjc2MDU4OCwiZXhwIjoyMDg4MzM2NTg4fQ.F0znp91t-vDnmOOVFCwwYIeKSLb99zLVP4gT9KG1qA4"
+              },
+              {
+                "name": "Authorization",
+                "value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV1a3phZHhlamltem93dGN0Z3duIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3Mjc2MDU4OCwiZXhwIjoyMDg4MzM2NTg4fQ.F0znp91t-vDnmOOVFCwwYIeKSLb99zLVP4gT9KG1qA4"
+              }
+            ]
+          },
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={{ JSON.stringify({ manuscript_path: $(\"Create Project Record\").item.json.id + \"-\" + ($(\"Download Manuscript File\").item.binary.manuscript_file.fileName || \"manuscript.txt\"), manuscript_url: \"https://uukzadxejimzowtctgwn.supabase.co/storage/v1/object/public/editorial-manuscripts/\" + $(\"Create Project Record\").item.json.id + \"-\" + ($(\"Download Manuscript File\").item.binary.manuscript_file.fileName || \"manuscript.txt\"), updated_at: $now.toISO() }) }}"
+        },
+        "id": "1a5d2165-e47c-478a-8b7c-7b34c608bb35",
+        "name": "Update Project with File Path",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.4,
+        "position": [
+          1584,
+          100
+        ],
+        "disabled": true
+      },
+      {
+        "parameters": {
+          "tableId": "editorial_stages",
+          "fieldsUi": {
+            "fieldValues": [
+              {
+                "fieldId": "project_id",
+                "fieldValue": "={{ $(\"Create Project Record\").item.json.id }}"
+              },
+              {
+                "fieldId": "stage_key",
+                "fieldValue": "ingesta"
+              },
+              {
+                "fieldId": "status",
+                "fieldValue": "completed"
+              },
+              {
+                "fieldId": "completed_at",
+                "fieldValue": "={{ $now.toISO() }}"
+              },
+              {
+                "fieldId": "started_at",
+                "fieldValue": "={{ $now.toISO() }}"
+              }
+            ]
+          }
+        },
+        "id": "16c7f642-6d46-4cd5-bfb1-c928250547f5",
+        "name": "Create Workflow Stage Record",
+        "type": "n8n-nodes-base.supabase",
+        "typeVersion": 1,
+        "position": [
+          1808,
+          208
+        ],
+        "credentials": {
+          "supabaseApi": {
+            "id": "vJbTIVngHDiMXBWb",
+            "name": "Supabase account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "select": "channel",
+          "channelId": {
+            "__rl": true,
+            "mode": "list",
+            "value": ""
+          },
+          "messageType": "block",
+          "blocksUi": "={{ [{\"type\": \"header\", \"text\": {\"type\": \"plain_text\", \"text\": \"\ud83d\udcda New Manuscript Received\"}}, {\"type\": \"section\", \"fields\": [{\"type\": \"mrkdwn\", \"text\": \"*Title:*\\n\" + $(\"Create Project Record\").item.json.title}, {\"type\": \"mrkdwn\", \"text\": \"*Author:*\\n\" + $(\"Create Project Record\").item.json.author}, {\"type\": \"mrkdwn\", \"text\": \"*Service Plan:*\\n\" + $(\"Manuscript Upload Webhook\").item.json.body.service_plan}, {\"type\": \"mrkdwn\", \"text\": \"*Editorial Style:*\\n\" + $(\"Manuscript Upload Webhook\").item.json.body.editorial_style}]}, {\"type\": \"section\", \"text\": {\"type\": \"mrkdwn\", \"text\": \"\u2705 Manuscript uploaded and project initialized. Ready for content parsing.\"}}] }}",
+          "text": "={{ \"New Manuscript: \" + $(\"Create Project Record\").item.json.title }}",
+          "otherOptions": {}
+        },
+        "id": "3ba31d6f-2647-4938-bc49-d40fcfa94adc",
+        "name": "Notify Team - New Manuscript",
+        "type": "n8n-nodes-base.slack",
+        "typeVersion": 2.4,
+        "position": [
+          2032,
+          112
+        ],
+        "webhookId": "115513dc-d100-4021-9b20-8ac16327482b",
+        "disabled": true
+      },
+      {
+        "parameters": {
+          "sendTo": "={{ $(\"Manuscript Upload Webhook\").item.json.body.author_email }}",
+          "subject": "={{ \"Manuscript Received: \" + $(\"Create Project Record\").item.json.title }}",
+          "message": "=Dear {{ $(\"Manuscript Upload Webhook\").item.json.body.author_name }},\n\nThank you for submitting your manuscript \"{{ $(\"Create Project Record\").item.json.title }}\" to Reino Editorial through HEBELING OS.\n\n\u2705 Your manuscript has been successfully received and your editorial project has been initialized.\n\n\ud83d\udccb Project Details:\n\u2022 Project ID: {{ $(\"Create Project Record\").item.json.id }}\n\u2022 Service Plan: {{ $(\"Manuscript Upload Webhook\").item.json.body.service_plan }}\n\u2022 Editorial Style: {{ $(\"Manuscript Upload Webhook\").item.json.body.editorial_style }}\n\u2022 Trim Size: {{ $(\"Manuscript Upload Webhook\").item.json.body.trim_size }}\n\n\ud83d\udd04 Next Steps:\nYour manuscript will now enter our 12-day editorial process. You can track progress in real-time through your HEBELING OS client portal.\n\nThe editorial team will begin content parsing and diagnostic analysis within 24 hours.\n\nThank you for choosing Reino Editorial!\n\nThe HEBELING OS Team",
+          "options": {
+            "senderName": "Reino Editorial - HEBELING OS"
+          }
+        },
+        "id": "a71b0325-dcdf-466a-9ac2-26edae8668fe",
+        "name": "Send Confirmation Email to Author",
+        "type": "n8n-nodes-base.gmail",
+        "typeVersion": 2.2,
+        "position": [
+          2032,
+          304
+        ],
+        "webhookId": "9685dc96-1820-43cb-9768-99566f67f124",
+        "disabled": true
+      },
+      {
+        "parameters": {
+          "tableId": "editorial_audit_logs",
+          "fieldsUi": {
+            "fieldValues": [
+              {
+                "fieldId": "event_type",
+                "fieldValue": "validation_error"
+              },
+              {
+                "fieldId": "severity",
+                "fieldValue": "error"
+              },
+              {
+                "fieldId": "message",
+                "fieldValue": "Invalid file type submitted"
+              },
+              {
+                "fieldId": "metadata",
+                "fieldValue": "={{ JSON.stringify($(\"Manuscript Upload Webhook\").item.json.body) }}"
+              },
+              {
+                "fieldId": "created_at",
+                "fieldValue": "={{ $now.toISO() }}"
+              }
+            ]
+          }
+        },
+        "id": "b6af183b-70a4-473a-9d75-cf6e8ae43a0d",
+        "name": "Log Validation Error",
+        "type": "n8n-nodes-base.supabase",
+        "typeVersion": 1,
+        "position": [
+          688,
+          400
+        ],
+        "credentials": {
+          "supabaseApi": {
+            "id": "vJbTIVngHDiMXBWb",
+            "name": "Supabase account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "respondWith": "json",
+          "responseBody": "={{ { \"success\": false, \"error\": \"Invalid file type\", \"message\": \"Only DOCX, PDF, TXT, and Markdown files are supported\", \"supported_formats\": [\"docx\", \"pdf\", \"txt\", \"md\"] } }}",
+          "options": {
+            "responseCode": 400
+          }
+        },
+        "id": "1b48e536-73fd-41fb-b8ce-f7b1f17e5642",
+        "name": "Respond Error",
+        "type": "n8n-nodes-base.respondToWebhook",
+        "typeVersion": 1.5,
+        "position": [
+          912,
+          400
+        ]
+      },
+      {
+        "parameters": {
+          "mode": "runOnceForEachItem",
+          "jsCode": "// Fork binary data to both Extract and Store paths\n// Both downstream nodes receive the same item with binary data\nreturn [$input.item];"
+        },
+        "id": "binary-duplicator-node",
+        "name": "Duplicate Binary",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          912,
+          208
+        ],
+        "disabled": true
+      }
+    ],
+    "connections": {
+      "Manuscript Upload Webhook": {
+        "main": [
+          [
+            {
+              "node": "Validate File Type",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Validate File Type": {
+        "main": [
+          [
+            {
+              "node": "Download Manuscript File",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Log Validation Error",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Download Manuscript File": {
+        "main": [
+          [
+            {
+              "node": "Extract Text Content",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Extract Text Content": {
+        "main": [
+          [
+            {
+              "node": "Create Project Record",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Create Project Record": {
+        "main": [
+          [
+            {
+              "node": "Create Workflow Stage Record",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Create Workflow Stage Record": {
+        "main": [
+          [
+            {
+              "node": "Respond Success",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Log Validation Error": {
+        "main": [
+          [
+            {
+              "node": "Respond Error",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "authors": "Max Hebeling",
+    "name": "Fix: Disable Storage/Update nodes, sequential flow",
+    "description": "Disabled Storage, Update Project, and Duplicate Binary nodes to fix auth errors. Simple sequential flow: Webhook > Validate > Download > Extract > Create Project > Create Stage > Respond",
+    "autosaved": false,
+    "workflowPublishHistory": [
+      {
+        "createdAt": "2026-03-16T21:27:52.453Z",
+        "id": 30,
+        "workflowId": "zuZupbzThhhxxhcy",
+        "versionId": "eedca4c8-44b0-4fda-8edf-e84df0560927",
+        "event": "activated",
+        "userId": "78598414-3612-4a24-85db-e09f2b7f0532"
+      }
+    ]
+  },
+  "homeProject": {
+    "id": "Yo7Xli08gsNYUx75",
+    "type": "personal",
+    "name": "Max Hebeling <maxhebeling@gmail.com>",
+    "icon": null
+  },
+  "sharedWithProjects": [],
+  "usedCredentials": [
+    {
+      "id": "vJbTIVngHDiMXBWb",
+      "name": "Supabase account",
+      "type": "supabaseApi",
+      "currentUserHasAccess": true,
+      "homeProject": {
+        "id": "Yo7Xli08gsNYUx75",
+        "type": "personal",
+        "name": "Max Hebeling <maxhebeling@gmail.com>",
+        "icon": null
+      },
+      "sharedWithProjects": []
+    }
+  ],
+  "scopes": [
+    "workflow:create",
+    "workflow:delete",
+    "workflow:execute",
+    "workflow:execute-chat",
+    "workflow:list",
+    "workflow:move",
+    "workflow:publish",
+    "workflow:read",
+    "workflow:share",
+    "workflow:unpublish",
+    "workflow:unshare",
+    "workflow:update",
+    "workflow:updateRedactionSetting"
+  ],
+  "checksum": "cf706d98b8c3806b786bbede045194cac579adc5940b3b295658d7d41010394b"
 }
