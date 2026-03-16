@@ -179,7 +179,6 @@ export function PipelineVisual13({ projectId, onPhaseSelect }: Props) {
 
   // ── Advance to phase ──
   const handleAdvance = async (targetPhase: string) => {
-    console.log("[v0] handleAdvance called with targetPhase:", targetPhase);
     setError(null);
     try {
       const res = await fetch(`/api/editorial/projects/${projectId}/publishing-engine`, {
@@ -187,22 +186,15 @@ export function PipelineVisual13({ projectId, onPhaseSelect }: Props) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ action: "approve", targetPhase }),
       });
-      console.log("[v0] Response status:", res.status);
       const json = await res.json();
-      console.log("[v0] Response JSON:", json);
       if (!res.ok || !json.success) {
-        const errorMsg = json.error ?? "Error al aprobar la fase";
-        console.error("[v0] Error al aprobar fase:", errorMsg);
-        setError(errorMsg);
+        setError(json.error ?? "Error al aprobar la fase");
         return;
       }
-      console.log("[v0] Aprobacion exitosa, refrescando datos...");
-      // Force a small delay to let DB update propagate
-      await new Promise(resolve => setTimeout(resolve, 500));
+      // Small delay then refresh
+      await new Promise(resolve => setTimeout(resolve, 300));
       await fetchData();
-      console.log("[v0] Datos refrescados");
     } catch (err) {
-      console.error("[v0] Error en handleAdvance:", err);
       setError(err instanceof Error ? err.message : "Error de conexion");
     }
   };
@@ -358,46 +350,72 @@ export function PipelineVisual13({ projectId, onPhaseSelect }: Props) {
       {/* ─── All Phases List (collapsed) ─────────────────────── */}
       {!selectedPhase && (
         <div className="space-y-2">
-          {phaseDefinitions.map((phase) => {
+          {phaseDefinitions.map((phase, idx) => {
             const ps = phaseStates.find((p) => p.key === phase.key);
             const status = ps?.status ?? "pending";
             const config = STATUS_CONFIG[status] ?? STATUS_CONFIG.pending;
             const Icon = PHASE_ICONS[phase.key] ?? FileText;
+            const isCurrent = state.currentPhaseKey === phase.key;
+            const canAdvance = status !== "pending" && status !== "completed" && status !== "approved" && phase.order < 13;
 
             return (
-              <button
+              <div
                 key={phase.key}
-                onClick={() => setSelectedPhase(phase.key)}
-                className="flex w-full items-center gap-4 rounded-xl border border-gray-100 bg-white p-4 text-left transition-all hover:border-gray-200 hover:shadow-sm"
+                className={`flex w-full items-center gap-4 rounded-xl border bg-white p-4 transition-all ${
+                  isCurrent ? "border-blue-200 ring-1 ring-blue-100" : "border-gray-100 hover:border-gray-200 hover:shadow-sm"
+                }`}
               >
-                <div className={`flex h-9 w-9 items-center justify-center rounded-lg ${config.bgColor}`}>
-                  {status === "processing" ? (
-                    <Loader2 className={`h-4 w-4 animate-spin ${config.color}`} />
-                  ) : status === "completed" || status === "approved" ? (
-                    <CheckCircle2 className="h-4 w-4 text-emerald-500" />
-                  ) : (
-                    <Icon className={`h-4 w-4 ${config.color}`} />
-                  )}
-                </div>
-                <div className="flex-1">
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs font-bold text-gray-400">#{phase.order}</span>
-                    <span className="text-sm font-medium text-gray-900">{phase.label}</span>
+                <button
+                  onClick={() => setSelectedPhase(phase.key)}
+                  className="flex flex-1 items-center gap-4 text-left"
+                >
+                  <div className={`flex h-9 w-9 items-center justify-center rounded-lg ${config.bgColor}`}>
+                    {status === "processing" ? (
+                      <Loader2 className={`h-4 w-4 animate-spin ${config.color}`} />
+                    ) : status === "completed" || status === "approved" ? (
+                      <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+                    ) : (
+                      <Icon className={`h-4 w-4 ${config.color}`} />
+                    )}
                   </div>
-                  <p className="text-xs text-gray-500 line-clamp-1">{phase.description}</p>
-                </div>
-                <div className="flex items-center gap-2">
-                  {phase.isAiAutomated && (
-                    <span className="rounded-full bg-blue-50 px-2 py-0.5 text-[10px] font-medium text-blue-600">IA</span>
-                  )}
-                  {phase.requiresHumanReview && (
-                    <span className="rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-medium text-amber-600">Revisión</span>
-                  )}
-                  <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${config.bgColor} ${config.color}`}>
-                    {config.label}
-                  </span>
-                </div>
-              </button>
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-bold text-gray-400">#{phase.order}</span>
+                      <span className="text-sm font-medium text-gray-900">{phase.label}</span>
+                      {isCurrent && (
+                        <span className="rounded bg-blue-100 px-1.5 py-0.5 text-[9px] font-bold text-blue-700">ACTUAL</span>
+                      )}
+                    </div>
+                    <p className="text-xs text-gray-500 line-clamp-1">{phase.description}</p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {phase.isAiAutomated && (
+                      <span className="rounded-full bg-blue-50 px-2 py-0.5 text-[10px] font-medium text-blue-600">IA</span>
+                    )}
+                    {phase.requiresHumanReview && (
+                      <span className="rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-medium text-amber-600">Revision</span>
+                    )}
+                    <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${config.bgColor} ${config.color}`}>
+                      {config.label}
+                    </span>
+                  </div>
+                </button>
+                {/* Quick approve button for current phase */}
+                {canAdvance && (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      const nextPhases = ["manuscript_received","ai_diagnosis","spelling_correction","grammar_correction","style_editing","structural_review","theological_review","editorial_approval","interior_layout","cover_design","final_review","export","publication"];
+                      const nextIdx = nextPhases.indexOf(phase.key) + 1;
+                      if (nextIdx < nextPhases.length) handleAdvance(nextPhases[nextIdx]);
+                    }}
+                    className="shrink-0 inline-flex items-center gap-1.5 rounded-lg bg-emerald-600 px-3 py-2 text-xs font-medium text-white hover:bg-emerald-700"
+                  >
+                    <CheckCircle2 className="h-3.5 w-3.5" />
+                    Aprobar
+                  </button>
+                )}
+              </div>
             );
           })}
         </div>

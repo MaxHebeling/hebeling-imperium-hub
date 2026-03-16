@@ -64,19 +64,15 @@ export async function POST(
   try {
     const body = await req.json();
     const action = body.action as string;
-    console.log("[v0] Publishing engine POST:", { projectId, action, body });
 
     switch (action) {
       case "advance": 
       case "approve": {
-        // Both actions advance to the target phase
         const targetPhase = body.targetPhase as PublishingPhaseKey;
-        console.log("[v0] Approve/Advance action:", { projectId, targetPhase });
         if (!targetPhase) {
           return NextResponse.json({ error: "targetPhase requerido" }, { status: 400 });
         }
         const result = await advanceToPhase(projectId, targetPhase);
-        console.log("[v0] advanceToPhase result:", result);
         return NextResponse.json(result);
       }
 
