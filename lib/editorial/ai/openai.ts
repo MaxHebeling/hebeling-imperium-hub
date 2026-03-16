@@ -67,7 +67,7 @@ export async function runEditorialManuscriptAnalysis(
   const prompt = buildEditorialPrompt(text, extracted.truncated || text.length < extracted.text.length);
 
   console.info("[editorial-ai][openai] sending request", {
-    model: "gpt-4.1-mini",
+    model: "gpt-4o-mini",
     promptChars: prompt.length,
   });
 
@@ -82,7 +82,7 @@ export async function runEditorialManuscriptAnalysis(
         Authorization: `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
-        model: "gpt-4.1-mini",
+        model: "gpt-4o-mini",
         messages: [
           {
             role: "system",

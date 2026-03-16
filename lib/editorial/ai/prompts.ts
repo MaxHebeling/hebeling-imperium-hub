@@ -24,9 +24,15 @@ export async function getActivePromptTemplate(options: {
 }
 
 export function buildPrompt(template: EditorialAiPromptTemplate, context: Record<string, unknown>): string {
-  // For 4B.1 we avoid complex templating; callers can interpolate as needed later.
-  // This helper exists to keep the layering clean.
-  void context;
-  return template.prompt_text;
+  // Interpolate {{variable}} placeholders in the template with context values
+  let result = template.prompt_text;
+  
+  for (const [key, value] of Object.entries(context)) {
+    const placeholder = `{{${key}}}`;
+    const stringValue = typeof value === "string" ? value : JSON.stringify(value);
+    result = result.replaceAll(placeholder, stringValue);
+  }
+  
+  return result;
 }
 
