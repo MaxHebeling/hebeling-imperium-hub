@@ -28,7 +28,8 @@ import {
   ShieldAlert,
   TrendingUp,
   Eye,
-  Sparkles,
+  Zap,
+  ExternalLink,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -179,7 +180,7 @@ export default function EditorialProjectDetailPage() {
 
   // Pipeline run state
   const [runningPipeline, setRunningPipeline] = useState(false);
-  const [pipelineResult, setPipelineResult] = useState<{ success: boolean; message: string; stagesProcessed?: number } | null>(null);
+  const [pipelineResult, setPipelineResult] = useState<{ success: boolean; message: string; stagesProcessed?: number; n8nTriggered?: boolean } | null>(null);
 
   // KDP format configurator state
   const [kdpTrimSizeId, setKdpTrimSizeId] = useState("6x9");
@@ -313,23 +314,25 @@ export default function EditorialProjectDetailPage() {
     setRunningPipeline(true);
     setPipelineResult(null);
     try {
-      const res = await fetch(`/api/staff/projects/${projectId}/pipeline/run`, {
+      // Call the real n8n integration endpoint to trigger the editorial pipeline
+      const res = await fetch(`/api/editorial/n8n`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ projectId, action: "run_pipeline" }),
       });
       const json = await res.json();
-      if (json.success) {
+      if (res.ok && json.success) {
         setPipelineResult({ 
           success: true, 
-          message: json.message,
-          stagesProcessed: json.stagesProcessed?.length ?? 0
+          message: json.message ?? "Pipeline editorial activado en n8n. El proceso ha iniciado.",
+          n8nTriggered: true,
         });
         await fetchData(); // Refresh data to show updated stages
       } else {
-        setPipelineResult({ success: false, message: json.error ?? "Error al ejecutar el pipeline" });
+        setPipelineResult({ success: false, message: json.error ?? "Error al activar el pipeline en n8n" });
       }
     } catch {
-      setPipelineResult({ success: false, message: "Error de conexion al ejecutar el pipeline" });
+      setPipelineResult({ success: false, message: "Error de conexión al activar el pipeline" });
     } finally {
       setRunningPipeline(false);
     }
@@ -504,12 +507,12 @@ export default function EditorialProjectDetailPage() {
                 {runningPipeline ? (
                   <>
                     <Loader2 className="w-4 h-4 animate-spin" />
-                    Procesando IA...
+                    Enviando a n8n...
                   </>
                 ) : (
                   <>
-                    <Sparkles className="w-4 h-4" />
-                    Ejecutar Pipeline IA
+                    <Zap className="w-4 h-4" />
+                    Activar Pipeline Editorial
                   </>
                 )}
               </button>
@@ -527,15 +530,32 @@ export default function EditorialProjectDetailPage() {
         {/* Pipeline Result Message */}
         {pipelineResult && (
           <div 
-            className="mt-4 px-4 py-3 rounded-xl text-sm flex items-center gap-2"
+            className="mt-4 px-4 py-3 rounded-xl text-sm flex items-start gap-2"
             style={{
               background: pipelineResult.success ? "var(--re-success-pale)" : "var(--re-danger-pale)",
               color: pipelineResult.success ? "var(--re-success)" : "var(--re-danger)",
               border: `1px solid ${pipelineResult.success ? "rgba(13, 122, 95, 0.2)" : "rgba(192, 49, 43, 0.2)"}`
             }}
           >
-            {pipelineResult.success ? <CheckCircle2 className="w-4 h-4" /> : <AlertCircle className="w-4 h-4" />}
-            {pipelineResult.message}
+            {pipelineResult.success ? <CheckCircle2 className="w-4 h-4 mt-0.5 shrink-0" /> : <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />}
+            <div className="flex-1 min-w-0">
+              <span>{pipelineResult.message}</span>
+              {pipelineResult.n8nTriggered && (
+                <div className="mt-2 flex items-center gap-3 flex-wrap">
+                  <a
+                    href="https://maxhebeling.app.n8n.cloud"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 text-xs font-medium underline underline-offset-2"
+                    style={{ color: "var(--re-success)" }}
+                  >
+                    <ExternalLink className="w-3 h-3" />
+                    Ver estado en n8n Cloud
+                  </a>
+                  <span className="text-xs opacity-75">El pipeline corre en n8n. Recarga la página para ver el avance.</span>
+                </div>
+              )}
+            </div>
           </div>
         )}
       </div>
