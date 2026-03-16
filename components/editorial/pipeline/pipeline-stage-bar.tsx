@@ -270,6 +270,8 @@ export function PipelineStageBar({
               s.stageKey === stageKey ? { ...s, status: "completed" } : s
             )
           );
+          // Refresh workflow data after EACH stage so the 11 visual nodes update
+          onPipelineComplete?.();
         } else {
           failedCount++;
           // Mark stage as failed but continue
@@ -279,7 +281,8 @@ export function PipelineStageBar({
             )
           );
           console.error(`[pipeline] Stage ${stageKey} failed: ${json.error}`);
-          // Don't stop — continue processing remaining stages
+          // Still refresh so UI reflects the failure
+          onPipelineComplete?.();
         }
       } catch (err) {
         failedCount++;
@@ -302,7 +305,7 @@ export function PipelineStageBar({
       setAiError(`Pipeline parcial: ${completedCount} completadas, ${failedCount} con error.`);
     }
 
-    // Refresh the workflow data so the parent sees updated progress
+    // Final refresh to ensure everything is synced
     onPipelineComplete?.();
   }
 

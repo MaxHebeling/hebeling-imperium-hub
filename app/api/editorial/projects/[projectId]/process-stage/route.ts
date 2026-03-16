@@ -185,8 +185,32 @@ export async function POST(
 
     const durationMs = Date.now() - jobStart;
 
-    // Update current_stage and progress_percent on the project
+    // Mark this stage as completed in editorial_stages
+    await supabase
+      .from("editorial_stages")
+      .update({
+        status: "completed",
+        completed_at: new Date().toISOString(),
+      })
+      .eq("project_id", projectId)
+      .eq("stage_key", stageKey);
+
+    // Also mark all previous stages as completed (in case they were skipped)
     const stageIndex = STAGE_ORDER.indexOf(stageKey);
+    if (stageIndex > 0) {
+      const previousStages = STAGE_ORDER.slice(0, stageIndex);
+      await supabase
+        .from("editorial_stages")
+        .update({
+          status: "completed",
+          completed_at: new Date().toISOString(),
+        })
+        .eq("project_id", projectId)
+        .in("stage_key", previousStages)
+        .neq("status", "completed");
+    }
+
+    // Update current_stage and progress_percent on the project
     const progressPercent = Math.round(((stageIndex + 1) / STAGE_ORDER.length) * 100);
 
     await supabase
