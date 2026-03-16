@@ -15,7 +15,6 @@ import type { EditorialStageKey, EditorialStageStatus } from "@/lib/editorial/ty
 import type { EditorialAiTaskKey } from "@/lib/editorial/types/ai";
 import type { EditorialAiJobContext } from "@/lib/editorial/types/ai";
 import {
-  EditorialJobQueue,
   buildQueueEntries,
   type QueueEntry,
 } from "@/lib/editorial/ai/queue";
@@ -175,129 +174,157 @@ export async function POST(
       skipAutoAdvance: true,
     });
 
-    // ── 7. Create queue with processor and lifecycle hooks ─────────
+    // ── 7. Process ALL jobs sequentially and AWAIT completion ─────
+    //
+    // CRITICAL FIX: Previously the queue ran in the background and the
+    // HTTP response was returned immediately. On Vercel serverless, the
+    // function context gets killed after the response is sent, so the
+    // queue's async drain loop was being terminated mid-execution.
+    // Jobs were created with "queued" status but never actually processed.
+    //
+    // Solution: process each job inline and await its completion before
+    // returning the response. With maxDuration=300 (5 min) we have
+    // plenty of time for 8 stages at ~10-30s each.
+    //
     let completedCount = 0;
+    const failedJobs: { stageKey: string; error: string }[] = [];
+    const stageResults: { stageKey: string; status: string; durationMs: number }[] = [];
 
-    const queue = new EditorialJobQueue(async (entry: QueueEntry) => {
-      await processAiJob({
-        jobId: entry.jobId,
-        projectId: entry.projectId,
-        stageKey: entry.stageKey,
-        taskKey: entry.taskKey,
-        context: entry.context,
-        manuscriptText: entry.manuscriptText,
-        skipAutoAdvance: entry.skipAutoAdvance,
-      });
-      completedCount++;
-    });
+    console.log(`[process-all] Starting sequential processing of ${entries.length} jobs for project ${projectId}`);
 
-    // When the queue is fully drained, run post-processing
-    queue.on(async (event) => {
-      if (event.type !== "queue_drained") return;
+    for (const entry of entries) {
+      const jobStart = Date.now();
+      console.log(`[process-all] Processing job ${entry.jobId} (${entry.stageKey}/${entry.taskKey})...`);
 
       try {
-        // ── Post-processing validation ──
-        const validationResults = await runPostParallelValidation(projectId);
-        const allValidationsPassed = validationResults.every((v) => v.passed);
-
-        await logWorkflowEvent({
-          orgId: project.org_id,
-          projectId,
-          stageKey: "export",
-          eventType: "stage_completed",
-          actorId: null,
-          actorRole: "system",
-          payload: {
-            sequentialQueue: true,
-            postQueueValidation: true,
-            validations: validationResults.map((v) => ({
-              checkpoint: v.checkpoint,
-              passed: v.passed,
-            })),
-          },
+        await processAiJob({
+          jobId: entry.jobId,
+          projectId: entry.projectId,
+          stageKey: entry.stageKey,
+          taskKey: entry.taskKey,
+          context: entry.context,
+          manuscriptText: entry.manuscriptText,
+          skipAutoAdvance: entry.skipAutoAdvance,
         });
-
-        // Sync legacy stages → professional workflow stages (non-blocking)
-        try {
-          const completedLegacyStages = jobEntries
-            .slice(0, completedCount)
-            .map((e) => e.stageKey);
-          await syncWorkflowStages(projectId, completedLegacyStages);
-        } catch (syncErr) {
-          console.warn(
-            "[process-all] Workflow sync error (non-blocking):",
-            (syncErr as Error).message
-          );
-        }
-
-        if (completedCount === jobEntries.length) {
-          try {
-            await persistPublishingArtifacts(projectId);
-          } catch (pubErr) {
-            console.warn(
-              "[process-all] Publishing artifacts error (non-blocking):",
-              (pubErr as Error).message
-            );
-          }
-
-          await supabase
-            .from("editorial_projects")
-            .update({
-              status: "completed",
-              current_stage: "distribution",
-            })
-            .eq("id", projectId);
-
-          await logWorkflowEvent({
-            orgId: project.org_id,
-            projectId,
-            stageKey: "distribution",
-            eventType: "stage_completed",
-            actorId: null,
-            actorRole: "system",
-            payload: {
-              autoAdvanced: true,
-              pipelineCompleted: true,
-              sequentialQueue: true,
-              validationsPassed: allValidationsPassed,
-            },
-          });
-
-          console.log(
-            `[process-all] Pipeline completed (sequential queue) for project ${projectId}: ${completedCount}/${jobEntries.length}, validations=${allValidationsPassed ? "PASS" : "WARN"}`
-          );
-        } else {
-          const lastCompleted =
-            jobEntries[completedCount - 1]?.stageKey ?? "ingesta";
-          await supabase
-            .from("editorial_projects")
-            .update({ current_stage: lastCompleted })
-            .eq("id", projectId);
-
-          console.log(
-            `[process-all] Pipeline partial (sequential queue): ${completedCount}/${jobEntries.length} for project ${projectId}`
-          );
-        }
-      } catch (postErr) {
-        console.error("[process-all] Post-queue error:", postErr);
+        completedCount++;
+        const durationMs = Date.now() - jobStart;
+        stageResults.push({ stageKey: entry.stageKey, status: "completed", durationMs });
+        console.log(`[process-all] Job ${entry.jobId} (${entry.stageKey}) completed in ${Math.round(durationMs / 1000)}s`);
+      } catch (jobErr) {
+        const durationMs = Date.now() - jobStart;
+        const errMsg = jobErr instanceof Error ? jobErr.message : "Error desconocido";
+        failedJobs.push({ stageKey: entry.stageKey, error: errMsg });
+        stageResults.push({ stageKey: entry.stageKey, status: "failed", durationMs });
+        console.error(`[process-all] Job ${entry.jobId} (${entry.stageKey}) FAILED after ${Math.round(durationMs / 1000)}s: ${errMsg}`);
+        // Continue processing remaining stages — don't stop the whole pipeline
       }
-    });
 
-    // ── 8. Enqueue and let the queue drain in the background ───────
-    queue.enqueue(entries);
+      // Brief pause between jobs to respect API rate limits (2s instead of 5s for speed)
+      if (entries.indexOf(entry) < entries.length - 1) {
+        await new Promise((resolve) => setTimeout(resolve, 2000));
+      }
+    }
 
-    // Get initial snapshot for the response
-    const queueSnapshot = queue.snapshot();
+    // ── 8. Post-processing (runs BEFORE returning response) ───────
+    console.log(`[process-all] All jobs processed: ${completedCount}/${jobEntries.length} succeeded, ${failedJobs.length} failed`);
+
+    // Post-parallel validation
+    let allValidationsPassed = false;
+    try {
+      const validationResults = await runPostParallelValidation(projectId);
+      allValidationsPassed = validationResults.every((v) => v.passed);
+
+      await logWorkflowEvent({
+        orgId: project.org_id,
+        projectId,
+        stageKey: "export",
+        eventType: "stage_completed",
+        actorId: null,
+        actorRole: "system",
+        payload: {
+          sequentialInline: true,
+          postProcessingValidation: true,
+          validations: validationResults.map((v) => ({
+            checkpoint: v.checkpoint,
+            passed: v.passed,
+          })),
+        },
+      });
+    } catch (valErr) {
+      console.warn("[process-all] Validation error (non-blocking):", (valErr as Error).message);
+    }
+
+    // Sync legacy stages → professional workflow stages (non-blocking)
+    try {
+      const completedLegacyStages = jobEntries
+        .slice(0, completedCount)
+        .map((e) => e.stageKey);
+      await syncWorkflowStages(projectId, completedLegacyStages);
+    } catch (syncErr) {
+      console.warn("[process-all] Workflow sync error (non-blocking):", (syncErr as Error).message);
+    }
+
+    // Update project status based on completion
+    if (completedCount === jobEntries.length) {
+      try {
+        await persistPublishingArtifacts(projectId);
+      } catch (pubErr) {
+        console.warn("[process-all] Publishing artifacts error (non-blocking):", (pubErr as Error).message);
+      }
+
+      await supabase
+        .from("editorial_projects")
+        .update({
+          status: "completed",
+          current_stage: "distribution",
+        })
+        .eq("id", projectId);
+
+      await logWorkflowEvent({
+        orgId: project.org_id,
+        projectId,
+        stageKey: "distribution",
+        eventType: "stage_completed",
+        actorId: null,
+        actorRole: "system",
+        payload: {
+          autoAdvanced: true,
+          pipelineCompleted: true,
+          sequentialInline: true,
+          validationsPassed: allValidationsPassed,
+          totalDurationMs: stageResults.reduce((sum, r) => sum + r.durationMs, 0),
+        },
+      });
+
+      console.log(
+        `[process-all] Pipeline COMPLETED for project ${projectId}: ${completedCount}/${jobEntries.length}, validations=${allValidationsPassed ? "PASS" : "WARN"}`
+      );
+    } else if (completedCount > 0) {
+      const lastCompleted = jobEntries[completedCount - 1]?.stageKey ?? "ingesta";
+      await supabase
+        .from("editorial_projects")
+        .update({ current_stage: lastCompleted })
+        .eq("id", projectId);
+
+      console.log(
+        `[process-all] Pipeline PARTIAL for project ${projectId}: ${completedCount}/${jobEntries.length}`
+      );
+    }
+
+    // ── 9. Return AFTER all processing is complete ────────────────
+    const totalDurationMs = stageResults.reduce((sum, r) => sum + r.durationMs, 0);
 
     return NextResponse.json({
       success: true,
-      message: `Cola optimizada iniciada: ${jobEntries.length} etapas con ~5s entre jobs y modelo rápido para tareas simples.`,
+      message: completedCount === jobEntries.length
+        ? `Pipeline completado: ${completedCount} etapas procesadas en ${Math.round(totalDurationMs / 1000)}s.`
+        : `Pipeline parcial: ${completedCount}/${jobEntries.length} etapas completadas, ${failedJobs.length} fallidas.`,
       totalStages: jobEntries.length,
-      queue: {
-        pending: queueSnapshot.pending,
-        tpmLimit: queueSnapshot.tpmLimit,
-        interJobDelayMs: queueSnapshot.interJobDelayMs,
-      },
+      completedStages: completedCount,
+      failedStages: failedJobs.length,
+      totalDurationSeconds: Math.round(totalDurationMs / 1000),
+      stageResults,
+      failedJobs: failedJobs.length > 0 ? failedJobs : undefined,
       jobIds: jobEntries.map((e) => e.jobId),
     });
   } catch (err) {
