@@ -66,7 +66,9 @@ export async function POST(
     const action = body.action as string;
 
     switch (action) {
-      case "advance": {
+      case "advance": 
+      case "approve": {
+        // Both actions advance to the target phase
         const targetPhase = body.targetPhase as PublishingPhaseKey;
         if (!targetPhase) {
           return NextResponse.json({ error: "targetPhase requerido" }, { status: 400 });

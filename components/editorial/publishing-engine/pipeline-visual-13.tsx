@@ -180,14 +180,21 @@ export function PipelineVisual13({ projectId, onPhaseSelect }: Props) {
   // ── Advance to phase ──
   const handleAdvance = async (targetPhase: string) => {
     try {
-      await fetch(`/api/editorial/projects/${projectId}/publishing-engine`, {
+      const res = await fetch(`/api/editorial/projects/${projectId}/publishing-engine`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "advance", targetPhase }),
+        body: JSON.stringify({ action: "approve", targetPhase }),
       });
+      const json = await res.json();
+      if (!res.ok || !json.success) {
+        console.error("[v0] Error al aprobar fase:", json.error ?? json);
+        setError(json.error ?? "Error al aprobar la fase");
+        return;
+      }
       await fetchData();
-    } catch {
-      // silently handle
+    } catch (err) {
+      console.error("[v0] Error en handleAdvance:", err);
+      setError(err instanceof Error ? err.message : "Error de conexion");
     }
   };
 
@@ -214,6 +221,18 @@ export function PipelineVisual13({ projectId, onPhaseSelect }: Props) {
 
   return (
     <div className="space-y-6">
+      {/* ─── Error Toast ─────────────────────────────────────── */}
+      {error && data && (
+        <div className="flex items-center justify-between rounded-lg border border-red-200 bg-red-50 px-4 py-3">
+          <div className="flex items-center gap-2">
+            <AlertCircle className="h-4 w-4 text-red-500" />
+            <span className="text-sm text-red-700">{error}</span>
+          </div>
+          <button onClick={() => setError(null)} className="text-xs text-red-500 hover:underline">
+            Cerrar
+          </button>
+        </div>
+      )}
       {/* ─── Header with progress ─────────────────────────────── */}
       <div className="flex items-center justify-between">
         <div>
