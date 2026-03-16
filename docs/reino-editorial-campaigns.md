@@ -9,11 +9,11 @@ This document contains the complete campaign infrastructure setup for Reino Edit
 
 | Component | Status | Details |
 |-----------|--------|---------|
-| Google Analytics 4 | Installed | ID: `G-V77XN1L4NM` (already on editorialreino.com) |
-| Google Tag Manager | Not installed | Needs GTM container ID |
-| Meta Pixel | Not installed | Needs Pixel ID |
-| Google Ads Account | Not configured | Needs account creation |
-| Meta Business Manager | Not configured | Needs verification |
+| Google Analytics 4 | Installed | ID: `G-V77XN1L4NM` (exclusive Reino Editorial) |
+| Google Tag Manager | Installed | ID: `GTM-MNTCBQ8Q` (Reino Editorial container) |
+| Meta Pixel | Created | ID: `2009923259732455` (Reino Editorial Pixel) |
+| Google Ads Account | Created | ID: `647-298-0045` (needs payment method) |
+| Meta Business Manager | Configured | Business ID: `916910247586739` (iKingdom account) |
 | Landing Page `/publica-tu-libro` | Created | Optimized for ad campaigns |
 | Lead Capture API | Created | `POST /api/editorial/leads` |
 | Email Automation | Created | Confirmation + Welcome + Manuscript invitation |
@@ -26,14 +26,14 @@ This document contains the complete campaign infrastructure setup for Reino Edit
 Add these to your Vercel project (or `.env.local`):
 
 ```env
-# Google Tag Manager (create container at tagmanager.google.com)
-NEXT_PUBLIC_GTM_ID=GTM-XXXXXXX
+# Google Tag Manager (Reino Editorial container)
+NEXT_PUBLIC_GTM_ID=GTM-MNTCBQ8Q
 
-# Google Analytics 4 (already exists)
+# Google Analytics 4 (Reino Editorial exclusive)
 NEXT_PUBLIC_GA_MEASUREMENT_ID=G-V77XN1L4NM
 
-# Meta Pixel (create at business.facebook.com)
-NEXT_PUBLIC_META_PIXEL_ID=XXXXXXXXXXXXXXXXX
+# Meta Pixel (Reino Editorial Pixel)
+NEXT_PUBLIC_META_PIXEL_ID=2009923259732455
 
 # Email notifications
 EDITORIAL_NOTIFICATION_EMAIL=contacto@editorialreino.com
@@ -164,39 +164,39 @@ POST /api/editorial/leads
 
 ## 8. External Platform Setup Checklist
 
-### Google Ads Account
-- [ ] Create Google Ads account at ads.google.com
-- [ ] Set country: México (or your billing country)
-- [ ] Set currency: MXN or USD
-- [ ] Set timezone
-- [ ] Add payment method
+### Google Ads Account (ID: 647-298-0045)
+- [x] Create Google Ads account at ads.google.com
+- [x] Set country: México
+- [x] Set currency: MXN
+- [x] Set timezone: America/Tijuana
+- [ ] **Add payment method** (credit card required)
 - [ ] Grant admin access to collaborators
-- [ ] Link GA4 property (G-V77XN1L4NM)
+- [x] Link GA4 property (G-V77XN1L4NM)
 
-### Google Tag Manager
-- [ ] Create GTM account at tagmanager.google.com
-- [ ] Create container named "Reino Editorial"
-- [ ] Copy GTM ID (GTM-XXXXXXX)
-- [ ] Add to Vercel env as `NEXT_PUBLIC_GTM_ID`
+### Google Tag Manager (ID: GTM-MNTCBQ8Q)
+- [x] Create GTM account at tagmanager.google.com
+- [x] Create container named "Reino Editorial"
+- [x] GTM ID: `GTM-MNTCBQ8Q`
+- [ ] Add to Vercel env as `NEXT_PUBLIC_GTM_ID=GTM-MNTCBQ8Q`
 - [ ] Inside GTM, create tags for:
   - Google Ads Conversion Tracking
   - GA4 Event tags (form_submit, lead, contact, button_click)
 - [ ] Publish container
 
-### Google Analytics 4
-- [ ] GA4 already installed: G-V77XN1L4NM
+### Google Analytics 4 (ID: G-V77XN1L4NM)
+- [x] GA4 installed: G-V77XN1L4NM (exclusive Reino Editorial)
 - [ ] Verify events are being tracked in GA4 → Events
-- [ ] Create custom conversions for: form_submit, lead, contact
-- [ ] Link to Google Ads account
+- [x] Created key event: `lead`
+- [ ] Create additional custom conversions for: form_submit, contact
+- [x] Linked to Google Ads account (647-298-0045)
 
-### Meta Business Manager
-- [ ] Create or access Business Manager at business.facebook.com
+### Meta Business Manager (Business ID: 916910247586739)
+- [x] Access Business Manager at business.facebook.com
 - [ ] Add Facebook Page: Reino Editorial
 - [ ] Verify domain: editorialreino.com
-- [ ] Create Ad Account
-- [ ] Create Meta Pixel named "Reino Editorial Pixel"
-- [ ] Copy Pixel ID
-- [ ] Add to Vercel env as `NEXT_PUBLIC_META_PIXEL_ID`
+- [x] Ad Account exists (ID: 1274272724591969)
+- [x] Created Meta Pixel: "Reino Editorial Pixel" (ID: `2009923259732455`)
+- [ ] Add to Vercel env as `NEXT_PUBLIC_META_PIXEL_ID=2009923259732455`
 - [ ] Verify pixel fires using Meta Pixel Helper extension
 
 ---
