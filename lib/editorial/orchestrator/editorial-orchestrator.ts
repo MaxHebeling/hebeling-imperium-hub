@@ -77,14 +77,14 @@ export const PROJECT_PHASES: {
   },
   {
     phase: "publishing_preparation",
-    label: "Preparacion para Publicacion",
-    description: "Validacion KDP, metadatos, ISBN, paquete final.",
+    label: "Preparación para Publicación",
+    description: "Validación KDP, metadatos, ISBN, paquete final.",
     stages: ["export"],
   },
   {
     phase: "export_distribution",
-    label: "Exportacion y Distribucion",
-    description: "Generacion de PDF, ebook, paquete de publicacion.",
+    label: "Exportación y Distribución",
+    description: "Generación de PDF, ebook, paquete de publicación.",
     stages: ["export", "distribution"],
   },
 ];
@@ -767,10 +767,10 @@ FASES DEL PROCESO:
 2. Procesamiento → Extraccion de texto, analisis estructural
 3. Correccion Editorial → Ortografia, gramatica, ortotipografia, estilo
 4. Revision Editorial → Revision final del contenido
-5. Diseno Interior → Maquetacion, tipografia, capitulos
-6. Portada → Diseno profesional de portada
-7. Preparacion → Validacion KDP, metadatos
-8. Exportacion → PDF print-ready, ebook, paquete de publicacion
+5. Diseño Interior → Maquetación, tipografía, capítulos
+6. Portada → Diseño profesional de portada
+7. Preparación → Validación KDP, metadatos
+8. Exportación → PDF print-ready, ebook, paquete de publicación
 
 CONTROLES DE CALIDAD:
 - Antes de maquetacion: verificar que TODAS las correcciones estan completas
@@ -858,7 +858,7 @@ export const REGISTERED_MODULES: OrchestratorModule[] = [
   {
     id: "marketing_assets",
     name: "Marketing Assets Generator",
-    description: "Generacion de assets de marketing (social media, ads).",
+    description: "Generación de assets de marketing (social media, ads).",
     phase: "export_distribution",
     isActive: false,
     version: "0.0.0",

@@ -51,7 +51,7 @@ const STAGE_LABELS: Record<string, string> = {
   ortotipografia: "Ortotipograf\u00eda",
   maquetacion: "Maquetaci\u00f3n",
   revision_final: "Revisi\u00f3n Final",
-  export: "Export",
+  export: "Exportación",
   distribution: "Distribuci\u00f3n",
 };
 
