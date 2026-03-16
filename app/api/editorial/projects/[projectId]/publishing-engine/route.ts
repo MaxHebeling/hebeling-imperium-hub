@@ -69,10 +69,13 @@ export async function POST(
       case "advance": 
       case "approve": {
         const targetPhase = body.targetPhase as PublishingPhaseKey;
+        console.log("[v0] API approve/advance - projectId:", projectId, "targetPhase:", targetPhase);
         if (!targetPhase) {
+          console.log("[v0] API ERROR - targetPhase missing");
           return NextResponse.json({ error: "targetPhase requerido" }, { status: 400 });
         }
         const result = await advanceToPhase(projectId, targetPhase);
+        console.log("[v0] API advanceToPhase result:", result);
         return NextResponse.json(result);
       }
 
