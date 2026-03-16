@@ -12,7 +12,6 @@ import {
   Clock,
   AlertCircle,
   XCircle,
-  CircleDot,
   Upload,
   Mail,
   UserPlus,
@@ -28,14 +27,11 @@ import {
   ShieldAlert,
   TrendingUp,
   Eye,
-  Play,
   Sparkles,
 } from "lucide-react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
-import { Separator } from "@/components/ui/separator";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -167,9 +163,7 @@ export default function EditorialProjectDetailPage() {
   const [downloadingReport, setDownloadingReport] = useState(false);
   const [reportError, setReportError] = useState<string | null>(null);
 
-  // Stage control state (staff can move to any stage)
-  const [changingStage, setChangingStage] = useState(false);
-  const [stageChangeError, setStageChangeError] = useState<string | null>(null);
+
 
   // Expanded stage detail state
   const [expandedStages, setExpandedStages] = useState<Set<string>>(new Set());
@@ -180,64 +174,6 @@ export default function EditorialProjectDetailPage() {
       else next.add(key);
       return next;
     });
-  }
-
-  // Prompt editor state
-  const [promptEditorOpen, setPromptEditorOpen] = useState(false);
-  const [promptEditorStage, setPromptEditorStage] = useState<string>("");
-  const [promptEditorTask, setPromptEditorTask] = useState<string>("");
-  const [promptSystem, setPromptSystem] = useState("");
-  const [promptUser, setPromptUser] = useState("");
-  const [promptSaving, setPromptSaving] = useState(false);
-  const [promptSaveResult, setPromptSaveResult] = useState<{ success: boolean; message: string } | null>(null);
-  const [promptLoading, setPromptLoading] = useState(false);
-
-  async function openPromptEditor(stageKey: string) {
-    setPromptEditorStage(stageKey);
-    setPromptEditorTask("");
-    setPromptSystem("");
-    setPromptUser("");
-    setPromptSaveResult(null);
-    setPromptLoading(true);
-    setPromptEditorOpen(true);
-    try {
-      const res = await fetch(`/api/editorial/prompts?stageKey=${stageKey}`);
-      const json = await res.json();
-      if (json.success && json.prompts.length > 0) {
-        const first = json.prompts[0];
-        setPromptEditorTask(first.taskKey);
-        setPromptSystem(first.systemPrompt);
-        setPromptUser(first.userPromptTemplate);
-      }
-    } catch { /* ignore */ }
-    setPromptLoading(false);
-  }
-
-  async function handleSavePrompt() {
-    if (!promptEditorStage || !promptEditorTask) return;
-    setPromptSaving(true);
-    setPromptSaveResult(null);
-    try {
-      const res = await fetch("/api/editorial/prompts", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          stageKey: promptEditorStage,
-          taskKey: promptEditorTask,
-          systemPrompt: promptSystem,
-          userPromptTemplate: promptUser,
-        }),
-      });
-      const json = await res.json();
-      if (json.success) {
-        setPromptSaveResult({ success: true, message: "Prompt guardado correctamente" });
-      } else {
-        setPromptSaveResult({ success: false, message: json.error ?? "Error al guardar" });
-      }
-    } catch {
-      setPromptSaveResult({ success: false, message: "Error de conexión" });
-    }
-    setPromptSaving(false);
   }
 
   // Pipeline run state
@@ -395,29 +331,6 @@ export default function EditorialProjectDetailPage() {
       setPipelineResult({ success: false, message: "Error de conexion al ejecutar el pipeline" });
     } finally {
       setRunningPipeline(false);
-    }
-  }
-
-  async function handleStageChange(targetStage: EditorialStageKey) {
-    if (changingStage) return;
-    setChangingStage(true);
-    setStageChangeError(null);
-    try {
-      const res = await fetch(`/api/editorial/projects/${projectId}/stage`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ stage: targetStage }),
-      });
-      const json = await res.json();
-      if (json.success) {
-        await fetchData();
-      } else {
-        setStageChangeError(json.error ?? "Error al cambiar etapa");
-      }
-    } catch {
-      setStageChangeError("Error de conexión al cambiar etapa");
-    } finally {
-      setChangingStage(false);
     }
   }
 
@@ -649,12 +562,12 @@ export default function EditorialProjectDetailPage() {
       <div className="re-card overflow-hidden">
         <div className="px-6 py-5 flex items-center justify-between" style={{ borderBottom: "1px solid var(--re-border)" }}>
           <div>
-            <h2 className="text-base font-semibold" style={{ color: "var(--re-text)" }}>Pipeline Editorial</h2>
+            <h2 className="text-base font-semibold" style={{ color: "var(--re-text)" }}>Pipeline Editorial - 8 Etapas</h2>
             <p className="text-xs mt-1" style={{ color: "var(--re-text-muted)" }}>
-              Haz clic en una etapa para navegar. Expande con el icono de ojo para ver el analisis IA.
+              Clic en <Eye className="w-3 h-3 inline" /> para ver resultados IA de cada etapa.
             </p>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-3">
             <span 
               className="text-xs font-medium px-3 py-1.5 rounded-full"
               style={{ background: "var(--re-blue-pale)", color: "var(--re-blue)" }}
@@ -663,11 +576,6 @@ export default function EditorialProjectDetailPage() {
             </span>
           </div>
         </div>
-        {stageChangeError && (
-          <div className="px-5 py-2 text-xs" style={{ color: "var(--re-danger, #ef4444)", background: "#ef444410" }}>
-            {stageChangeError}
-          </div>
-        )}
         <div className="divide-y" style={{ borderColor: "var(--re-border)" }}>
           {EDITORIAL_STAGE_KEYS.map((key, index) => {
             const stage = stageMap.get(key);
@@ -675,16 +583,16 @@ export default function EditorialProjectDetailPage() {
             const isCurrentStage = project.current_stage === key;
             const targetProgress = EDITORIAL_STAGE_PROGRESS[key];
             const isCompleted = status === "completed" || status === "approved";
-            const canNavigate = !isCurrentStage && !changingStage;
             const aiResult = stageJobMap.get(key);
             const aiJob = stageJobStatusMap.get(key);
             const isExpanded = expandedStages.has(key);
             const hasAiData = !!aiResult;
+            const isProcessing = status === "processing" || status === "queued";
 
             return (
               <div key={key}>
                 <div
-                  className="flex items-start gap-4 px-5 py-4 transition-colors w-full text-left group"
+                  className="flex items-start gap-4 px-5 py-4 transition-colors w-full text-left"
                   style={{
                     background: isCurrentStage ? "#1B40C010" : "transparent",
                     borderLeft: isCurrentStage ? "3px solid var(--re-blue-light)" : "3px solid transparent",
@@ -692,14 +600,13 @@ export default function EditorialProjectDetailPage() {
                 >
                   {/* Step number */}
                   <div
-                    className="flex items-center justify-center w-7 h-7 rounded-full text-xs font-bold shrink-0 mt-0.5 transition-transform group-hover:scale-110 cursor-pointer"
+                    className="flex items-center justify-center w-7 h-7 rounded-full text-xs font-bold shrink-0 mt-0.5"
                     style={{
-                      background: isCompleted ? "#22d3a020" : isCurrentStage ? "#1B40C030" : "var(--re-surface-3)",
-                      color: isCompleted ? "var(--re-success)" : isCurrentStage ? "var(--re-blue-light)" : "var(--re-text-subtle)",
+                      background: isCompleted ? "#22d3a020" : isProcessing ? "#1B40C030" : "var(--re-surface-3)",
+                      color: isCompleted ? "var(--re-success)" : isProcessing ? "var(--re-blue-light)" : "var(--re-text-subtle)",
                     }}
-                    onClick={() => canNavigate && handleStageChange(key)}
                   >
-                    {changingStage && isCurrentStage ? (
+                    {isProcessing ? (
                       <Loader2 className="w-4 h-4 animate-spin" />
                     ) : isCompleted ? (
                       <CheckCircle2 className="w-4 h-4" />
@@ -712,9 +619,8 @@ export default function EditorialProjectDetailPage() {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
                       <span
-                        className="font-medium text-sm cursor-pointer"
+                        className="font-medium text-sm"
                         style={{ color: "var(--re-text)" }}
-                        onClick={() => canNavigate && handleStageChange(key)}
                       >
                         {EDITORIAL_STAGE_LABELS[key]}
                       </span>
@@ -732,15 +638,6 @@ export default function EditorialProjectDetailPage() {
                           style={{ background: "#F5C84215", color: "var(--re-gold, #F5C842)", border: "1px solid #F5C84230" }}
                         >
                           <Star className="w-3 h-3" /> {aiResult.score}/10
-                        </span>
-                      )}
-                      {canNavigate && (
-                        <span
-                          className="px-1.5 py-0.5 rounded text-xs font-medium opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
-                          style={{ background: "var(--re-surface-3)", color: "var(--re-text-muted)" }}
-                          onClick={() => handleStageChange(key)}
-                        >
-                          {EDITORIAL_STAGE_KEYS.indexOf(key) < EDITORIAL_STAGE_KEYS.indexOf(project.current_stage as EditorialStageKey) ? "Regresar aquí" : "Avanzar aquí"}
                         </span>
                       )}
                     </div>
@@ -773,24 +670,38 @@ export default function EditorialProjectDetailPage() {
                     )}
                   </div>
 
-                  {/* Expand/view button + Progress target */}
+                  {/* View Results Button + Progress */}
                   <div className="flex items-center gap-3 shrink-0">
-                    {(hasAiData || aiJob) && (
+                    {(hasAiData || aiJob) ? (
                       <button
                         type="button"
                         onClick={() => toggleStageExpand(key)}
-                        className="flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-medium transition-all"
+                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all"
                         style={{
-                          background: isExpanded ? "#1B40C020" : "var(--re-surface-3)",
-                          color: isExpanded ? "var(--re-blue-light)" : "var(--re-text-muted)",
-                          border: isExpanded ? "1px solid #1B40C040" : "1px solid transparent",
+                          background: isExpanded ? "var(--re-blue)" : "var(--re-surface-3)",
+                          color: isExpanded ? "#fff" : "var(--re-text-muted)",
+                          border: "1px solid var(--re-border)",
                         }}
                       >
                         <Eye className="w-3.5 h-3.5" />
+                        {isExpanded ? "Ocultar" : "Ver Resultados"}
                         {isExpanded ? <ChevronDown className="w-3 h-3" /> : <ChevronRight className="w-3 h-3" />}
                       </button>
+                    ) : (
+                      <span 
+                        className="text-xs px-3 py-1.5 rounded-lg"
+                        style={{ 
+                          background: "var(--re-surface-3)",
+                          color: "var(--re-text-subtle)" 
+                        }}
+                      >
+                        Sin datos
+                      </span>
                     )}
-                    <span className="text-xs" style={{ color: "var(--re-text-subtle)" }}>
+                    <span 
+                      className="text-xs font-medium tabular-nums"
+                      style={{ color: isCompleted ? "var(--re-success)" : "var(--re-text-subtle)" }}
+                    >
                       {targetProgress}%
                     </span>
                   </div>
@@ -936,23 +847,6 @@ export default function EditorialProjectDetailPage() {
                         )}
                       </div>
                     )}
-
-                    {/* Edit Prompt button - always visible in expanded view */}
-                    <div className="mt-3 flex justify-end">
-                      <button
-                        type="button"
-                        onClick={() => openPromptEditor(key)}
-                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all"
-                        style={{
-                          background: "var(--re-surface-3)",
-                          color: "var(--re-text-muted)",
-                          border: "1px solid var(--re-border)",
-                        }}
-                      >
-                        <FileText className="w-3.5 h-3.5" />
-                        Editar Prompt IA
-                      </button>
-                    </div>
                   </div>
                 )}
               </div>
@@ -1372,95 +1266,6 @@ export default function EditorialProjectDetailPage() {
           </CardContent>
         </Card>
       )}
-
-      {/* Prompt Editor Dialog */}
-      <Dialog open={promptEditorOpen} onOpenChange={setPromptEditorOpen}>
-        <DialogContent className="sm:max-w-[700px] max-h-[80vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <FileText className="w-5 h-5" style={{ color: "var(--re-blue-light)" }} />
-              Editar Prompt IA — {EDITORIAL_STAGE_LABELS[promptEditorStage as EditorialStageKey] ?? promptEditorStage}
-            </DialogTitle>
-            <DialogDescription>
-              Personaliza el prompt que la IA usa para analizar el manuscrito en esta etapa. Usa {"{{content}}"} donde quieras insertar el texto del manuscrito.
-            </DialogDescription>
-          </DialogHeader>
-          {promptLoading ? (
-            <div className="flex items-center justify-center py-8">
-              <Loader2 className="w-5 h-5 animate-spin" style={{ color: "var(--re-blue-light)" }} />
-            </div>
-          ) : (
-            <div className="flex flex-col gap-4 py-2">
-              <div className="flex flex-col gap-1.5">
-                <Label className="text-xs font-semibold" style={{ color: "var(--re-text-muted)" }}>
-                  Prompt de Sistema (instrucciones para la IA)
-                </Label>
-                <textarea
-                  value={promptSystem}
-                  onChange={(e) => setPromptSystem(e.target.value)}
-                  rows={4}
-                  className="w-full px-3 py-2 rounded-lg text-sm font-mono resize-y"
-                  style={{
-                    background: "var(--re-surface-2)",
-                    color: "var(--re-text)",
-                    border: "1px solid var(--re-border)",
-                  }}
-                  placeholder="Eres un editor profesional..."
-                />
-              </div>
-              <div className="flex flex-col gap-1.5">
-                <Label className="text-xs font-semibold" style={{ color: "var(--re-text-muted)" }}>
-                  Prompt de Usuario (instrucciones específicas + {"{{content}}"})
-                </Label>
-                <textarea
-                  value={promptUser}
-                  onChange={(e) => setPromptUser(e.target.value)}
-                  rows={12}
-                  className="w-full px-3 py-2 rounded-lg text-sm font-mono resize-y"
-                  style={{
-                    background: "var(--re-surface-2)",
-                    color: "var(--re-text)",
-                    border: "1px solid var(--re-border)",
-                  }}
-                  placeholder="Analiza el siguiente manuscrito..."
-                />
-              </div>
-              {promptSaveResult && (
-                <div
-                  className="rounded-lg px-3 py-2 text-sm"
-                  style={{
-                    background: promptSaveResult.success ? "#22d3a010" : "#ef444410",
-                    color: promptSaveResult.success ? "var(--re-success, #22d3a0)" : "var(--re-danger, #ef4444)",
-                    border: promptSaveResult.success ? "1px solid #22d3a030" : "1px solid #ef444430",
-                  }}
-                >
-                  {promptSaveResult.message}
-                </div>
-              )}
-            </div>
-          )}
-          <DialogFooter>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => setPromptEditorOpen(false)}
-            >
-              Cancelar
-            </Button>
-            <Button
-              type="button"
-              disabled={promptSaving || promptLoading}
-              onClick={handleSavePrompt}
-            >
-              {promptSaving ? (
-                <><Loader2 className="w-4 h-4 animate-spin mr-2" /> Guardando...</>
-              ) : (
-                <><CheckCheck className="w-4 h-4 mr-2" /> Guardar Prompt</>
-              )}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
 
       {/* Invite Client Dialog */}
       <Dialog open={inviteOpen} onOpenChange={setInviteOpen}>
