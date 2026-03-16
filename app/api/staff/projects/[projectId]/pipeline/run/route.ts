@@ -6,7 +6,6 @@ import { advanceProjectStage, approveStage, updateStageStatus, logEditorialActiv
 import { getNextStage } from "@/lib/editorial/pipeline/stage-utils";
 import { EDITORIAL_STAGE_KEYS } from "@/lib/editorial/pipeline/constants";
 import { initializeNextStage } from "@/lib/editorial/pipeline/stage-transitions";
-import { processManuscriptNow } from "@/lib/editorial/ai/process-manuscript";
 import { processAiJob } from "@/lib/editorial/ai/processor";
 import { requestAiTask } from "@/lib/editorial/ai/jobs";
 import { logWorkflowEvent } from "@/lib/editorial/workflow-events";
@@ -103,20 +102,7 @@ export async function POST(
         // Run AI analysis for this stage
         const primaryTask = STAGE_PRIMARY_AI_TASK[stageKey];
 
-        if (stageKey === "ingesta") {
-          // Ingesta uses OpenAI via processManuscriptNow
-          try {
-            await processManuscriptNow({
-              projectId,
-              orgId: project.org_id,
-              requestedBy: staff.userId,
-            });
-            stageResult.aiAnalysis = true;
-            stageResult.aiTask = "manuscript_analysis (OpenAI)";
-          } catch (aiError) {
-            console.warn(`[pipeline/run] AI analysis failed for ${stageKey}:`, aiError);
-          }
-        } else if (primaryTask && manuscriptFileId) {
+        if (primaryTask && manuscriptFileId) {
           // All other stages use Claude via processAiJob
           try {
             const { jobId } = await requestAiTask({
@@ -144,7 +130,7 @@ export async function POST(
             });
 
             stageResult.aiAnalysis = true;
-            stageResult.aiTask = `${primaryTask} (Claude)`;
+            stageResult.aiTask = primaryTask;
           } catch (aiError) {
             console.warn(`[pipeline/run] AI analysis failed for ${stageKey}/${primaryTask}:`, aiError);
             // Continue pipeline even if AI fails for this stage
