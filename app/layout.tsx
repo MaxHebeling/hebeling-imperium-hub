@@ -2,6 +2,9 @@ import type { Metadata, Viewport } from 'next'
 import { Inter, Playfair_Display } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
 import { Toaster } from '@/components/ui/toaster'
+import { GoogleTagManager, GoogleTagManagerNoScript } from '@/components/tracking/google-tag-manager'
+import { GoogleAnalytics } from '@/components/tracking/google-analytics'
+import { MetaPixel } from '@/components/tracking/meta-pixel'
 import './globals.css'
 
 const inter = Inter({
@@ -32,7 +35,14 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="dark">
+      <head>
+        <meta name="facebook-domain-verification" content="hcz89foxj2tw19osjlonjey79sq7vb" />
+        <GoogleTagManager />
+        <GoogleAnalytics />
+        <MetaPixel />
+      </head>
       <body className={`${inter.variable} ${playfair.variable} font-sans antialiased`}>
+        <GoogleTagManagerNoScript />
         {children}
         <Toaster />
         <Analytics />
