@@ -2,7 +2,6 @@ import { CompanySecondaryNav } from "@/components/company-secondary-nav";
 
 const REINO_NAV_ITEMS = [
   { href: "/app/companies/reino-editorial/overview", label: "Panel" },
-  { href: "/app/companies/reino-editorial/projects", label: "Proyectos" },
   { href: "/app/companies/reino-editorial/authors", label: "Autores" },
   { href: "/app/companies/reino-editorial/staff", label: "Equipo" },
   { href: "/app/companies/reino-editorial/reports", label: "Reportes" },
