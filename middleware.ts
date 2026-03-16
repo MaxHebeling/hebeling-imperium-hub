@@ -46,6 +46,20 @@ export async function middleware(request: NextRequest) {
       if (pathname.startsWith("/apply")) {
         return NextResponse.next();
       }
+    } else if (brandSlug === "editorial-reino") {
+      // Editorial Reino: allow public pages and API routes
+      if (
+        pathname === "/apply" ||
+        pathname.startsWith("/apply") ||
+        pathname === "/publica-tu-libro" ||
+        pathname === "/submit-manuscript" ||
+        pathname.startsWith("/api/editorial/") ||
+        pathname.startsWith("/api/leads")
+      ) {
+        return NextResponse.next();
+      }
+      // All other editorial routes redirect to editorial site
+      return NextResponse.redirect("https://www.editorialreino.com");
     } else {
       // For other brands, allow /apply routes without auth
       if (pathname === "/apply" || pathname.startsWith("/apply")) {
@@ -67,6 +81,12 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next();
   }
   if (pathname === "/api/editorial/submit-manuscript") {
+    return NextResponse.next();
+  }
+  if (pathname.startsWith("/api/editorial/")) {
+    return NextResponse.next();
+  }
+  if (pathname === "/publica-tu-libro") {
     return NextResponse.next();
   }
 
