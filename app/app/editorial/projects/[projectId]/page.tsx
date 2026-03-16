@@ -28,6 +28,8 @@ import {
   ShieldAlert,
   TrendingUp,
   Eye,
+  Play,
+  Sparkles,
 } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -238,6 +240,10 @@ export default function EditorialProjectDetailPage() {
     setPromptSaving(false);
   }
 
+  // Pipeline run state
+  const [runningPipeline, setRunningPipeline] = useState(false);
+  const [pipelineResult, setPipelineResult] = useState<{ success: boolean; message: string; stagesProcessed?: number } | null>(null);
+
   // KDP format configurator state
   const [kdpTrimSizeId, setKdpTrimSizeId] = useState("6x9");
   const [kdpPaperType, setKdpPaperType] = useState<KdpPaperType>("cream");
@@ -355,6 +361,40 @@ export default function EditorialProjectDetailPage() {
     } finally {
       setUploading(false);
       e.target.value = "";
+    }
+  }
+
+  async function handleRunPipeline() {
+    if (runningPipeline) return;
+    
+    // Check if there are files uploaded
+    if (data && data.files.length === 0) {
+      setPipelineResult({ success: false, message: "Primero debes subir un manuscrito antes de ejecutar el pipeline." });
+      return;
+    }
+
+    setRunningPipeline(true);
+    setPipelineResult(null);
+    try {
+      const res = await fetch(`/api/staff/projects/${projectId}/pipeline/run`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+      });
+      const json = await res.json();
+      if (json.success) {
+        setPipelineResult({ 
+          success: true, 
+          message: json.message,
+          stagesProcessed: json.stagesProcessed?.length ?? 0
+        });
+        await fetchData(); // Refresh data to show updated stages
+      } else {
+        setPipelineResult({ success: false, message: json.error ?? "Error al ejecutar el pipeline" });
+      }
+    } catch {
+      setPipelineResult({ success: false, message: "Error de conexion al ejecutar el pipeline" });
+    } finally {
+      setRunningPipeline(false);
     }
   }
 
@@ -536,15 +576,54 @@ export default function EditorialProjectDetailPage() {
             </div>
           </div>
           <div className="flex items-center gap-3">
+            {/* Run Pipeline Button - Primary Action */}
+            {project.status !== "completed" && (
+              <button
+                onClick={handleRunPipeline}
+                disabled={runningPipeline || files.length === 0}
+                className="re-btn-primary flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                style={{
+                  background: runningPipeline ? "var(--re-blue-deep)" : "linear-gradient(135deg, var(--re-blue) 0%, var(--re-cyan) 100%)",
+                  boxShadow: "0 4px 14px rgba(27, 64, 192, 0.3)",
+                }}
+              >
+                {runningPipeline ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    Procesando IA...
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="w-4 h-4" />
+                    Ejecutar Pipeline IA
+                  </>
+                )}
+              </button>
+            )}
             <button
               onClick={() => { setInviteOpen(true); setInviteResult(null); }}
-              className={project.client_id ? "re-btn-secondary flex items-center gap-2" : "re-btn-primary flex items-center gap-2"}
+              className="re-btn-secondary flex items-center gap-2"
             >
               {project.client_id ? <Mail className="w-4 h-4" /> : <UserPlus className="w-4 h-4" />}
               {project.client_id ? "Reenviar Invitacion" : "Invitar Cliente"}
             </button>
           </div>
         </div>
+
+        {/* Pipeline Result Message */}
+        {pipelineResult && (
+          <div 
+            className="mt-4 px-4 py-3 rounded-xl text-sm flex items-center gap-2"
+            style={{
+              background: pipelineResult.success ? "var(--re-success-pale)" : "var(--re-danger-pale)",
+              color: pipelineResult.success ? "var(--re-success)" : "var(--re-danger)",
+              border: `1px solid ${pipelineResult.success ? "rgba(13, 122, 95, 0.2)" : "rgba(192, 49, 43, 0.2)"}`
+            }}
+          >
+            {pipelineResult.success ? <CheckCircle2 className="w-4 h-4" /> : <AlertCircle className="w-4 h-4" />}
+            {pipelineResult.message}
+          </div>
+        )}
       </div>
 
       {/* Progress Card */}

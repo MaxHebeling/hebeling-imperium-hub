@@ -19,7 +19,6 @@ import {
   FileSearch,
   Clock,
   TrendingUp,
-  FolderOpen,
 } from "lucide-react";
 
 export default function EditorialPage() {
@@ -231,7 +230,7 @@ export default function EditorialPage() {
               <ArrowRight className="w-4 h-4" />
             </Link>
             <Link
-              href="/submit-manuscript"
+              href="/publica-tu-libro"
               className="re-btn-secondary inline-flex items-center gap-2"
             >
               <BookOpen className="w-4 h-4" />
@@ -287,9 +286,9 @@ export default function EditorialPage() {
 
 const QUICK_STATS = [
   { label: "Etapas", value: "8", icon: Layers, color: "var(--re-blue)" },
-  { label: "Proyectos", value: "12", icon: FolderOpen, color: "var(--re-cyan)" },
-  { label: "En proceso", value: "3", icon: Clock, color: "var(--re-gold)" },
-  { label: "Completados", value: "9", icon: TrendingUp, color: "var(--re-success)" },
+  { label: "IA Activa", value: "24/7", icon: Sparkles, color: "var(--re-cyan)" },
+  { label: "Procesos", value: "Auto", icon: Clock, color: "var(--re-gold)" },
+  { label: "Fiabilidad", value: "99%", icon: TrendingUp, color: "var(--re-success)" },
 ];
 
 const PIPELINE_STAGES = [
