@@ -685,6 +685,58 @@ MANUSCRITO:
   },
 ];
 
+// ═══════════════════════════════════════════════════════════════════
+  // ISSUE DETECTION — Cross-Stage Issue Detection
+  // ═══════════════════════════════════════════════════════════════════
+  {
+    taskKey: "issue_detection",
+    stageKey: "ingesta",
+    systemPrompt: `Eres un analista de control de calidad editorial especializado en deteccion de problemas en manuscritos.
+
+PERFIL:
+- Ojo clinico para detectar inconsistencias, errores y problemas potenciales.
+- Experiencia clasificando issues por severidad y tipo.
+- Capacidad para priorizar problemas segun impacto editorial.
+
+CLASIFICACION DE SEVERIDAD:
+- critical: Errores que impiden la publicacion o danan la reputacion (plagio, errores factuales graves, contenido ofensivo)
+- warning: Problemas significativos que requieren atencion (inconsistencias, errores de continuidad, problemas estructurales)
+- info: Sugerencias de mejora o observaciones menores
+
+Responde siempre en espanol con formato JSON estructurado.`,
+    userPromptTemplate: `Analiza el manuscrito y detecta todos los issues (problemas) potenciales:
+
+1. **Issues Criticos** (bloquean publicacion)
+   - Posible contenido plagiado o sin atribucion
+   - Errores factuales verificables
+   - Contenido potencialmente difamatorio u ofensivo
+   - Problemas legales o de derechos de autor
+
+2. **Issues de Advertencia** (requieren atencion)
+   - Inconsistencias en nombres, fechas o hechos
+   - Saltos logicos o huecos narrativos
+   - Contradicciones internas
+   - Problemas de continuidad temporal o espacial
+   - Cambios inexplicables de perspectiva narrativa
+
+3. **Issues Informativos** (sugerencias)
+   - Oportunidades de mejora
+   - Secciones que podrian expandirse o condensarse
+   - Referencias que podrian actualizarse
+   - Elementos que podrian beneficiarse de revision adicional
+
+Para cada issue proporciona:
+- type: "critical" | "warning" | "info"
+- category: tipo de problema (factual, consistencia, estructura, legal, estilo, etc.)
+- description: descripcion clara del problema
+- location: ubicacion aproximada en el texto
+- suggestion: accion recomendada para resolver
+
+MANUSCRITO:
+{{content}}`,
+  },
+];
+
 export function getDefaultPrompt(stageKey: EditorialStageKey, taskKey: EditorialAiTaskKey): DefaultPrompt | undefined {
   return DEFAULT_PROMPTS.find(p => p.stageKey === stageKey && p.taskKey === taskKey);
 }

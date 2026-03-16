@@ -92,6 +92,7 @@ export function AiStageAssistPanel({
   const runTask = (taskKey: EditorialAiTaskKey) => {
     startTransition(async () => {
       try {
+        // 1. Crear el job
         const res = await fetch(`/api/staff/projects/${projectId}/stages/${stageKey}/ai/run`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -101,10 +102,24 @@ export function AiStageAssistPanel({
         if (!res.ok || !json?.success) {
           throw new Error(json?.error ?? "No se pudo crear el job AI");
         }
+        
         toast({
           title: "Job AI solicitado",
-          description: `Job: ${json.jobId}`,
+          description: `Job: ${json.jobId} - Procesando...`,
         });
+
+        // 2. Disparar procesamiento de jobs pendientes
+        const processRes = await fetch("/api/editorial/ai/process", { method: "POST" });
+        const processJson = await processRes.json();
+        
+        if (processRes.ok && processJson?.success) {
+          toast({
+            title: "Procesamiento completado",
+            description: `Procesados: ${processJson.processed}, Fallidos: ${processJson.failed}`,
+          });
+          // Refrescar findings despues del procesamiento
+          refreshFindings();
+        }
       } catch (e) {
         toast({
           title: "Error",

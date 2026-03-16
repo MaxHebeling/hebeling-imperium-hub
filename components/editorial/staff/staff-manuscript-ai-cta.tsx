@@ -10,6 +10,10 @@ interface StaffManuscriptAiCtaProps {
   hasLatestManuscript: boolean;
 }
 
+/**
+ * CTA unificado que usa el sistema de jobs por etapa.
+ * Crea un job de manuscript_analysis en la etapa ingesta y luego dispara el procesamiento.
+ */
 export function StaffManuscriptAiCta({
   projectId,
   hasLatestManuscript,
@@ -20,23 +24,40 @@ export function StaffManuscriptAiCta({
   const router = useRouter();
 
   async function handleClick() {
-    console.info("[editorial-ai][cta] Run AI Editorial Analysis clicked", {
-      projectId,
-    });
     setIsProcessing(true);
     setResult("idle");
     setErrorMsg(null);
+    
     try {
-      const res = await fetch(
-        `/api/staff/projects/${encodeURIComponent(projectId)}/ai/process-manuscript`,
-        { method: "POST" }
+      // 1. Crear job usando el sistema unificado de stage-assist
+      const createRes = await fetch(
+        `/api/staff/projects/${encodeURIComponent(projectId)}/stages/ingesta/ai/run`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ taskKey: "manuscript_analysis" }),
+        }
       );
-      const json = await res.json();
-      if (!res.ok || !json?.success) {
+      const createJson = await createRes.json();
+      
+      if (!createRes.ok || !createJson?.success) {
         setResult("error");
-        setErrorMsg(json?.error ?? `Error HTTP ${res.status}`);
+        setErrorMsg(createJson?.error ?? `Error al crear job: HTTP ${createRes.status}`);
         return;
       }
+
+      // 2. Disparar procesamiento de jobs pendientes
+      const processRes = await fetch("/api/editorial/ai/process", { method: "POST" });
+      const processJson = await processRes.json();
+      
+      if (!processRes.ok || !processJson?.success) {
+        // Job creado pero no procesado - aun asi es un estado valido
+        setResult("success");
+        setErrorMsg("Job creado. Se procesara en segundo plano.");
+        router.refresh();
+        return;
+      }
+
       setResult("success");
       router.refresh();
     } catch (e) {
@@ -53,17 +74,17 @@ export function StaffManuscriptAiCta({
     <div className="flex flex-col gap-1 text-xs text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
       <div className="space-y-0.5">
         <p className="font-medium text-foreground text-xs flex items-center gap-1.5">
-          <Zap className="h-3 w-3 text-purple-500" />
-          Análisis Editorial IA
+          <Zap className="h-3 w-3 text-amber-500" />
+          Analisis Editorial IA
         </p>
         <p className="text-[11px] text-muted-foreground">
           {hasLatestManuscript
-            ? "Manuscrito listo para análisis editorial con AI."
-            : "No hay manuscrito aún. Sube uno para habilitar el análisis editorial."}
+            ? "Manuscrito listo para analisis editorial con AI."
+            : "No hay manuscrito aun. Sube uno para habilitar el analisis editorial."}
         </p>
         {result === "success" && (
           <p className="text-[11px] text-emerald-600 flex items-center gap-1">
-            <CheckCircle2 className="h-3 w-3" /> Análisis completado. Revisa los resultados en AI Review.
+            <CheckCircle2 className="h-3 w-3" /> Job enviado. Revisa los resultados en AI Review.
           </p>
         )}
         {result === "error" && errorMsg && (
@@ -80,7 +101,7 @@ export function StaffManuscriptAiCta({
         onClick={handleClick}
       >
         {isProcessing && <Loader2 className="h-3 w-3 animate-spin" />}
-        Ejecutar Análisis Editorial IA
+        Solicitar Analisis IA
       </Button>
     </div>
   );
