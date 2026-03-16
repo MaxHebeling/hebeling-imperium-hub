@@ -270,13 +270,15 @@ export default async function ReinoEditorialOverviewPage() {
               <CardTitle className="text-base" style={{ color: "var(--re-text)" }}>
                 Project Pipeline View
               </CardTitle>
-              <Link
-                href="/app/companies/reino-editorial/projects"
+              <a
+                href="https://maxhebeling.app.n8n.cloud"
+                target="_blank"
+                rel="noopener noreferrer"
                 className="text-xs font-medium flex items-center gap-1 hover:underline"
                 style={{ color: "var(--re-blue)" }}
               >
-                Ver todos <ArrowRight className="h-3 w-3" />
-              </Link>
+                Ver en n8n <ArrowRight className="h-3 w-3" />
+              </a>
             </div>
           </CardHeader>
           <CardContent>
@@ -302,13 +304,9 @@ export default async function ReinoEditorialOverviewPage() {
                           <p className="text-sm" style={{ color: "var(--re-text-muted)" }}>
                             No hay proyectos en el pipeline editorial.
                           </p>
-                          <Link
-                            href="/app/companies/reino-editorial/projects"
-                            className="text-xs font-medium hover:underline"
-                            style={{ color: "var(--re-blue)" }}
-                          >
-                            Crear primer proyecto
-                          </Link>
+                          <p className="text-xs" style={{ color: "var(--re-text-subtle)" }}>
+                            Los proyectos editoriales se gestionan desde n8n Cloud.
+                          </p>
                         </div>
                       </TableCell>
                     </TableRow>
@@ -513,41 +511,61 @@ export default async function ReinoEditorialOverviewPage() {
         </h2>
         <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
           <ModuleCard
-            href="/app/companies/reino-editorial/projects"
-            title="Project Workspace"
-            description="Vista detallada por libro — metadata, etapas, archivos y actividad"
-            icon={BookOpen}
-          />
-          <ModuleCard
-            href="/app/companies/reino-editorial/pipeline"
-            title="Editorial Pipeline"
-            description="Vista etapa por etapa del pipeline de 8 fases con controles de avance"
-            icon={ArrowRight}
-          />
-          <ModuleCard
-            href="/app/companies/reino-editorial/ai"
-            title="AI Review Dashboard"
-            description="Jobs AI, findings, backlog y métricas de procesamiento"
-            icon={Cpu}
-          />
-          <ModuleCard
-            href="/app/companies/reino-editorial/distribution"
-            title="Distribución & KDP"
-            description="Validación Amazon KDP, paquete de publicación y envío a cliente"
-            icon={Rocket}
-          />
-          <ModuleCard
-            href="/app/companies/reino-editorial/operations"
-            title="Operaciones"
-            description="Contratos, ISBN, metadata legal y página de derechos"
+            href="/app/editorial/oficina"
+            title="Oficina"
+            description="Contratos, facturas, recibos y documentos legales"
             icon={FileText}
+          />
+          <ModuleCard
+            href="/app/companies/reino-editorial/authors"
+            title="Autores"
+            description="Gestión de autores y clientes de la editorial"
+            icon={Users}
+          />
+          <ModuleCard
+            href="/app/companies/reino-editorial/staff"
+            title="Equipo"
+            description="Asignaciones de personal y roles editoriales"
+            icon={BookOpen}
           />
           <ModuleCard
             href="/app/companies/reino-editorial/reports"
             title="Reportes"
-            description="Reportes de corrección, comparación de manuscritos y métricas"
+            description="Reportes de corrección, métricas y análisis editorial"
             icon={BarChart3}
           />
+          <a
+            href="https://maxhebeling.app.n8n.cloud"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="block"
+          >
+            <div
+              className="rounded-xl p-4 flex items-start gap-3 transition-all duration-200 hover:shadow-md hover:-translate-y-0.5 h-full"
+              style={{
+                backgroundColor: "var(--re-surface)",
+                border: "1px solid var(--re-border)",
+                boxShadow: "var(--re-shadow-sm, 0 1px 3px rgba(0,0,0,0.06))",
+              }}
+            >
+              <div
+                className="flex items-center justify-center w-9 h-9 rounded-lg shrink-0 mt-0.5"
+                style={{
+                  background: "linear-gradient(135deg, var(--re-blue) 0%, var(--re-cyan) 100%)",
+                }}
+              >
+                <Zap className="h-4 w-4 text-white" />
+              </div>
+              <div>
+                <p className="text-sm font-semibold" style={{ color: "var(--re-text)" }}>
+                  Pipeline n8n
+                </p>
+                <p className="text-xs mt-0.5" style={{ color: "var(--re-text-muted)" }}>
+                  Pipeline editorial automatizado con IA en n8n Cloud
+                </p>
+              </div>
+            </div>
+          </a>
         </div>
       </section>
     </div>
