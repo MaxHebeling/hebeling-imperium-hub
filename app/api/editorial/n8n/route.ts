@@ -3,7 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 
 const N8N_WEBHOOK_URL =
   process.env.N8N_WEBHOOK_URL ||
-  "https://maxhebeling.app.n8n.cloud/webhook/manuscript-intake";
+  "https://maxhebeling.app.n8n.cloud/webhook/editorial-ai-process";
 
 export async function POST(req: NextRequest) {
   try {
@@ -50,6 +50,48 @@ export async function POST(req: NextRequest) {
       .limit(1)
       .single();
 
+    // Extract manuscript text from storage
+    let manuscriptText = "";
+    if (manuscriptFile?.file_path) {
+      try {
+        const { data: fileData } = await supabase.storage
+          .from("editorial-manuscripts")
+          .download(manuscriptFile.file_path);
+        if (fileData) {
+          const ext = manuscriptFile.file_name?.split(".").pop()?.toLowerCase();
+          if (ext === "txt") {
+            manuscriptText = await fileData.text();
+          } else if (ext === "docx" || ext === "doc") {
+            // For DOCX, send as base64 and let n8n handle extraction
+            const buffer = Buffer.from(await fileData.arrayBuffer());
+            try {
+              const mammoth = await import("mammoth");
+              const result = await mammoth.extractRawText({ buffer });
+              manuscriptText = result.value;
+            } catch {
+              manuscriptText = buffer.toString("utf-8").substring(0, 50000);
+            }
+          } else if (ext === "pdf") {
+            try {
+              const pdfParse = (await import("pdf-parse")).default;
+              const buffer = Buffer.from(await fileData.arrayBuffer());
+              const pdfData = await pdfParse(buffer);
+              manuscriptText = pdfData.text;
+            } catch {
+              manuscriptText = "[Contenido PDF - requiere extracción manual]";
+            }
+          }
+          // Truncate to avoid exceeding API limits
+          if (manuscriptText.length > 50000) {
+            manuscriptText = manuscriptText.substring(0, 50000) + "\n\n[Texto truncado a 50,000 caracteres]";
+          }
+        }
+      } catch (e) {
+        console.error("[n8n-trigger] Error extracting manuscript text:", e);
+        manuscriptText = "[Error al extraer texto del manuscrito]";
+      }
+    }
+
     // Build the payload for n8n webhook
     const webhookPayload = {
       action: action || "run_pipeline",
@@ -59,6 +101,7 @@ export async function POST(req: NextRequest) {
       language: project.language || "es",
       genre: project.genre,
       current_stage: project.current_stage,
+      manuscript_text: manuscriptText,
       manuscript_file: manuscriptFile
         ? {
             id: manuscriptFile.id,
@@ -72,6 +115,8 @@ export async function POST(req: NextRequest) {
       triggered_by: user.id,
       triggered_at: new Date().toISOString(),
       supabase_url: process.env.NEXT_PUBLIC_SUPABASE_URL,
+      supabase_anon_key: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+      supabase_service_key: process.env.SUPABASE_SERVICE_ROLE_KEY,
     };
 
     // Call n8n webhook
