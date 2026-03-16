@@ -488,107 +488,101 @@ export default function EditorialProjectDetailPage() {
   }
 
   return (
-    <div className="flex flex-col gap-6 p-6 max-w-5xl mx-auto">
+    <div className="flex flex-col gap-8 p-8 max-w-6xl mx-auto">
       {/* Back nav */}
       <Link
         href="/app/editorial/projects"
-        className="inline-flex items-center gap-2 text-sm w-fit transition-colors"
+        className="inline-flex items-center gap-2 text-sm w-fit transition-all hover:gap-3 group"
         style={{ color: "var(--re-text-muted)" }}
       >
-        <ArrowLeft className="w-4 h-4" />
+        <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-1" />
         Volver a proyectos
       </Link>
 
       {/* Project Header */}
-      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
-        <div className="flex items-center gap-3">
-          <div
-            className="flex items-center justify-center w-10 h-10 rounded-xl"
-            style={{ background: "linear-gradient(135deg, #1B40C0 0%, #2DD4D4 100%)" }}
-          >
-            <BookOpen className="w-5 h-5 text-white" />
+      <div className="re-card p-6">
+        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-5">
+          <div className="flex items-start gap-4">
+            <div
+              className="flex items-center justify-center w-14 h-14 rounded-2xl shadow-lg shrink-0"
+              style={{ background: "linear-gradient(135deg, var(--re-blue) 0%, var(--re-cyan) 100%)" }}
+            >
+              <BookOpen className="w-7 h-7 text-white" />
+            </div>
+            <div>
+              <h1 className="text-2xl font-bold tracking-tight" style={{ color: "var(--re-text)" }}>
+                {project.title}
+              </h1>
+              {project.author_name && (
+                <p className="text-sm mt-0.5" style={{ color: "var(--re-text-muted)" }}>
+                  por {project.author_name}
+                </p>
+              )}
+              <div className="flex items-center gap-2 mt-3">
+                <span
+                  className="re-badge"
+                  style={{ 
+                    background: project.status === "completed" ? "var(--re-success-pale)" : "var(--re-gold-pale)",
+                    color: project.status === "completed" ? "var(--re-success)" : "var(--re-gold)",
+                    border: `1px solid ${project.status === "completed" ? "rgba(13, 122, 95, 0.2)" : "rgba(196, 139, 10, 0.2)"}`
+                  }}
+                >
+                  {project.status}
+                </span>
+                <span className="re-badge re-badge-blue">
+                  {EDITORIAL_STAGE_LABELS[project.current_stage as EditorialStageKey] ?? project.current_stage}
+                </span>
+              </div>
+            </div>
           </div>
-          <div>
-            <h1 className="text-2xl font-bold tracking-tight" style={{ color: "var(--re-text)" }}>
-              {project.title}
-            </h1>
-            {project.author_name && (
-              <p className="text-sm" style={{ color: "var(--re-text-muted)" }}>
-                por {project.author_name}
-              </p>
-            )}
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => { setInviteOpen(true); setInviteResult(null); }}
+              className={project.client_id ? "re-btn-secondary flex items-center gap-2" : "re-btn-primary flex items-center gap-2"}
+            >
+              {project.client_id ? <Mail className="w-4 h-4" /> : <UserPlus className="w-4 h-4" />}
+              {project.client_id ? "Reenviar Invitacion" : "Invitar Cliente"}
+            </button>
           </div>
-        </div>
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => { setInviteOpen(true); setInviteResult(null); }}
-            className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all"
-            style={{
-              background: project.client_id ? "var(--re-surface-2)" : "var(--re-blue)",
-              color: project.client_id ? "var(--re-text)" : "#ffffff",
-              border: project.client_id ? "1px solid var(--re-border)" : "none",
-              boxShadow: project.client_id ? "none" : "0 0 16px #1B40C040",
-            }}
-          >
-            {project.client_id ? <Mail className="w-4 h-4" /> : <UserPlus className="w-4 h-4" />}
-            {project.client_id ? "Reenviar Invitación" : "Invitar Cliente"}
-          </button>
         </div>
       </div>
 
-      {/* Summary Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div
-          className="rounded-xl p-4"
-          style={{ background: "var(--re-surface-2)", border: "1px solid var(--re-border)" }}
-        >
-          <p className="text-xs mb-2" style={{ color: "var(--re-text-muted)" }}>Estado</p>
-          <span
-            className="px-2.5 py-1 rounded-full text-xs font-semibold"
-            style={{ background: "#F5C84215", color: "var(--re-gold)", border: "1px solid #F5C84230" }}
+      {/* Progress Card */}
+      <div className="re-card p-5">
+        <div className="flex items-center justify-between mb-4">
+          <p className="text-sm font-medium" style={{ color: "var(--re-text)" }}>Progreso General</p>
+          <span 
+            className="text-2xl font-bold"
+            style={{ color: "var(--re-blue)" }}
           >
-            {project.status}
+            {project.progress_percent}%
           </span>
         </div>
-        <div
-          className="rounded-xl p-4"
-          style={{ background: "var(--re-surface-2)", border: "1px solid var(--re-border)" }}
-        >
-          <p className="text-xs mb-2" style={{ color: "var(--re-text-muted)" }}>Etapa actual</p>
-          <span
-            className="px-2.5 py-1 rounded-full text-xs font-semibold"
-            style={{ background: "#2DD4D415", color: "var(--re-cyan)", border: "1px solid #2DD4D430" }}
-          >
-            {EDITORIAL_STAGE_LABELS[project.current_stage as EditorialStageKey] ?? project.current_stage}
-          </span>
-        </div>
-        <div
-          className="rounded-xl p-4"
-          style={{ background: "var(--re-surface-2)", border: "1px solid var(--re-border)" }}
-        >
-          <p className="text-xs mb-2" style={{ color: "var(--re-text-muted)" }}>Progreso general</p>
-          <div className="flex items-center gap-2">
-            <div className="flex-1 h-2 rounded-full overflow-hidden" style={{ background: "var(--re-surface-3)" }}>
-              <div
-                className="h-full rounded-full"
-                style={{ width: `${project.progress_percent}%`, background: "var(--re-blue-light)" }}
-              />
-            </div>
-            <span className="text-sm font-bold" style={{ color: "var(--re-text)" }}>
-              {project.progress_percent}%
-            </span>
-          </div>
+        <div className="re-progress h-2">
+          <div 
+            className="re-progress-bar" 
+            style={{ width: `${project.progress_percent}%` }}
+          />
         </div>
       </div>
 
       {/* Pipeline stages */}
-      <div
-        className="rounded-2xl overflow-hidden"
-        style={{ background: "var(--re-surface)", border: "1px solid var(--re-border)" }}
-      >
-        <div className="px-5 py-4" style={{ borderBottom: "1px solid var(--re-border)" }}>
-          <h2 className="text-sm font-semibold" style={{ color: "var(--re-text)" }}>Pipeline Editorial</h2>
-          <p className="text-xs mt-0.5" style={{ color: "var(--re-text-muted)" }}>Haz clic en el ojo para ver el análisis IA de cada etapa. Haz clic en la etapa para mover el proyecto.</p>
+      <div className="re-card overflow-hidden">
+        <div className="px-6 py-5 flex items-center justify-between" style={{ borderBottom: "1px solid var(--re-border)" }}>
+          <div>
+            <h2 className="text-base font-semibold" style={{ color: "var(--re-text)" }}>Pipeline Editorial</h2>
+            <p className="text-xs mt-1" style={{ color: "var(--re-text-muted)" }}>
+              Haz clic en una etapa para navegar. Expande con el icono de ojo para ver el analisis IA.
+            </p>
+          </div>
+          <div className="flex items-center gap-2">
+            <span 
+              className="text-xs font-medium px-3 py-1.5 rounded-full"
+              style={{ background: "var(--re-blue-pale)", color: "var(--re-blue)" }}
+            >
+              {stages.filter(s => s.status === "completed" || s.status === "approved").length} / {EDITORIAL_STAGE_KEYS.length} completadas
+            </span>
+          </div>
         </div>
         {stageChangeError && (
           <div className="px-5 py-2 text-xs" style={{ color: "var(--re-danger, #ef4444)", background: "#ef444410" }}>
@@ -889,10 +883,7 @@ export default function EditorialProjectDetailPage() {
       </div>
 
       {/* Files + Upload */}
-      <div
-        className="rounded-2xl overflow-hidden"
-        style={{ background: "var(--re-surface)", border: "1px solid var(--re-border)" }}
-      >
+      <div className="re-card overflow-hidden">
         <div className="px-5 py-4 flex items-center justify-between" style={{ borderBottom: "1px solid var(--re-border)" }}>
           <div className="flex items-center gap-2">
             <FileText className="w-4 h-4" style={{ color: "var(--re-text-muted)" }} />
@@ -979,10 +970,7 @@ export default function EditorialProjectDetailPage() {
       </div>
 
       {/* Correction Report Download */}
-      <div
-        className="rounded-2xl overflow-hidden"
-        style={{ background: "var(--re-surface)", border: "1px solid var(--re-border)" }}
-      >
+      <div className="re-card overflow-hidden">
         <div className="px-5 py-4" style={{ borderBottom: "1px solid var(--re-border)" }}>
           <h2 className="text-sm font-semibold" style={{ color: "var(--re-text)" }}>Reporte de Correcciones</h2>
           <p className="text-xs mt-0.5" style={{ color: "var(--re-text-muted)" }}>
@@ -1019,10 +1007,7 @@ export default function EditorialProjectDetailPage() {
       </div>
 
       {/* KDP Format Configurator */}
-      <div
-        className="rounded-2xl overflow-hidden"
-        style={{ background: "var(--re-surface)", border: "1px solid var(--re-border)" }}
-      >
+      <div className="re-card overflow-hidden">
         <div className="px-5 py-4 flex items-center gap-2" style={{ borderBottom: "1px solid var(--re-border)" }}>
           <BookCopy className="w-4 h-4" style={{ color: "var(--re-gold, #F5C842)" }} />
           <div>

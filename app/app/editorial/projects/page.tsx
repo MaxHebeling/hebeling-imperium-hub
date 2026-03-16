@@ -11,6 +11,12 @@ import {
   BarChart2,
   Trash2,
   MoreHorizontal,
+  FolderOpen,
+  Clock,
+  CheckCircle2,
+  TrendingUp,
+  Search,
+  Filter,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -18,9 +24,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import {
   Dialog,
   DialogContent,
@@ -31,34 +35,8 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { Progress } from "@/components/ui/progress";
 import type { EditorialProject } from "@/lib/editorial/types/editorial";
 import { EDITORIAL_STAGE_LABELS } from "@/lib/editorial/pipeline/constants";
-
-const STAGE_BADGE_VARIANTS: Record<string, string> = {
-  ingesta: "secondary",
-  estructura: "secondary",
-  estilo: "secondary",
-  ortotipografia: "secondary",
-  maquetacion: "secondary",
-  revision_final: "default",
-};
-
-const STATUS_BADGE_VARIANTS: Record<string, string> = {
-  created: "secondary",
-  in_progress: "default",
-  review: "outline",
-  completed: "default",
-  archived: "outline",
-};
 
 function formatDate(dateStr: string) {
   return new Date(dateStr).toLocaleDateString("es-ES", {
@@ -72,9 +50,9 @@ type ServiceType = "full_pipeline" | "reedicion" | "rediseno_portada" | "reedici
 
 const SERVICE_TYPES: { value: ServiceType; label: string; desc: string; icon: typeof BookOpen }[] = [
   { value: "full_pipeline", label: "Pipeline Completo", desc: "Nuevo libro: 8 etapas completas", icon: BookOpen },
-  { value: "reedicion", label: "Re-edici\u00f3n", desc: "Correcci\u00f3n y mejora de libro existente", icon: BookOpen },
-  { value: "rediseno_portada", label: "Re-dise\u00f1o de Portada", desc: "Nueva portada para libro existente", icon: Eye },
-  { value: "reedicion_y_portada", label: "Re-edici\u00f3n + Portada", desc: "Edici\u00f3n completa + nueva portada", icon: BookOpen },
+  { value: "reedicion", label: "Re-edicion", desc: "Correccion y mejora de libro existente", icon: BookOpen },
+  { value: "rediseno_portada", label: "Re-diseno de Portada", desc: "Nueva portada para libro existente", icon: Eye },
+  { value: "reedicion_y_portada", label: "Re-edicion + Portada", desc: "Edicion completa + nueva portada", icon: BookOpen },
 ];
 
 interface CreateProjectForm {
@@ -103,6 +81,7 @@ export default function EditorialProjectsPage() {
   const [form, setForm] = useState<CreateProjectForm>(INITIAL_FORM);
   const [creating, setCreating] = useState(false);
   const [createError, setCreateError] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
 
   const fetchProjects = useCallback(async () => {
     setLoading(true);
@@ -129,7 +108,7 @@ export default function EditorialProjectsPage() {
   async function handleCreate(e: React.FormEvent) {
     e.preventDefault();
     if (!form.title.trim()) {
-      setCreateError("El título es obligatorio");
+      setCreateError("El titulo es obligatorio");
       return;
     }
     setCreating(true);
@@ -148,7 +127,6 @@ export default function EditorialProjectsPage() {
         }),
       });
       const json = await res.json();
-      // Authenticated endpoint returns { projectId } on success (HTTP 201)
       if (res.ok && json.projectId) {
         setDialogOpen(false);
         setForm(INITIAL_FORM);
@@ -167,230 +145,166 @@ export default function EditorialProjectsPage() {
     setForm((prev) => ({ ...prev, [field]: value }));
   }
 
+  const filteredProjects = projects.filter(
+    (p) =>
+      p.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (p.author_name && p.author_name.toLowerCase().includes(searchQuery.toLowerCase()))
+  );
+
+  const stats = {
+    total: projects.length,
+    inProgress: projects.filter((p) => p.status === "in_progress").length,
+    completed: projects.filter((p) => p.status === "completed").length,
+    avgProgress: projects.length > 0 
+      ? Math.round(projects.reduce((acc, p) => acc + p.progress_percent, 0) / projects.length)
+      : 0,
+  };
+
   return (
-    <div className="flex flex-col gap-6 p-6 max-w-6xl mx-auto">
+    <div className="flex flex-col gap-8 p-8 max-w-6xl mx-auto">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <Link
-            href="/app/editorial"
-            className="flex items-center justify-center w-8 h-8 rounded-lg transition-colors"
-            style={{ color: "var(--re-text-muted)" }}
-          >
-            <ArrowLeft className="w-4 h-4" />
-          </Link>
-          <div className="flex items-center gap-2">
-            <div
-              className="flex items-center justify-center w-8 h-8 rounded-lg"
-              style={{ background: "#1B40C020" }}
+      <div className="flex flex-col gap-6">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <Link
+              href="/app/editorial"
+              className="flex items-center justify-center w-9 h-9 rounded-xl transition-all re-lift"
+              style={{ 
+                background: "var(--re-surface)", 
+                border: "1px solid var(--re-border)",
+                color: "var(--re-text-muted)" 
+              }}
             >
-              <BookOpen className="w-4 h-4" style={{ color: "var(--re-cyan)" }} />
+              <ArrowLeft className="w-4 h-4" />
+            </Link>
+            <div className="flex items-center gap-3">
+              <div
+                className="flex items-center justify-center w-11 h-11 rounded-xl"
+                style={{ 
+                  background: "linear-gradient(135deg, var(--re-blue) 0%, var(--re-cyan) 100%)",
+                }}
+              >
+                <FolderOpen className="w-5 h-5 text-white" />
+              </div>
+              <div>
+                <h1 className="text-2xl font-bold" style={{ color: "var(--re-text)" }}>
+                  Proyectos Editoriales
+                </h1>
+                <p className="text-sm" style={{ color: "var(--re-text-muted)" }}>
+                  Gestiona y supervisa todos los proyectos del pipeline
+                </p>
+              </div>
             </div>
-            <h1 className="text-xl font-bold" style={{ color: "var(--re-text)" }}>
-              Proyectos Editoriales
-            </h1>
           </div>
+          <button
+            onClick={() => setDialogOpen(true)}
+            className="re-btn-primary flex items-center gap-2"
+          >
+            <Plus className="w-4 h-4" />
+            Nuevo Proyecto
+          </button>
         </div>
-        <button
-          onClick={() => setDialogOpen(true)}
-          className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all"
-          style={{
-            background: "var(--re-blue)",
-            color: "#ffffff",
-            boxShadow: "0 0 16px #1B40C040",
-          }}
-        >
-          <Plus className="w-4 h-4" />
-          Nuevo Proyecto
-        </button>
+
+        {/* Stats Row */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+          {[
+            { label: "Total", value: stats.total, icon: FolderOpen, color: "var(--re-blue)" },
+            { label: "En progreso", value: stats.inProgress, icon: Clock, color: "var(--re-gold)" },
+            { label: "Completados", value: stats.completed, icon: CheckCircle2, color: "var(--re-success)" },
+            { label: "Progreso medio", value: `${stats.avgProgress}%`, icon: TrendingUp, color: "var(--re-cyan)" },
+          ].map(({ label, value, icon: Icon, color }) => (
+            <div
+              key={label}
+              className="re-card p-4 flex items-center gap-3"
+            >
+              <div
+                className="flex items-center justify-center w-10 h-10 rounded-xl shrink-0"
+                style={{ background: `${color}12` }}
+              >
+                <Icon className="w-5 h-5" style={{ color }} />
+              </div>
+              <div>
+                <p className="text-xs font-medium" style={{ color: "var(--re-text-muted)" }}>{label}</p>
+                <p className="text-xl font-bold" style={{ color: "var(--re-text)" }}>{value}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Search */}
+        {projects.length > 0 && (
+          <div className="flex items-center gap-3">
+            <div 
+              className="flex items-center gap-2 flex-1 px-4 py-2.5 rounded-xl"
+              style={{ 
+                background: "var(--re-surface)",
+                border: "1px solid var(--re-border)",
+              }}
+            >
+              <Search className="w-4 h-4" style={{ color: "var(--re-text-subtle)" }} />
+              <input
+                type="text"
+                placeholder="Buscar por titulo o autor..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="flex-1 bg-transparent text-sm outline-none"
+                style={{ color: "var(--re-text)" }}
+              />
+            </div>
+            <button
+              className="re-btn-secondary flex items-center gap-2 px-4 py-2.5"
+            >
+              <Filter className="w-4 h-4" />
+              Filtrar
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Content */}
       {loading ? (
         <div className="flex items-center justify-center py-20">
-          <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+          <Loader2 className="w-6 h-6 animate-spin" style={{ color: "var(--re-text-muted)" }} />
         </div>
       ) : error ? (
         <div
-          className="rounded-xl p-6 text-center text-sm"
-          style={{ background: "var(--re-surface)", border: "1px solid var(--re-danger)30", color: "var(--re-danger)" }}
+          className="re-card p-6 text-center text-sm"
+          style={{ borderColor: "var(--re-danger)", color: "var(--re-danger)" }}
         >
           {error}
         </div>
       ) : projects.length === 0 ? (
         <div
-          className="rounded-2xl p-10 flex flex-col items-center gap-4 text-center"
-          style={{ background: "var(--re-surface)", border: "1px solid var(--re-border)" }}
+          className="re-card p-12 flex flex-col items-center gap-5 text-center"
         >
           <div
-            className="flex items-center justify-center w-12 h-12 rounded-2xl"
-            style={{ background: "#2DD4D415" }}
+            className="flex items-center justify-center w-16 h-16 rounded-2xl"
+            style={{ background: "var(--re-blue-pale)" }}
           >
-            <BookOpen className="w-6 h-6" style={{ color: "var(--re-cyan)" }} />
+            <BookOpen className="w-8 h-8" style={{ color: "var(--re-blue)" }} />
           </div>
           <div>
-            <p className="font-semibold" style={{ color: "var(--re-text)" }}>Sin proyectos</p>
-            <p className="text-sm mt-1" style={{ color: "var(--re-text-muted)" }}>
-              Aun no hay proyectos editoriales. Crea el primero para comenzar el pipeline.
+            <p className="font-semibold text-lg" style={{ color: "var(--re-text)" }}>Sin proyectos</p>
+            <p className="text-sm mt-1 max-w-sm" style={{ color: "var(--re-text-muted)" }}>
+              Aun no hay proyectos editoriales. Crea el primero para comenzar el pipeline de produccion.
             </p>
           </div>
           <button
             onClick={() => setDialogOpen(true)}
-            className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold"
-            style={{ background: "var(--re-cyan-dim)", color: "var(--re-cyan)", border: "1px solid var(--re-border-cyan)" }}
+            className="re-btn-primary flex items-center gap-2"
           >
             <Plus className="w-4 h-4" />
             Crear Proyecto
           </button>
         </div>
       ) : (
-        <div
-          className="rounded-2xl overflow-hidden"
-          style={{ background: "var(--re-surface)", border: "1px solid var(--re-border)" }}
-        >
-          <Table>
-            <TableHeader>
-              <TableRow style={{ borderColor: "var(--re-border)" }}>
-                <TableHead style={{ color: "var(--re-text-muted)" }}>Titulo</TableHead>
-                <TableHead style={{ color: "var(--re-text-muted)" }}>Autor</TableHead>
-                <TableHead style={{ color: "var(--re-text-muted)" }}>Etapa actual</TableHead>
-                <TableHead style={{ color: "var(--re-text-muted)" }}>Progreso</TableHead>
-                <TableHead style={{ color: "var(--re-text-muted)" }}>Estado</TableHead>
-                <TableHead style={{ color: "var(--re-text-muted)" }}>Creado</TableHead>
-                <TableHead className="w-[60px]" />
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {projects.map((project) => (
-                <TableRow
-                  key={project.id}
-                  style={{ borderColor: "var(--re-border)" }}
-                  className="transition-colors hover:bg-white/5"
-                >
-                  <TableCell className="font-medium max-w-[200px]">
-                    <div className="truncate" style={{ color: "var(--re-text)" }}>{project.title}</div>
-                    {project.subtitle && (
-                      <div className="text-xs truncate" style={{ color: "var(--re-text-muted)" }}>{project.subtitle}</div>
-                    )}
-                  </TableCell>
-                  <TableCell className="text-sm" style={{ color: "var(--re-text-muted)" }}>
-                    {project.author_name ?? "—"}
-                  </TableCell>
-                  <TableCell>
-                    <span
-                      className="px-2 py-0.5 rounded-full text-xs font-semibold"
-                      style={{ background: "#2DD4D415", color: "var(--re-cyan)", border: "1px solid #2DD4D430" }}
-                    >
-                      {EDITORIAL_STAGE_LABELS[project.current_stage] ?? project.current_stage}
-                    </span>
-                  </TableCell>
-                  <TableCell className="min-w-[130px]">
-                    <div className="flex items-center gap-2">
-                      <div className="flex-1 h-1.5 rounded-full overflow-hidden" style={{ background: "var(--re-surface-3)" }}>
-                        <div
-                          className="h-full rounded-full transition-all"
-                          style={{ width: `${project.progress_percent}%`, background: "var(--re-blue-light)" }}
-                        />
-                      </div>
-                      <span className="text-xs w-8 text-right" style={{ color: "var(--re-text-muted)" }}>
-                        {project.progress_percent}%
-                      </span>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <span
-                      className="px-2 py-0.5 rounded-full text-xs font-semibold"
-                      style={{
-                        background: project.status === "completed" ? "#22d3a015" : "#F5C84215",
-                        color: project.status === "completed" ? "var(--re-success)" : "var(--re-gold)",
-                        border: `1px solid ${project.status === "completed" ? "#22d3a030" : "#F5C84230"}`,
-                      }}
-                    >
-                      {project.status}
-                    </span>
-                  </TableCell>
-                  <TableCell className="text-xs" style={{ color: "var(--re-text-muted)" }}>
-                    {formatDate(project.created_at)}
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-1">
-                      <Link
-                        href={`/app/editorial/projects/${project.id}`}
-                        className="flex items-center justify-center w-8 h-8 rounded-lg transition-colors hover:bg-white/10"
-                        style={{ color: "var(--re-text-muted)" }}
-                      >
-                        <Eye className="w-4 h-4" />
-                      </Link>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <button
-                            className="flex items-center justify-center w-8 h-8 rounded-lg transition-colors hover:bg-white/10"
-                            style={{ color: "var(--re-text-muted)" }}
-                          >
-                            <MoreHorizontal className="w-4 h-4" />
-                          </button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem asChild>
-                            <Link href={`/app/editorial/projects/${project.id}`}>
-                              <Eye className="h-4 w-4 mr-2" />
-                              View Project
-                            </Link>
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            className="text-destructive focus:text-destructive"
-                            onClick={() => {
-                              if (confirm(`Delete "${project.title}"? This cannot be undone.`)) {
-                                fetch(`/api/editorial/projects/${project.id}`, { method: "DELETE" })
-                                  .then(res => res.json())
-                                  .then(data => { if (data.success) fetchProjects(); });
-                              }
-                            }}
-                          >
-                            <Trash2 className="h-4 w-4 mr-2" />
-                            Delete
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
-      )}
-
-      {/* Summary stats */}
-      {projects.length > 0 && (
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-          {[
-            { label: "Total", value: projects.length, icon: BarChart2, accent: "var(--re-cyan)" },
-            { label: "En progreso", value: projects.filter((p) => p.status === "in_progress").length, icon: BookOpen, accent: "var(--re-blue-light)" },
-            { label: "Completados", value: projects.filter((p) => p.status === "completed").length, icon: BarChart2, accent: "var(--re-success)" },
-            {
-              label: "Progreso medio",
-              value: `${projects.length > 0 ? Math.round(projects.reduce((acc, p) => acc + p.progress_percent, 0) / projects.length) : 0}%`,
-              icon: BarChart2,
-              accent: "var(--re-gold)",
-            },
-          ].map(({ label, value, icon: Icon, accent }) => (
-            <div
-              key={label}
-              className="rounded-xl p-4 flex items-center gap-3"
-              style={{ background: "var(--re-surface-2)", border: "1px solid var(--re-border)" }}
-            >
-              <div
-                className="flex items-center justify-center w-9 h-9 rounded-lg shrink-0"
-                style={{ background: `${accent}15` }}
-              >
-                <Icon className="w-4 h-4" style={{ color: accent }} />
-              </div>
-              <div>
-                <p className="text-xs" style={{ color: "var(--re-text-muted)" }}>{label}</p>
-                <p className="text-xl font-bold leading-tight" style={{ color: "var(--re-text)" }}>{value}</p>
-              </div>
-            </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {filteredProjects.map((project) => (
+            <ProjectCard 
+              key={project.id} 
+              project={project} 
+              onDelete={fetchProjects}
+            />
           ))}
         </div>
       )}
@@ -402,7 +316,7 @@ export default function EditorialProjectsPage() {
             <DialogHeader>
               <DialogTitle>Nuevo Proyecto Editorial</DialogTitle>
               <DialogDescription>
-                Completa los datos básicos. Podrás cargar el manuscrito desde el detalle del proyecto.
+                Completa los datos basicos. Podras cargar el manuscrito desde el detalle del proyecto.
               </DialogDescription>
             </DialogHeader>
             <div className="flex flex-col gap-4 py-4">
@@ -415,45 +329,49 @@ export default function EditorialProjectsPage() {
                       key={st.value}
                       type="button"
                       onClick={() => handleFieldChange("service_type", st.value)}
-                      className={`p-3 rounded-lg border text-left transition-all ${
-                        form.service_type === st.value
-                          ? "border-[#1a3a6b] bg-[#1a3a6b]/5 ring-1 ring-[#1a3a6b]/20"
-                          : "border-gray-200 hover:border-gray-300"
-                      }`}
+                      className="p-3 rounded-xl border text-left transition-all"
+                      style={{
+                        background: form.service_type === st.value ? "var(--re-blue-pale)" : "var(--re-surface)",
+                        borderColor: form.service_type === st.value ? "var(--re-blue)" : "var(--re-border)",
+                      }}
                     >
                       <div className="flex items-center gap-2">
-                        <st.icon className={`w-4 h-4 ${
-                          form.service_type === st.value ? "text-[#1a3a6b]" : "text-gray-400"
-                        }`} />
-                        <span className={`text-xs font-semibold ${
-                          form.service_type === st.value ? "text-[#1a3a6b]" : "text-gray-700"
-                        }`}>
+                        <st.icon 
+                          className="w-4 h-4" 
+                          style={{ color: form.service_type === st.value ? "var(--re-blue)" : "var(--re-text-muted)" }}
+                        />
+                        <span 
+                          className="text-xs font-semibold"
+                          style={{ color: form.service_type === st.value ? "var(--re-blue)" : "var(--re-text)" }}
+                        >
                           {st.label}
                         </span>
                       </div>
-                      <p className="text-[10px] text-gray-400 mt-1 ml-6">{st.desc}</p>
+                      <p className="text-[10px] mt-1 ml-6" style={{ color: "var(--re-text-muted)" }}>{st.desc}</p>
                     </button>
                   ))}
                 </div>
               </div>
 
               <div className="flex flex-col gap-1.5">
-                <Label htmlFor="title">Título *</Label>
+                <Label htmlFor="title">Titulo *</Label>
                 <Input
                   id="title"
-                  placeholder="Título del libro"
+                  placeholder="Titulo del libro"
                   value={form.title}
                   onChange={(e) => handleFieldChange("title", e.target.value)}
                   required
+                  className="re-input"
                 />
               </div>
               <div className="flex flex-col gap-1.5">
-                <Label htmlFor="subtitle">Subtítulo</Label>
+                <Label htmlFor="subtitle">Subtitulo</Label>
                 <Input
                   id="subtitle"
-                  placeholder="Subtítulo (opcional)"
+                  placeholder="Subtitulo (opcional)"
                   value={form.subtitle}
                   onChange={(e) => handleFieldChange("subtitle", e.target.value)}
+                  className="re-input"
                 />
               </div>
               <div className="flex flex-col gap-1.5">
@@ -463,16 +381,18 @@ export default function EditorialProjectsPage() {
                   placeholder="Nombre del autor"
                   value={form.author_name}
                   onChange={(e) => handleFieldChange("author_name", e.target.value)}
+                  className="re-input"
                 />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="flex flex-col gap-1.5">
-                  <Label htmlFor="genre">Género</Label>
+                  <Label htmlFor="genre">Genero</Label>
                   <Input
                     id="genre"
                     placeholder="Novela, ensayo..."
                     value={form.genre}
                     onChange={(e) => handleFieldChange("genre", e.target.value)}
+                    className="re-input"
                   />
                 </div>
                 <div className="flex flex-col gap-1.5">
@@ -482,11 +402,12 @@ export default function EditorialProjectsPage() {
                     placeholder="es"
                     value={form.language}
                     onChange={(e) => handleFieldChange("language", e.target.value)}
+                    className="re-input"
                   />
                 </div>
               </div>
               {createError && (
-                <p className="text-sm text-destructive">{createError}</p>
+                <p className="text-sm" style={{ color: "var(--re-danger)" }}>{createError}</p>
               )}
             </div>
             <DialogFooter>
@@ -502,7 +423,7 @@ export default function EditorialProjectsPage() {
               >
                 Cancelar
               </Button>
-              <Button type="submit" disabled={creating}>
+              <Button type="submit" disabled={creating} className="re-btn-primary">
                 {creating ? (
                   <>
                     <Loader2 className="w-4 h-4 mr-2 animate-spin" />
@@ -516,6 +437,131 @@ export default function EditorialProjectsPage() {
           </form>
         </DialogContent>
       </Dialog>
+    </div>
+  );
+}
+
+function ProjectCard({ project, onDelete }: { project: EditorialProject; onDelete: () => void }) {
+  const statusConfig = {
+    created: { label: "Creado", color: "var(--re-text-muted)", bg: "var(--re-surface-2)" },
+    in_progress: { label: "En progreso", color: "var(--re-gold)", bg: "var(--re-gold-pale)" },
+    review: { label: "En revision", color: "var(--re-blue)", bg: "var(--re-blue-pale)" },
+    completed: { label: "Completado", color: "var(--re-success)", bg: "var(--re-success-pale)" },
+    archived: { label: "Archivado", color: "var(--re-text-subtle)", bg: "var(--re-surface-2)" },
+  };
+
+  const status = statusConfig[project.status as keyof typeof statusConfig] || statusConfig.created;
+
+  return (
+    <div className="re-card re-lift p-5 flex flex-col gap-4 group">
+      {/* Header */}
+      <div className="flex items-start justify-between gap-3">
+        <div className="flex-1 min-w-0">
+          <Link 
+            href={`/app/editorial/projects/${project.id}`}
+            className="block"
+          >
+            <h3 
+              className="font-semibold text-base truncate group-hover:text-[var(--re-blue)] transition-colors"
+              style={{ color: "var(--re-text)" }}
+            >
+              {project.title}
+            </h3>
+            {project.subtitle && (
+              <p className="text-xs truncate mt-0.5" style={{ color: "var(--re-text-muted)" }}>
+                {project.subtitle}
+              </p>
+            )}
+          </Link>
+        </div>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button
+              className="flex items-center justify-center w-8 h-8 rounded-lg transition-all opacity-0 group-hover:opacity-100"
+              style={{ 
+                background: "var(--re-surface-2)",
+                color: "var(--re-text-muted)" 
+              }}
+            >
+              <MoreHorizontal className="w-4 h-4" />
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem asChild>
+              <Link href={`/app/editorial/projects/${project.id}`}>
+                <Eye className="h-4 w-4 mr-2" />
+                Ver Proyecto
+              </Link>
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              className="text-destructive focus:text-destructive"
+              onClick={() => {
+                if (confirm(`Eliminar "${project.title}"? Esta accion no se puede deshacer.`)) {
+                  fetch(`/api/editorial/projects/${project.id}`, { method: "DELETE" })
+                    .then(res => res.json())
+                    .then(data => { if (data.success) onDelete(); });
+                }
+              }}
+            >
+              <Trash2 className="h-4 w-4 mr-2" />
+              Eliminar
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
+
+      {/* Author */}
+      {project.author_name && (
+        <p className="text-xs" style={{ color: "var(--re-text-muted)" }}>
+          por {project.author_name}
+        </p>
+      )}
+
+      {/* Stage Badge */}
+      <div className="flex items-center gap-2">
+        <span
+          className="re-badge re-badge-blue"
+        >
+          {EDITORIAL_STAGE_LABELS[project.current_stage] ?? project.current_stage}
+        </span>
+        <span
+          className="text-xs px-2 py-0.5 rounded-full"
+          style={{ background: status.bg, color: status.color }}
+        >
+          {status.label}
+        </span>
+      </div>
+
+      {/* Progress */}
+      <div className="flex items-center gap-3">
+        <div className="re-progress flex-1">
+          <div 
+            className="re-progress-bar" 
+            style={{ width: `${project.progress_percent}%` }}
+          />
+        </div>
+        <span 
+          className="text-xs font-semibold tabular-nums"
+          style={{ color: "var(--re-blue)" }}
+        >
+          {project.progress_percent}%
+        </span>
+      </div>
+
+      {/* Footer */}
+      <div className="flex items-center justify-between pt-2 border-t" style={{ borderColor: "var(--re-border)" }}>
+        <span className="text-xs" style={{ color: "var(--re-text-subtle)" }}>
+          {formatDate(project.created_at)}
+        </span>
+        <Link
+          href={`/app/editorial/projects/${project.id}`}
+          className="text-xs font-medium flex items-center gap-1 transition-colors hover:gap-2"
+          style={{ color: "var(--re-blue)" }}
+        >
+          Ver detalle
+          <Eye className="w-3.5 h-3.5" />
+        </Link>
+      </div>
     </div>
   );
 }

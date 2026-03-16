@@ -209,7 +209,7 @@
   --re-blue-pale:    #EEF2FC;
   --re-blue-muted:   rgba(27, 64, 192, 0.09);
 
-  /* ── Brand: Cyan (toned for light bg) ── */
+  /* ── Brand: Cyan (toned for light bg) ─�� */
   --re-cyan:         #18A8A8;
   --re-cyan-bright:  #2DD4D4;
   --re-cyan-pale:    #EAF9F9;
@@ -282,6 +282,231 @@
 }
 .editorial-theme ::-webkit-scrollbar-thumb:hover { 
   background: var(--re-blue-light); 
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   REINO EDITORIAL — Premium UI Components
+   ═══════════════════════════════════════════════════════════════ */
+@layer components {
+  /* Premium card with subtle elevation */
+  .re-card {
+    background: var(--re-surface);
+    border: 1px solid var(--re-border);
+    border-radius: 1rem;
+    box-shadow: var(--re-shadow-sm);
+    transition: all 0.2s ease;
+  }
+  .re-card:hover {
+    box-shadow: var(--re-shadow-md);
+    border-color: var(--re-border-blue);
+  }
+
+  /* Premium card with blue accent */
+  .re-card-blue {
+    background: var(--re-surface);
+    border: 1px solid var(--re-border-blue);
+    border-radius: 1rem;
+    box-shadow: var(--re-shadow-sm), 0 0 0 1px var(--re-blue-muted);
+  }
+  .re-card-blue:hover {
+    box-shadow: var(--re-shadow-md), 0 0 0 2px var(--re-blue-muted);
+  }
+
+  /* Glass effect for headers */
+  .re-glass {
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--re-border);
+  }
+
+  /* Premium button styles */
+  .re-btn-primary {
+    background: var(--re-blue);
+    color: white;
+    border-radius: 0.625rem;
+    padding: 0.625rem 1.25rem;
+    font-weight: 500;
+    font-size: 0.875rem;
+    transition: all 0.15s ease;
+    box-shadow: 0 1px 2px rgba(27, 64, 192, 0.2);
+  }
+  .re-btn-primary:hover {
+    background: var(--re-blue-deep);
+    box-shadow: 0 4px 12px rgba(27, 64, 192, 0.25);
+    transform: translateY(-1px);
+  }
+  .re-btn-primary:active {
+    transform: translateY(0);
+  }
+
+  .re-btn-secondary {
+    background: var(--re-surface);
+    color: var(--re-text);
+    border: 1px solid var(--re-border);
+    border-radius: 0.625rem;
+    padding: 0.625rem 1.25rem;
+    font-weight: 500;
+    font-size: 0.875rem;
+    transition: all 0.15s ease;
+  }
+  .re-btn-secondary:hover {
+    background: var(--re-surface-2);
+    border-color: var(--re-blue);
+    color: var(--re-blue);
+  }
+
+  /* Pipeline stage indicators */
+  .re-stage {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .re-stage-dot {
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid var(--re-border);
+    background: var(--re-surface);
+    transition: all 0.2s ease;
+  }
+  .re-stage-dot.pending {
+    border-color: var(--re-border);
+    color: var(--re-text-subtle);
+  }
+  .re-stage-dot.processing {
+    border-color: var(--re-blue);
+    background: var(--re-blue-pale);
+    color: var(--re-blue);
+    animation: pulse-stage 2s ease-in-out infinite;
+  }
+  .re-stage-dot.completed {
+    border-color: var(--re-success);
+    background: var(--re-success);
+    color: white;
+  }
+  .re-stage-dot.failed {
+    border-color: var(--re-danger);
+    background: var(--re-danger-pale);
+    color: var(--re-danger);
+  }
+
+  @keyframes pulse-stage {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(27, 64, 192, 0.3); }
+    50% { box-shadow: 0 0 0 8px rgba(27, 64, 192, 0); }
+  }
+
+  /* Pipeline connector line */
+  .re-stage-line {
+    position: absolute;
+    top: 1.25rem;
+    left: 100%;
+    width: 100%;
+    height: 2px;
+    background: var(--re-border);
+  }
+  .re-stage-line.completed {
+    background: var(--re-success);
+  }
+
+  /* Status badges */
+  .re-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    padding: 0.25rem 0.625rem;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    line-height: 1;
+  }
+  .re-badge-blue {
+    background: var(--re-blue-pale);
+    color: var(--re-blue);
+    border: 1px solid var(--re-border-blue);
+  }
+  .re-badge-success {
+    background: var(--re-success-pale);
+    color: var(--re-success);
+    border: 1px solid rgba(13, 122, 95, 0.2);
+  }
+  .re-badge-warning {
+    background: var(--re-warning-pale);
+    color: var(--re-warning);
+    border: 1px solid rgba(196, 139, 10, 0.2);
+  }
+  .re-badge-danger {
+    background: var(--re-danger-pale);
+    color: var(--re-danger);
+    border: 1px solid rgba(192, 49, 43, 0.2);
+  }
+
+  /* Premium input fields */
+  .re-input {
+    background: var(--re-surface);
+    border: 1px solid var(--re-border);
+    border-radius: 0.625rem;
+    padding: 0.625rem 0.875rem;
+    font-size: 0.875rem;
+    transition: all 0.15s ease;
+  }
+  .re-input:focus {
+    outline: none;
+    border-color: var(--re-blue);
+    box-shadow: 0 0 0 3px var(--re-blue-muted);
+  }
+
+  /* Subtle hover lift */
+  .re-lift {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+  .re-lift:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--re-shadow-md);
+  }
+
+  /* Progress bar */
+  .re-progress {
+    height: 0.375rem;
+    background: var(--re-surface-2);
+    border-radius: 9999px;
+    overflow: hidden;
+  }
+  .re-progress-bar {
+    height: 100%;
+    background: linear-gradient(90deg, var(--re-blue), var(--re-cyan));
+    border-radius: 9999px;
+    transition: width 0.5s ease;
+  }
+
+  /* Breadcrumb styling */
+  .re-breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.8125rem;
+    color: var(--re-text-muted);
+  }
+  .re-breadcrumb-item {
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+  }
+  .re-breadcrumb-item:hover {
+    color: var(--re-blue);
+  }
+  .re-breadcrumb-separator {
+    color: var(--re-text-subtle);
+  }
+  .re-breadcrumb-current {
+    color: var(--re-text);
+    font-weight: 500;
+  }
 }
 
 /* ═══════════════════════════════════════════════════════════════
