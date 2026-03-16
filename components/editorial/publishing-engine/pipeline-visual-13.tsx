@@ -179,22 +179,36 @@ export function PipelineVisual13({ projectId, onPhaseSelect }: Props) {
 
   // ── Advance to phase ──
   const handleAdvance = async (targetPhase: string) => {
+    console.log("[v0] handleAdvance START - targetPhase:", targetPhase);
     setError(null);
     try {
-      const res = await fetch(`/api/editorial/projects/${projectId}/publishing-engine`, {
+      const url = `/api/editorial/projects/${projectId}/publishing-engine`;
+      const body = { action: "approve", targetPhase };
+      console.log("[v0] Fetching:", url, body);
+      
+      const res = await fetch(url, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "approve", targetPhase }),
+        body: JSON.stringify(body),
       });
+      
+      console.log("[v0] Response status:", res.status);
       const json = await res.json();
+      console.log("[v0] Response body:", json);
+      
       if (!res.ok || !json.success) {
-        setError(json.error ?? "Error al aprobar la fase");
+        const errorMsg = json.error ?? `Error al aprobar (status: ${res.status}, success: ${json.success})`;
+        console.log("[v0] ERROR:", errorMsg);
+        setError(errorMsg);
         return;
       }
-      // Small delay then refresh
+      
+      console.log("[v0] SUCCESS - refreshing data...");
       await new Promise(resolve => setTimeout(resolve, 300));
       await fetchData();
+      console.log("[v0] Data refreshed");
     } catch (err) {
+      console.log("[v0] CATCH ERROR:", err);
       setError(err instanceof Error ? err.message : "Error de conexion");
     }
   };
