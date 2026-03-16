@@ -24,7 +24,7 @@ export type PhaseStatus = "pending" | "processing" | "completed" | "failed" | "n
 
 // ─── AI Provider ─────────────────────────────────────────────────────
 
-export type AiProvider = "openai" | "claude" | "grammarly" | "midjourney" | "atticus" | "internal";
+export type AiProvider = "openai" | "claude" | "languagetool" | "stability" | "grammarly" | "midjourney" | "atticus" | "internal";
 
 // ─── Phase Definition ────────────────────────────────────────────────
 
