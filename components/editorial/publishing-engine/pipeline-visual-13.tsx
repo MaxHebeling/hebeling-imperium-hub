@@ -197,7 +197,10 @@ export function PipelineVisual13({ projectId, onPhaseSelect }: Props) {
         return;
       }
       console.log("[v0] Aprobacion exitosa, refrescando datos...");
+      // Force a small delay to let DB update propagate
+      await new Promise(resolve => setTimeout(resolve, 500));
       await fetchData();
+      console.log("[v0] Datos refrescados");
     } catch (err) {
       console.error("[v0] Error en handleAdvance:", err);
       setError(err instanceof Error ? err.message : "Error de conexion");
