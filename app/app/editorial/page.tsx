@@ -10,83 +10,99 @@ import {
   Palette,
   BarChart3,
   Building2,
+  Sparkles,
+  FileOutput,
+  PenTool,
+  Type,
+  ShieldCheck,
+  Send,
+  FileSearch,
+  Clock,
+  TrendingUp,
+  FolderOpen,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
 
 export default function EditorialPage() {
   return (
-    <div className="flex flex-col gap-10 p-6 max-w-5xl mx-auto">
-
-      {/* Header */}
-      <div className="flex flex-col gap-6 pt-4">
-        {/* Logo + title */}
-        <div className="flex items-center gap-4">
+    <div className="flex flex-col gap-8 p-8 max-w-6xl mx-auto">
+      {/* Premium Header Section */}
+      <section className="flex flex-col gap-6">
+        {/* Logo + Title */}
+        <div className="flex items-start gap-5">
           <div
-            className="flex items-center justify-center w-14 h-14 rounded-2xl shrink-0"
+            className="flex items-center justify-center w-16 h-16 rounded-2xl shrink-0 shadow-lg"
             style={{
-              background: "linear-gradient(135deg, #1B40C0 0%, #2DD4D4 100%)",
-              boxShadow: "0 0 24px #2DD4D440",
+              background: "linear-gradient(135deg, var(--re-blue) 0%, var(--re-cyan) 100%)",
             }}
           >
-            <BookOpen className="w-7 h-7 text-white" />
+            <BookOpen className="w-8 h-8 text-white" />
           </div>
-          <div>
-            <h1
-              className="text-3xl font-bold tracking-tight"
-              style={{ color: "var(--re-text)" }}
-            >
-              Reino Editorial
-            </h1>
+          <div className="flex flex-col gap-2">
+            <div className="flex items-center gap-3">
+              <h1
+                className="text-3xl font-bold tracking-tight"
+                style={{ color: "var(--re-text)" }}
+              >
+                Editorial AI Engine
+              </h1>
+              <span className="re-badge re-badge-blue">
+                <Sparkles className="w-3 h-3" />
+                v2.0
+              </span>
+            </div>
             <p
-              className="text-sm mt-0.5"
+              className="text-base max-w-xl"
               style={{ color: "var(--re-text-muted)" }}
             >
-              AI Engine · Pipeline de producción editorial inteligente
+              Pipeline de produccion editorial inteligente con IA en cada fase del proceso.
             </p>
           </div>
         </div>
 
-        {/* Stat pills */}
-        <div className="flex flex-wrap gap-3">
-          {[
-            { label: "8 Etapas", color: "var(--re-cyan)" },
-            { label: "IA en cada fase", color: "var(--re-gold)" },
-            { label: "Export multi-formato", color: "var(--re-blue-light)" },
-          ].map(({ label, color }) => (
-            <span
-              key={label}
-              className="px-3 py-1 rounded-full text-xs font-semibold"
-              style={{
-                background: `${color}15`,
-                color,
-                border: `1px solid ${color}30`,
-              }}
+        {/* Quick Stats */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+          {QUICK_STATS.map((stat) => (
+            <div
+              key={stat.label}
+              className="re-card p-4 flex flex-col gap-1"
             >
-              {label}
-            </span>
+              <div className="flex items-center gap-2">
+                <stat.icon 
+                  className="w-4 h-4" 
+                  style={{ color: stat.color }}
+                />
+                <span 
+                  className="text-xs font-medium"
+                  style={{ color: "var(--re-text-muted)" }}
+                >
+                  {stat.label}
+                </span>
+              </div>
+              <p 
+                className="text-2xl font-bold"
+                style={{ color: "var(--re-text)" }}
+              >
+                {stat.value}
+              </p>
+            </div>
           ))}
         </div>
-      </div>
+      </section>
 
-      {/* Description card */}
-      <div
-        className="rounded-2xl p-6"
-        style={{
-          background: "var(--re-surface)",
-          border: "1px solid var(--re-border-cyan)",
-          boxShadow: "inset 0 1px 0 #2DD4D410",
-        }}
+      {/* Description Card */}
+      <section
+        className="re-card-blue p-6"
       >
         <div className="flex items-center gap-2 mb-3">
           <Zap
             className="w-4 h-4"
-            style={{ color: "var(--re-cyan)" }}
+            style={{ color: "var(--re-blue)" }}
           />
           <h2
             className="text-base font-semibold"
             style={{ color: "var(--re-text)" }}
           >
-            Que es el Reino Editorial AI Engine?
+            Que es el Editorial AI Engine?
           </h2>
         </div>
         <p
@@ -98,187 +114,215 @@ export default function EditorialPage() {
           inteligencia artificial y validada por el equipo editorial con puntos de
           aprobacion humana en momentos clave del proceso.
         </p>
-      </div>
+      </section>
 
-      {/* Pipeline grid */}
-      <div>
-        <h2
-          className="text-lg font-semibold mb-5"
-          style={{ color: "var(--re-text)" }}
-        >
-          Pipeline Editorial
-        </h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {PIPELINE_STAGES.map((stage, index) => {
-            const isActive = index === 0;
-            return (
-              <div
-                key={stage.key}
-                className="rounded-xl p-4 flex flex-col gap-3 transition-all"
-                style={{
-                  background: isActive ? "var(--re-blue-dim)" : "var(--re-surface-2)",
-                  border: isActive
-                    ? "1px solid var(--re-blue-light)"
-                    : "1px solid var(--re-border)",
-                }}
-              >
-                <div className="flex items-center justify-between">
-                  <span
-                    className="text-xs font-bold tabular-nums"
-                    style={{ color: "var(--re-text-subtle)" }}
-                  >
-                    {String(index + 1).padStart(2, "0")}
-                  </span>
-                  <div
-                    className="flex items-center justify-center w-7 h-7 rounded-lg"
-                    style={{
-                      background: stage.accent + "20",
-                    }}
-                  >
-                    <stage.icon
-                      className="w-4 h-4"
-                      style={{ color: stage.accent }}
-                    />
-                  </div>
-                </div>
-                <div>
-                  <p
-                    className="text-sm font-semibold"
-                    style={{ color: "var(--re-text)" }}
-                  >
-                    {stage.label}
-                  </p>
-                  <p
-                    className="text-xs mt-1 leading-relaxed"
-                    style={{ color: "var(--re-text-muted)" }}
-                  >
-                    {stage.description}
-                  </p>
-                </div>
-                <div
-                  className="text-xs font-medium px-2 py-0.5 rounded-full self-start"
-                  style={{
-                    background: stage.accent + "15",
-                    color: stage.accent,
-                  }}
-                >
-                  {stage.progress}%
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* CTA row */}
-      <div
-        className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between rounded-2xl p-6"
-        style={{
-          background: "var(--re-surface-2)",
-          border: "1px solid var(--re-border)",
-        }}
-      >
-        <div>
-          <p
-            className="font-semibold text-base"
+      {/* Pipeline Visual */}
+      <section>
+        <div className="flex items-center justify-between mb-5">
+          <h2
+            className="text-lg font-semibold"
             style={{ color: "var(--re-text)" }}
           >
-            Listo para comenzar?
-          </p>
-          <p
-            className="text-sm mt-0.5"
-            style={{ color: "var(--re-text-muted)" }}
+            Pipeline Editorial
+          </h2>
+          <span 
+            className="text-xs font-medium px-3 py-1 rounded-full"
+            style={{ 
+              background: "var(--re-surface-2)",
+              color: "var(--re-text-muted)" 
+            }}
           >
-            Revisa los proyectos activos o inicia un nuevo manuscrito.
-          </p>
+            8 etapas automatizadas
+          </span>
         </div>
-        <div className="flex gap-3 flex-wrap">
-          <Link
-            href="/app/editorial/projects"
-            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all"
-            style={{
-              background: "var(--re-blue)",
-              color: "#ffffff",
-              boxShadow: "0 0 20px #1B40C040",
-            }}
-          >
-            Ver Proyectos
-            <ArrowRight className="w-4 h-4" />
-          </Link>
-          <Link
-            href="/submit-manuscript"
-            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all"
-            style={{
-              background: "var(--re-cyan-dim)",
-              color: "var(--re-cyan)",
-              border: "1px solid var(--re-border-cyan)",
-            }}
-          >
-            Nuevo Manuscrito
-            <BookOpen className="w-4 h-4" />
-          </Link>
-          <Link
-            href="/app/editorial/portadas"
-            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all"
-            style={{
-              background: "linear-gradient(135deg, #9333ea20, #ec489920)",
-              color: "#9333ea",
-              border: "1px solid #9333ea30",
-            }}
-          >
-            Portadas AI
-            <Palette className="w-4 h-4" />
-          </Link>
-          <Link
-            href="/app/editorial/oficina"
-            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all"
-            style={{
-              background: "#1a3a6b10",
-              color: "#1a3a6b",
-              border: "1px solid #1a3a6b30",
-            }}
-          >
-            Oficina
-            <Building2 className="w-4 h-4" />
-          </Link>
-        </div>
-      </div>
 
+        {/* Pipeline Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {PIPELINE_STAGES.map((stage, index) => (
+            <div
+              key={stage.key}
+              className="re-card re-lift p-5 flex flex-col gap-4 cursor-default"
+            >
+              {/* Stage Number + Icon */}
+              <div className="flex items-center justify-between">
+                <span
+                  className="text-xs font-bold tabular-nums w-6 h-6 rounded-full flex items-center justify-center"
+                  style={{ 
+                    background: "var(--re-surface-2)",
+                    color: "var(--re-text-subtle)" 
+                  }}
+                >
+                  {index + 1}
+                </span>
+                <div
+                  className="flex items-center justify-center w-9 h-9 rounded-xl"
+                  style={{
+                    background: `${stage.color}15`,
+                  }}
+                >
+                  <stage.icon
+                    className="w-4.5 h-4.5"
+                    style={{ color: stage.color }}
+                  />
+                </div>
+              </div>
+
+              {/* Content */}
+              <div className="flex-1">
+                <p
+                  className="text-sm font-semibold mb-1"
+                  style={{ color: "var(--re-text)" }}
+                >
+                  {stage.label}
+                </p>
+                <p
+                  className="text-xs leading-relaxed"
+                  style={{ color: "var(--re-text-muted)" }}
+                >
+                  {stage.description}
+                </p>
+              </div>
+
+              {/* Progress */}
+              <div className="flex items-center justify-between gap-3">
+                <div className="re-progress flex-1">
+                  <div 
+                    className="re-progress-bar" 
+                    style={{ width: `${stage.progress}%` }}
+                  />
+                </div>
+                <span 
+                  className="text-xs font-semibold tabular-nums"
+                  style={{ color: stage.color }}
+                >
+                  {stage.progress}%
+                </span>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* Quick Actions */}
+      <section
+        className="re-card p-6"
+      >
+        <div className="flex flex-col sm:flex-row gap-5 items-start sm:items-center justify-between">
+          <div>
+            <p
+              className="font-semibold text-base"
+              style={{ color: "var(--re-text)" }}
+            >
+              Acciones Rapidas
+            </p>
+            <p
+              className="text-sm mt-0.5"
+              style={{ color: "var(--re-text-muted)" }}
+            >
+              Accede a las funciones principales del motor editorial.
+            </p>
+          </div>
+          <div className="flex gap-3 flex-wrap">
+            <Link
+              href="/app/editorial/projects"
+              className="re-btn-primary inline-flex items-center gap-2"
+            >
+              Ver Proyectos
+              <ArrowRight className="w-4 h-4" />
+            </Link>
+            <Link
+              href="/submit-manuscript"
+              className="re-btn-secondary inline-flex items-center gap-2"
+            >
+              <BookOpen className="w-4 h-4" />
+              Nuevo Manuscrito
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* Feature Cards */}
+      <section className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        {FEATURE_CARDS.map((feature) => (
+          <Link
+            key={feature.href}
+            href={feature.href}
+            className="re-card re-lift p-5 flex flex-col gap-3 group"
+          >
+            <div
+              className="flex items-center justify-center w-10 h-10 rounded-xl transition-transform group-hover:scale-105"
+              style={{
+                background: feature.gradient,
+              }}
+            >
+              <feature.icon className="w-5 h-5 text-white" />
+            </div>
+            <div>
+              <p
+                className="text-sm font-semibold mb-0.5"
+                style={{ color: "var(--re-text)" }}
+              >
+                {feature.title}
+              </p>
+              <p
+                className="text-xs"
+                style={{ color: "var(--re-text-muted)" }}
+              >
+                {feature.description}
+              </p>
+            </div>
+            <div 
+              className="flex items-center gap-1 text-xs font-medium mt-auto group-hover:gap-2 transition-all"
+              style={{ color: "var(--re-blue)" }}
+            >
+              Acceder
+              <ArrowRight className="w-3.5 h-3.5" />
+            </div>
+          </Link>
+        ))}
+      </section>
     </div>
   );
 }
+
+const QUICK_STATS = [
+  { label: "Etapas", value: "8", icon: Layers, color: "var(--re-blue)" },
+  { label: "Proyectos", value: "12", icon: FolderOpen, color: "var(--re-cyan)" },
+  { label: "En proceso", value: "3", icon: Clock, color: "var(--re-gold)" },
+  { label: "Completados", value: "9", icon: TrendingUp, color: "var(--re-success)" },
+];
 
 const PIPELINE_STAGES = [
   {
     key: "ingesta",
     label: "Ingesta",
-    icon: FileText,
+    icon: BookOpen,
     description: "Carga del manuscrito original y validacion de formato.",
-    accent: "#2DD4D4",
+    color: "var(--re-cyan)",
     progress: 10,
   },
   {
     key: "estructura",
     label: "Estructura",
-    icon: Layers,
+    icon: FileSearch,
     description: "Analisis y reorganizacion de la estructura narrativa.",
-    accent: "#2a56e8",
+    color: "var(--re-blue)",
     progress: 25,
   },
   {
     key: "estilo",
     label: "Estilo",
-    icon: Zap,
+    icon: PenTool,
     description: "Mejora y homogeneizacion del estilo de escritura.",
-    accent: "#F5C842",
+    color: "var(--re-gold)",
     progress: 40,
   },
   {
     key: "ortotipografia",
     label: "Ortotipografia",
-    icon: CheckCircle,
+    icon: Type,
     description: "Correccion ortografica, gramatical y tipografica.",
-    accent: "#2DD4D4",
+    color: "var(--re-cyan)",
     progress: 55,
   },
   {
@@ -286,31 +330,55 @@ const PIPELINE_STAGES = [
     label: "Maquetacion",
     icon: Palette,
     description: "Diseno y composicion del interior del libro.",
-    accent: "#2a56e8",
+    color: "var(--re-blue)",
     progress: 70,
   },
   {
     key: "revision_final",
     label: "Revision Final",
-    icon: BarChart3,
+    icon: ShieldCheck,
     description: "Revision integral y aprobacion para exportacion.",
-    accent: "#F5C842",
+    color: "var(--re-gold)",
     progress: 85,
   },
   {
     key: "export",
     label: "Export",
-    icon: BookOpen,
+    icon: FileOutput,
     description: "Generacion de PDF, EPUB y MOBI en alta calidad.",
-    accent: "#2DD4D4",
+    color: "var(--re-cyan)",
     progress: 95,
   },
   {
     key: "distribution",
     label: "Distribucion",
-    icon: Globe,
+    icon: Send,
     description: "Amazon, Apple Books, Kobo y canales directos.",
-    accent: "#F5C842",
+    color: "var(--re-success)",
     progress: 100,
+  },
+];
+
+const FEATURE_CARDS = [
+  {
+    title: "Portadas AI",
+    description: "Genera portadas profesionales con inteligencia artificial.",
+    icon: Palette,
+    href: "/app/editorial/portadas",
+    gradient: "linear-gradient(135deg, #9333ea 0%, #ec4899 100%)",
+  },
+  {
+    title: "Oficina Editorial",
+    description: "Gestion administrativa y reportes del equipo.",
+    icon: Building2,
+    href: "/app/editorial/oficina",
+    gradient: "linear-gradient(135deg, #1a3a6b 0%, #2563eb 100%)",
+  },
+  {
+    title: "Analisis AI",
+    description: "Revisa los analisis y recomendaciones de la IA.",
+    icon: BarChart3,
+    href: "/app/editorial/projects",
+    gradient: "linear-gradient(135deg, var(--re-blue) 0%, var(--re-cyan) 100%)",
   },
 ];
