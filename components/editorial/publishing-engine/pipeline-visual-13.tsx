@@ -135,17 +135,27 @@ export function PipelineVisual13({ projectId, onPhaseSelect }: Props) {
 
   useEffect(() => { fetchData(); }, [fetchData]);
 
-  // ── Run full AI pipeline ──
+  // ── Run full AI pipeline (phase-by-phase to avoid Vercel timeout) ──
   const handleRunFullPipeline = async () => {
     setRunningAi(true);
     try {
-      const res = await fetch(`/api/editorial/projects/${projectId}/publishing-engine`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "run-full-pipeline" }),
-      });
-      if (!res.ok) throw new Error("Error al ejecutar pipeline");
-      await fetchData();
+      // Get AI-automated phases from the data we already have
+      const aiPhases = (data?.phases ?? []).filter(
+        (p: { isAiAutomated?: boolean; aiTaskKey?: string | null }) => p.isAiAutomated && p.aiTaskKey
+      );
+
+      for (const phase of aiPhases) {
+        const res = await fetch(`/api/editorial/projects/${projectId}/publishing-engine`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ action: "run-ai", phaseKey: phase.key }),
+        });
+        if (!res.ok) {
+          console.error(`Error en fase ${phase.key}`);
+        }
+        // Refresh UI after each phase so user sees progress
+        await fetchData();
+      }
     } catch {
       // silently handle
     } finally {
