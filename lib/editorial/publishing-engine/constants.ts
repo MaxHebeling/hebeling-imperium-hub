@@ -1,195 +1,257 @@
 /**
- * AI Publishing Engine — 9-Phase Pipeline Definitions
+ * Reino Editorial AI Publishing Engine — Constants
  *
- * Each phase maps to an existing editorial_stages row for DB compatibility.
- * AI providers are configurable via environment variables.
+ * 13-phase editorial pipeline definitions.
  */
 
-import type { PublishingPhaseDefinition, AuthorTimelineDay } from "./types";
+import type { PublishingPhaseDefinition, PublishingPhaseKey, AuthorTimelineDay } from "./types";
 
-// ─── 9 Publishing Phases ─────────────────────────────────────────────
+// ─── 13 Editorial Phases ────────────────────────────────────────────
 
 export const PUBLISHING_PHASES: PublishingPhaseDefinition[] = [
   {
-    key: "manuscript_intake",
+    key: "manuscript_received",
     order: 1,
-    label: "Ingreso del Manuscrito",
-    shortLabel: "Ingreso",
-    description:
-      "Subida del manuscrito, captura automática de metadatos (autor, idioma, tipo, palabras, páginas), selección de formato Amazon.",
+    label: "Manuscrito recibido",
+    labelEn: "Manuscript Received",
+    description: "Subida y validación del manuscrito. Detección de capítulos, conteo de palabras, formato.",
+    descriptionEn: "Upload and validation. Chapter detection, word count, format analysis.",
+    aiAgent: "ingestion",
     aiProvider: "internal",
-    aiProviderLabel: "Sistema interno",
     legacyStageKey: "ingesta",
     aiTaskKey: null,
     requiresHumanReview: false,
-    isAiAutomated: false,
+    isAiAutomated: true,
+    icon: "FileText",
     outputs: [
-      { key: "original_manuscript", label: "Manuscrito original", fileType: "docx", description: "Archivo original subido" },
-      { key: "intake_summary", label: "Resumen de ingreso", fileType: "pdf", description: "Reporte automático de metadatos capturados" },
+      { key: "clean_manuscript", label: "Manuscrito limpio", fileType: "docx", description: "Manuscrito normalizado" },
+      { key: "intake_report", label: "Reporte de ingesta", fileType: "pdf", description: "Reporte del análisis inicial" },
     ],
-    completionMessageTemplate: "El manuscrito ha sido recibido y registrado correctamente en el sistema editorial.",
   },
   {
-    key: "ai_analysis",
+    key: "ai_diagnosis",
     order: 2,
-    label: "Análisis Inicial con IA",
-    shortLabel: "Análisis IA",
-    description:
-      "La IA analiza idioma, género, estructura, capítulos, longitud, problemas graves de redacción y nivel de lectura. Genera reporte editorial automático.",
+    label: "Diagnóstico IA",
+    labelEn: "AI Diagnosis",
+    description: "Análisis completo del manuscrito: idioma, género, estructura, nivel de lectura, problemas.",
+    descriptionEn: "Full manuscript analysis: language, genre, structure, reading level, issues.",
+    aiAgent: "ingestion",
     aiProvider: "openai",
-    aiProviderLabel: "OpenAI GPT-4o",
-    legacyStageKey: "estructura",
+    legacyStageKey: "ingesta",
     aiTaskKey: "manuscript_analysis",
     requiresHumanReview: false,
     isAiAutomated: true,
+    icon: "Brain",
     outputs: [
-      { key: "ai_analysis_report", label: "Reporte de análisis IA", fileType: "pdf", description: "Análisis completo del manuscrito" },
-      { key: "editorial_summary", label: "Resumen editorial", fileType: "pdf", description: "Resumen ejecutivo del análisis" },
-      { key: "issue_report", label: "Reporte de problemas", fileType: "pdf", description: "Problemas detectados con ubicación" },
+      { key: "ai_report", label: "Reporte IA", fileType: "pdf", description: "Análisis completo del manuscrito" },
+      { key: "issue_report", label: "Reporte de problemas", fileType: "pdf", description: "Problemas detectados" },
     ],
-    completionMessageTemplate: "Se completó el análisis editorial inicial del manuscrito con inteligencia artificial.",
   },
   {
-    key: "orthotypographic_correction",
+    key: "spelling_correction",
     order: 3,
-    label: "Corrección Ortotipográfica",
-    shortLabel: "Corrección",
-    description:
-      "Corrección de ortografía, gramática, puntuación y errores tipográficos. Genera documento corregido descargable.",
-    aiProvider: "languagetool",
-    aiProviderLabel: "LanguageTool + OpenAI GPT-4o",
+    label: "Corrección ortográfica",
+    labelEn: "Spelling Correction",
+    description: "Corrección de ortografía, puntuación y errores tipográficos.",
+    descriptionEn: "Spelling, punctuation and typographical error correction.",
+    aiAgent: "corrector",
+    aiProvider: "openai",
     legacyStageKey: "ortotipografia",
     aiTaskKey: "orthotypography_review",
     requiresHumanReview: true,
     isAiAutomated: true,
+    icon: "SpellCheck",
     outputs: [
-      { key: "corrected_docx", label: "Manuscrito corregido (.docx)", fileType: "docx", description: "Documento con correcciones aplicadas" },
-      { key: "corrected_pdf", label: "Manuscrito corregido (.pdf)", fileType: "pdf", description: "PDF con correcciones aplicadas" },
-      { key: "original_version", label: "Versión original", fileType: "docx", description: "Manuscrito sin modificaciones para comparación" },
+      { key: "corrected_docx", label: "DOCX corregido", fileType: "docx", description: "Manuscrito con correcciones ortográficas" },
+      { key: "correction_report", label: "Reporte de correcciones", fileType: "pdf", description: "Detalle de correcciones" },
     ],
-    completionMessageTemplate: "Se completó la corrección ortotipográfica. El staff debe revisar antes de continuar.",
+  },
+  {
+    key: "grammar_correction",
+    order: 4,
+    label: "Corrección gramatical",
+    labelEn: "Grammar Correction",
+    description: "Corrección de sintaxis, concordancia y estructura de frases.",
+    descriptionEn: "Syntax, agreement and sentence structure correction.",
+    aiAgent: "grammar",
+    aiProvider: "openai",
+    legacyStageKey: "ortotipografia",
+    aiTaskKey: "orthotypography_review",
+    requiresHumanReview: true,
+    isAiAutomated: true,
+    icon: "FileCheck",
+    outputs: [
+      { key: "grammar_docx", label: "DOCX revisado", fileType: "docx", description: "Manuscrito con correcciones gramaticales" },
+      { key: "grammar_report", label: "Reporte gramatical", fileType: "pdf", description: "Detalle de correcciones gramaticales" },
+    ],
   },
   {
     key: "style_editing",
-    order: 4,
-    label: "Edición de Estilo",
-    shortLabel: "Estilo",
-    description:
-      "La IA mejora claridad, coherencia, fluidez y estilo. Soporta modos: académico, pastoral, devocional, narrativo, ensayo.",
+    order: 5,
+    label: "Edición de estilo",
+    labelEn: "Style Editing",
+    description: "Ajuste de tono editorial: pastoral, académico, devocional, corporativo, narrativo.",
+    descriptionEn: "Editorial tone adjustment: pastoral, academic, devotional, corporate, narrative.",
+    aiAgent: "style_editor",
     aiProvider: "openai",
-    aiProviderLabel: "OpenAI GPT-4o",
     legacyStageKey: "estilo",
     aiTaskKey: "style_suggestions",
     requiresHumanReview: true,
     isAiAutomated: true,
+    icon: "Palette",
     outputs: [
-      { key: "styled_docx", label: "Manuscrito con estilo mejorado (.docx)", fileType: "docx", description: "Documento con mejoras de estilo" },
-      { key: "style_report", label: "Reporte de cambios de estilo", fileType: "pdf", description: "Detalle de mejoras aplicadas" },
+      { key: "styled_docx", label: "DOCX editado", fileType: "docx", description: "Manuscrito con edición de estilo" },
+      { key: "style_report", label: "Reporte de estilo", fileType: "pdf", description: "Cambios de estilo realizados" },
     ],
-    completionMessageTemplate: "Se completó la edición de estilo. El manuscrito ha sido mejorado en claridad y fluidez.",
   },
   {
-    key: "auto_layout",
-    order: 5,
-    label: "Maquetación Automática",
-    shortLabel: "Maquetación",
-    description:
-      "Cálculo de páginas finales, páginas preliminares, capítulos. Cálculo de parámetros Amazon: ancho del lomo, tamaño del cover, bleed, márgenes.",
-    aiProvider: "internal",
-    aiProviderLabel: "Motor de maquetación",
-    legacyStageKey: "maquetacion",
-    aiTaskKey: "layout_analysis",
-    requiresHumanReview: false,
-    isAiAutomated: true,
-    outputs: [
-      { key: "layout_pdf", label: "Interior maquetado (.pdf)", fileType: "pdf", description: "PDF interior con maquetación profesional" },
-      { key: "layout_specs", label: "Especificaciones de maquetación", fileType: "pdf", description: "Parámetros técnicos del layout" },
-    ],
-    completionMessageTemplate: "Se completó la maquetación automática. El interior del libro está listo.",
-  },
-  {
-    key: "interior_design",
+    key: "structural_review",
     order: 6,
-    label: "Diseño Interior Editorial",
-    shortLabel: "Interior",
-    description:
-      "Configuración de página de título, copyright, dedicatoria, índice, encabezados, pie de página, biografía del autor, agradecimientos. La IA sugiere layouts.",
+    label: "Revisión estructural",
+    labelEn: "Structural Review",
+    description: "Análisis de longitud de capítulos, orden narrativo, redundancias. Propuesta de reorganización.",
+    descriptionEn: "Chapter length analysis, narrative order, redundancies. Reorganization proposal.",
+    aiAgent: "structural",
     aiProvider: "openai",
-    aiProviderLabel: "OpenAI GPT-4o",
-    legacyStageKey: "maquetacion",
-    aiTaskKey: "layout_analysis",
+    legacyStageKey: "estructura",
+    aiTaskKey: "structure_analysis",
     requiresHumanReview: true,
     isAiAutomated: true,
+    icon: "LayoutList",
     outputs: [
-      { key: "interior_pdf", label: "Interior diseñado (.pdf)", fileType: "pdf", description: "PDF con diseño interior completo" },
-      { key: "interior_preview", label: "Vista previa del interior", fileType: "pdf", description: "Muestra de páginas clave del diseño" },
+      { key: "structure_report", label: "Reporte estructural", fileType: "pdf", description: "Análisis de estructura" },
     ],
-    completionMessageTemplate: "Se completó el diseño interior editorial del libro.",
   },
   {
-    key: "cover_design",
+    key: "theological_review",
     order: 7,
-    label: "Diseño de Portada",
-    shortLabel: "Portada",
-    description:
-      "La IA analiza concepto del libro, mensaje central, género y público objetivo. Genera portada completa (front, back, spine) respetando trim size y 300 DPI.",
-    aiProvider: "stability",
-    aiProviderLabel: "Stability AI + DALL-E 3",
+    label: "Revisión teológica",
+    labelEn: "Theological Review",
+    description: "Verificación de citas bíblicas, referencias, consistencia doctrinal.",
+    descriptionEn: "Bible citation verification, references, doctrinal consistency.",
+    aiAgent: "theological",
+    aiProvider: "openai",
+    legacyStageKey: "revision_final",
+    aiTaskKey: "redline_diff",
+    requiresHumanReview: true,
+    isAiAutomated: true,
+    icon: "BookOpen",
+    outputs: [
+      { key: "theological_report", label: "Reporte teológico", fileType: "pdf", description: "Revisión de citas y doctrina" },
+    ],
+  },
+  {
+    key: "editorial_approval",
+    order: 8,
+    label: "Aprobación editorial",
+    labelEn: "Editorial Approval",
+    description: "Revisión y aprobación humana antes de producción.",
+    descriptionEn: "Human review and approval before production.",
+    aiAgent: null,
+    aiProvider: "human",
     legacyStageKey: "revision_final",
     aiTaskKey: null,
     requiresHumanReview: true,
     isAiAutomated: false,
+    icon: "CheckCircle",
+    outputs: [],
+  },
+  {
+    key: "interior_layout",
+    order: 9,
+    label: "Maquetación interior",
+    labelEn: "Interior Layout",
+    description: "Conversión del manuscrito en libro maquetado. Formato Amazon KDP.",
+    descriptionEn: "Convert manuscript to laid-out book. Amazon KDP format.",
+    aiAgent: "layout",
+    aiProvider: "openai",
+    legacyStageKey: "maquetacion",
+    aiTaskKey: "layout_analysis",
+    requiresHumanReview: true,
+    isAiAutomated: true,
+    icon: "BookText",
     outputs: [
-      { key: "cover_front", label: "Portada frontal", fileType: "png", description: "Diseño de portada frontal a 300 DPI" },
-      { key: "cover_back", label: "Contraportada", fileType: "png", description: "Diseño de contraportada" },
-      { key: "cover_full", label: "Portada completa (wrap)", fileType: "pdf", description: "PDF con portada completa para Amazon" },
+      { key: "interior_pdf", label: "PDF interior", fileType: "pdf", description: "Interior maquetado para imprenta" },
+      { key: "review_pdf", label: "PDF revisión", fileType: "pdf", description: "PDF para revisión" },
+      { key: "epub", label: "EPUB", fileType: "epub", description: "Versión digital" },
     ],
-    completionMessageTemplate: "Se completó el diseño de portada. El staff debe revisar y aprobar.",
+  },
+  {
+    key: "cover_design",
+    order: 10,
+    label: "Diseño de portada",
+    labelEn: "Cover Design",
+    description: "Generación de portada, contraportada y lomo con IA o diseño manual.",
+    descriptionEn: "Cover, back cover and spine generation with AI or manual design.",
+    aiAgent: "cover",
+    aiProvider: "stability",
+    legacyStageKey: "maquetacion",
+    aiTaskKey: null,
+    requiresHumanReview: true,
+    isAiAutomated: true,
+    icon: "Image",
+    outputs: [
+      { key: "cover_front", label: "Portada", fileType: "png", description: "Diseño de portada" },
+      { key: "cover_full", label: "Cover completo", fileType: "pdf", description: "Portada + lomo + contraportada" },
+    ],
   },
   {
     key: "final_review",
-    order: 8,
-    label: "Revisión Final Editorial",
-    shortLabel: "Revisión",
-    description:
-      "El staff puede ver el libro completo, descargar PDF, revisar portada, volver a fases anteriores. Cada fase permite modificación por prompt.",
-    aiProvider: "internal",
-    aiProviderLabel: "Revisión humana",
+    order: 11,
+    label: "Revisión final",
+    labelEn: "Final Review",
+    description: "Última revisión del libro completo antes de exportar.",
+    descriptionEn: "Final review of the complete book before export.",
+    aiAgent: null,
+    aiProvider: "human",
     legacyStageKey: "revision_final",
-    aiTaskKey: "redline_diff",
+    aiTaskKey: null,
     requiresHumanReview: true,
     isAiAutomated: false,
-    outputs: [
-      { key: "review_report", label: "Reporte de revisión final", fileType: "pdf", description: "Checklist de revisión completado" },
-      { key: "final_manuscript", label: "Manuscrito final aprobado", fileType: "pdf", description: "Versión final aprobada para exportación" },
-    ],
-    completionMessageTemplate: "Se completó la revisión final editorial. El libro está listo para exportación.",
+    icon: "Eye",
+    outputs: [],
   },
   {
-    key: "final_export",
-    order: 9,
-    label: "Exportación Final",
-    shortLabel: "Exportación",
-    description:
-      "Exportación de archivos finales: PDF para imprenta, EPUB, Kindle, eBook.",
+    key: "export",
+    order: 12,
+    label: "Exportación",
+    labelEn: "Export",
+    description: "Generación de archivos finales: PDF imprenta, EPUB, Kindle, metadatos.",
+    descriptionEn: "Final file generation: print PDF, EPUB, Kindle, metadata.",
+    aiAgent: "exporter",
     aiProvider: "internal",
-    aiProviderLabel: "Motor de exportación",
     legacyStageKey: "export",
     aiTaskKey: "export_validation",
     requiresHumanReview: false,
     isAiAutomated: true,
+    icon: "Download",
     outputs: [
-      { key: "print_pdf", label: "PDF para imprenta", fileType: "pdf", description: "PDF listo para impresión profesional" },
-      { key: "epub", label: "EPUB", fileType: "epub", description: "Archivo EPUB para distribución digital" },
-      { key: "kindle", label: "Kindle (MOBI)", fileType: "kindle", description: "Archivo para Amazon Kindle" },
+      { key: "print_pdf", label: "PDF imprenta", fileType: "pdf", description: "PDF listo para imprenta" },
+      { key: "epub_final", label: "EPUB final", fileType: "epub", description: "Libro digital EPUB" },
+      { key: "kindle", label: "Kindle", fileType: "kindle", description: "Formato Kindle" },
     ],
-    completionMessageTemplate: "¡Exportación completada! Tu libro está listo para ser entregado, vendido y distribuido.",
+  },
+  {
+    key: "publication",
+    order: 13,
+    label: "Publicación",
+    labelEn: "Publication",
+    description: "Libro listo para distribución y venta.",
+    descriptionEn: "Book ready for distribution and sale.",
+    aiAgent: null,
+    aiProvider: "human",
+    legacyStageKey: "distribution",
+    aiTaskKey: "metadata_generation",
+    requiresHumanReview: false,
+    isAiAutomated: false,
+    icon: "Rocket",
+    outputs: [],
   },
 ];
 
-// ─── Helper: get phase by key ────────────────────────────────────────
+// ─── Helper: Get phase by key ───────────────────────────────────────
 
-export function getPhaseDefinition(key: string): PublishingPhaseDefinition | undefined {
+export function getPhaseDefinition(key: PublishingPhaseKey): PublishingPhaseDefinition | undefined {
   return PUBLISHING_PHASES.find((p) => p.key === key);
 }
 
@@ -197,114 +259,124 @@ export function getPhaseByOrder(order: number): PublishingPhaseDefinition | unde
   return PUBLISHING_PHASES.find((p) => p.order === order);
 }
 
-export function getNextPhase(currentKey: string): PublishingPhaseDefinition | undefined {
-  const current = PUBLISHING_PHASES.find((p) => p.key === currentKey);
+export function getNextPhase(currentKey: PublishingPhaseKey): PublishingPhaseDefinition | undefined {
+  const current = getPhaseDefinition(currentKey);
   if (!current) return undefined;
-  return PUBLISHING_PHASES.find((p) => p.order === current.order + 1);
+  return getPhaseByOrder(current.order + 1);
 }
 
-// ─── 12-Day Author Timeline ─────────────────────────────────────────
+export function getPreviousPhase(currentKey: PublishingPhaseKey): PublishingPhaseDefinition | undefined {
+  const current = getPhaseDefinition(currentKey);
+  if (!current || current.order <= 1) return undefined;
+  return getPhaseByOrder(current.order - 1);
+}
 
-export const AUTHOR_TIMELINE_12_DAYS: Omit<AuthorTimelineDay, "status">[] = [
+// ─── Legacy stage key → Phase key mapping ───────────────────────────
+
+const LEGACY_TO_PHASE: Record<string, PublishingPhaseKey> = {
+  ingesta: "manuscript_received",
+  estructura: "structural_review",
+  estilo: "style_editing",
+  ortotipografia: "spelling_correction",
+  maquetacion: "interior_layout",
+  revision_final: "final_review",
+  export: "export",
+  distribution: "publication",
+};
+
+export function legacyStageToPhaseKey(legacyKey: string): PublishingPhaseKey {
+  return LEGACY_TO_PHASE[legacyKey] ?? "manuscript_received";
+}
+
+// ─── Progress calculation ───────────────────────────────────────────
+
+export function calculateProgressPercent(currentPhaseKey: PublishingPhaseKey): number {
+  const phase = getPhaseDefinition(currentPhaseKey);
+  if (!phase) return 0;
+  return Math.round((phase.order / PUBLISHING_PHASES.length) * 100);
+}
+
+// ─── 12-Day Author Timeline ────────────────────────────────────────
+
+export const AUTHOR_TIMELINE_12_DAYS: AuthorTimelineDay[] = [
   {
     day: 1,
     dayRange: "Día 1",
     label: "Recepción del manuscrito",
-    labelEn: "Manuscript reception",
-    description: "Tu manuscrito ha sido recibido y está siendo preparado para el proceso editorial.",
-    descriptionEn: "Your manuscript has been received and is being prepared for the editorial process.",
-    phaseKeys: ["manuscript_intake"],
+    labelEn: "Manuscript Reception",
+    description: "Tu manuscrito ha sido recibido y registrado en nuestro sistema editorial.",
+    descriptionEn: "Your manuscript has been received and registered in our editorial system.",
+    status: "pending",
+    phaseKeys: ["manuscript_received"],
   },
   {
     day: 2,
-    dayRange: "Día 2-3",
+    dayRange: "Día 2–3",
     label: "Análisis editorial",
-    labelEn: "Editorial analysis",
-    description: "Nuestro equipo está analizando la estructura, el estilo y la calidad general de tu manuscrito.",
-    descriptionEn: "Our team is analyzing the structure, style, and overall quality of your manuscript.",
-    phaseKeys: ["ai_analysis"],
+    labelEn: "Editorial Analysis",
+    description: "Nuestro equipo está realizando un análisis profundo de tu manuscrito.",
+    descriptionEn: "Our team is performing a thorough analysis of your manuscript.",
+    status: "pending",
+    phaseKeys: ["ai_diagnosis"],
   },
   {
     day: 4,
-    dayRange: "Día 4-5",
-    label: "Corrección ortográfica y gramatical",
-    labelEn: "Spelling and grammar correction",
-    description: "Estamos perfeccionando la ortografía, gramática y puntuación de tu texto.",
-    descriptionEn: "We are perfecting the spelling, grammar, and punctuation of your text.",
-    phaseKeys: ["orthotypographic_correction"],
+    dayRange: "Día 4–5",
+    label: "Corrección y edición",
+    labelEn: "Correction & Editing",
+    description: "Tu manuscrito está siendo corregido y editado profesionalmente.",
+    descriptionEn: "Your manuscript is being professionally corrected and edited.",
+    status: "pending",
+    phaseKeys: ["spelling_correction", "grammar_correction", "style_editing"],
   },
   {
     day: 6,
-    dayRange: "Día 6-7",
-    label: "Edición de estilo",
-    labelEn: "Style editing",
-    description: "Estamos mejorando la claridad, coherencia y fluidez de tu escritura.",
-    descriptionEn: "We are improving the clarity, coherence, and fluency of your writing.",
-    phaseKeys: ["style_editing"],
+    dayRange: "Día 6–7",
+    label: "Revisión editorial",
+    labelEn: "Editorial Review",
+    description: "Estamos revisando la estructura y contenido teológico de tu obra.",
+    descriptionEn: "We are reviewing the structure and theological content of your work.",
+    status: "pending",
+    phaseKeys: ["structural_review", "theological_review"],
   },
   {
     day: 8,
     dayRange: "Día 8",
-    label: "Especificaciones del libro",
-    labelEn: "Book specifications",
-    description: "Se están calculando las especificaciones técnicas del libro para su formato final.",
-    descriptionEn: "Technical book specifications are being calculated for the final format.",
-    phaseKeys: ["auto_layout"],
+    label: "Aprobación editorial",
+    labelEn: "Editorial Approval",
+    description: "Tu manuscrito está siendo aprobado por el equipo editorial.",
+    descriptionEn: "Your manuscript is being approved by the editorial team.",
+    status: "pending",
+    phaseKeys: ["editorial_approval"],
   },
   {
     day: 9,
-    dayRange: "Día 9-10",
-    label: "Maquetación y diseño interior",
-    labelEn: "Layout and interior design",
-    description: "Estamos preparando el diseño interior profesional de tu libro.",
-    descriptionEn: "We are preparing the professional interior design of your book.",
-    phaseKeys: ["interior_design"],
-  },
-  {
-    day: 10,
-    dayRange: "Día 10",
-    label: "Diseño de portada",
-    labelEn: "Cover design",
-    description: "Nuestro equipo creativo está diseñando la portada de tu libro.",
-    descriptionEn: "Our creative team is designing the cover of your book.",
-    phaseKeys: ["cover_design"],
+    dayRange: "Día 9–10",
+    label: "Maquetación y diseño",
+    labelEn: "Layout & Design",
+    description: "Estamos preparando el diseño interior y la portada de tu libro.",
+    descriptionEn: "We are preparing the interior design and cover of your book.",
+    status: "pending",
+    phaseKeys: ["interior_layout", "cover_design"],
   },
   {
     day: 11,
     dayRange: "Día 11",
     label: "Revisión final",
-    labelEn: "Final review",
-    description: "Se está realizando la revisión final exhaustiva antes de la exportación.",
-    descriptionEn: "A thorough final review is being conducted before export.",
+    labelEn: "Final Review",
+    description: "Última revisión completa antes de la producción final.",
+    descriptionEn: "Final complete review before final production.",
+    status: "pending",
     phaseKeys: ["final_review"],
   },
   {
     day: 12,
     dayRange: "Día 12",
-    label: "Libro listo para publicación",
-    labelEn: "Book ready for publication",
-    description: "¡Tu libro ha completado el proceso editorial y está listo para ser publicado!",
-    descriptionEn: "Your book has completed the editorial process and is ready for publication!",
-    phaseKeys: ["final_export"],
+    label: "Libro listo",
+    labelEn: "Book Ready",
+    description: "Tu libro ha completado el proceso editorial y está listo para publicación.",
+    descriptionEn: "Your book has completed the editorial process and is ready for publication.",
+    status: "pending",
+    phaseKeys: ["export", "publication"],
   },
 ];
-
-// ─── Editorial Style Modes ───────────────────────────────────────────
-
-export const EDITORIAL_STYLE_MODES = [
-  { key: "academic", label: "Académico", labelEn: "Academic" },
-  { key: "pastoral", label: "Pastoral", labelEn: "Pastoral" },
-  { key: "devotional", label: "Devocional", labelEn: "Devotional" },
-  { key: "narrative", label: "Narrativo", labelEn: "Narrative" },
-  { key: "essay", label: "Ensayo", labelEn: "Essay" },
-] as const;
-
-// ─── Amazon Trim Sizes ──────────────────────────────────────────────
-
-export const AMAZON_TRIM_SIZES = [
-  { key: "5x8", label: '5" × 8"', widthIn: 5, heightIn: 8 },
-  { key: "5.5x8.5", label: '5.5" × 8.5"', widthIn: 5.5, heightIn: 8.5 },
-  { key: "6x9", label: '6" × 9"', widthIn: 6, heightIn: 9 },
-  { key: "7x10", label: '7" × 10"', widthIn: 7, heightIn: 10 },
-  { key: "8.5x11", label: '8.5" × 11"', widthIn: 8.5, heightIn: 11 },
-] as const;

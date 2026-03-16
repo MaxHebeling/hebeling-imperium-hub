@@ -1,80 +1,69 @@
 /**
- * AI Publishing Engine — Core Service
+ * Reino Editorial AI Publishing Engine — Core Service
  *
- * Orchestrates the 9-phase editorial pipeline.
+ * Orchestrates the 13-phase editorial pipeline.
  * Connects to existing editorial_stages + editorial_jobs tables.
  */
 
-import { getAdminClient, ORG_ID } from "@/lib/leads/helpers";
-import { PUBLISHING_PHASES, getPhaseDefinition, getNextPhase } from "./constants";
+import { getAdminClient } from "@/lib/leads/helpers";
+import {
+  PUBLISHING_PHASES,
+  getPhaseDefinition,
+  getNextPhase,
+  legacyStageToPhaseKey,
+  calculateProgressPercent,
+  AUTHOR_TIMELINE_12_DAYS,
+} from "./constants";
 import type {
   PublishingPhaseKey,
   PhaseStatus,
-  PipelineRun,
-  PhaseResult,
-  PhasePromptEdit,
+  PipelineState,
+  PhaseState,
+  PhaseFinding,
+  PhasePromptOverride,
   AmazonFormatConfig,
+  AuthorTimelineDay,
 } from "./types";
 
-// ─── Get pipeline status for a project ───────────────────────────────
+// ─── Get full pipeline state for a project ──────────────────────────
 
-export async function getPipelineStatus(projectId: string): Promise<PipelineRun> {
+export async function getPipelineState(
+  projectId: string
+): Promise<PipelineState> {
   const supabase = getAdminClient();
 
   const { data: project } = await supabase
     .from("editorial_projects")
-    .select("id, current_stage, status, progress_percent, created_at, updated_at")
+    .select(
+      "id, current_stage, status, progress_percent, created_at, updated_at"
+    )
     .eq("id", projectId)
     .maybeSingle();
 
   if (!project) {
     return {
-      id: projectId,
       projectId,
       status: "idle",
       currentPhaseKey: null,
       currentPhaseIndex: 0,
       totalPhases: PUBLISHING_PHASES.length,
       completedPhases: 0,
+      progressPercent: 0,
+      phases: buildEmptyPhases(),
       startedAt: null,
       completedAt: null,
       error: null,
     };
   }
 
-  // Map legacy stage to publishing phase
-  const currentPhase = PUBLISHING_PHASES.find((p) => p.legacyStageKey === project.current_stage);
-  const currentPhaseKey = currentPhase?.key ?? "manuscript_intake";
-  const currentPhaseIndex = currentPhase?.order ?? 1;
+  // Map legacy stage to 13-phase key
+  const currentPhaseKey = legacyStageToPhaseKey(
+    project.current_stage ?? "ingesta"
+  );
+  const currentPhaseDef = getPhaseDefinition(currentPhaseKey);
+  const currentPhaseIndex = currentPhaseDef?.order ?? 1;
 
-  // Count completed phases based on progress
-  const completedPhases = PUBLISHING_PHASES.filter(
-    (p) => p.order < currentPhaseIndex
-  ).length;
-
-  const isCompleted = project.status === "completed";
-  const isRunning = project.status === "processing" || project.status === "active";
-
-  return {
-    id: projectId,
-    projectId,
-    status: isCompleted ? "completed" : isRunning ? "running" : "idle",
-    currentPhaseKey: currentPhaseKey as PublishingPhaseKey,
-    currentPhaseIndex,
-    totalPhases: PUBLISHING_PHASES.length,
-    completedPhases: isCompleted ? PUBLISHING_PHASES.length : completedPhases,
-    startedAt: project.created_at,
-    completedAt: isCompleted ? project.updated_at : null,
-    error: null,
-  };
-}
-
-// ─── Get all phase results for a project ─────────────────────────────
-
-export async function getPhaseResults(projectId: string): Promise<PhaseResult[]> {
-  const supabase = getAdminClient();
-
-  // Get all jobs for this project
+  // Get all jobs for this project to populate phase results
   const { data: jobs } = await supabase
     .from("editorial_jobs")
     .select("*")
@@ -87,37 +76,70 @@ export async function getPhaseResults(projectId: string): Promise<PhaseResult[]>
     .select("*")
     .eq("project_id", projectId);
 
-  const results: PhaseResult[] = [];
+  const isCompleted = project.status === "completed";
+  const isRunning =
+    project.status === "processing" || project.status === "active";
 
-  for (const phase of PUBLISHING_PHASES) {
-    // Find the matching stage
-    const stage = (stages ?? []).find((s) => s.stage_key === phase.legacyStageKey);
-    // Find completed jobs for this stage
-    const stageJobs = (jobs ?? []).filter(
-      (j) => j.stage_key === phase.legacyStageKey && j.status === "succeeded"
+  // Build phase states from jobs + stages
+  const phases: PhaseState[] = PUBLISHING_PHASES.map((phaseDef) => {
+    const stage = (stages ?? []).find(
+      (s: Record<string, unknown>) =>
+        s.stage_key === phaseDef.legacyStageKey
+    );
+    const phaseJobs = (jobs ?? []).filter(
+      (j: Record<string, unknown>) =>
+        j.stage_key === phaseDef.legacyStageKey &&
+        j.status === "succeeded"
     );
 
-    if (!stage && stageJobs.length === 0) continue;
+    // Determine status
+    let status: PhaseStatus = "pending";
+    if (isCompleted) {
+      status = "completed";
+    } else if (phaseDef.order < currentPhaseIndex) {
+      status = "completed";
+    } else if (phaseDef.order === currentPhaseIndex) {
+      const stageStatus = (
+        stage as Record<string, unknown> | null
+      )?.status as string | undefined;
+      if (stageStatus === "completed" || stageStatus === "approved")
+        status = "completed";
+      else if (stageStatus === "processing" || stageStatus === "queued")
+        status = "processing";
+      else if (stageStatus === "review_required")
+        status = "needs_review";
+      else if (stageStatus === "failed") status = "failed";
+      else status = "processing";
+    }
 
-    // Parse the latest job output
-    let summary = "";
+    // Parse latest job output for summary/score/findings
+    let summary: string | null = null;
     let score: number | null = null;
-    const findings: PhaseResult["findings"] = [];
+    const findings: PhaseFinding[] = [];
+    let jobId: string | null = null;
+    const processingTimeMs: number | null = null;
 
-    if (stageJobs.length > 0) {
-      const latestJob = stageJobs[stageJobs.length - 1];
+    if (phaseJobs.length > 0) {
+      const latestJob = phaseJobs[phaseJobs.length - 1] as Record<
+        string,
+        unknown
+      >;
+      jobId = (latestJob.id as string) ?? null;
       try {
-        const output = JSON.parse(latestJob.output_ref ?? "{}");
-        summary = output.summary ?? "";
-        score = output.score ?? null;
-        if (output.issues) {
+        const output = JSON.parse(
+          (latestJob.output_ref as string) ?? "{}"
+        );
+        summary = output.summary ?? null;
+        score = output.score ?? output.readiness_score ?? null;
+        if (output.issues && Array.isArray(output.issues)) {
           for (const issue of output.issues) {
             findings.push({
               type: issue.type ?? "suggestion",
               description: issue.description ?? "",
               location: issue.location ?? null,
-              correction: issue.suggestion ?? null,
-              confidence: null,
+              correction:
+                issue.suggestion ?? issue.correction ?? null,
+              confidence: issue.confidence ?? null,
             });
           }
         }
@@ -126,31 +148,66 @@ export async function getPhaseResults(projectId: string): Promise<PhaseResult[]>
       }
     }
 
-    const stageStatus = stage?.status ?? "pending";
-    let phaseStatus: PhaseStatus = "pending";
-    if (stageStatus === "completed" || stageStatus === "approved") phaseStatus = "completed";
-    else if (stageStatus === "processing" || stageStatus === "queued") phaseStatus = "processing";
-    else if (stageStatus === "review_required") phaseStatus = "needs_review";
-    else if (stageStatus === "failed") phaseStatus = "failed";
+    const stageRecord = stage as Record<string, unknown> | null;
 
-    results.push({
-      phaseKey: phase.key,
-      status: phaseStatus,
-      summary: summary || phase.completionMessageTemplate,
+    return {
+      key: phaseDef.key,
+      status,
+      order: phaseDef.order,
+      label: phaseDef.label,
+      summary,
       score,
       findings,
-      outputFiles: [],
-      aiProvider: phase.aiProvider,
-      processingTimeMs: 0,
-      startedAt: stage?.started_at ?? "",
-      completedAt: stage?.completed_at ?? null,
-    });
-  }
+      aiProvider: phaseDef.aiProvider,
+      processingTimeMs,
+      startedAt: (stageRecord?.started_at as string) ?? null,
+      completedAt: (stageRecord?.completed_at as string) ?? null,
+      jobId,
+    };
+  });
 
-  return results;
+  const completedPhases = phases.filter(
+    (p) => p.status === "completed"
+  ).length;
+  const progressPercent = isCompleted
+    ? 100
+    : calculateProgressPercent(currentPhaseKey);
+
+  return {
+    projectId,
+    status: isCompleted ? "completed" : isRunning ? "running" : "idle",
+    currentPhaseKey,
+    currentPhaseIndex,
+    totalPhases: PUBLISHING_PHASES.length,
+    completedPhases,
+    progressPercent,
+    phases,
+    startedAt: project.created_at ?? null,
+    completedAt: isCompleted ? (project.updated_at ?? null) : null,
+    error: null,
+  };
 }
 
-// ─── Advance to next phase ───────────────────────────────────────────
+// ─── Build empty phase states ─────────────────────────────────────
+
+function buildEmptyPhases(): PhaseState[] {
+  return PUBLISHING_PHASES.map((p) => ({
+    key: p.key,
+    status: "pending" as PhaseStatus,
+    order: p.order,
+    label: p.label,
+    summary: null,
+    score: null,
+    findings: [],
+    aiProvider: p.aiProvider,
+    processingTimeMs: null,
+    startedAt: null,
+    completedAt: null,
+    jobId: null,
+  }));
+}
+
+// ─── Advance to a specific phase ─────────────────────────────────
 
 export async function advanceToPhase(
   projectId: string,
@@ -160,8 +217,7 @@ export async function advanceToPhase(
   const phase = getPhaseDefinition(targetPhaseKey);
   if (!phase) return { success: false, error: "Fase no encontrada" };
 
-  // Calculate progress
-  const progress = Math.round((phase.order / PUBLISHING_PHASES.length) * 100);
+  const progress = calculateProgressPercent(targetPhaseKey);
 
   // Update project stage and progress
   const { error } = await supabase
@@ -169,76 +225,241 @@ export async function advanceToPhase(
     .update({
       current_stage: phase.legacyStageKey,
       progress_percent: progress,
-      status: phase.order === PUBLISHING_PHASES.length ? "completed" : "active",
+      status:
+        phase.order === PUBLISHING_PHASES.length
+          ? "completed"
+          : "active",
       updated_at: new Date().toISOString(),
     })
     .eq("id", projectId);
 
   if (error) return { success: false, error: error.message };
 
-  // Update editorial_stages statuses
-  for (const p of PUBLISHING_PHASES) {
-    const status =
-      p.order < phase.order
-        ? "completed"
-        : p.order === phase.order
-        ? "processing"
-        : "pending";
+  // Update editorial_stages statuses — deduplicate by legacy key
+  const uniqueLegacyKeys = [
+    ...new Set(PUBLISHING_PHASES.map((p) => p.legacyStageKey)),
+  ];
+  for (const legacyKey of uniqueLegacyKeys) {
+    const phasesForKey = PUBLISHING_PHASES.filter(
+      (p) => p.legacyStageKey === legacyKey
+    );
+    const maxOrder = Math.max(...phasesForKey.map((p) => p.order));
+    const minOrder = Math.min(...phasesForKey.map((p) => p.order));
+
+    let stageStatus: string;
+    if (maxOrder < phase.order) {
+      stageStatus = "completed";
+    } else if (
+      minOrder <= phase.order &&
+      maxOrder >= phase.order
+    ) {
+      stageStatus = "processing";
+    } else {
+      stageStatus = "pending";
+    }
 
     await supabase
       .from("editorial_stages")
       .update({
-        status,
-        ...(status === "processing" ? { started_at: new Date().toISOString() } : {}),
-        ...(status === "completed" ? { completed_at: new Date().toISOString() } : {}),
+        status: stageStatus,
+        ...(stageStatus === "processing"
+          ? { started_at: new Date().toISOString() }
+          : {}),
+        ...(stageStatus === "completed"
+          ? { completed_at: new Date().toISOString() }
+          : {}),
       })
       .eq("project_id", projectId)
-      .eq("stage_key", p.legacyStageKey);
+      .eq("stage_key", legacyKey);
   }
+
+  // Log activity
+  await supabase.from("editorial_activity_log").insert({
+    project_id: projectId,
+    event_type: "phase_advanced",
+    actor_type: "staff",
+    payload: { targetPhaseKey, progress },
+  });
 
   return { success: true };
 }
 
-// ─── Save prompt edit for a phase ────────────────────────────────────
+// ─── Execute AI for a single phase ───────────────────────────────
+
+export async function executePhaseAi(
+  projectId: string,
+  phaseKey: PublishingPhaseKey
+): Promise<{
+  success: boolean;
+  result?: PhaseState;
+  error?: string;
+}> {
+  const phase = getPhaseDefinition(phaseKey);
+  if (!phase) return { success: false, error: "Fase no encontrada" };
+  if (!phase.aiTaskKey)
+    return {
+      success: false,
+      error: "Esta fase no tiene tarea IA configurada",
+    };
+
+  const supabase = getAdminClient();
+
+  // Create a job
+  const { data: job, error: jobError } = await supabase
+    .from("editorial_jobs")
+    .insert({
+      project_id: projectId,
+      stage_key: phase.legacyStageKey,
+      task_type: phase.aiTaskKey,
+      status: "queued",
+      provider:
+        phase.aiProvider === "internal"
+          ? "openai"
+          : phase.aiProvider,
+    })
+    .select()
+    .single();
+
+  if (jobError || !job) {
+    return {
+      success: false,
+      error: jobError?.message ?? "Error creando job",
+    };
+  }
+
+  return {
+    success: true,
+    result: {
+      key: phase.key,
+      status: "processing",
+      order: phase.order,
+      label: phase.label,
+      summary: null,
+      score: null,
+      findings: [],
+      aiProvider: phase.aiProvider,
+      processingTimeMs: null,
+      startedAt: new Date().toISOString(),
+      completedAt: null,
+      jobId: job.id,
+    },
+  };
+}
+
+// ─── Run full AI pipeline ────────────────────────────────────────
+
+export async function runFullAiPipeline(
+  projectId: string
+): Promise<{
+  success: boolean;
+  results: Array<{
+    phaseKey: PublishingPhaseKey;
+    success: boolean;
+    error?: string;
+  }>;
+}> {
+  const aiPhases = PUBLISHING_PHASES.filter(
+    (p) => p.isAiAutomated && p.aiTaskKey
+  );
+  const results: Array<{
+    phaseKey: PublishingPhaseKey;
+    success: boolean;
+    error?: string;
+  }> = [];
+
+  for (const phase of aiPhases) {
+    const result = await executePhaseAi(projectId, phase.key);
+    results.push({
+      phaseKey: phase.key,
+      success: result.success,
+      error: result.error,
+    });
+  }
+
+  return { success: results.every((r) => r.success), results };
+}
+
+// ─── Save prompt override for a phase ────────────────────────────
 
 export async function savePhasePrompt(
   projectId: string,
   phaseKey: PublishingPhaseKey,
   prompt: string,
   userId: string | null
-): Promise<PhasePromptEdit> {
-  const edit: PhasePromptEdit = {
+): Promise<PhasePromptOverride> {
+  const override: PhasePromptOverride = {
     id: crypto.randomUUID(),
     projectId,
     phaseKey,
+    promptType: "override",
     prompt,
     createdAt: new Date().toISOString(),
     createdBy: userId,
   };
 
-  // Store in activity log for now (no dedicated table needed)
   const supabase = getAdminClient();
-  await supabase.from("editorial_activity_log").insert({
-    project_id: projectId,
-    stage_key: getPhaseDefinition(phaseKey)?.legacyStageKey ?? null,
-    event_type: "prompt_edit",
-    actor_id: userId,
-    actor_type: "staff",
-    payload: { phaseKey, prompt },
-  });
 
-  return edit;
+  // Try to save in editorial_custom_prompts first
+  try {
+    await supabase.from("editorial_custom_prompts").insert({
+      project_id: projectId,
+      stage_key: phaseKey,
+      prompt_type: "override",
+      prompt_content: prompt,
+      is_active: true,
+      created_by: userId,
+    });
+  } catch {
+    // Fallback: save in activity log
+    await supabase.from("editorial_activity_log").insert({
+      project_id: projectId,
+      stage_key:
+        getPhaseDefinition(phaseKey)?.legacyStageKey ?? null,
+      event_type: "prompt_edit",
+      actor_id: userId,
+      actor_type: "staff",
+      payload: { phaseKey, prompt },
+    });
+  }
+
+  return override;
 }
 
-// ─── Get prompt history for a phase ──────────────────────────────────
+// ─── Get prompt history for a phase ──────────────────────────────
 
 export async function getPhasePromptHistory(
   projectId: string,
   phaseKey: PublishingPhaseKey
-): Promise<PhasePromptEdit[]> {
+): Promise<PhasePromptOverride[]> {
   const supabase = getAdminClient();
-  const phase = getPhaseDefinition(phaseKey);
 
+  // Try editorial_custom_prompts first
+  try {
+    const { data: prompts } = await supabase
+      .from("editorial_custom_prompts")
+      .select("*")
+      .eq("project_id", projectId)
+      .eq("stage_key", phaseKey)
+      .order("created_at", { ascending: false });
+
+    if (prompts && prompts.length > 0) {
+      return prompts.map((p: Record<string, unknown>) => ({
+        id: p.id as string,
+        projectId: p.project_id as string,
+        phaseKey: p.stage_key as PublishingPhaseKey,
+        promptType:
+          (p.prompt_type as "system" | "user" | "override") ??
+          "override",
+        prompt: p.prompt_content as string,
+        createdAt: p.created_at as string,
+        createdBy: (p.created_by as string) ?? null,
+      }));
+    }
+  } catch {
+    // Table might not exist — fall through to activity log
+  }
+
+  // Fallback: read from activity log
   const { data } = await supabase
     .from("editorial_activity_log")
     .select("*")
@@ -247,24 +468,26 @@ export async function getPhasePromptHistory(
     .order("created_at", { ascending: false });
 
   return (data ?? [])
-    .filter((d) => {
+    .filter((d: Record<string, unknown>) => {
       const payload = d.payload as Record<string, unknown> | null;
       return payload?.phaseKey === phaseKey;
     })
-    .map((d) => {
+    .map((d: Record<string, unknown>) => {
       const payload = d.payload as Record<string, unknown>;
       return {
-        id: d.id,
-        projectId: d.project_id,
-        phaseKey: (payload.phaseKey as PublishingPhaseKey) ?? phaseKey,
+        id: d.id as string,
+        projectId: d.project_id as string,
+        phaseKey:
+          (payload.phaseKey as PublishingPhaseKey) ?? phaseKey,
+        promptType: "override" as const,
         prompt: (payload.prompt as string) ?? "",
-        createdAt: d.created_at,
-        createdBy: d.actor_id,
+        createdAt: d.created_at as string,
+        createdBy: (d.actor_id as string) ?? null,
       };
     });
 }
 
-// ─── Save Amazon format config ───────────────────────────────────────
+// ─── Save Amazon format config ───────────────────────────────────
 
 export async function saveAmazonConfig(
   projectId: string,
@@ -280,27 +503,30 @@ export async function saveAmazonConfig(
   return { success: true };
 }
 
-// ─── Get Author Timeline (12 days) ──────────────────────────────────
+// ─── Get Author Timeline (12 days) ──────────────────────────────
 
-export async function getAuthorTimeline(projectId: string) {
-  const pipeline = await getPipelineStatus(projectId);
-  const { AUTHOR_TIMELINE_12_DAYS } = await import("./constants");
+export async function getAuthorTimeline(
+  projectId: string
+): Promise<AuthorTimelineDay[]> {
+  const pipeline = await getPipelineState(projectId);
 
-  // Calculate which day the project is on based on creation date
-  const { data: project } = getAdminClient()
+  const supabase = getAdminClient();
+  const { data: project } = await supabase
     .from("editorial_projects")
     .select("created_at")
     .eq("id", projectId)
     .maybeSingle();
 
-  const createdAt = (await project)?.data?.created_at;
+  const createdAt = project?.created_at as string | undefined;
   const daysSinceCreation = createdAt
-    ? Math.floor((Date.now() - new Date(createdAt).getTime()) / (1000 * 60 * 60 * 24)) + 1
+    ? Math.floor(
+        (Date.now() - new Date(createdAt).getTime()) /
+          (1000 * 60 * 60 * 24)
+      ) + 1
     : 1;
 
   return AUTHOR_TIMELINE_12_DAYS.map((day) => {
-    // Determine status based on pipeline progress and day number
-    let status: "completed" | "in_progress" | "upcoming" | "pending";
+    let status: AuthorTimelineDay["status"];
 
     if (pipeline.status === "completed") {
       status = "completed";

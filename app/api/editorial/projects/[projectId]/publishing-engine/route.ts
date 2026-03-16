@@ -7,17 +7,19 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import {
-  getPipelineStatus,
-  getPhaseResults,
+  getPipelineState,
   advanceToPhase,
+  executePhaseAi,
+  runFullAiPipeline,
   savePhasePrompt,
   getPhasePromptHistory,
   saveAmazonConfig,
+  getAuthorTimeline,
   PUBLISHING_PHASES,
 } from "@/lib/editorial/publishing-engine";
 import type { PublishingPhaseKey, AmazonFormatConfig } from "@/lib/editorial/publishing-engine";
 
-// ─── GET: Pipeline status + results ──────────────────────────────────
+// ─── GET: Pipeline state (phases, progress, results) ─────────────────
 
 export async function GET(
   _req: NextRequest,
@@ -26,25 +28,22 @@ export async function GET(
   const { projectId } = await params;
 
   try {
-    const [pipeline, results] = await Promise.all([
-      getPipelineStatus(projectId),
-      getPhaseResults(projectId),
-    ]);
+    const state = await getPipelineState(projectId);
 
     return NextResponse.json({
-      pipeline,
-      results,
+      state,
       phases: PUBLISHING_PHASES.map((p) => ({
         key: p.key,
         order: p.order,
         label: p.label,
-        shortLabel: p.shortLabel,
+        labelEn: p.labelEn,
         description: p.description,
+        aiAgent: p.aiAgent,
         aiProvider: p.aiProvider,
-        aiProviderLabel: p.aiProviderLabel,
         requiresHumanReview: p.requiresHumanReview,
         isAiAutomated: p.isAiAutomated,
         outputs: p.outputs,
+        icon: p.icon,
       })),
     });
   } catch (err) {
@@ -101,6 +100,25 @@ export async function POST(
         }
         const result = await saveAmazonConfig(projectId, config);
         return NextResponse.json(result);
+      }
+
+      case "run-ai": {
+        const phaseKey = body.phaseKey as PublishingPhaseKey;
+        if (!phaseKey) {
+          return NextResponse.json({ error: "phaseKey requerido" }, { status: 400 });
+        }
+        const result = await executePhaseAi(projectId, phaseKey);
+        return NextResponse.json(result);
+      }
+
+      case "run-full-pipeline": {
+        const result = await runFullAiPipeline(projectId);
+        return NextResponse.json(result);
+      }
+
+      case "get-timeline": {
+        const timeline = await getAuthorTimeline(projectId);
+        return NextResponse.json({ timeline });
       }
 
       default:

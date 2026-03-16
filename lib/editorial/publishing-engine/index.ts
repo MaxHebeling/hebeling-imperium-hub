@@ -5,9 +5,10 @@
 export * from "./types";
 export * from "./constants";
 export {
-  getPipelineStatus,
-  getPhaseResults,
+  getPipelineState,
   advanceToPhase,
+  executePhaseAi,
+  runFullAiPipeline,
   savePhasePrompt,
   getPhasePromptHistory,
   saveAmazonConfig,

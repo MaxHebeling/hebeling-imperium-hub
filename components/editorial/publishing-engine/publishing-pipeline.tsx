@@ -27,61 +27,76 @@ interface PhaseDefinition {
   key: string;
   order: number;
   label: string;
-  shortLabel: string;
+  labelEn: string;
   description: string;
+  aiAgent: string;
   aiProvider: string;
-  aiProviderLabel: string;
   requiresHumanReview: boolean;
   isAiAutomated: boolean;
   outputs: { key: string; label: string; fileType: string; description: string }[];
+  icon: string;
 }
 
-interface PhaseResult {
-  phaseKey: string;
+interface PhaseState {
+  key: string;
   status: "pending" | "processing" | "completed" | "failed" | "needs_review";
-  summary: string;
+  order: number;
+  label: string;
+  summary: string | null;
   score: number | null;
   findings: {
     type: string;
     description: string;
     location: string | null;
     correction: string | null;
+    confidence: number | null;
   }[];
   aiProvider: string;
-  startedAt: string;
+  processingTimeMs: number | null;
+  startedAt: string | null;
   completedAt: string | null;
+  jobId: string | null;
 }
 
-interface PipelineState {
-  pipeline: {
+interface PipelineResponse {
+  state: {
+    projectId: string;
     status: string;
     currentPhaseKey: string | null;
     currentPhaseIndex: number;
     totalPhases: number;
     completedPhases: number;
+    progressPercent: number;
+    phases: PhaseState[];
+    startedAt: string | null;
+    completedAt: string | null;
+    error: string | null;
   };
-  results: PhaseResult[];
   phases: PhaseDefinition[];
 }
 
 // ─── Phase Icons ─────────────────────────────────────────────────────
 
 const PHASE_ICONS: Record<string, typeof BookOpen> = {
-  manuscript_intake: BookOpen,
-  ai_analysis: Search,
-  orthotypographic_correction: FileText,
+  manuscript_received: BookOpen,
+  ai_diagnosis: Search,
+  spelling_correction: FileText,
+  grammar_correction: FileText,
   style_editing: Pen,
-  auto_layout: Layout,
-  interior_design: Layout,
+  structural_review: Layout,
+  theological_review: Eye,
+  editorial_approval: CheckCircle2,
+  interior_layout: Layout,
   cover_design: Palette,
   final_review: Eye,
-  final_export: Download,
+  export: Download,
+  publication: Send,
 };
 
 // ─── Main Component ──────────────────────────────────────────────────
 
 export function PublishingPipeline({ projectId }: { projectId: string }) {
-  const [state, setState] = useState<PipelineState | null>(null);
+  const [data, setData] = useState<PipelineResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedPhase, setSelectedPhase] = useState<string | null>(null);
@@ -94,11 +109,11 @@ export function PublishingPipeline({ projectId }: { projectId: string }) {
     try {
       const res = await fetch(`/api/editorial/projects/${projectId}/publishing-engine`);
       if (!res.ok) throw new Error("Error al cargar pipeline");
-      const data = await res.json();
-      setState(data);
+      const json = await res.json();
+      setData(json);
       // Auto-select current phase
-      if (!selectedPhase && data.pipeline?.currentPhaseKey) {
-        setSelectedPhase(data.pipeline.currentPhaseKey);
+      if (!selectedPhase && json.state?.currentPhaseKey) {
+        setSelectedPhase(json.state.currentPhaseKey);
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Error desconocido");
@@ -182,7 +197,7 @@ export function PublishingPipeline({ projectId }: { projectId: string }) {
     );
   }
 
-  if (error || !state) {
+  if (error || !data) {
     return (
       <div className="rounded-xl border border-red-200 bg-red-50 p-6 text-center">
         <AlertCircle className="mx-auto h-8 w-8 text-red-400" />
@@ -194,13 +209,14 @@ export function PublishingPipeline({ projectId }: { projectId: string }) {
     );
   }
 
-  const { pipeline, results, phases } = state;
+  const { state: pipeline, phases } = data;
+  const phaseStates = pipeline.phases;
   const selected = phases.find((p) => p.key === selectedPhase);
-  const selectedResult = results.find((r) => r.phaseKey === selectedPhase);
+  const selectedResult = phaseStates.find((r) => r.key === selectedPhase);
 
   // Progress
-  const completedCount = results.filter((r) => r.status === "completed").length;
-  const progressPercent = Math.round((completedCount / phases.length) * 100);
+  const completedCount = phaseStates.filter((r) => r.status === "completed").length;
+  const progressPercent = pipeline.progressPercent ?? Math.round((completedCount / phases.length) * 100);
 
   return (
     <div className="space-y-6">
@@ -242,7 +258,7 @@ export function PublishingPipeline({ projectId }: { projectId: string }) {
       <div className="overflow-x-auto pb-2" style={{ scrollbarWidth: "thin" }}>
         <div className="flex items-center gap-0 min-w-max">
           {phases.map((phase, i) => {
-            const result = results.find((r) => r.phaseKey === phase.key);
+            const result = phaseStates.find((r) => r.key === phase.key);
             const status = result?.status ?? "pending";
             const isSelected = selectedPhase === phase.key;
             const isCurrent = pipeline.currentPhaseKey === phase.key;
@@ -291,11 +307,16 @@ export function PublishingPipeline({ projectId }: { projectId: string }) {
                     )}
                   </div>
                   <span className={`text-[10px] font-medium leading-tight text-center max-w-[72px] ${labelColor}`}>
-                    {phase.shortLabel}
+                    {phase.label}
                   </span>
                   {isCurrent && (
                     <span className="text-[8px] font-bold text-blue-600 uppercase tracking-wider">
                       Actual
+                    </span>
+                  )}
+                  {result?.processingTimeMs != null && result.status === "completed" && (
+                    <span className="text-[8px] text-gray-400">
+                      {(result.processingTimeMs / 1000).toFixed(1)}s
                     </span>
                   )}
                 </button>
@@ -342,7 +363,7 @@ export function PublishingPipeline({ projectId }: { projectId: string }) {
                   <h3 className="font-semibold text-gray-900">
                     Fase {selected.order}: {selected.label}
                   </h3>
-                  <p className="text-sm text-gray-500">{selected.aiProviderLabel}</p>
+                  <p className="text-sm text-gray-500">{selected.aiAgent}</p>
                 </div>
               </div>
               <div className="flex items-center gap-2">
