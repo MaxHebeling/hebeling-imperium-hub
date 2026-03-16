@@ -16,7 +16,6 @@ import {
   CheckCircle2,
   TrendingUp,
   Search,
-  Filter,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -233,30 +232,31 @@ export default function EditorialProjectsPage() {
 
         {/* Search */}
         {projects.length > 0 && (
-          <div className="flex items-center gap-3">
-            <div 
-              className="flex items-center gap-2 flex-1 px-4 py-2.5 rounded-xl"
-              style={{ 
-                background: "var(--re-surface)",
-                border: "1px solid var(--re-border)",
-              }}
-            >
-              <Search className="w-4 h-4" style={{ color: "var(--re-text-subtle)" }} />
-              <input
-                type="text"
-                placeholder="Buscar por titulo o autor..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="flex-1 bg-transparent text-sm outline-none"
-                style={{ color: "var(--re-text)" }}
-              />
-            </div>
-            <button
-              className="re-btn-secondary flex items-center gap-2 px-4 py-2.5"
-            >
-              <Filter className="w-4 h-4" />
-              Filtrar
-            </button>
+          <div 
+            className="flex items-center gap-2 px-4 py-2.5 rounded-xl"
+            style={{ 
+              background: "var(--re-surface)",
+              border: "1px solid var(--re-border)",
+            }}
+          >
+            <Search className="w-4 h-4" style={{ color: "var(--re-text-subtle)" }} />
+            <input
+              type="text"
+              placeholder="Buscar por titulo o autor..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="flex-1 bg-transparent text-sm outline-none"
+              style={{ color: "var(--re-text)" }}
+            />
+            {searchQuery && (
+              <button
+                onClick={() => setSearchQuery("")}
+                className="text-xs px-2 py-1 rounded-md hover:bg-[var(--re-surface-2)]"
+                style={{ color: "var(--re-text-muted)" }}
+              >
+                Limpiar
+              </button>
+            )}
           </div>
         )}
       </div>
