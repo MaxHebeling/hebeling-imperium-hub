@@ -1,9 +1,8 @@
 import { generateText, Output } from "ai";
 import { z } from "zod";
-import { getAdminClient } from "@/lib/leads/helpers";
 import type { EditorialStageKey } from "@/lib/editorial/types/editorial";
 import type { EditorialAiJobContext } from "@/lib/editorial/types/ai";
-import { getActivePromptTemplate, buildPrompt } from "./prompts";
+import { fetchManuscriptContent } from "./manuscript-loader";
 import type { CopyeditingResult } from "./agent-contracts";
 
 const CopyeditingSchema = z.object({
@@ -30,58 +29,80 @@ const CopyeditingSchema = z.object({
   ),
 });
 
+const COPYEDITING_SYSTEM_PROMPT = `Eres un corrector ortotipografico profesional de nivel editorial premium con mas de 15 anos de experiencia.
+
+PERFIL PROFESIONAL:
+- Especialista certificado en correccion de textos segun normas RAE (espanol) o CMOS (ingles).
+- Dominio absoluto de ortografia, gramatica, puntuacion y tipografia editorial.
+- Experiencia con textos devotionales, ficcion cristiana y no-ficcion.
+
+ESTANDARES DE PRECISION:
+- LA PRECISION ES MAS IMPORTANTE QUE LA VELOCIDAD.
+- Cada correccion debe ser TRAZABLE: texto original exacto + correccion + justificacion.
+- No inventes errores — solo reporta problemas reales y verificables.
+- NO cambies el mensaje doctrinal ni teologico.
+- Distingue entre errores objetivos y preferencias estilisticas.
+
+TIPOS DE ERRORES A DETECTAR:
+- ortografia: errores ortograficos, tildes, mayusculas
+- gramatica: concordancia, regimen verbal, leismo/laismo, tiempos verbales
+- puntuacion: comas, puntos, punto y coma, dos puntos, signos de interrogacion/exclamacion
+- tipografia: comillas, guiones vs rayas, espaciado, numeros, abreviaturas
+
+NORMAS ORTOTIPOGRAFICAS (ESPANOL):
+- Comillas angulares como primera opcion, inglesas como segunda.
+- Raya para dialogos e incisos, NO guion.
+- Tildes diacriticas vigentes segun RAE.
+- Coma vocativa obligatoria.
+
+IMPORTANTE:
+- Devuelve EXCLUSIVAMENTE un JSON valido que siga el esquema solicitado.
+- No incluyas texto fuera del JSON.
+- Limita tus correcciones a las 30 mas importantes.`;
+
+const COPYEDITING_USER_PROMPT = `Realiza una correccion ortotipografica exhaustiva del siguiente manuscrito.
+
+Para cada error encontrado, incluye:
+- id: identificador unico (ej: "ce_001")
+- kind: tipo de error (ortografia, gramatica, puntuacion, tipografia)
+- severity: gravedad del error (baja, media, alta)
+- confidence: confianza en la correccion (0.0 a 1.0)
+- location: ubicacion aproximada en el texto
+- original_text: texto exacto con el error
+- suggested_text: texto corregido
+- justification: regla ortografica/gramatical aplicable
+
+Responde con un objeto JSON que contenga:
+- summary: resumen del estado ortotipografico del manuscrito (2-3 oraciones)
+- total_changes: numero total de correcciones
+- changes: array de correcciones
+
+MANUSCRITO:
+{{manuscript_text}}`;
+
 export async function runCopyeditingAgent(options: {
   projectId: string;
   stageKey: EditorialStageKey;
   context: EditorialAiJobContext;
 }): Promise<CopyeditingResult> {
-  const supabase = getAdminClient();
+  // Cargar contenido del manuscrito usando la funcion compartida
+  const manuscriptText = await fetchManuscriptContent(
+    options.projectId,
+    options.context.source_file_id
+  );
 
-  const template = await getActivePromptTemplate({
-    orgId: options.projectId, // TODO: usar orgId real cuando esté disponible en el contexto
-    stageKey: options.stageKey,
-    taskKey: "copyediting",
-  });
+  // Truncar si es muy largo
+  const maxChars = 80000;
+  const truncatedText = manuscriptText.length > maxChars
+    ? manuscriptText.slice(0, maxChars) + "\n\n[... contenido truncado por limites de contexto ...]"
+    : manuscriptText;
 
-  if (!template) {
-    throw new Error("No hay un prompt de AI activo para copyediting en esta etapa.");
-  }
-
-  const { data: fileRow, error: fileError } = await supabase
-    .from("editorial_files")
-    .select("id, storage_path")
-    .eq("id", options.context.source_file_id)
-    .maybeSingle();
-
-  if (fileError || !fileRow) {
-    throw new Error("No se pudo localizar el archivo de manuscrito para copyediting.");
-  }
-
-  const { data: fileData, error: downloadError } = await supabase.storage
-    .from("editorial-manuscripts")
-    .download(fileRow.storage_path);
-
-  if (downloadError || !fileData) {
-    throw new Error("No se pudo descargar el manuscrito para copyediting.");
-  }
-
-  const manuscriptText = await fileData.text();
-
-  const prompt = buildPrompt(template, {
-    manuscript_text: manuscriptText,
-  });
+  const userPrompt = COPYEDITING_USER_PROMPT.replace("{{manuscript_text}}", truncatedText);
 
   const result = await generateText({
     model: "anthropic/claude-sonnet-4-20250514",
-    system: `
-Eres un corrector de estilo y ortotipografía de una editorial cristiana.
-Debes detectar y proponer correcciones gramaticales, ortográficas y de puntuación sin cambiar el mensaje.
-
-IMPORTANTE:
-- Devuelve EXCLUSIVAMENTE un JSON válido que siga este esquema (CopyeditingSchema).
-- No incluyas texto fuera del JSON.
-`,
-    prompt,
+    system: COPYEDITING_SYSTEM_PROMPT,
+    prompt: userPrompt,
     output: Output.object({
       schema: CopyeditingSchema,
     }),
