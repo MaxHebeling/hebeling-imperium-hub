@@ -28,7 +28,7 @@ import {
   ShieldAlert,
   TrendingUp,
   Eye,
-  Sparkles,
+  Zap,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -508,7 +508,7 @@ export default function EditorialProjectDetailPage() {
                   </>
                 ) : (
                   <>
-                    <Sparkles className="w-4 h-4" />
+                    <Zap className="w-4 h-4" />
                     Ejecutar Pipeline IA
                   </>
                 )}

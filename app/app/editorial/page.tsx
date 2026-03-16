@@ -9,7 +9,6 @@ import {
   Globe,
   Palette,
   Building2,
-  Sparkles,
   FileOutput,
   PenTool,
   Type,
@@ -42,7 +41,7 @@ export default function EditorialPage() {
                 Editorial AI Engine
               </h1>
               <span className="re-badge re-badge-blue">
-                <Sparkles className="w-3 h-3" />
+                <Zap className="w-3 h-3" />
                 v2.0
               </span>
             </div>
@@ -282,7 +281,7 @@ export default function EditorialPage() {
 
 const QUICK_STATS = [
   { label: "Etapas Pipeline", value: "8", icon: Layers, color: "var(--re-blue)" },
-  { label: "Motor IA", value: "GPT + Claude", icon: Sparkles, color: "var(--re-cyan)" },
+  { label: "Motor IA", value: "GPT + Claude", icon: Zap, color: "var(--re-cyan)" },
   { label: "Automatizacion", value: "n8n", icon: Zap, color: "var(--re-gold)" },
   { label: "Formatos Export", value: "PDF EPUB", icon: FileOutput, color: "var(--re-success)" },
 ];
