@@ -55,10 +55,9 @@ export function AuthorTimeline12Day({
         if (!res.ok) throw new Error();
         const data = await res.json();
 
-        // Build timeline from phases
-        const phases = data.phases ?? [];
-        const results = data.results ?? [];
-        const pipeline = data.pipeline ?? {};
+        // Build timeline from new API response structure
+        const pipelineState = data.state ?? {};
+        const phaseStates: { key: string; status: string }[] = pipelineState.phases ?? [];
 
         // Map to 12-day timeline
         const TIMELINE_DAYS: TimelineDay[] = [
@@ -73,8 +72,8 @@ export function AuthorTimeline12Day({
                 : "Your manuscript has been received and is being prepared for the editorial process.",
             descriptionEn:
               "Your manuscript has been received and is being prepared for the editorial process.",
-            status: getStatusForPhase("manuscript_intake", results, pipeline),
-            phaseKeys: ["manuscript_intake"],
+            status: getStatusForPhase("manuscript_received", phaseStates, pipelineState),
+            phaseKeys: ["manuscript_received"],
           },
           {
             day: 2,
@@ -87,8 +86,8 @@ export function AuthorTimeline12Day({
                 : "Our team is analyzing the structure, style, and overall quality of your manuscript.",
             descriptionEn:
               "Our team is analyzing the structure, style, and overall quality of your manuscript.",
-            status: getStatusForPhase("ai_analysis", results, pipeline),
-            phaseKeys: ["ai_analysis"],
+            status: getStatusForPhase("ai_diagnosis", phaseStates, pipelineState),
+            phaseKeys: ["ai_diagnosis"],
           },
           {
             day: 4,
@@ -104,8 +103,8 @@ export function AuthorTimeline12Day({
                 : "We are perfecting the spelling, grammar, and punctuation of your text.",
             descriptionEn:
               "We are perfecting the spelling, grammar, and punctuation of your text.",
-            status: getStatusForPhase("orthotypographic_correction", results, pipeline),
-            phaseKeys: ["orthotypographic_correction"],
+            status: getStatusForPhase("spelling_correction", phaseStates, pipelineState),
+            phaseKeys: ["spelling_correction", "grammar_correction"],
           },
           {
             day: 6,
@@ -118,8 +117,8 @@ export function AuthorTimeline12Day({
                 : "We are improving the clarity, coherence, and fluency of your writing.",
             descriptionEn:
               "We are improving the clarity, coherence, and fluency of your writing.",
-            status: getStatusForPhase("style_editing", results, pipeline),
-            phaseKeys: ["style_editing"],
+            status: getStatusForPhase("style_editing", phaseStates, pipelineState),
+            phaseKeys: ["style_editing", "structural_review", "theological_review"],
           },
           {
             day: 8,
@@ -135,8 +134,8 @@ export function AuthorTimeline12Day({
                 : "Technical book specifications are being calculated for the final format.",
             descriptionEn:
               "Technical book specifications are being calculated for the final format.",
-            status: getStatusForPhase("auto_layout", results, pipeline),
-            phaseKeys: ["auto_layout"],
+            status: getStatusForPhase("editorial_approval", phaseStates, pipelineState),
+            phaseKeys: ["editorial_approval"],
           },
           {
             day: 9,
@@ -152,8 +151,8 @@ export function AuthorTimeline12Day({
                 : "We are preparing the professional interior design of your book.",
             descriptionEn:
               "We are preparing the professional interior design of your book.",
-            status: getStatusForPhase("interior_design", results, pipeline),
-            phaseKeys: ["interior_design"],
+            status: getStatusForPhase("interior_layout", phaseStates, pipelineState),
+            phaseKeys: ["interior_layout"],
           },
           {
             day: 10,
@@ -166,7 +165,7 @@ export function AuthorTimeline12Day({
                 : "Our creative team is designing the cover of your book.",
             descriptionEn:
               "Our creative team is designing the cover of your book.",
-            status: getStatusForPhase("cover_design", results, pipeline),
+            status: getStatusForPhase("cover_design", phaseStates, pipelineState),
             phaseKeys: ["cover_design"],
           },
           {
@@ -180,7 +179,7 @@ export function AuthorTimeline12Day({
                 : "A thorough final review is being conducted before export.",
             descriptionEn:
               "A thorough final review is being conducted before export.",
-            status: getStatusForPhase("final_review", results, pipeline),
+            status: getStatusForPhase("final_review", phaseStates, pipelineState),
             phaseKeys: ["final_review"],
           },
           {
@@ -197,8 +196,8 @@ export function AuthorTimeline12Day({
                 : "Your book has completed the editorial process and is ready for publication!",
             descriptionEn:
               "Your book has completed the editorial process and is ready for publication!",
-            status: getStatusForPhase("final_export", results, pipeline),
-            phaseKeys: ["final_export"],
+            status: getStatusForPhase("export", phaseStates, pipelineState),
+            phaseKeys: ["export", "publication"],
           },
         ];
 
@@ -410,14 +409,14 @@ export function AuthorTimeline12Day({
 
 function getStatusForPhase(
   phaseKey: string,
-  results: { phaseKey: string; status: string }[],
-  pipeline: { currentPhaseKey?: string | null }
+  phaseStates: { key: string; status: string }[],
+  pipelineState: { currentPhaseKey?: string | null }
 ): "completed" | "in_progress" | "upcoming" | "pending" {
-  const result = results.find((r) => r.phaseKey === phaseKey);
-  if (result?.status === "completed") return "completed";
-  if (result?.status === "processing" || pipeline.currentPhaseKey === phaseKey)
+  const phase = phaseStates.find((p) => p.key === phaseKey);
+  if (phase?.status === "completed") return "completed";
+  if (phase?.status === "processing" || pipelineState.currentPhaseKey === phaseKey)
     return "in_progress";
-  if (result?.status === "needs_review") return "in_progress";
+  if (phase?.status === "needs_review") return "in_progress";
   return "pending";
 }
 
