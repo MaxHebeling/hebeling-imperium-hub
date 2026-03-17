@@ -133,6 +133,20 @@
   /* Red Apostólica */
   --company-apostolica-gold: #D6C28A;
   --company-apostolica-navy: #0B1C2E;
+
+  /* ── Covenant Core — Relationship Intelligence ── */
+  --covenant-bg:             #0B1420;
+  --covenant-bg-secondary:   #132033;
+  --covenant-card:           #1B2430;
+  --covenant-text:           #F6F8FB;
+  --covenant-text-silver:    #C7CED8;
+  --covenant-text-muted:     #8A95A5;
+  --covenant-accent:         #21D1AC;
+  --covenant-accent-glow:    rgba(33, 209, 172, 0.15);
+  --covenant-gold:           #C9A96E;
+  --covenant-gold-glow:      rgba(201, 169, 110, 0.12);
+  --covenant-border:         #1E3048;
+  --covenant-border-subtle:  rgba(30, 48, 72, 0.5);
 }
 
 @theme inline {
@@ -209,7 +223,7 @@
   --re-blue-pale:    #EEF2FC;
   --re-blue-muted:   rgba(27, 64, 192, 0.09);
 
-  /* ── Brand: Cyan (toned for light bg) ─�� */
+  /* ── Brand: Cyan (toned for light bg) ─��� */
   --re-cyan:         #18A8A8;
   --re-cyan-bright:  #2DD4D4;
   --re-cyan-pale:    #EAF9F9;
