@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { CovenantSidebar } from "@/components/covenant/covenant-sidebar";
 import { CovenantTopbar } from "@/components/covenant/covenant-topbar";
+import { LanguageProvider } from "@/lib/i18n";
 
 export const metadata: Metadata = {
   title: "Covenant Core | Relationship Intelligence Platform",
@@ -35,17 +36,19 @@ export default async function CovenantLayout({
   }
 
   return (
-    <div
-      className="flex min-h-screen"
-      style={{ backgroundColor: "var(--covenant-bg)" }}
-    >
-      <CovenantSidebar />
-      <div className="flex-1 flex flex-col min-w-0">
-        <CovenantTopbar userName={profile.full_name || profile.email || "User"} />
-        <main className="flex-1 overflow-auto">
-          {children}
-        </main>
+    <LanguageProvider>
+      <div
+        className="flex min-h-screen"
+        style={{ backgroundColor: "var(--covenant-bg)" }}
+      >
+        <CovenantSidebar />
+        <div className="flex-1 flex flex-col min-w-0">
+          <CovenantTopbar userName={profile?.full_name || profile?.email || "User"} />
+          <main className="flex-1 overflow-auto">
+            {children}
+          </main>
+        </div>
       </div>
-    </div>
+    </LanguageProvider>
   );
 }
