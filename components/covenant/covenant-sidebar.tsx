@@ -30,17 +30,17 @@ import {
 } from "@/components/ui/tooltip";
 
 const navItems = [
-  { href: "/app/covenant", label: "Overview", icon: LayoutDashboard },
-  { href: "/app/covenant/people", label: "People", icon: Users },
-  { href: "/app/covenant/organizations", label: "Organizations", icon: Building2 },
-  { href: "/app/covenant/relationships", label: "Relationships", icon: Network },
-  { href: "/app/covenant/pipelines", label: "Pipelines", icon: GitBranch },
-  { href: "/app/covenant/opportunities", label: "Opportunities", icon: Target },
-  { href: "/app/covenant/communications", label: "Communications", icon: MessageSquare },
-  { href: "/app/covenant/events", label: "Events", icon: CalendarDays },
-  { href: "/app/covenant/analytics", label: "Analytics", icon: BarChart3 },
-  { href: "/app/covenant/ai-insights", label: "AI Insights", icon: Sparkles },
-  { href: "/app/covenant/settings", label: "Settings", icon: Settings },
+  { href: "/covenant", label: "Overview", icon: LayoutDashboard },
+  { href: "/covenant/people", label: "People", icon: Users },
+  { href: "/covenant/organizations", label: "Organizations", icon: Building2 },
+  { href: "/covenant/relationships", label: "Relationships", icon: Network },
+  { href: "/covenant/pipelines", label: "Pipelines", icon: GitBranch },
+  { href: "/covenant/opportunities", label: "Opportunities", icon: Target },
+  { href: "/covenant/communications", label: "Communications", icon: MessageSquare },
+  { href: "/covenant/events", label: "Events", icon: CalendarDays },
+  { href: "/covenant/analytics", label: "Analytics", icon: BarChart3 },
+  { href: "/covenant/ai-insights", label: "AI Insights", icon: Sparkles },
+  { href: "/covenant/settings", label: "Settings", icon: Settings },
 ];
 
 export function CovenantSidebar() {
@@ -142,8 +142,8 @@ export function CovenantSidebar() {
         <nav className="flex-1 overflow-y-auto p-2 space-y-0.5">
           {navItems.map((item) => {
             const isActive = pathname === item.href || 
-              (item.href !== "/app/covenant" && pathname.startsWith(item.href + "/"));
-            const isOverviewActive = item.href === "/app/covenant" && pathname === "/app/covenant";
+              (item.href !== "/covenant" && pathname.startsWith(item.href + "/"));
+            const isOverviewActive = item.href === "/covenant" && pathname === "/covenant";
 
             const linkContent = (
               <Link

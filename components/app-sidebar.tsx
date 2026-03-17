@@ -34,7 +34,7 @@ const navSections = [
     titleKey: "empresas" as const,
     titleHref: "/app/companies" as string | null,
     items: [
-      { href: "/app/covenant", labelKey: "covenant", icon: Network },
+      { href: "/covenant", labelKey: "covenant", icon: Network },
       { href: "/app/crm", labelKey: "crm", icon: Users },
     ],
   },

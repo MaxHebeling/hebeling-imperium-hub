@@ -84,7 +84,7 @@ function CompanyCard({
 // Premium Covenant Core Card - Central Intelligence Layer
 function CovenantCoreCard() {
   return (
-    <Link href="/app/covenant" className="block col-span-full">
+    <Link href="/covenant" className="block col-span-full">
       <div
         className="group relative overflow-hidden rounded-xl p-6 transition-all duration-300 hover:translate-y-[-2px]"
         style={{
