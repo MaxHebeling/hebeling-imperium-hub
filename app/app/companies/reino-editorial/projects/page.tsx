@@ -18,15 +18,10 @@ import {
 } from "@/components/ui/table";
 import { getControlCenterData } from "@/lib/editorial/control-center/services";
 import {
-  BookOpen,
-  Eye,
-  Rocket,
-  CheckCircle2,
-  AlertTriangle,
-  BarChart3,
-  FileText,
   Plus,
   FolderOpen,
+  FileText,
+  AlertTriangle,
 } from "lucide-react";
 
 export const dynamic = "force-dynamic";
@@ -56,26 +51,26 @@ function stageStatusBadge(status: string) {
   }
 }
 
-export default async function ReinoEditorialOverviewPage() {
+export default async function ProjectsListPage() {
   noStore();
 
   let data;
   try {
     data = await getControlCenterData();
   } catch (error) {
-    console.error("[editorial-control-center] Error loading data:", error);
+    console.error("[editorial-projects] Error loading data:", error);
     return (
       <div className="min-h-full p-6">
         <div className="rounded-lg border border-red-200 bg-red-50 p-6 text-center">
           <AlertTriangle className="h-8 w-8 text-red-500 mx-auto mb-2" />
-          <h2 className="text-lg font-semibold text-red-800">Error al cargar el Panel</h2>
+          <h2 className="text-lg font-semibold text-red-800">Error al cargar proyectos</h2>
           <p className="text-sm text-red-600 mt-1">No se pudieron cargar los datos. Intenta recargar la pagina.</p>
         </div>
       </div>
     );
   }
 
-  const { kpis, pipelineProjects, stageBreakdown } = data;
+  const { pipelineProjects } = data;
 
   return (
     <div
@@ -92,20 +87,20 @@ export default async function ReinoEditorialOverviewPage() {
                 background: "linear-gradient(135deg, var(--re-blue) 0%, var(--re-cyan) 100%)",
               }}
             >
-              <BarChart3 className="h-5 w-5 text-white" />
+              <FolderOpen className="h-5 w-5 text-white" />
             </div>
             <div>
               <h1
                 className="text-2xl font-bold tracking-tight"
                 style={{ color: "var(--re-text)" }}
               >
-                Panel Editorial
+                Proyectos Editoriales
               </h1>
               <p
                 className="text-sm"
                 style={{ color: "var(--re-text-muted)" }}
               >
-                Pipeline de produccion editorial — 11 etapas
+                {pipelineProjects.length} proyecto{pipelineProjects.length !== 1 ? "s" : ""} en el pipeline
               </p>
             </div>
           </div>
@@ -124,41 +119,9 @@ export default async function ReinoEditorialOverviewPage() {
         </div>
       </div>
 
-      {/* KPI Cards */}
+      {/* Projects Table */}
       <section className="px-6">
-        <div className="grid gap-3 grid-cols-2 sm:grid-cols-4">
-          <KpiCard
-            icon={BookOpen}
-            label="Proyectos Activos"
-            value={kpis.activeProjects}
-            color="blue"
-          />
-          <KpiCard
-            icon={Eye}
-            label="Esperando Revision"
-            value={kpis.awaitingReview}
-            color="orange"
-          />
-          <KpiCard
-            icon={Rocket}
-            label="Listo p/ Publicar"
-            value={kpis.readyForPublishing}
-            color="green"
-          />
-          <KpiCard
-            icon={CheckCircle2}
-            label="Completados (mes)"
-            value={kpis.completedThisMonth}
-            color="emerald"
-          />
-        </div>
-      </section>
-
-      {/* Stage Breakdown + Pipeline View */}
-      <section className="px-6 grid gap-4 lg:grid-cols-4">
-        {/* Stage Breakdown - 11 Etapas */}
         <Card
-          className="lg:col-span-1"
           style={{
             backgroundColor: "var(--re-surface)",
             border: "1px solid var(--re-border)",
@@ -166,51 +129,8 @@ export default async function ReinoEditorialOverviewPage() {
         >
           <CardHeader className="pb-3">
             <CardTitle className="text-base" style={{ color: "var(--re-text)" }}>
-              Pipeline por Etapa
+              Todos los Proyectos
             </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-1.5">
-            {stageBreakdown.length === 0 ? (
-              <p className="text-sm" style={{ color: "var(--re-text-muted)" }}>
-                Sin proyectos activos en el pipeline.
-              </p>
-            ) : (
-              stageBreakdown.map((stage) => (
-                <div
-                  key={stage.stageKey}
-                  className="flex items-center justify-between py-1.5 px-2 rounded-lg"
-                  style={{ backgroundColor: "var(--re-surface-2, #f8f9fa)" }}
-                >
-                  <span className="text-xs font-medium truncate" style={{ color: "var(--re-text)" }}>
-                    {stage.stageLabel}
-                  </span>
-                  <span
-                    className="inline-flex items-center justify-center w-6 h-6 rounded-full text-xs font-bold text-white shrink-0"
-                    style={{ backgroundColor: "var(--re-blue)" }}
-                  >
-                    {stage.projectCount}
-                  </span>
-                </div>
-              ))
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Project Pipeline Table */}
-        <Card
-          className="lg:col-span-3"
-          style={{
-            backgroundColor: "var(--re-surface)",
-            border: "1px solid var(--re-border)",
-          }}
-        >
-          <CardHeader className="pb-3">
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-base flex items-center gap-2" style={{ color: "var(--re-text)" }}>
-                <FolderOpen className="h-4 w-4" style={{ color: "var(--re-blue)" }} />
-                Proyectos en Pipeline
-              </CardTitle>
-            </div>
           </CardHeader>
           <CardContent>
             <div className="overflow-x-auto">
@@ -305,59 +225,6 @@ export default async function ReinoEditorialOverviewPage() {
           </CardContent>
         </Card>
       </section>
-    </div>
-  );
-}
-
-/* ------------------------------------------------------------------ */
-/* KPI Card                                                            */
-/* ------------------------------------------------------------------ */
-
-const KPI_COLOR_CLASSES: Record<string, { icon: string; value: string; iconBg: string }> = {
-  blue: { icon: "text-blue-700", value: "text-blue-700", iconBg: "bg-blue-100" },
-  orange: { icon: "text-orange-600", value: "text-orange-600", iconBg: "bg-orange-100" },
-  green: { icon: "text-green-600", value: "text-green-600", iconBg: "bg-green-100" },
-  emerald: { icon: "text-emerald-600", value: "text-emerald-600", iconBg: "bg-emerald-100" },
-};
-
-function KpiCard({
-  icon: Icon,
-  label,
-  value,
-  color,
-}: {
-  icon: React.ComponentType<{ className?: string }>;
-  label: string;
-  value: number;
-  color: string;
-}) {
-  const c = KPI_COLOR_CLASSES[color] ?? KPI_COLOR_CLASSES.blue;
-
-  return (
-    <div
-      className="rounded-xl p-4 flex flex-col gap-2"
-      style={{
-        backgroundColor: "var(--re-surface)",
-        border: "1px solid var(--re-border)",
-        boxShadow: "var(--re-shadow-sm, 0 1px 3px rgba(0,0,0,0.06))",
-      }}
-    >
-      <div className="flex items-center gap-2">
-        <div
-          className={`flex items-center justify-center w-8 h-8 rounded-lg ${c.iconBg}`}
-        >
-          <Icon className={`h-4 w-4 ${c.icon}`} />
-        </div>
-      </div>
-      <p className={`text-2xl font-bold ${c.value}`}>
-        {value}
-      </p>
-      <p
-        className="text-xs font-medium"
-        style={{ color: "var(--re-text-muted)" }}
-      >
-        {label}
-      </p>
     </div>
   );
 }

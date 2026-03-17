@@ -1,14 +1,19 @@
 export type EditorialFileVisibility = "internal" | "client" | "public";
 
 export type EditorialStageKey =
-  | "ingesta"
-  | "estructura"
-  | "estilo"
-  | "ortotipografia"
-  | "maquetacion"
-  | "revision_final"
-  | "export"
-  | "distribution";
+  | "recepcion"
+  | "preparacion"
+  | "correccion_linguistica"
+  | "edicion_editorial"
+  | "preprensa_kdp"
+  | "maquetacion_interior"
+  | "validacion_paginas"
+  | "briefing_portada"
+  | "generacion_portada"
+  | "marketing_editorial"
+  | "entrega_final";
+
+export type CreativeMode = "author_directed" | "editorial_directed";
 
 export type EditorialStageStatus =
   | "pending"
@@ -37,6 +42,11 @@ export interface EditorialProject {
   status: string;
   progress_percent: number;
   service_type?: EditorialServiceType;
+  creative_mode: CreativeMode;
+  cover_prompt: string | null;
+  cover_notes: string | null;
+  book_size: string | null;
+  observations: string | null;
   due_date: string | null;
   created_by: string | null;
   created_at: string;

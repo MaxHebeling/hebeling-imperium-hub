@@ -36,9 +36,14 @@ export async function POST(request: Request) {
     const language = (formData.get("language") as string)?.trim() || "es";
     const category = (formData.get("category") as string)?.trim();
     const shortDescription = (formData.get("shortDescription") as string)?.trim() || undefined;
+    const creativeMode = (formData.get("creativeMode") as string)?.trim() || "author_directed";
+    const coverPrompt = (formData.get("coverPrompt") as string)?.trim() || undefined;
+    const coverNotes = (formData.get("coverNotes") as string)?.trim() || undefined;
+    const bookSize = (formData.get("bookSize") as string)?.trim() || undefined;
+    const observations = (formData.get("observations") as string)?.trim() || undefined;
     const manuscript = formData.get("manuscript") as File | null;
 
-    console.log("[v0] Form fields:", { authorName, authorEmail, bookTitle, category, hasManuscript: !!manuscript });
+    console.log("[v0] Form fields:", { authorName, authorEmail, bookTitle, category, creativeMode, hasManuscript: !!manuscript });
 
     if (!authorName || !authorEmail || !bookTitle || !category) {
       console.log("[v0] Missing required fields");
@@ -72,6 +77,11 @@ export async function POST(request: Request) {
       language,
       genre: category,
       target_audience: shortDescription ?? undefined,
+      creative_mode: creativeMode as "author_directed" | "editorial_directed",
+      cover_prompt: coverPrompt,
+      cover_notes: coverNotes,
+      book_size: bookSize,
+      observations,
     });
     console.log("[v0] Project created:", project.id);
 
@@ -98,7 +108,7 @@ export async function POST(request: Request) {
     await requestAiTask({
       orgId: ORG_ID,
       projectId: project.id,
-      stageKey: "ingesta",
+      stageKey: "recepcion",
       taskKey: "manuscript_analysis",
       sourceFileId: fileRecord.id,
       sourceFileVersion: 1,
@@ -111,7 +121,7 @@ export async function POST(request: Request) {
     await logWorkflowEvent({
       orgId: ORG_ID,
       projectId: project.id,
-      stageKey: "ingesta",
+      stageKey: "recepcion",
       eventType: "manuscript_submitted",
       payload: {
         author_email: authorEmail,
