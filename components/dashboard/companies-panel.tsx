@@ -197,7 +197,7 @@ export function CompaniesPanel() {
     },
     {
       name: "Reino Editorial",
-      href: "/app/companies/reino-editorial",
+      href: "/app/editorial",
       tagline: "Publishing & distribution",
       activeProjects: 5,
       leads: 32,
