@@ -130,8 +130,8 @@ export async function getControlCenterData(): Promise<ControlCenterData> {
   const activeProjects = projects.filter((p) => p.status !== "completed" && p.status !== "archived").length;
   const aiProcessing = pipelineProjects.filter((p) => p.aiStatus === "running" || p.aiStatus === "queued").length;
   const awaitingReview = pipelineProjects.filter((p) => p.staffReview === "in_review").length;
-  const readyForPublishing = projects.filter((p) => p.current_stage === "export" || p.current_stage === "distribution").length;
-  const clientReviewStage = projects.filter((p) => p.current_stage === "revision_final").length;
+  const readyForPublishing = projects.filter((p) => p.current_stage === "entrega_final" || p.current_stage === "marketing_editorial").length;
+  const clientReviewStage = projects.filter((p) => p.current_stage === "validacion_paginas").length;
   const completedThisMonth = projects.filter((p) => {
     if (p.status !== "completed") return false;
     const updated = p.updated_at ?? p.created_at;
@@ -153,7 +153,7 @@ export async function getControlCenterData(): Promise<ControlCenterData> {
       projectCount,
     }))
     .sort((a, b) => {
-      const order = ["ingesta", "estructura", "estilo", "ortotipografia", "maquetacion", "revision_final", "export", "distribution"];
+      const order = ["recepcion", "preparacion", "correccion_linguistica", "edicion_editorial", "preprensa_kdp", "maquetacion_interior", "validacion_paginas", "briefing_portada", "generacion_portada", "marketing_editorial", "entrega_final"];
       return order.indexOf(a.stageKey) - order.indexOf(b.stageKey);
     });
 

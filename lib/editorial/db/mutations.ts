@@ -19,6 +19,11 @@ export interface CreateEditorialProjectInput {
   client_id?: string;
   created_by?: string;
   service_type?: string;
+  creative_mode?: "author_directed" | "editorial_directed";
+  cover_prompt?: string;
+  cover_notes?: string;
+  book_size?: string;
+  observations?: string;
 }
 
 export async function createEditorialProject(
@@ -37,10 +42,15 @@ export async function createEditorialProject(
       language: input.language ?? "es",
       genre: input.genre ?? null,
       target_audience: input.target_audience ?? null,
-      current_stage: "ingesta",
+      current_stage: "recepcion",
       status: "created",
       progress_percent: 0,
       created_by: input.created_by ?? null,
+      creative_mode: input.creative_mode ?? "author_directed",
+      cover_prompt: input.cover_prompt ?? null,
+      cover_notes: input.cover_notes ?? null,
+      book_size: input.book_size ?? null,
+      observations: input.observations ?? null,
     })
     .select()
     .single();
@@ -49,11 +59,8 @@ export async function createEditorialProject(
     throw new Error(`Failed to create editorial project: ${error?.message}`);
   }
 
-  // Create one stage record per pipeline stage (only for existing stages in the database)
-  // export and distribution are handled separately or may need a migration
-  const stageKeys = EDITORIAL_STAGE_KEYS.filter(
-    (key) => key !== "export" && key !== "distribution"
-  );
+  // Create one stage record per pipeline stage
+  const stageKeys = EDITORIAL_STAGE_KEYS;
   
   const stageRows = stageKeys.map((key) => ({
     project_id: project.id,
@@ -131,7 +138,7 @@ export async function registerManuscriptFile(
     .from("editorial_files")
     .insert({
       project_id: projectId,
-      stage_key: "ingesta",
+      stage_key: "recepcion",
       file_type: "manuscript_original",
       version,
       storage_path: storagePath,
