@@ -13,6 +13,7 @@ import {
   PanelLeft,
   ChevronRight,
   FolderOpen,
+  Network,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -33,6 +34,7 @@ const navSections = [
     titleKey: "empresas" as const,
     titleHref: "/app/companies" as string | null,
     items: [
+      { href: "/app/covenant", labelKey: "covenant", icon: Network },
       { href: "/app/crm", labelKey: "crm", icon: Users },
     ],
   },
