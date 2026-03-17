@@ -58,8 +58,8 @@ const UNITS: BusinessUnit[] = [
     tagline: "AI-Powered Publishing",
     description:
       "Pipeline editorial inteligente con IA en cada etapa. Desde la ingesta del manuscrito hasta la distribución global.",
-    href: "/app/companies/reino-editorial",
-    editorialHref: "/app/editorial",
+    href: "/app/editorial",
+    editorialHref: null,
     oficinaHref: "/app/editorial/oficina",
     webProjectsHref: null,
     logo: "/logo-reino-editorial.png",
