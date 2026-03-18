@@ -1,7 +1,9 @@
 #!/usr/bin/env bash
 # setup-env-local.sh
 # Genera un .env.local limpio conservando los valores existentes de Supabase.
-# Uso: bash scripts/setup-env-local.sh
+# Uso:
+#   bash scripts/setup-env-local.sh
+#   OPENAI_API_KEY=xxx STABILITY_API_KEY=xxx RESEND_API_KEY=xxx bash scripts/setup-env-local.sh
 
 set -euo pipefail
 
@@ -30,14 +32,19 @@ else
   echo "No se encontro $ENV_FILE existente. Se creara uno nuevo."
 fi
 
+# ── Leer API keys de variables de entorno (si existen) ──
+OPENAI_KEY="${OPENAI_API_KEY:-}"
+STABILITY_KEY="${STABILITY_API_KEY:-}"
+RESEND_KEY="${RESEND_API_KEY:-}"
+
 # ── Escribir archivo limpio ──
 cat > "$ENV_FILE" << EOF
 NEXT_PUBLIC_SUPABASE_URL=${SUPABASE_URL}
 NEXT_PUBLIC_SUPABASE_ANON_KEY=${SUPABASE_ANON}
 SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE}
-OPENAI_API_KEY=
-STABILITY_API_KEY=
-RESEND_API_KEY=
+OPENAI_API_KEY=${OPENAI_KEY}
+STABILITY_API_KEY=${STABILITY_KEY}
+RESEND_API_KEY=${RESEND_KEY}
 RESEND_FROM_EMAIL="Reino Editorial <info@editorialreino.com>"
 EOF
 
@@ -61,4 +68,9 @@ while IFS='=' read -r key value; do
 done < "$ENV_FILE"
 
 echo ""
-echo "Listo. Ahora agrega los valores reales de OPENAI_API_KEY, STABILITY_API_KEY y RESEND_API_KEY editando $ENV_FILE"
+if [ -z "$OPENAI_KEY" ] || [ -z "$STABILITY_KEY" ] || [ -z "$RESEND_KEY" ]; then
+  echo "Nota: Algunas API keys quedaron vacias. Para rellenarlas ejecuta:"
+  echo "  OPENAI_API_KEY=xxx STABILITY_API_KEY=xxx RESEND_API_KEY=xxx bash scripts/setup-env-local.sh"
+else
+  echo "Todas las variables tienen valor. .env.local listo para usar."
+fi
