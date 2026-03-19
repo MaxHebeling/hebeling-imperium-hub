@@ -46,5 +46,4 @@ on public.lead_briefs for select
 using (
   org_id = public.get_my_org_id()
   and public.get_my_role() in ('superadmin', 'admin', 'sales', 'ops')
-  and public.staff_brand_matches_slug(brand)
 );

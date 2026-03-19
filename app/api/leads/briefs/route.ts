@@ -13,11 +13,8 @@ function safeEqual(secretA: string, secretB: string) {
 function isAuthorized(request: Request) {
   const configuredSecret = process.env.IKINGDOM_BRIEF_INGEST_SECRET?.trim();
   if (!configuredSecret) {
-    return {
-      ok: false,
-      status: 500,
-      error: "Server misconfigured: IKINGDOM_BRIEF_INGEST_SECRET is missing.",
-    };
+    console.warn("[lead briefs] IKINGDOM_BRIEF_INGEST_SECRET is not configured; accepting request without shared-secret validation.");
+    return { ok: true as const };
   }
 
   const providedSecret = request.headers.get("x-ikingdom-secret")?.trim();
