@@ -2,6 +2,8 @@ import { timingSafeEqual } from "node:crypto";
 import { NextResponse } from "next/server";
 import { storeLeadBrief, type LeadBriefPayload } from "@/lib/leads/briefs";
 
+export const dynamic = "force-dynamic";
+
 function safeEqual(secretA: string, secretB: string) {
   const a = Buffer.from(secretA, "utf8");
   const b = Buffer.from(secretB, "utf8");
