@@ -1,7 +1,7 @@
 import { CompanySecondaryNav } from "@/components/company-secondary-nav";
 
 const IKINGDOM_NAV_ITEMS = [
-  { href: "/app/companies/ikingdom/overview", label: "Panel" },
+  { href: "/app/companies/ikingdom/overview", label: "Overview" },
   { href: "/app/companies/ikingdom/leads", label: "Leads" },
   { href: "/app/companies/ikingdom/briefs", label: "Briefs" },
   { href: "/app/companies/ikingdom/proposals", label: "Propuestas" },
