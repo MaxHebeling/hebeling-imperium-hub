@@ -147,7 +147,7 @@ function CovenantCoreCard() {
                 Relationship Intelligence Platform
               </p>
               <p className="text-xs text-[#8A95A5] mt-1">
-                Unified CRM across Editorial, iKingdom, Imperium & Ministerio
+                Unified CRM across Editorial, iKingdom, Lead Hunter, Imperium & Ministerio
               </p>
             </div>
           </div>
@@ -220,16 +220,16 @@ export function CompaniesPanel() {
       accentText: "text-[#C8A84B]",
     },
     {
-      name: "Convocation OS",
-      href: "/app/companies/convocation-os",
-      tagline: "Event operations & command center",
+      name: "Lead Hunter",
+      href: "/app/companies/lead-hunter",
+      tagline: "Construction lead engine",
       activeProjects: 1,
-      leads: 9,
-      revenue: "Pilot",
-      recentActivity: "RAF was positioned as the first event series under Convocation OS",
-      logo: "/logo-convocation-os.svg",
-      accentBg: "bg-amber-600",
-      accentText: "text-amber-400",
+      leads: 24,
+      revenue: "$12.4K",
+      recentActivity: "ANNA qualification flow approved for construction intake",
+      logo: "/logo-lead-hunter.svg",
+      accentBg: "bg-[#C96F2D]",
+      accentText: "text-[#E1A24A]",
     },
     {
       name: "Imperium Group",
