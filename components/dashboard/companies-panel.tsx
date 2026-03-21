@@ -220,6 +220,18 @@ export function CompaniesPanel() {
       accentText: "text-[#C8A84B]",
     },
     {
+      name: "Convocation OS",
+      href: "/app/companies/convocation-os",
+      tagline: "Event operations & command center",
+      activeProjects: 1,
+      leads: 9,
+      revenue: "Pilot",
+      recentActivity: "RAF was positioned as the first event series under Convocation OS",
+      logo: "/logo-convocation-os.svg",
+      accentBg: "bg-amber-600",
+      accentText: "text-amber-400",
+    },
+    {
       name: "Imperium Group",
       href: "/app/companies/imperium",
       tagline: "Holding & strategic operations",
@@ -238,7 +250,7 @@ export function CompaniesPanel() {
       <div className="flex items-center justify-between mb-4">
         <div>
           <h3 className="text-sm font-semibold text-foreground">Portfolio Companies</h3>
-          <p className="text-xs text-muted-foreground mt-0.5">4 active entities</p>
+          <p className="text-xs text-muted-foreground mt-0.5">5 active entities</p>
         </div>
         <Link href="/app/companies" className="text-xs text-primary hover:text-primary/80 transition-colors font-medium">
           View all

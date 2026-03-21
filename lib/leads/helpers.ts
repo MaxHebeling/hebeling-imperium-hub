@@ -108,6 +108,51 @@ export interface Lead {
   updated_at: string;
 }
 
+interface FindLeadByContactInput {
+  brand?: string;
+  email?: string;
+  whatsapp?: string;
+}
+
+/**
+ * Find an existing lead by contact details to avoid duplicate records.
+ */
+export async function findLeadByContact({
+  brand,
+  email,
+  whatsapp,
+}: FindLeadByContactInput): Promise<Lead | null> {
+  const supabase = getAdminClient();
+  const filters: string[] = [];
+
+  if (email?.trim()) {
+    filters.push(`email.eq.${email.trim()}`);
+  }
+
+  if (whatsapp?.trim()) {
+    filters.push(`whatsapp.eq.${whatsapp.trim()}`);
+  }
+
+  if (filters.length === 0) {
+    return null;
+  }
+
+  let query = supabase.from("leads").select("*").or(filters.join(",")).limit(1);
+
+  if (brand?.trim()) {
+    query = query.eq("brand", brand.trim());
+  }
+
+  const { data, error } = await query.maybeSingle();
+
+  if (error) {
+    console.error("Lead lookup error:", error);
+    throw new Error(`Failed to find lead by contact: ${error.message}`);
+  }
+
+  return data ?? null;
+}
+
 /**
  * Create a new lead in the database
  */

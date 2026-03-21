@@ -95,6 +95,27 @@ const UNITS: BusinessUnit[] = [
     featured: false,
   },
   {
+    slug: "convocation-os",
+    name: "Convocation OS",
+    tagline: "Events & Experiences Command",
+    description:
+      "Unidad operativa interna para convocatorias, speakers, agenda, branding y escalado multi-ciudad dentro de Evelyn OS / HEBELING OS. RAF vive aqui como primer event series, mientras rafconference.org permanece como la cara publica del evento.",
+    href: "/app/companies/convocation-os",
+    editorialHref: null,
+    oficinaHref: null,
+    webProjectsHref: null,
+    logo: "/logo-convocation-os.svg",
+    logoBg: "#0B1420",
+    logoRounded: false,
+    gradient: "linear-gradient(135deg, #7A2E1C, #C8A75B)",
+    accent: "#D69D53",
+    stats: [
+      { label: "Series", value: "1" },
+      { label: "Editions", value: "Ready" },
+    ],
+    featured: false,
+  },
+  {
     slug: "imperium",
     name: "Imperium Group",
     tagline: "Operations & Strategy",
@@ -110,7 +131,7 @@ const UNITS: BusinessUnit[] = [
     gradient: `linear-gradient(135deg, #0B1C2E, ${P.gold})`,
     accent: "#0B1C2E",
     stats: [
-      { label: "Unidades", value: "4" },
+      { label: "Unidades", value: "6" },
       { label: "Países", value: "3" },
     ],
     featured: false,
@@ -215,7 +236,7 @@ export default function CompaniesPage() {
           {/* quick stats */}
           <div className="flex flex-wrap gap-6 mt-8">
             {([
-              { icon: Zap, label: "Unidades Activas", value: "5" },
+              { icon: Zap, label: "Unidades Activas", value: "6" },
               { icon: BarChart3, label: "Pipeline AI", value: "Activo" },
               { icon: Users, label: "Jurisdicciones", value: "USA · MX · AR" },
               { icon: Zap, label: "Motor", value: "OpenAI + Claude" },
