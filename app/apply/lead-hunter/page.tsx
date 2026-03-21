@@ -16,7 +16,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { useLanguage } from "@/lib/i18n";
+import { LanguageProvider, useLanguage } from "@/lib/i18n";
 
 const LEAD_HUNTER_BACKGROUND = "/lead-hunter-cinematic-luxury-v1.jpg";
 
@@ -55,6 +55,14 @@ const initialFormData: LeadHunterFormData = {
 };
 
 export default function LeadHunterApplyPage() {
+  return (
+    <LanguageProvider>
+      <LeadHunterApplyContent />
+    </LanguageProvider>
+  );
+}
+
+function LeadHunterApplyContent() {
   const { locale } = useLanguage();
   const isES = locale === "es";
   const [formData, setFormData] = useState<LeadHunterFormData>(initialFormData);

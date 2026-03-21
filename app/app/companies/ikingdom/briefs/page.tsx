@@ -4,6 +4,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { createClient } from "@/lib/supabase/server";
 import { ikingdomBriefLibrary } from "@/lib/ikingdom-office";
 
+export const dynamic = "force-dynamic";
+
 interface LeadBriefRow {
   id: string;
   company_name: string;
