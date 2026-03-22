@@ -5,23 +5,32 @@ export interface LatestManuscriptResult {
   file: EditorialFile;
 }
 
+function getErrorCode(error: unknown): string | undefined {
+  if (typeof error === "object" && error !== null && "code" in error) {
+    const code = error.code;
+    return typeof code === "string" ? code : undefined;
+  }
+  return undefined;
+}
+
 /**
  * Find the most recent manuscript file for a project.
  *
- * For el MVP consideramos cualquier file_type que empiece por "manuscript"
- * (por ejemplo: manuscript_original, manuscript_edited).
+ * For el MVP consideramos cualquier file_type textual procesable:
+ * - manuscript_original
+ * - manuscript_edited
+ * - working_file
  */
 export async function getLatestManuscriptForProject(
   projectId: string
 ): Promise<LatestManuscriptResult | null> {
   const supabase = getAdminClient();
 
-  // Usamos starts_with(file_type, 'manuscript') para cubrir original/edited.
   const { data, error } = await supabase
     .from("editorial_files")
     .select("*")
     .eq("project_id", projectId)
-    .like("file_type", "manuscript%")
+    .or("file_type.like.manuscript%,file_type.eq.working_file")
     .order("created_at", { ascending: false })
     .limit(1)
     .maybeSingle();
@@ -29,7 +38,7 @@ export async function getLatestManuscriptForProject(
   if (error) {
     console.error("[editorial-ai][process] getLatestManuscriptForProject error", {
       projectId,
-      code: (error as any).code,
+      code: getErrorCode(error),
       message: error.message,
     });
     return null;
@@ -41,4 +50,3 @@ export async function getLatestManuscriptForProject(
 
   return { file: data as EditorialFile };
 }
-

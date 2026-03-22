@@ -1,23 +1,35 @@
 import { generateText, Output } from "ai";
+import { createOpenAI } from "@ai-sdk/openai";
 import { z } from "zod";
 import { getAdminClient, ORG_ID } from "@/lib/leads/helpers";
 import { markAiJobStatus } from "./jobs";
 import { getDefaultPrompt, buildPromptFromDefault } from "./default-prompts";
 import { fetchManuscriptContent } from "./manuscript-loader";
 import type { EditorialAiTaskKey, EditorialAiJobContext } from "@/lib/editorial/types/ai";
-import type { EditorialStageKey } from "@/lib/editorial/types/editorial";
+import type {
+  EditorialAnyStageKey,
+  EditorialPipelineStageKey,
+} from "@/lib/editorial/types/editorial";
 import { runLineEditingAgent } from "./line-editing";
 import { runCopyeditingAgent } from "./copyediting";
 import { saveSuggestionsFromLineEditing, saveSuggestionsFromCopyediting } from "./suggestions";
-import { getNextStage } from "@/lib/editorial/pipeline/stage-utils";
 import { initializeNextStage } from "@/lib/editorial/pipeline/stage-transitions";
+import {
+  getNextPipelineStage,
+  mapPipelineStageToProjectStage,
+  resolvePipelineStageKey,
+} from "@/lib/editorial/pipeline/stage-compat";
 import { logWorkflowEvent } from "@/lib/editorial/workflow-events";
 import {
   getNextTransition,
   validateEditorialQuality,
   runErrorPreventionChecks,
-  type OrchestratorState,
 } from "@/lib/editorial/orchestrator/editorial-orchestrator";
+
+const openai = createOpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
+  baseURL: "https://api.openai.com/v1",
+});
 
 // Schema for structured AI output
 const AnalysisResultSchema = z.object({
@@ -37,10 +49,139 @@ const AnalysisResultSchema = z.object({
 
 export type AnalysisResult = z.infer<typeof AnalysisResultSchema>;
 
+function extractFirstJsonObject(rawText: string): string | null {
+  const fencedMatch = rawText.match(/```json\s*([\s\S]*?)```/i) ?? rawText.match(/```\s*([\s\S]*?)```/);
+  if (fencedMatch?.[1]) {
+    return fencedMatch[1].trim();
+  }
+
+  const start = rawText.indexOf("{");
+  if (start === -1) return null;
+
+  let depth = 0;
+  let inString = false;
+  let escaped = false;
+
+  for (let index = start; index < rawText.length; index += 1) {
+    const char = rawText[index];
+
+    if (escaped) {
+      escaped = false;
+      continue;
+    }
+
+    if (char === "\\") {
+      escaped = true;
+      continue;
+    }
+
+    if (char === "\"") {
+      inString = !inString;
+      continue;
+    }
+
+    if (inString) continue;
+
+    if (char === "{") depth += 1;
+    if (char === "}") {
+      depth -= 1;
+      if (depth === 0) {
+        return rawText.slice(start, index + 1);
+      }
+    }
+  }
+
+  return null;
+}
+
+function sanitizeJsonStringControls(value: string): string {
+  let result = "";
+  let inString = false;
+  let escaped = false;
+
+  for (const char of value) {
+    if (escaped) {
+      result += char;
+      escaped = false;
+      continue;
+    }
+
+    if (char === "\\") {
+      result += char;
+      escaped = true;
+      continue;
+    }
+
+    if (char === "\"") {
+      result += char;
+      inString = !inString;
+      continue;
+    }
+
+    if (inString) {
+      if (char === "\n") {
+        result += "\\n";
+        continue;
+      }
+      if (char === "\r") {
+        result += "\\r";
+        continue;
+      }
+      if (char === "\t") {
+        result += "\\t";
+        continue;
+      }
+      if (char.charCodeAt(0) < 0x20) {
+        result += " ";
+        continue;
+      }
+    }
+
+    result += char;
+  }
+
+  return result;
+}
+
+function fallbackAnalysisResult(rawText: string): AnalysisResult {
+  const cleaned = rawText.replace(/```json|```/gi, "").replace(/\s+/g, " ").trim();
+  return {
+    summary:
+      cleaned.slice(0, 500) ||
+      "La IA devolvio una respuesta no estructurada. Conviene reintentar la etapa para obtener hallazgos trazables.",
+    score: null,
+    strengths: [],
+    improvements: [],
+    issues: [],
+    recommendations: [
+      "Reintentar la etapa si necesitas hallazgos estructurados antes de aprobar.",
+    ],
+    metadata: {
+      mode: "unstructured_fallback",
+    },
+  };
+}
+
+function parseAnalysisResultFromRawText(rawText: string): AnalysisResult {
+  const extractedJson = extractFirstJsonObject(rawText);
+  if (!extractedJson) {
+    return fallbackAnalysisResult(rawText);
+  }
+
+  try {
+    const parsed = AnalysisResultSchema.safeParse(JSON.parse(sanitizeJsonStringControls(extractedJson)));
+    if (parsed.success) return parsed.data;
+  } catch {
+    // ignore and fall back below
+  }
+
+  return fallbackAnalysisResult(rawText);
+}
+
 interface ProcessJobOptions {
   jobId: string;
   projectId: string;
-  stageKey: EditorialStageKey;
+  stageKey: EditorialPipelineStageKey;
   taskKey: EditorialAiTaskKey;
   context: EditorialAiJobContext;
   /** Pre-fetched manuscript text — avoids re-downloading for every stage. */
@@ -58,9 +199,9 @@ export { fetchManuscriptContent } from "./manuscript-loader";
  * Falls back to null so the caller can use the built-in default prompt.
  */
 async function fetchCustomPrompt(
-  stageKey: EditorialStageKey,
+  stageKey: EditorialPipelineStageKey,
   taskKey: EditorialAiTaskKey
-): Promise<{ taskKey: EditorialAiTaskKey; stageKey: EditorialStageKey; systemPrompt: string; userPromptTemplate: string } | null> {
+): Promise<{ taskKey: EditorialAiTaskKey; stageKey: EditorialPipelineStageKey; systemPrompt: string; userPromptTemplate: string } | null> {
   try {
     const supabase = getAdminClient();
     const { data, error } = await supabase
@@ -117,27 +258,72 @@ export async function processAiJob(options: ProcessJobOptions): Promise<Analysis
         context: options.context,
       });
 
-      await saveSuggestionsFromLineEditing(
-        {
+      let persistedSuggestions = true;
+      try {
+        await saveSuggestionsFromLineEditing(
+          {
+            projectId: options.projectId,
+            jobId: options.jobId,
+            fileId: options.context.source_file_id ?? "",
+            fileVersion: options.context.source_file_version ?? 1,
+            taskKey: options.taskKey,
+          },
+          result
+        );
+      } catch (suggestionError) {
+        persistedSuggestions = false;
+        console.error("[editorial-ai][processor] line_editing suggestions persistence failed; continuing", {
           projectId: options.projectId,
           jobId: options.jobId,
-          fileId: options.context.source_file_id ?? "",
-          fileVersion: options.context.source_file_version ?? 1,
+          stageKey: options.stageKey,
           taskKey: options.taskKey,
-        },
-        result
-      );
+          error:
+            suggestionError instanceof Error ? suggestionError.message : "unknown_error",
+        });
+      }
 
       await markAiJobStatus({ jobId: options.jobId, status: "succeeded" });
+
+      const analysisResult: AnalysisResult = {
+        summary: result.summary,
+        score: result.total_changes > 0 ? Math.max(1, 10 - Math.min(result.total_changes, 9)) : 10,
+        strengths: [
+          "Se generaron sugerencias de estilo y claridad sobre la version actual del manuscrito.",
+        ],
+        improvements: result.changes.slice(0, 5).map((change) => change.justification),
+        issues: result.changes.map((change) => ({
+          type:
+            change.severity === "alta"
+              ? "error"
+              : change.severity === "media"
+                ? "warning"
+                : "suggestion",
+          description: change.justification,
+          location:
+            change.location?.paragraph_index !== undefined &&
+            change.location?.paragraph_index !== null
+              ? `Parrafo ${change.location.paragraph_index + 1}`
+              : null,
+          suggestion: change.suggested_text,
+        })),
+        recommendations: [
+          "Revisa las sugerencias, sube una version corregida y vuelve a correr la IA antes de aprobar.",
+        ],
+        metadata: {
+          mode: "line_editing",
+          total_changes: String(result.total_changes),
+          suggestions_persisted: persistedSuggestions ? "true" : "false",
+        },
+      };
 
       await supabase
         .from("editorial_jobs")
         .update({
-          output_ref: JSON.stringify(result),
+          output_ref: JSON.stringify(analysisResult),
         })
         .eq("id", options.jobId);
 
-      return null;
+      return analysisResult;
     }
 
     if (options.taskKey === "copyediting") {
@@ -147,27 +333,72 @@ export async function processAiJob(options: ProcessJobOptions): Promise<Analysis
         context: options.context,
       });
 
-      await saveSuggestionsFromCopyediting(
-        {
+      let persistedSuggestions = true;
+      try {
+        await saveSuggestionsFromCopyediting(
+          {
+            projectId: options.projectId,
+            jobId: options.jobId,
+            fileId: options.context.source_file_id ?? "",
+            fileVersion: options.context.source_file_version ?? 1,
+            taskKey: options.taskKey,
+          },
+          result
+        );
+      } catch (suggestionError) {
+        persistedSuggestions = false;
+        console.error("[editorial-ai][processor] copyediting suggestions persistence failed; continuing", {
           projectId: options.projectId,
           jobId: options.jobId,
-          fileId: options.context.source_file_id ?? "",
-          fileVersion: options.context.source_file_version ?? 1,
+          stageKey: options.stageKey,
           taskKey: options.taskKey,
-        },
-        result
-      );
+          error:
+            suggestionError instanceof Error ? suggestionError.message : "unknown_error",
+        });
+      }
 
       await markAiJobStatus({ jobId: options.jobId, status: "succeeded" });
+
+      const analysisResult: AnalysisResult = {
+        summary: result.summary,
+        score: result.total_changes > 0 ? Math.max(1, 10 - Math.min(result.total_changes, 9)) : 10,
+        strengths: [
+          "Se detectaron correcciones ortotipograficas concretas sobre la version actual del manuscrito.",
+        ],
+        improvements: result.changes.slice(0, 5).map((change) => change.justification),
+        issues: result.changes.map((change) => ({
+          type:
+            change.severity === "alta"
+              ? "error"
+              : change.severity === "media"
+                ? "warning"
+                : "suggestion",
+          description: change.justification,
+          location:
+            change.location?.paragraph_index !== undefined &&
+            change.location?.paragraph_index !== null
+              ? `Parrafo ${change.location.paragraph_index + 1}`
+              : null,
+          suggestion: change.suggested_text,
+        })),
+        recommendations: [
+          "Corrige las observaciones ortotipograficas, sube una nueva version y repite la etapa antes de aprobar.",
+        ],
+        metadata: {
+          mode: "copyediting",
+          total_changes: String(result.total_changes),
+          suggestions_persisted: persistedSuggestions ? "true" : "false",
+        },
+      };
 
       await supabase
         .from("editorial_jobs")
         .update({
-          output_ref: JSON.stringify(result),
+          output_ref: JSON.stringify(analysisResult),
         })
         .eq("id", options.jobId);
 
-      return null;
+      return analysisResult;
     }
 
     // Get prompt: check for custom override first, then fall back to default
@@ -207,29 +438,30 @@ export async function processAiJob(options: ProcessJobOptions): Promise<Analysis
       "typography_check",
       "page_flow_review",
     ];
-    const modelId = FAST_TASKS.includes(options.taskKey) ? "openai/gpt-4o-mini" : "openai/gpt-4o";
+    const model = FAST_TASKS.includes(options.taskKey)
+      ? openai("gpt-4o-mini")
+      : openai("gpt-4o");
 
-    const result = await generateText({
-      model: modelId,
-      system,
-      prompt: user,
-      output: Output.object({
-        schema: AnalysisResultSchema,
-      }),
-    });
-
-    // Extract structured result
     let analysisResult: AnalysisResult;
-    if (result.object) {
-      analysisResult = result.object as AnalysisResult;
-    } else {
-      // Fallback: parse the text response as JSON
-      const text = result.text?.trim() ?? "";
-      const jsonMatch = text.match(/\{[\s\S]*\}/);
-      if (!jsonMatch) {
-        throw new Error("AI no devolvió un objeto JSON válido en la respuesta.");
-      }
-      analysisResult = AnalysisResultSchema.parse(JSON.parse(jsonMatch[0]));
+    try {
+      const result = await generateText({
+        model,
+        system,
+        prompt: user,
+        output: Output.object({
+          schema: AnalysisResultSchema,
+        }),
+      });
+
+      analysisResult = (result.output as AnalysisResult) ??
+        parseAnalysisResultFromRawText(result.text?.trim() ?? "");
+    } catch {
+      const fallbackResult = await generateText({
+        model,
+        system,
+        prompt: `${user}\n\nSi no puedes seguir un schema exacto, devuelve un unico objeto JSON valido con las claves summary, score, strengths, improvements, issues, recommendations y metadata.`,
+      });
+      analysisResult = parseAnalysisResultFromRawText(fallbackResult.text?.trim() ?? "");
     }
 
     // Mark job as succeeded (this also sets finished_at)
@@ -252,7 +484,7 @@ export async function processAiJob(options: ProcessJobOptions): Promise<Analysis
         completed_at: new Date().toISOString(),
       })
       .eq("project_id", options.projectId)
-      .eq("stage_key", options.stageKey);
+      .eq("stage_key", mapPipelineStageToProjectStage(options.stageKey));
 
     // Auto-advance: complete this stage and initialize the next one
     // (skipped when the caller orchestrates stages in parallel)
@@ -286,13 +518,14 @@ export async function processAiJob(options: ProcessJobOptions): Promise<Analysis
  */
 async function autoAdvanceToNextStage(
   projectId: string,
-  completedStageKey: EditorialStageKey
+  completedStageKey: EditorialPipelineStageKey
 ): Promise<void> {
   const supabase = getAdminClient();
 
   // Look up orchestrator transition rules
   const transition = getNextTransition(completedStageKey);
-  const nextStageKey = transition?.toStage ?? getNextStage(completedStageKey);
+  const nextStageKey = transition?.toStage ?? getNextPipelineStage(completedStageKey);
+  const completedProjectStageKey = mapPipelineStageToProjectStage(completedStageKey);
 
   if (!nextStageKey) {
     // Last stage (distribution) completed — mark project as finished
@@ -300,7 +533,7 @@ async function autoAdvanceToNextStage(
       .from("editorial_projects")
       .update({
         status: "completed",
-        current_stage: completedStageKey,
+        current_stage: completedProjectStageKey,
       })
       .eq("id", projectId);
 
@@ -334,7 +567,7 @@ async function autoAdvanceToNextStage(
       .eq("project_id", projectId);
 
     const stageStatuses = (allStages ?? []).map((s) => ({
-      stageKey: s.stage_key as EditorialStageKey,
+      stageKey: resolvePipelineStageKey(s.stage_key as EditorialAnyStageKey),
       status: s.status as "pending" | "processing" | "completed" | "approved" | "review_required" | "failed",
     }));
 
@@ -412,7 +645,7 @@ async function autoAdvanceToNextStage(
     // Mark the current stage as completed but don't auto-advance
     await supabase
       .from("editorial_projects")
-      .update({ current_stage: completedStageKey })
+      .update({ current_stage: completedProjectStageKey })
       .eq("id", projectId);
 
     const { data: project } = await supabase
@@ -443,10 +676,12 @@ async function autoAdvanceToNextStage(
     return;
   }
 
+  const nextProjectStageKey = mapPipelineStageToProjectStage(nextStageKey);
+
   // ── Advance to next stage ──
   await supabase
     .from("editorial_projects")
-    .update({ current_stage: nextStageKey })
+    .update({ current_stage: nextProjectStageKey })
     .eq("id", projectId);
 
   const { data: project } = await supabase
@@ -499,7 +734,7 @@ async function autoAdvanceToNextStage(
         await processAiJob({
           jobId: nextJob.id,
           projectId: nextJob.project_id,
-          stageKey: nextJob.stage_key as EditorialStageKey,
+          stageKey: nextJob.stage_key as EditorialPipelineStageKey,
           taskKey: nextJob.job_type as EditorialAiTaskKey,
           context,
         });
@@ -541,7 +776,7 @@ export async function processPendingJobs(limit = 5): Promise<{ processed: number
       await processAiJob({
         jobId: job.id,
         projectId: job.project_id,
-        stageKey: job.stage_key as EditorialStageKey,
+        stageKey: job.stage_key as EditorialPipelineStageKey,
         taskKey: job.job_type as EditorialAiTaskKey,
         context,
       });

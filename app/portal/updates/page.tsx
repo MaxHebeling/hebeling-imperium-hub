@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { Bell, BookOpen, MessageSquare, CheckCircle2, Clock, Loader2, AlertCircle } from "lucide-react";
+import { Bell, BookOpen, MessageSquare, CheckCircle2, Clock, Loader2 } from "lucide-react";
 import type { PortalLocale } from "@/lib/editorial/i18n/portal-translations";
 import { getTranslations } from "@/lib/editorial/i18n/portal-translations";
 

@@ -1,5 +1,12 @@
 // Covenant Core - Type Definitions
 
+export type CovenantBusinessUnit =
+  | "editorial"
+  | "ikingdom"
+  | "imperium"
+  | "ministerio"
+  | "lead_hunter";
+
 export interface CovenantPerson {
   id: string;
   created_at: string;
@@ -54,7 +61,7 @@ export interface CovenantBusinessConnection {
   created_at: string;
   person_id: string | null;
   organization_id: string | null;
-  business_unit: 'editorial' | 'ikingdom' | 'imperium' | 'ministerio';
+  business_unit: CovenantBusinessUnit;
   connection_type: string;
   status: 'active' | 'inactive' | 'pending';
   lifetime_value: number;
@@ -83,7 +90,7 @@ export interface CovenantOpportunity {
   description: string | null;
   person_id: string | null;
   organization_id: string | null;
-  business_unit: 'editorial' | 'ikingdom' | 'imperium' | 'ministerio';
+  business_unit: CovenantBusinessUnit;
   stage: 'lead' | 'qualified' | 'proposal' | 'negotiation' | 'closed_won' | 'closed_lost';
   value: number | null;
   currency: string;
@@ -107,7 +114,7 @@ export interface CovenantEvent {
   location: string | null;
   is_virtual: boolean;
   virtual_link: string | null;
-  business_unit: 'editorial' | 'ikingdom' | 'imperium' | 'ministerio' | null;
+  business_unit: CovenantBusinessUnit | null;
   owner_id: string | null;
 }
 

@@ -8,6 +8,21 @@ import { getAdminClient } from "@/lib/leads/helpers";
 
 const MAX_SUMMARY_CHARS = 4000;
 
+interface OpenAiChatCompletionResponse {
+  choices?: Array<{
+    message?: {
+      content?: string | null;
+    };
+  }>;
+}
+
+interface OpenAiImageGenerationResponse {
+  data?: Array<{
+    b64_json?: string | null;
+    revised_prompt?: string | null;
+  }>;
+}
+
 /**
  * POST /api/staff/projects/[projectId]/ai/generate-cover
  * Body: { userPrompt?: string }
@@ -129,8 +144,8 @@ Responde con este JSON exacto:
       );
     }
 
-    const summaryJson = (await summaryRes.json()) as Record<string, unknown>;
-    const summaryContent = (summaryJson as any)?.choices?.[0]?.message?.content ?? "{}";
+    const summaryJson = (await summaryRes.json()) as OpenAiChatCompletionResponse;
+    const summaryContent = summaryJson.choices?.[0]?.message?.content ?? "{}";
     let coverConcept: {
       theme?: string;
       mood?: string;
@@ -182,9 +197,9 @@ Responde con este JSON exacto:
       );
     }
 
-    const dalleJson = (await dalleRes.json()) as Record<string, unknown>;
-    const imageB64 = (dalleJson as any)?.data?.[0]?.b64_json;
-    const revisedPrompt = (dalleJson as any)?.data?.[0]?.revised_prompt ?? dallePrompt;
+    const dalleJson = (await dalleRes.json()) as OpenAiImageGenerationResponse;
+    const imageB64 = dalleJson.data?.[0]?.b64_json;
+    const revisedPrompt = dalleJson.data?.[0]?.revised_prompt ?? dallePrompt;
 
     if (!imageB64) {
       return NextResponse.json(

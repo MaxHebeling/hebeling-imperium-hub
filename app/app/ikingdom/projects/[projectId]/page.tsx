@@ -25,7 +25,6 @@ import {
   WEB_STAGE_KEYS,
   WEB_STAGE_LABELS,
   WEB_STAGE_DESCRIPTIONS,
-  WEB_STAGE_PROGRESS,
   WEB_SERVICE_TYPE_LABELS,
 } from "@/lib/ikingdom/pipeline/constants";
 
@@ -246,7 +245,6 @@ export default function IKingdomProjectDetailPage() {
   }
 
   const stageMap = new Map(stages.map((s) => [s.stage_key, s]));
-  const currentStageIndex = WEB_STAGE_KEYS.indexOf(project.current_stage);
 
   return (
     <div className="min-h-full" style={{ background: P.bg, color: P.text }}>

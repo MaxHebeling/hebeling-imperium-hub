@@ -13,7 +13,6 @@ const ADMIN_FULL_CAPABILITIES: EditorialCapability[] = [
   "stage:reopen",
   "files:upload",
   "files:read",
-  "files:delete",
   "comments:create",
   "assignment:change",
   "rule:override",
@@ -171,4 +170,3 @@ export async function requireEditorialCapability(options: {
   });
   return decision;
 }
-

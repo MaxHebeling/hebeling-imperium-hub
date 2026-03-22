@@ -13,6 +13,14 @@ export interface ExtractedManuscriptText {
   truncated: boolean;
 }
 
+type PdfParseResult = {
+  text?: string;
+};
+
+type PdfParseModule = {
+  default?: (buffer: Buffer) => Promise<PdfParseResult>;
+};
+
 function isDocx(file: EditorialFile): boolean {
   const ext = (file.storage_path.split(".").pop() ?? "").toLowerCase();
   return ext === "docx" || file.mime_type === "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
@@ -75,10 +83,11 @@ export async function extractManuscriptText(file: EditorialFile): Promise<Extrac
       const text = truncated ? value.slice(0, MAX_CHARS_FOR_MVP) : value;
 
       if (truncated) {
-        console.warn("[editorial-ai][extract] DOCX text truncated for MVP", {
+      console.warn("[editorial-ai][extract] DOCX text truncated for MVP", {
           fileId: file.id,
           originalChars: value.length,
           maxChars: MAX_CHARS_FOR_MVP,
+          approxOriginalSize,
         });
       }
 
@@ -95,11 +104,12 @@ export async function extractManuscriptText(file: EditorialFile): Promise<Extrac
   if (isPdf(file)) {
     console.info("[editorial-ai][extract] parsing PDF", { fileId: file.id });
     try {
-      const pdfParseModule = await import("pdf-parse");
-      const pdfParse =
-        "default" in pdfParseModule
-          ? pdfParseModule.default
-          : (pdfParseModule as any);
+      const pdfParseModule = (await import("pdf-parse")) as PdfParseModule;
+      const pdfParse = pdfParseModule.default;
+
+      if (!pdfParse) {
+        throw new Error("pdf-parse default export is unavailable.");
+      }
 
       const result = await pdfParse(buffer);
       const originalText = result.text ?? "";
@@ -111,6 +121,7 @@ export async function extractManuscriptText(file: EditorialFile): Promise<Extrac
           fileId: file.id,
           originalChars: originalText.length,
           maxChars: MAX_CHARS_FOR_MVP,
+          approxOriginalSize,
         });
       }
 
@@ -131,4 +142,3 @@ export async function extractManuscriptText(file: EditorialFile): Promise<Extrac
   });
   throw new Error("Formato de manuscrito no soportado para extracción de texto (solo DOCX y PDF).");
 }
-

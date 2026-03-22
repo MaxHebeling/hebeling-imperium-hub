@@ -14,8 +14,9 @@ import {
   Loader2,
   AlertCircle,
 } from "lucide-react";
-import type { EditorialProject, EditorialStageKey } from "@/lib/editorial/types/editorial";
+import type { EditorialProject } from "@/lib/editorial/types/editorial";
 import { getClientVisibleProgress } from "@/lib/editorial/pipeline/client-delays";
+import { resolvePipelineStageKey } from "@/lib/editorial/pipeline/stage-compat";
 import { getTranslations } from "@/lib/editorial/i18n/portal-translations";
 import type { PortalLocale } from "@/lib/editorial/i18n/portal-translations";
 
@@ -59,7 +60,7 @@ export default function PortalOverviewPage() {
   );
   const completedProjects = projects.filter((p) => p.status === "completed");
   const inReviewProjects = projects.filter(
-    (p) => p.current_stage === "revision_final" || p.status === "review"
+    (p) => resolvePipelineStageKey(p.current_stage) === "revision_final" || p.status === "review"
   );
 
   return (
@@ -213,12 +214,13 @@ export default function PortalOverviewPage() {
           ) : (
             <div className="space-y-4">
               {projects.map((project) => {
+                const pipelineStageKey = resolvePipelineStageKey(project.current_stage);
                 const visibleProgress = getClientVisibleProgress(
                   project.created_at,
-                  project.current_stage as EditorialStageKey
+                  project.current_stage
                 );
                 const stageLabel =
-                  t.stageLabels[project.current_stage as EditorialStageKey] ??
+                  t.stageLabels[pipelineStageKey] ??
                   project.current_stage;
 
                 return (

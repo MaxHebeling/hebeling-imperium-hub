@@ -4,13 +4,15 @@ import { getAdminClient } from "@/lib/leads/helpers";
 import { processAiJob, fetchManuscriptContent } from "@/lib/editorial/ai/processor";
 import { requestStageAiAssist } from "@/lib/editorial/ai/stage-assist";
 import { logWorkflowEvent } from "@/lib/editorial/workflow-events";
-import type { EditorialStageKey } from "@/lib/editorial/types/editorial";
+import type { EditorialPipelineStageKey } from "@/lib/editorial/types/editorial";
 import type { EditorialAiTaskKey } from "@/lib/editorial/types/ai";
+import { getLatestManuscriptForProject } from "@/lib/editorial/files/get-latest-manuscript";
+import { mapPipelineStageToProjectStage } from "@/lib/editorial/pipeline/stage-compat";
 
 // Each stage call should complete well within Vercel's timeout (10-60s)
 export const maxDuration = 60;
 
-const STAGE_PRIMARY_TASK: Partial<Record<EditorialStageKey, EditorialAiTaskKey>> = {
+const STAGE_PRIMARY_TASK: Partial<Record<EditorialPipelineStageKey, EditorialAiTaskKey>> = {
   ingesta: "manuscript_analysis",
   estructura: "structure_analysis",
   estilo: "style_suggestions",
@@ -21,7 +23,7 @@ const STAGE_PRIMARY_TASK: Partial<Record<EditorialStageKey, EditorialAiTaskKey>>
   distribution: "metadata_generation",
 };
 
-const STAGE_ORDER: EditorialStageKey[] = [
+const STAGE_ORDER: EditorialPipelineStageKey[] = [
   "ingesta",
   "estructura",
   "estilo",
@@ -61,7 +63,8 @@ export async function POST(
 
     // Parse request body
     const body = await req.json();
-    const stageKey = body.stageKey as EditorialStageKey;
+    const stageKey = body.stageKey as EditorialPipelineStageKey;
+    const projectStageKey = mapPipelineStageToProjectStage(stageKey);
 
     if (!stageKey || !STAGE_ORDER.includes(stageKey)) {
       return NextResponse.json(
@@ -92,16 +95,8 @@ export async function POST(
       );
     }
 
-    // Get latest manuscript file
-    const { data: latestFile } = await supabase
-      .from("editorial_files")
-      .select("id, version")
-      .eq("project_id", projectId)
-      .order("version", { ascending: false })
-      .limit(1)
-      .single();
-
-    if (!latestFile) {
+    const latestFile = await getLatestManuscriptForProject(projectId);
+    if (!latestFile?.file) {
       return NextResponse.json(
         { success: false, error: "No hay manuscrito subido. Sube un archivo primero." },
         { status: 400 }
@@ -128,7 +123,7 @@ export async function POST(
       .from("editorial_stages")
       .update({ status: "processing", started_at: new Date().toISOString() })
       .eq("project_id", projectId)
-      .eq("stage_key", stageKey);
+      .eq("stage_key", projectStageKey);
 
     // Create the AI job
     const jobResult = await requestStageAiAssist({
@@ -137,12 +132,12 @@ export async function POST(
       stageKey,
       taskKey,
       requestedBy: "staff",
-      sourceFileId: latestFile.id,
-      sourceFileVersion: latestFile.version,
+      sourceFileId: latestFile.file.id,
+      sourceFileVersion: latestFile.file.version,
     });
 
     // Fetch manuscript content
-    const manuscriptText = await fetchManuscriptContent(projectId, latestFile.id);
+    const manuscriptText = await fetchManuscriptContent(projectId, latestFile.file.id);
 
     // Process the job — this is the actual AI call (~10-30s)
     const jobStart = Date.now();
@@ -157,8 +152,8 @@ export async function POST(
         context: {
           project_id: projectId,
           stage_key: stageKey,
-          source_file_id: latestFile.id,
-          source_file_version: latestFile.version,
+          source_file_id: latestFile.file.id,
+          source_file_version: latestFile.file.version,
           requested_by: "staff",
         },
         manuscriptText,
@@ -193,12 +188,14 @@ export async function POST(
         completed_at: new Date().toISOString(),
       })
       .eq("project_id", projectId)
-      .eq("stage_key", stageKey);
+      .eq("stage_key", projectStageKey);
 
     // Also mark all previous stages as completed (in case they were skipped)
     const stageIndex = STAGE_ORDER.indexOf(stageKey);
     if (stageIndex > 0) {
-      const previousStages = STAGE_ORDER.slice(0, stageIndex);
+      const previousStages = STAGE_ORDER
+        .slice(0, stageIndex)
+        .map((value) => mapPipelineStageToProjectStage(value));
       await supabase
         .from("editorial_stages")
         .update({
@@ -216,7 +213,7 @@ export async function POST(
     await supabase
       .from("editorial_projects")
       .update({
-        current_stage: stageKey,
+        current_stage: projectStageKey,
         progress_percent: progressPercent,
         status: stageKey === "distribution" ? "completed" : "processing",
       })

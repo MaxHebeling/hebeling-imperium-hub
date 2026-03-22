@@ -52,6 +52,8 @@ interface OrganizationsContentProps {
   organizations: Organization[];
 }
 
+type OrganizationsTranslations = ReturnType<typeof useLanguage>["t"];
+
 const statusColors: Record<string, string> = {
   active: "bg-emerald-500/10 text-emerald-400 border-emerald-500/30",
   inactive: "bg-slate-500/10 text-slate-400 border-slate-500/30",
@@ -289,7 +291,7 @@ export function OrganizationsContent({ organizations }: OrganizationsContentProp
   );
 }
 
-function EmptyOrgState({ t }: { t: any }) {
+function EmptyOrgState({ t }: { t: OrganizationsTranslations }) {
   return (
     <div className="flex flex-col items-center justify-center py-12 text-center">
       <div className="h-12 w-12 rounded-xl bg-muted/50 flex items-center justify-center mb-4">

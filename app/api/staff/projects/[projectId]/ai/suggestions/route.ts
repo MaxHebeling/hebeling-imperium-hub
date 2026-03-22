@@ -1,19 +1,41 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireStaff } from "@/lib/auth/staff";
 import { listSuggestionsForFile } from "@/lib/editorial/ai/suggestions";
+import type { EditorialAiTaskKey } from "@/lib/editorial/types/ai";
+
+function isEditorialAiTaskKey(value: string): value is EditorialAiTaskKey {
+  return [
+    "manuscript_analysis",
+    "structure_analysis",
+    "style_suggestions",
+    "orthotypography_review",
+    "issue_detection",
+    "quality_scoring",
+    "redline_diff",
+    "layout_analysis",
+    "typography_check",
+    "page_flow_review",
+    "export_validation",
+    "metadata_generation",
+    "line_editing",
+    "copyediting",
+    "concept_review",
+  ].includes(value);
+}
 
 export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ projectId: string }> }
 ) {
   try {
-    const staff = await requireStaff();
+    await requireStaff();
     const { projectId } = await params;
 
     const { searchParams } = new URL(req.url);
     const fileId = searchParams.get("fileId");
-    const taskKey = searchParams.get("taskKey") ?? undefined;
+    const rawTaskKey = searchParams.get("taskKey");
     const status = searchParams.get("status");
+    const taskKey = rawTaskKey && isEditorialAiTaskKey(rawTaskKey) ? rawTaskKey : undefined;
 
     if (!fileId) {
       return NextResponse.json(
@@ -25,7 +47,7 @@ export async function GET(
     const suggestions = await listSuggestionsForFile({
       projectId,
       fileId,
-      taskKey: taskKey as any,
+      taskKey,
       onlyPending: status === "pending",
     });
 
@@ -42,4 +64,3 @@ export async function GET(
     );
   }
 }
-

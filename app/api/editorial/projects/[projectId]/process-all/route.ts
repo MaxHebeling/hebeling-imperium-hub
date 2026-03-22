@@ -3,6 +3,7 @@ import { requireStaff } from "@/lib/auth/staff";
 import { getAdminClient } from "@/lib/leads/helpers";
 import { processAiJob, fetchManuscriptContent } from "@/lib/editorial/ai/processor";
 import { requestStageAiAssist } from "@/lib/editorial/ai/stage-assist";
+import { getLatestManuscriptForProject } from "@/lib/editorial/files/get-latest-manuscript";
 import { logWorkflowEvent } from "@/lib/editorial/workflow-events";
 import {
   validateEditorialQuality,
@@ -11,18 +12,23 @@ import {
 } from "@/lib/editorial/orchestrator/editorial-orchestrator";
 import { persistPublishingChecklist, assemblePublishingPackage } from "@/lib/editorial/publishing/publishing-integration";
 import type { PublishingConfig, BookMetadata } from "@/lib/editorial/publishing/publishing-director";
-import type { EditorialStageKey, EditorialStageStatus } from "@/lib/editorial/types/editorial";
+import type {
+  EditorialAnyStageKey,
+  EditorialPipelineStageKey,
+  EditorialStageStatus,
+} from "@/lib/editorial/types/editorial";
 import type { EditorialAiTaskKey } from "@/lib/editorial/types/ai";
 import type { EditorialAiJobContext } from "@/lib/editorial/types/ai";
+import { buildQueueEntries } from "@/lib/editorial/ai/queue";
 import {
-  buildQueueEntries,
-  type QueueEntry,
-} from "@/lib/editorial/ai/queue";
+  mapPipelineStageToProjectStage,
+  resolvePipelineStageKey,
+} from "@/lib/editorial/pipeline/stage-compat";
 
 // Allow up to 5 minutes for the full pipeline to process on Vercel Pro/Enterprise.
 export const maxDuration = 300;
 
-const AI_STAGES: EditorialStageKey[] = [
+const AI_STAGES: EditorialPipelineStageKey[] = [
   "ingesta",
   "estructura",
   "estilo",
@@ -33,7 +39,7 @@ const AI_STAGES: EditorialStageKey[] = [
   "distribution",
 ];
 
-const STAGE_PRIMARY_TASK: Partial<Record<EditorialStageKey, EditorialAiTaskKey>> = {
+const STAGE_PRIMARY_TASK: Partial<Record<EditorialPipelineStageKey, EditorialAiTaskKey>> = {
   ingesta: "manuscript_analysis",
   estructura: "structure_analysis",
   estilo: "style_suggestions",
@@ -81,15 +87,8 @@ export async function POST(
     }
 
     // ── 2. Get latest manuscript file ────────────────────────────────
-    const { data: latestFile } = await supabase
-      .from("editorial_files")
-      .select("id, version")
-      .eq("project_id", projectId)
-      .order("version", { ascending: false })
-      .limit(1)
-      .single();
-
-    if (!latestFile) {
+    const latestFile = await getLatestManuscriptForProject(projectId);
+    if (!latestFile?.file) {
       return NextResponse.json(
         { success: false, error: "No hay manuscrito subido. Sube un archivo primero." },
         { status: 400 }
@@ -111,11 +110,11 @@ export async function POST(
     }
 
     // ── 4. Pre-fetch manuscript content ONCE ─────────────────────────
-    const manuscriptText = await fetchManuscriptContent(projectId, latestFile.id);
+    const manuscriptText = await fetchManuscriptContent(projectId, latestFile.file.id);
 
     // ── 5. Create jobs for ALL stages up-front ───────────────────────
     const jobEntries: {
-      stageKey: EditorialStageKey;
+      stageKey: EditorialPipelineStageKey;
       taskKey: EditorialAiTaskKey;
       jobId: string;
     }[] = [];
@@ -130,7 +129,7 @@ export async function POST(
           .from("editorial_stages")
           .update({ status: "processing", started_at: new Date().toISOString() })
           .eq("project_id", projectId)
-          .eq("stage_key", stageKey);
+          .eq("stage_key", mapPipelineStageToProjectStage(stageKey));
 
         const result = await requestStageAiAssist({
           orgId: project.org_id,
@@ -138,8 +137,8 @@ export async function POST(
           stageKey,
           taskKey,
           requestedBy: "staff",
-          sourceFileId: latestFile.id,
-          sourceFileVersion: latestFile.version,
+          sourceFileId: latestFile.file.id,
+          sourceFileVersion: latestFile.file.version,
         });
 
         jobEntries.push({ stageKey, taskKey, jobId: result.jobId });
@@ -164,8 +163,8 @@ export async function POST(
       context: {
         project_id: projectId,
         stage_key: entry.stageKey,
-        source_file_id: latestFile.id,
-        source_file_version: latestFile.version,
+        source_file_id: latestFile.file.id,
+        source_file_version: latestFile.file.version,
         requested_by: "staff",
       } as EditorialAiJobContext,
     }));
@@ -276,7 +275,7 @@ export async function POST(
         .from("editorial_projects")
         .update({
           status: "completed",
-          current_stage: "distribution",
+          current_stage: mapPipelineStageToProjectStage("distribution"),
         })
         .eq("id", projectId);
 
@@ -303,7 +302,7 @@ export async function POST(
       const lastCompleted = jobEntries[completedCount - 1]?.stageKey ?? "ingesta";
       await supabase
         .from("editorial_projects")
-        .update({ current_stage: lastCompleted })
+        .update({ current_stage: mapPipelineStageToProjectStage(lastCompleted) })
         .eq("id", projectId);
 
       console.log(
@@ -467,8 +466,8 @@ async function runPostParallelValidation(
     .eq("project_id", projectId);
 
   const stageList = (stages ?? []).map((s) => ({
-    stageKey: s.stage_key as EditorialStageKey,
-    status: s.status as EditorialStageStatus,
+      stageKey: resolvePipelineStageKey(s.stage_key as EditorialAnyStageKey),
+      status: s.status as EditorialStageStatus,
   }));
 
   // 1. Editorial quality checkpoint

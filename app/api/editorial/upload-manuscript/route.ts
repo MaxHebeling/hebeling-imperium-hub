@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { registerManuscriptFile } from "@/lib/editorial/db/mutations";
 import { getAdminClient } from "@/lib/leads/helpers";
 import { EDITORIAL_BUCKETS } from "@/lib/editorial/storage/buckets";
+import { ensureEditorialBucket } from "@/lib/editorial/storage/provision";
 
 const MAX_FILE_SIZE = 100 * 1024 * 1024; // 100 MB
 const ALLOWED_EXTENSIONS = new Set([".pdf", ".docx", ".doc", ".epub", ".txt"]);
@@ -95,6 +96,7 @@ async function handlePresign(body: {
   }
 
   const supabase = getAdminClient();
+  await ensureEditorialBucket(EDITORIAL_BUCKETS.manuscripts);
 
   // Verify the project exists
   const { data: project, error: projectError } = await supabase

@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAdminClient } from "@/lib/leads/helpers";
 import { STAGE_AI_TASKS, requestStageAiAssist } from "@/lib/editorial/ai/stage-assist";
-import type { EditorialStageKey } from "@/lib/editorial/types/editorial";
+import type { EditorialPipelineStageKey } from "@/lib/editorial/types/editorial";
 import type { EditorialAiTaskKey } from "@/lib/editorial/types/ai";
 
-const INGEST_STAGE_KEY: EditorialStageKey = "ingesta";
+const INGEST_STAGE_KEY: EditorialPipelineStageKey = "ingesta";
 
 const INGEST_REVIEW_TASKS: EditorialAiTaskKey[] = [
   "issue_detection",
@@ -12,12 +12,17 @@ const INGEST_REVIEW_TASKS: EditorialAiTaskKey[] = [
   "quality_scoring",
 ];
 
-function parseOutputRefSafe(value: unknown): Record<string, any> | null {
+function isObjectRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null;
+}
+
+function parseOutputRefSafe(value: unknown): Record<string, unknown> | null {
   if (!value) return null;
-  if (typeof value === "object") return value as Record<string, any>;
+  if (isObjectRecord(value)) return value;
   if (typeof value === "string") {
     try {
-      return JSON.parse(value) as Record<string, any>;
+      const parsed = JSON.parse(value);
+      return isObjectRecord(parsed) ? parsed : null;
     } catch (error) {
       console.error("[editorial-ai][jobs] output_ref JSON parse error", {
         message: (error as Error).message,
@@ -64,7 +69,7 @@ export async function GET(
   }
 
   // For ingesta stage, limit to the core review tasks.
-  const effectiveStageKey = (stageKey as EditorialStageKey | null) ?? null;
+  const effectiveStageKey = (stageKey as EditorialPipelineStageKey | null) ?? null;
   if (!effectiveStageKey || effectiveStageKey === INGEST_STAGE_KEY) {
     query = query
       .eq("stage_key", INGEST_STAGE_KEY)
@@ -135,11 +140,15 @@ export async function POST(
   const supabase = getAdminClient();
 
   try {
-    const body = await req.json();
-    const { stageKey, taskKey } = body as { 
-      stageKey: EditorialStageKey; 
-      taskKey?: EditorialAiTaskKey;
-    };
+    const body = (await req.json()) as unknown;
+    const stageKey =
+      isObjectRecord(body) && typeof body.stageKey === "string"
+        ? (body.stageKey as EditorialPipelineStageKey)
+        : undefined;
+    const taskKey =
+      isObjectRecord(body) && typeof body.taskKey === "string"
+        ? (body.taskKey as EditorialAiTaskKey)
+        : undefined;
 
     if (!stageKey) {
       return NextResponse.json(
@@ -165,9 +174,9 @@ export async function POST(
     // Get the latest file for this project
     const { data: latestFile } = await supabase
       .from("editorial_files")
-      .select("id, version_number")
+      .select("id, version")
       .eq("project_id", projectId)
-      .order("version_number", { ascending: false })
+      .order("version", { ascending: false })
       .limit(1)
       .single();
 
@@ -194,7 +203,7 @@ export async function POST(
           taskKey: task,
           requestedBy: "staff", // TODO: Get actual user ID
           sourceFileId: latestFile?.id,
-          sourceFileVersion: latestFile?.version_number,
+          sourceFileVersion: latestFile?.version,
         });
         createdJobs.push(result.jobId);
       } catch (err) {

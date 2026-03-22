@@ -1,4 +1,4 @@
-import type { EditorialStageKey } from "@/lib/editorial/types/editorial";
+import type { EditorialPipelineStageKey } from "@/lib/editorial/types/editorial";
 
 export type EditorialAiTaskKey =
   | "manuscript_analysis"
@@ -23,7 +23,7 @@ export type EditorialAiJobStatus = "queued" | "running" | "succeeded" | "failed"
 export interface EditorialAiPromptTemplate {
   id: string;
   org_id: string;
-  stage_key: EditorialStageKey;
+  stage_key: EditorialPipelineStageKey;
   task_key: EditorialAiTaskKey | string;
   version: number;
   prompt_text: string;
@@ -35,11 +35,10 @@ export interface EditorialAiPromptTemplate {
 
 export interface EditorialAiJobContext {
   project_id: string;
-  stage_key: EditorialStageKey | null;
+  stage_key: EditorialPipelineStageKey | null;
   source_file_id: string | null;
   source_file_version: number | null;
   requested_by: string;
   prompt_template_id?: string | null;
   prompt_template_version?: number | null;
 }
-

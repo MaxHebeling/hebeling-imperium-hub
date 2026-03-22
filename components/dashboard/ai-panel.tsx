@@ -2,24 +2,26 @@
 
 import { Cpu, Search, Mail, Phone, CalendarCheck, CheckCircle } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
+import { useLanguage } from "@/lib/i18n";
 
 export function AiPanel() {
+  const { locale } = useLanguage();
   const aiMetrics = [
-    { name: "Leads Researched", value: 284, icon: <Search className="w-3.5 h-3.5" /> },
-    { name: "Emails Sent", value: 1240, icon: <Mail className="w-3.5 h-3.5" /> },
-    { name: "Calls Handled", value: 42, icon: <Phone className="w-3.5 h-3.5" /> },
-    { name: "Meetings Booked", value: 16, icon: <CalendarCheck className="w-3.5 h-3.5" /> },
-    { name: "Conversions", value: 8, icon: <CheckCircle className="w-3.5 h-3.5" /> },
+    { name: locale === "es" ? "Leads investigados" : "Leads Researched", value: 284, icon: <Search className="w-3.5 h-3.5" /> },
+    { name: locale === "es" ? "Emails enviados" : "Emails Sent", value: 1240, icon: <Mail className="w-3.5 h-3.5" /> },
+    { name: locale === "es" ? "Llamadas atendidas" : "Calls Handled", value: 42, icon: <Phone className="w-3.5 h-3.5" /> },
+    { name: locale === "es" ? "Reuniones agendadas" : "Meetings Booked", value: 16, icon: <CalendarCheck className="w-3.5 h-3.5" /> },
+    { name: locale === "es" ? "Conversiones" : "Conversions", value: 8, icon: <CheckCircle className="w-3.5 h-3.5" /> },
   ];
 
   const chartData = [
-    { name: "Mon", value: 45 },
-    { name: "Tue", value: 52 },
-    { name: "Wed", value: 48 },
-    { name: "Thu", value: 61 },
-    { name: "Fri", value: 58 },
-    { name: "Sat", value: 38 },
-    { name: "Sun", value: 32 },
+    { name: locale === "es" ? "Lun" : "Mon", value: 45 },
+    { name: locale === "es" ? "Mar" : "Tue", value: 52 },
+    { name: locale === "es" ? "Mié" : "Wed", value: 48 },
+    { name: locale === "es" ? "Jue" : "Thu", value: 61 },
+    { name: locale === "es" ? "Vie" : "Fri", value: 58 },
+    { name: locale === "es" ? "Sáb" : "Sat", value: 38 },
+    { name: locale === "es" ? "Dom" : "Sun", value: 32 },
   ];
 
   return (
@@ -35,16 +37,18 @@ export function AiPanel() {
           </div>
           <div>
             <h3 className="text-sm font-semibold text-foreground">ANNA AI System</h3>
-            <p className="text-xs text-muted-foreground">Autonomous operations</p>
+            <p className="text-xs text-muted-foreground">
+              {locale === "es" ? "Operaciones autónomas" : "Autonomous operations"}
+            </p>
           </div>
         </div>
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-1.5 text-xs text-emerald-400 font-medium">
             <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
-            Operational
+            {locale === "es" ? "Operativo" : "Operational"}
           </div>
           <div className="text-xs text-muted-foreground border border-border rounded-full px-2.5 py-0.5">
-            Efficiency <span className="text-primary font-semibold">94.2%</span>
+            {locale === "es" ? "Eficiencia" : "Efficiency"} <span className="text-primary font-semibold">94.2%</span>
           </div>
         </div>
       </div>
@@ -73,8 +77,12 @@ export function AiPanel() {
           {/* Chart — 3 cols */}
           <div className="lg:col-span-3 rounded-lg border border-border bg-background/50 p-4 flex flex-col">
             <div className="flex items-center justify-between mb-4">
-              <h4 className="text-xs font-semibold text-foreground uppercase tracking-widest">Weekly Activity</h4>
-              <span className="text-xs text-muted-foreground">This week</span>
+              <h4 className="text-xs font-semibold text-foreground uppercase tracking-widest">
+                {locale === "es" ? "Actividad semanal" : "Weekly Activity"}
+              </h4>
+              <span className="text-xs text-muted-foreground">
+                {locale === "es" ? "Esta semana" : "This week"}
+              </span>
             </div>
             <div className="flex-1 min-h-0" style={{ minHeight: 200 }}>
               <ResponsiveContainer width="100%" height="100%">

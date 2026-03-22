@@ -12,7 +12,7 @@
  */
 
 import type { EditorialAiTaskKey, EditorialAiJobContext } from "@/lib/editorial/types/ai";
-import type { EditorialStageKey } from "@/lib/editorial/types/editorial";
+import type { EditorialPipelineStageKey } from "@/lib/editorial/types/editorial";
 
 // ─── Configuration ──────────────────────────────────────────────────────
 
@@ -39,7 +39,7 @@ const TPM_WINDOW_MS = 60_000;
 
 // ─── Stage ordering (pipeline sequence) ────────────────────────────────
 
-const STAGE_ORDER: EditorialStageKey[] = [
+const STAGE_ORDER: EditorialPipelineStageKey[] = [
   "ingesta",
   "estructura",
   "estilo",
@@ -50,7 +50,7 @@ const STAGE_ORDER: EditorialStageKey[] = [
   "distribution",
 ];
 
-function stageIndex(key: EditorialStageKey): number {
+function stageIndex(key: EditorialPipelineStageKey): number {
   const idx = STAGE_ORDER.indexOf(key);
   return idx === -1 ? STAGE_ORDER.length : idx;
 }
@@ -162,7 +162,7 @@ class TokenRateTracker {
 export interface QueueEntry {
   jobId: string;
   projectId: string;
-  stageKey: EditorialStageKey;
+  stageKey: EditorialPipelineStageKey;
   taskKey: EditorialAiTaskKey;
   context: EditorialAiJobContext;
   manuscriptText?: string;
@@ -479,7 +479,7 @@ export function buildQueueEntries(
   jobs: Array<{
     jobId: string;
     projectId: string;
-    stageKey: EditorialStageKey;
+    stageKey: EditorialPipelineStageKey;
     taskKey: EditorialAiTaskKey;
     context: EditorialAiJobContext;
   }>,

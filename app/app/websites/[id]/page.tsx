@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useTransition } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
   Select,
   SelectContent,
@@ -112,6 +112,24 @@ interface Tenant {
   name: string;
 }
 
+type WebsiteRelation = { id: string; name: string } | Array<{ id: string; name: string }> | null;
+type WebsiteRow = Omit<Website, "tenant" | "brand"> & {
+  tenant: WebsiteRelation;
+  brand: WebsiteRelation;
+};
+
+function normalizeWebsiteRelation(value: WebsiteRelation) {
+  return Array.isArray(value) ? (value[0] ?? null) : value;
+}
+
+function mapWebsite(row: WebsiteRow): Website {
+  return {
+    ...row,
+    tenant: normalizeWebsiteRelation(row.tenant),
+    brand: normalizeWebsiteRelation(row.brand),
+  };
+}
+
 // Mock data for demonstration
 const mockDeployments = [
   { id: "dpl_abc123", env: "production", commit: "feat: update hero section", branch: "main", status: "ready", triggeredBy: "Max H.", deployTime: "45s", createdAt: "2 hours ago" },
@@ -189,7 +207,6 @@ const DEPLOYMENT_STATUS_CONFIG: Record<string, { color: string; icon: React.Reac
 
 export default function WebsiteDetailPage() {
   const params = useParams();
-  const router = useRouter();
   const [website, setWebsite] = useState<Website | null>(null);
   const [brands, setBrands] = useState<Brand[]>([]);
   const [tenants, setTenants] = useState<Tenant[]>([]);
@@ -244,7 +261,7 @@ export default function WebsiteDetailPage() {
         .single();
 
       if (websiteData) {
-        setWebsite(websiteData as Website);
+        setWebsite(mapWebsite(websiteData as WebsiteRow));
         setEditForm({
           name: websiteData.name,
           primary_domain: websiteData.primary_domain || "",
@@ -286,7 +303,7 @@ export default function WebsiteDetailPage() {
         .single();
 
       if (!error && data) {
-        setWebsite(data as Website);
+        setWebsite(mapWebsite(data as WebsiteRow));
         setIsEditOpen(false);
       }
     });

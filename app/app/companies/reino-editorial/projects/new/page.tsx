@@ -31,14 +31,10 @@ import {
   FileText,
   Loader2,
 } from "lucide-react";
-
-const BOOK_SIZES = [
-  { value: "5x8", label: "5\" x 8\" (Trade Paperback)" },
-  { value: "5.5x8.5", label: "5.5\" x 8.5\" (Digest)" },
-  { value: "6x9", label: "6\" x 9\" (US Trade)" },
-  { value: "8.5x11", label: "8.5\" x 11\" (Letter)" },
-  { value: "custom", label: "Tamano personalizado" },
-];
+import {
+  REINO_EDITORIAL_COLLECTION_TRIM_SIZE_OPTIONS,
+  REINO_EDITORIAL_DEFAULT_TRIM_SIZE_ID,
+} from "@/lib/editorial/kdp";
 
 const CATEGORIES = [
   "Ficcion",
@@ -79,7 +75,7 @@ export default function NewProjectPage() {
         throw new Error(data.error || "Error al crear el proyecto");
       }
 
-      router.push(`/app/companies/reino-editorial/projects/${data.projectId}`);
+      router.push(`/app/editorial/projects/${data.projectId}`);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Error desconocido");
       setIsSubmitting(false);
@@ -121,7 +117,7 @@ export default function NewProjectPage() {
               className="text-sm"
               style={{ color: "var(--re-text-muted)" }}
             >
-              Completa la informacion para iniciar el pipeline de 11 etapas
+              Completa la informacion para iniciar el pipeline editorial con preset Amazon KDP
             </p>
           </div>
         </div>
@@ -244,19 +240,26 @@ export default function NewProjectPage() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="bookSize">Tamano del Libro</Label>
-              <Select name="bookSize" defaultValue="6x9">
+              <Label htmlFor="bookSize">Tamano del Libro Amazon KDP *</Label>
+              <Select
+                name="bookSize"
+                defaultValue={REINO_EDITORIAL_DEFAULT_TRIM_SIZE_ID}
+              >
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  {BOOK_SIZES.map((size) => (
+                  {REINO_EDITORIAL_COLLECTION_TRIM_SIZE_OPTIONS.map((size) => (
                     <SelectItem key={size.value} value={size.value}>
                       {size.label}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
+              <p className="text-xs" style={{ color: "var(--re-text-muted)" }}>
+                Esta coleccion trabaja solo con los formatos estandar Amazon KDP
+                6&quot; x 9&quot; y 5.5&quot; x 8.5&quot;.
+              </p>
             </div>
 
             <div className="space-y-2">

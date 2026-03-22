@@ -177,7 +177,7 @@ export default function ProjectsPage() {
         .single();
 
       if (!error && data) {
-        setProjects([data as Project, ...projects]);
+        setProjects((current) => [data as Project, ...current]);
         setIsModalOpen(false);
         resetForm();
       }
@@ -488,7 +488,13 @@ export default function ProjectsPage() {
                                   if (confirm(`Delete "${project.name}"? This cannot be undone.`)) {
                                     fetch(`/api/projects/${project.id}`, { method: "DELETE" })
                                       .then(res => res.json())
-                                      .then(data => { if (data.success) fetchData(); });
+                                      .then((data) => {
+                                        if (data.success) {
+                                          setProjects((current) =>
+                                            current.filter((item) => item.id !== project.id)
+                                          );
+                                        }
+                                      });
                                   }
                                 }}
                               >

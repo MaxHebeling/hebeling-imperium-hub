@@ -11,6 +11,7 @@ import {
   Zap,
   Globe,
 } from "lucide-react";
+import { useLanguage } from "@/lib/i18n";
 
 /* ------------------------------------------------------------------ */
 /*  Hebeling OS — Dark Elegant Palette                                  */
@@ -39,6 +40,7 @@ interface BusinessUnit {
   tagline: string;
   description: string;
   href: string;
+  crmHref?: string | null;
   editorialHref: string | null;
   oficinaHref: string | null;
   webProjectsHref: string | null;
@@ -51,138 +53,186 @@ interface BusinessUnit {
   featured: boolean;
 }
 
-const UNITS: BusinessUnit[] = [
-  {
-    slug: "reino-editorial",
-    name: "Reino Editorial",
-    tagline: "AI-Powered Publishing",
-    description:
-      "Pipeline editorial inteligente con IA en cada etapa. Desde la ingesta del manuscrito hasta la distribución global.",
-    href: "/app/editorial",
-    editorialHref: null,
-    oficinaHref: "/app/editorial/oficina",
-    webProjectsHref: null,
-    logo: "/logo-reino-editorial.png",
-    logoBg: "#ffffff",
-    logoRounded: true,
-    gradient: `linear-gradient(135deg, ${P.maroon}, #2F6FA3)`,
-    accent: "#2F6FA3",
-    stats: [
-      { label: "Etapas AI", value: "8" },
-      { label: "Formatos", value: "3" },
-    ],
-    featured: true,
-  },
-  {
-    slug: "ikingdom",
-    name: "iKingdom",
-    tagline: "Digital Solutions",
-    description:
-      "Construcción de páginas web, aplicaciones digitales y soluciones tecnológicas para clientes.",
-    href: "/app/companies/ikingdom",
-    editorialHref: null,
-    oficinaHref: null,
-    webProjectsHref: "/app/ikingdom/projects",
-    logo: "/logo-ikingdom.png",
-    logoBg: "#ffffff",
-    logoRounded: false,
-    gradient: `linear-gradient(135deg, ${P.gold}, #8B7A3D)`,
-    accent: P.gold,
-    stats: [
-      { label: "Apps", value: "—" },
-      { label: "Clientes", value: "—" },
-    ],
-    featured: false,
-  },
-  {
-    slug: "lead-hunter",
-    name: "Lead Hunter",
-    tagline: "Leads de construccion con ANNA",
-    description:
-      "Motor comercial para captacion, calificacion y seguimiento de oportunidades en la industria de la construccion.",
-    href: "/app/companies/lead-hunter",
-    editorialHref: null,
-    oficinaHref: null,
-    webProjectsHref: null,
-    logo: "/logo-lead-hunter.svg",
-    logoBg: "#0F1B2D",
-    logoRounded: false,
-    gradient: "linear-gradient(135deg, #C96F2D, #E1A24A)",
-    accent: "#E1A24A",
-    stats: [
-      { label: "Canales", value: "2" },
-      { label: "CRM Native", value: "ANNA" },
-    ],
-    featured: true,
-  },
-  {
-    slug: "imperium",
-    name: "Imperium Group",
-    tagline: "Operations & Strategy",
-    description:
-      "Gestión de operaciones, estrategia empresarial y administración global del grupo.",
-    href: "/app/companies/imperium",
-    editorialHref: null,
-    oficinaHref: null,
-    webProjectsHref: null,
-    logo: "/logo-imperium.png",
-    logoBg: "transparent",
-    logoRounded: true,
-    gradient: `linear-gradient(135deg, #0B1C2E, ${P.gold})`,
-    accent: "#0B1C2E",
-    stats: [
-      { label: "Unidades", value: "6" },
-      { label: "Países", value: "3" },
-    ],
-    featured: false,
-  },
-  {
-    slug: "max-hebeling",
-    name: "Max Hebeling",
-    tagline: "Personal Brand",
-    description: "Marca personal, consultoría y proyectos individuales.",
-    href: "/app/companies/max-hebeling",
-    editorialHref: null,
-    oficinaHref: null,
-    webProjectsHref: null,
-    logo: "/logo-max-hebeling.png",
-    logoBg: "#ffffff",
-    logoRounded: false,
-    gradient: "linear-gradient(135deg, #F0652A, #8B3A15)",
-    accent: "#F0652A",
-    stats: [
-      { label: "Proyectos", value: "—" },
-      { label: "Servicios", value: "—" },
-    ],
-    featured: false,
-  },
-  {
-    slug: "red-apostolica",
-    name: "Red Apostólica",
-    tagline: "Reino y Avivamiento",
-    description:
-      "Red apostólica internacional. Ministerio, comunidad y alcance global.",
-    href: "/app/companies/red-apostolica",
-    editorialHref: null,
-    oficinaHref: null,
-    webProjectsHref: null,
-    logo: "/logo-red-apostolica.png",
-    logoBg: "transparent",
-    logoRounded: true,
-    gradient: `linear-gradient(135deg, #D6C28A, ${P.gold})`,
-    accent: "#D6C28A",
-    stats: [
-      { label: "Ministerio", value: "—" },
-      { label: "Alcance", value: "Global" },
-    ],
-    featured: false,
-  },
-];
+function getUnits(locale: "es" | "en"): BusinessUnit[] {
+  return [
+    {
+      slug: "idr",
+      name: "Inversionistas del Reino",
+      tagline: locale === "es" ? "Comunidad privada premium" : "Premium private community",
+      description:
+        locale === "es"
+          ? "Módulo privado para staff e inversionistas dentro de HEBELING OS, con experiencia premium, control central y acceso móvil."
+          : "Private module for staff and investors inside HEBELING OS, with a premium experience, central control, and mobile access.",
+      href: "/app/companies/idr",
+      crmHref: null,
+      editorialHref: null,
+      oficinaHref: null,
+      webProjectsHref: null,
+      logo: "/logo-idr.jpeg",
+      logoBg: "#07101C",
+      logoRounded: false,
+      gradient: "linear-gradient(135deg, #07101C, #C9A646)",
+      accent: "#C9A646",
+      stats: [
+        { label: locale === "es" ? "Carriles" : "Lanes", value: "2" },
+        { label: locale === "es" ? "Experiencia" : "Experience", value: locale === "es" ? "Premium" : "Premium" },
+      ],
+      featured: true,
+    },
+    {
+      slug: "reino-editorial",
+      name: "Reino Editorial",
+      tagline: locale === "es" ? "Publicación impulsada por IA" : "AI-Powered Publishing",
+      description:
+        locale === "es"
+          ? "Pipeline editorial inteligente con IA en cada etapa. Desde la ingesta del manuscrito hasta la distribución global."
+          : "Intelligent publishing pipeline with AI at every stage. From manuscript intake to global distribution.",
+      href: "/app/editorial",
+      crmHref: null,
+      editorialHref: null,
+      oficinaHref: "/app/editorial/oficina",
+      webProjectsHref: null,
+      logo: "/logo-reino-editorial.png",
+      logoBg: "#ffffff",
+      logoRounded: true,
+      gradient: `linear-gradient(135deg, ${P.maroon}, #2F6FA3)`,
+      accent: "#2F6FA3",
+      stats: [
+        { label: locale === "es" ? "Etapas IA" : "AI Stages", value: "8" },
+        { label: locale === "es" ? "Formatos" : "Formats", value: "3" },
+      ],
+      featured: true,
+    },
+    {
+      slug: "ikingdom",
+      name: "iKingdom",
+      tagline: locale === "es" ? "Soluciones digitales" : "Digital Solutions",
+      description:
+        locale === "es"
+          ? "Construcción de páginas web, aplicaciones digitales y soluciones tecnológicas para clientes."
+          : "Websites, digital applications, and technology solutions for clients.",
+      href: "/app/companies/ikingdom",
+      crmHref: "/app/crm?tab=leads&brand=ikingdom",
+      editorialHref: null,
+      oficinaHref: null,
+      webProjectsHref: "/app/ikingdom/projects",
+      logo: "/logo-ikingdom.png",
+      logoBg: "#ffffff",
+      logoRounded: false,
+      gradient: `linear-gradient(135deg, ${P.gold}, #8B7A3D)`,
+      accent: P.gold,
+      stats: [
+        { label: "Apps", value: "—" },
+        { label: locale === "es" ? "Clientes" : "Clients", value: "—" },
+      ],
+      featured: false,
+    },
+    {
+      slug: "lead-hunter",
+      name: "Lead Hunter",
+      tagline: locale === "es" ? "Leads de construcción con ANNA" : "ANNA-Powered Construction Leads",
+      description:
+        locale === "es"
+          ? "Motor comercial para captación, calificación y seguimiento de oportunidades en la industria de la construcción."
+          : "Commercial engine for capturing, qualifying, and following up on opportunities in the construction industry.",
+      href: "/app/companies/lead-hunter",
+      crmHref: "/app/crm?tab=leads&brand=lead_hunter",
+      editorialHref: null,
+      oficinaHref: null,
+      webProjectsHref: null,
+      logo: "/logo-lead-hunter.svg",
+      logoBg: "#0F1B2D",
+      logoRounded: false,
+      gradient: "linear-gradient(135deg, #C96F2D, #E1A24A)",
+      accent: "#E1A24A",
+      stats: [
+        { label: locale === "es" ? "Canales" : "Channels", value: "2" },
+        { label: "CRM Native", value: "ANNA" },
+      ],
+      featured: true,
+    },
+    {
+      slug: "imperium",
+      name: "Imperium Group",
+      tagline: locale === "es" ? "Operaciones y estrategia" : "Operations & Strategy",
+      description:
+        locale === "es"
+          ? "Gestión de operaciones, estrategia empresarial y administración global del grupo."
+          : "Operations management, business strategy, and global group administration.",
+      href: "/app/companies/imperium",
+      crmHref: "/app/crm?tab=leads&brand=imperium",
+      editorialHref: null,
+      oficinaHref: null,
+      webProjectsHref: null,
+      logo: "/logo-imperium.png",
+      logoBg: "transparent",
+      logoRounded: true,
+      gradient: `linear-gradient(135deg, #0B1C2E, ${P.gold})`,
+      accent: "#0B1C2E",
+      stats: [
+        { label: locale === "es" ? "Unidades" : "Units", value: "4" },
+        { label: locale === "es" ? "Países" : "Countries", value: "3" },
+      ],
+      featured: false,
+    },
+    {
+      slug: "max-hebeling",
+      name: "Max Hebeling",
+      tagline: locale === "es" ? "Marca personal" : "Personal Brand",
+      description:
+        locale === "es"
+          ? "Marca personal, consultoría y proyectos individuales."
+          : "Personal brand, consulting, and individual projects.",
+      href: "/app/companies/max-hebeling",
+      crmHref: "/app/crm?tab=leads&brand=max-hebeling",
+      editorialHref: null,
+      oficinaHref: null,
+      webProjectsHref: null,
+      logo: "/logo-max-hebeling.png",
+      logoBg: "#ffffff",
+      logoRounded: false,
+      gradient: "linear-gradient(135deg, #F0652A, #8B3A15)",
+      accent: "#F0652A",
+      stats: [
+        { label: locale === "es" ? "Proyectos" : "Projects", value: "—" },
+        { label: locale === "es" ? "Servicios" : "Services", value: "—" },
+      ],
+      featured: false,
+    },
+    {
+      slug: "red-apostolica",
+      name: "Red Apostólica",
+      tagline: locale === "es" ? "Reino y avivamiento" : "Kingdom and revival",
+      description:
+        locale === "es"
+          ? "Red apostólica internacional. Ministerio, comunidad y alcance global."
+          : "International apostolic network. Ministry, community, and global reach.",
+      href: "/app/companies/red-apostolica",
+      crmHref: null,
+      editorialHref: null,
+      oficinaHref: null,
+      webProjectsHref: null,
+      logo: "/logo-red-apostolica.png",
+      logoBg: "transparent",
+      logoRounded: true,
+      gradient: `linear-gradient(135deg, #D6C28A, ${P.gold})`,
+      accent: "#D6C28A",
+      stats: [
+        { label: locale === "es" ? "Ministerio" : "Ministry", value: "—" },
+        { label: locale === "es" ? "Alcance" : "Reach", value: locale === "es" ? "Global" : "Global" },
+      ],
+      featured: false,
+    },
+  ];
+}
 
 /* ------------------------------------------------------------------ */
 /*  Page                                                               */
 /* ------------------------------------------------------------------ */
 export default function CompaniesPage() {
+  const { locale } = useLanguage();
+  const units = getUnits(locale);
+
   return (
     <div className="min-h-full" style={{ background: P.bg }}>
 
@@ -228,7 +278,9 @@ export default function CompaniesPage() {
                 className="text-sm mt-0.5"
                 style={{ color: `${P.gold}cc` }}
               >
-                Enterprise Operating System &middot; Unidades de Negocio
+                {locale === "es"
+                  ? "Sistema operativo empresarial · Unidades de negocio"
+                  : "Enterprise Operating System · Business Units"}
               </p>
             </div>
           </div>
@@ -236,10 +288,10 @@ export default function CompaniesPage() {
           {/* quick stats */}
           <div className="flex flex-wrap gap-6 mt-8">
             {([
-              { icon: Zap, label: "Unidades Activas", value: "6" },
-              { icon: BarChart3, label: "Pipeline AI", value: "Activo" },
-              { icon: Users, label: "Jurisdicciones", value: "USA · MX · AR" },
-              { icon: Zap, label: "Motor", value: "OpenAI + Claude" },
+              { icon: Zap, label: locale === "es" ? "Unidades activas" : "Active units", value: "6" },
+              { icon: BarChart3, label: "Pipeline AI", value: locale === "es" ? "Activo" : "Active" },
+              { icon: Users, label: locale === "es" ? "Jurisdicciones" : "Jurisdictions", value: "USA · MX · AR" },
+              { icon: Zap, label: locale === "es" ? "Motor" : "Engine", value: "OpenAI + Claude" },
             ] as const).map((s) => (
               <div key={s.label} className="flex items-center gap-2.5">
                 <div
@@ -266,7 +318,7 @@ export default function CompaniesPage() {
       {/* ── Business unit cards ──────────────────────────────────── */}
       <div className="max-w-6xl mx-auto px-6 -mt-6 pb-10">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-          {UNITS.map((u) => (
+          {units.map((u) => (
               <div
                 key={u.slug}
                 className="group relative rounded-2xl overflow-hidden transition-all duration-300 hos-card-hover"
@@ -372,9 +424,24 @@ export default function CompaniesPage() {
                         boxShadow: `0 2px 8px ${u.accent}30`,
                       }}
                     >
-                      Entrar
+                      {locale === "en" ? "Enter" : "Entrar"}
                       <ArrowUpRight className="w-3.5 h-3.5" />
                     </Link>
+
+                    {u.crmHref && (
+                      <Link
+                        href={u.crmHref}
+                        className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold transition-all hover:opacity-80"
+                        style={{
+                          background: `${u.accent}12`,
+                          color: u.accent,
+                          border: `1px solid ${u.accent}30`,
+                        }}
+                      >
+                        <Users className="w-3.5 h-3.5" />
+                        CRM
+                      </Link>
+                    )}
 
                     {u.editorialHref && (
                       <Link
@@ -387,7 +454,7 @@ export default function CompaniesPage() {
                         }}
                       >
                         <BookOpen className="w-3.5 h-3.5" />
-                        Editorial
+                        {locale === "es" ? "Editorial" : "Editorial"}
                       </Link>
                     )}
 
@@ -402,7 +469,7 @@ export default function CompaniesPage() {
                         }}
                       >
                         <Briefcase className="w-3.5 h-3.5" />
-                        Oficina
+                        {locale === "es" ? "Oficina" : "Office"}
                       </Link>
                     )}
 
@@ -417,7 +484,7 @@ export default function CompaniesPage() {
                         }}
                       >
                         <Globe className="w-3.5 h-3.5" />
-                        Web Projects
+                        {locale === "es" ? "Web Projects" : "Web Projects"}
                       </Link>
                     )}
                   </div>
@@ -432,7 +499,8 @@ export default function CompaniesPage() {
             className="text-xs font-medium"
             style={{ color: `${P.txtM}60` }}
           >
-            HEBELING OS v1.0 &middot; Enterprise Operating System &middot;{" "}
+            HEBELING OS v1.0 &middot;{" "}
+            {locale === "es" ? "Sistema operativo empresarial" : "Enterprise Operating System"} &middot;{" "}
             &copy; {new Date().getFullYear()} Max Hebeling
           </p>
         </div>

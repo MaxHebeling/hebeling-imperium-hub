@@ -1,4 +1,8 @@
-import type { EditorialStageKey } from "../types/editorial";
+import type {
+  EditorialAnyStageKey,
+  EditorialPipelineStageKey,
+} from "../types/editorial";
+import { resolvePipelineStageKey } from "./stage-compat";
 
 /**
  * Scheduled delay system for client visibility.
@@ -10,7 +14,7 @@ import type { EditorialStageKey } from "../types/editorial";
  */
 
 /** Number of days after pipeline start that each stage becomes visible to the client. */
-export const STAGE_REVEAL_DAYS: Record<EditorialStageKey, number> = {
+export const STAGE_REVEAL_DAYS: Record<EditorialPipelineStageKey, number> = {
   ingesta: 1,
   estructura: 3,
   estilo: 5,
@@ -22,7 +26,10 @@ export const STAGE_REVEAL_DAYS: Record<EditorialStageKey, number> = {
 };
 
 /** Human-readable status messages shown to the client for each stage. */
-export const STAGE_CLIENT_MESSAGES: Record<EditorialStageKey, { active: string; completed: string }> = {
+export const STAGE_CLIENT_MESSAGES: Record<
+  EditorialPipelineStageKey,
+  { active: string; completed: string }
+> = {
   ingesta: {
     active: "Tu manuscrito está siendo revisado por nuestro equipo editorial.",
     completed: "Revisión inicial completada.",
@@ -58,7 +65,7 @@ export const STAGE_CLIENT_MESSAGES: Record<EditorialStageKey, { active: string; 
 };
 
 /** Stage labels for client-facing display in Spanish. */
-export const STAGE_CLIENT_LABELS: Record<EditorialStageKey, string> = {
+export const STAGE_CLIENT_LABELS: Record<EditorialPipelineStageKey, string> = {
   ingesta: "Revisión Inicial",
   estructura: "Análisis Estructural",
   estilo: "Corrección de Estilo",
@@ -69,7 +76,7 @@ export const STAGE_CLIENT_LABELS: Record<EditorialStageKey, string> = {
   distribution: "Listo para Publicar",
 };
 
-const STAGE_ORDER: EditorialStageKey[] = [
+const STAGE_ORDER: EditorialPipelineStageKey[] = [
   "ingesta",
   "estructura",
   "estilo",
@@ -81,7 +88,7 @@ const STAGE_ORDER: EditorialStageKey[] = [
 ];
 
 export interface ClientStageVisibility {
-  stageKey: EditorialStageKey;
+  stageKey: EditorialPipelineStageKey;
   label: string;
   isRevealed: boolean;
   isActive: boolean;
@@ -99,13 +106,14 @@ export interface ClientStageVisibility {
  */
 export function getClientVisibleStages(
   pipelineStartedAt: string | null,
-  actualCurrentStage: EditorialStageKey
+  actualCurrentStage: EditorialAnyStageKey
 ): ClientStageVisibility[] {
   const now = new Date();
   const startDate = pipelineStartedAt ? new Date(pipelineStartedAt) : now;
   const daysSinceStart = Math.max(0, (now.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
 
-  const actualStageIndex = STAGE_ORDER.indexOf(actualCurrentStage);
+  const normalizedCurrentStage = resolvePipelineStageKey(actualCurrentStage);
+  const actualStageIndex = STAGE_ORDER.indexOf(normalizedCurrentStage);
 
   return STAGE_ORDER.map((stageKey, index) => {
     const revealDay = STAGE_REVEAL_DAYS[stageKey];
@@ -149,7 +157,7 @@ export function getClientVisibleStages(
  */
 export function getClientVisibleProgress(
   pipelineStartedAt: string | null,
-  actualCurrentStage: EditorialStageKey
+  actualCurrentStage: EditorialAnyStageKey
 ): number {
   const stages = getClientVisibleStages(pipelineStartedAt, actualCurrentStage);
   const completedCount = stages.filter((s) => s.isCompleted).length;
@@ -168,11 +176,11 @@ export function getClientVisibleProgress(
  */
 export function getPendingNotifications(
   pipelineStartedAt: string | null,
-  actualCurrentStage: EditorialStageKey,
-  alreadyNotifiedStages: EditorialStageKey[]
-): Array<{ stageKey: EditorialStageKey; message: string; type: "stage_completed" | "stage_active" }> {
+  actualCurrentStage: EditorialAnyStageKey,
+  alreadyNotifiedStages: EditorialPipelineStageKey[]
+): Array<{ stageKey: EditorialPipelineStageKey; message: string; type: "stage_completed" | "stage_active" }> {
   const stages = getClientVisibleStages(pipelineStartedAt, actualCurrentStage);
-  const notifications: Array<{ stageKey: EditorialStageKey; message: string; type: "stage_completed" | "stage_active" }> = [];
+  const notifications: Array<{ stageKey: EditorialPipelineStageKey; message: string; type: "stage_completed" | "stage_active" }> = [];
 
   for (const stage of stages) {
     if (!stage.isRevealed) continue;

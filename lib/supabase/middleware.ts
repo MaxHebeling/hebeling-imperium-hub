@@ -7,6 +7,8 @@ export interface UserProfile {
   id: string
   role: AppRole
   org_id: string
+  brand_id: string | null
+  brand_slug: string | null
   tenant_id: string | null
   full_name: string | null
   email: string | null
@@ -67,14 +69,33 @@ export async function updateSession(request: NextRequest): Promise<UpdateSession
     try {
       const { data, error } = await supabase
         .from('profiles')
-        .select('id, role, org_id, tenant_id, full_name, email')
+        .select('id, role, org_id, brand_id, tenant_id, full_name, email')
         .eq('id', user.id)
         .single()
       
       if (error) {
         console.error('[v0] Profile fetch error in middleware:', error.message)
       } else {
-        profile = data as UserProfile | null
+        let brandSlug: string | null = null
+
+        if (data?.brand_id) {
+          const { data: brandData, error: brandError } = await supabase
+            .from("brands")
+            .select("slug")
+            .eq("id", data.brand_id)
+            .maybeSingle()
+
+          if (brandError) {
+            console.error("[v0] Brand fetch error in middleware:", brandError.message)
+          } else {
+            brandSlug = brandData?.slug ?? null
+          }
+        }
+
+        profile = {
+          ...(data as Omit<UserProfile, "brand_slug">),
+          brand_slug: brandSlug,
+        }
       }
     } catch (err) {
       console.error('[v0] Unexpected error fetching profile:', err)

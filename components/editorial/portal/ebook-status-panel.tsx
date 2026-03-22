@@ -9,9 +9,7 @@ import {
   CheckCircle2,
   Clock,
   Loader2,
-  BookOpen,
   FileText,
-  AlertCircle,
 } from "lucide-react";
 
 interface EbookStageView {

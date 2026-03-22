@@ -1,5 +1,3 @@
-import type { EditorialStageKey } from "@/lib/editorial/types/editorial";
-
 export type ExportFormat = "pdf" | "epub" | "mobi" | "docx" | "html";
 
 export type ExportStatus = "queued" | "processing" | "completed" | "failed";

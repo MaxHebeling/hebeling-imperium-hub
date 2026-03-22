@@ -1,0 +1,126 @@
+<svg width="1600" height="1200" viewBox="0 0 1600 1200" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="goldStroke" x1="213" y1="158" x2="1388" y2="1013" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#F4D48B" stop-opacity="0.9"/>
+      <stop offset="0.45" stop-color="#E1A24A" stop-opacity="0.82"/>
+      <stop offset="1" stop-color="#C96F2D" stop-opacity="0.58"/>
+    </linearGradient>
+    <linearGradient id="slateStroke" x1="164" y1="228" x2="1448" y2="984" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#D5DFEC" stop-opacity="0.34"/>
+      <stop offset="1" stop-color="#6E84A3" stop-opacity="0.12"/>
+    </linearGradient>
+    <radialGradient id="goldGlow" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(1193 232) rotate(132.307) scale(302.75 254.412)">
+      <stop stop-color="#E1A24A" stop-opacity="0.3"/>
+      <stop offset="1" stop-color="#E1A24A" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="copperGlow" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(424 854) rotate(6.04487) scale(399.182 279.906)">
+      <stop stop-color="#C96F2D" stop-opacity="0.22"/>
+      <stop offset="1" stop-color="#C96F2D" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="steelGlow" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(753 560) rotate(90) scale(363.252 507.021)">
+      <stop stop-color="#9FB2CC" stop-opacity="0.16"/>
+      <stop offset="1" stop-color="#9FB2CC" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="softBlur" x="0" y="0" width="1600" height="1200" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feFlood flood-opacity="0" result="BackgroundImageFix"/>
+      <feBlend mode="normal" in="SourceGraphic" in2="BackgroundImageFix" result="shape"/>
+      <feGaussianBlur stdDeviation="36" result="effect1_foregroundBlur_1_4"/>
+    </filter>
+    <pattern id="dotMesh" width="48" height="48" patternUnits="userSpaceOnUse">
+      <circle cx="1" cy="1" r="1" fill="#E1A24A" fill-opacity="0.12"/>
+    </pattern>
+  </defs>
+
+  <rect width="1600" height="1200" fill="url(#dotMesh)" opacity="0.35"/>
+  <rect width="1600" height="1200" fill="url(#goldGlow)"/>
+  <rect width="1600" height="1200" fill="url(#copperGlow)"/>
+  <rect width="1600" height="1200" fill="url(#steelGlow)"/>
+
+  <g opacity="0.42">
+    <path d="M108 338C162 316.667 222.667 301 290 291C357.333 281 421.667 278 483 282C544.333 286 610.333 299.333 681 322C696.333 326.667 711.333 333 726 341L769 385C780.333 395 785 408.667 783 426V448H706V419C706 397 698.333 380 683 368C668.333 356 649.333 350 626 350H270C242 350 218 358 198 374C178 390 168 412.667 168 442V448H104V426C104 389.333 115.333 360 138 338H108Z" stroke="url(#goldStroke)" stroke-width="2.5"/>
+    <circle cx="259" cy="451" r="74" stroke="url(#goldStroke)" stroke-width="2.5"/>
+    <circle cx="259" cy="451" r="46" stroke="url(#slateStroke)" stroke-width="1.5"/>
+    <circle cx="618" cy="451" r="74" stroke="url(#goldStroke)" stroke-width="2.5"/>
+    <circle cx="618" cy="451" r="46" stroke="url(#slateStroke)" stroke-width="1.5"/>
+    <path d="M241 328H650" stroke="url(#slateStroke)" stroke-width="1.5" stroke-linecap="round"/>
+    <path d="M689 343L756 356" stroke="url(#slateStroke)" stroke-width="1.5" stroke-linecap="round"/>
+    <path d="M716 389H761" stroke="url(#slateStroke)" stroke-width="1.5" stroke-linecap="round"/>
+    <path d="M293 319L329 290H456L529 320" stroke="url(#slateStroke)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M363 292L389 327" stroke="url(#slateStroke)" stroke-width="1.25"/>
+    <path d="M474 292L490 325" stroke="url(#slateStroke)" stroke-width="1.25"/>
+  </g>
+
+  <g opacity="0.38">
+    <circle cx="1200" cy="244" r="154" stroke="url(#goldStroke)" stroke-width="2.5"/>
+    <circle cx="1200" cy="244" r="122" stroke="url(#slateStroke)" stroke-width="1.5"/>
+    <circle cx="1200" cy="244" r="84" stroke="url(#goldStroke)" stroke-width="1.75"/>
+    <path d="M1200 160V175" stroke="url(#goldStroke)" stroke-width="2" stroke-linecap="round"/>
+    <path d="M1200 313V328" stroke="url(#goldStroke)" stroke-width="2" stroke-linecap="round"/>
+    <path d="M1116 244H1131" stroke="url(#goldStroke)" stroke-width="2" stroke-linecap="round"/>
+    <path d="M1269 244H1284" stroke="url(#goldStroke)" stroke-width="2" stroke-linecap="round"/>
+    <path d="M1140.7 184.7L1151.4 195.4" stroke="url(#slateStroke)" stroke-width="1.5" stroke-linecap="round"/>
+    <path d="M1248.6 292.6L1259.3 303.3" stroke="url(#slateStroke)" stroke-width="1.5" stroke-linecap="round"/>
+    <path d="M1259.3 184.7L1248.6 195.4" stroke="url(#slateStroke)" stroke-width="1.5" stroke-linecap="round"/>
+    <path d="M1151.4 292.6L1140.7 303.3" stroke="url(#slateStroke)" stroke-width="1.5" stroke-linecap="round"/>
+    <path d="M1198 244L1243 204" stroke="url(#goldStroke)" stroke-width="3" stroke-linecap="round"/>
+    <path d="M1200 244L1172 280" stroke="url(#goldStroke)" stroke-width="2" stroke-linecap="round"/>
+    <circle cx="1200" cy="244" r="7" fill="#E1A24A" fill-opacity="0.55"/>
+    <rect x="1138" y="84" width="124" height="26" rx="13" stroke="url(#slateStroke)" stroke-width="1.5"/>
+    <rect x="1138" y="378" width="124" height="26" rx="13" stroke="url(#slateStroke)" stroke-width="1.5"/>
+    <path d="M1148 98H1252" stroke="url(#goldStroke)" stroke-opacity="0.45" stroke-width="1.5" stroke-linecap="round"/>
+    <path d="M1148 391H1252" stroke="url(#goldStroke)" stroke-opacity="0.45" stroke-width="1.5" stroke-linecap="round"/>
+  </g>
+
+  <g opacity="0.36">
+    <circle cx="806" cy="610" r="188" stroke="url(#goldStroke)" stroke-width="2.5"/>
+    <circle cx="806" cy="610" r="112" stroke="url(#goldStroke)" stroke-width="2"/>
+    <circle cx="806" cy="610" r="78" stroke="url(#slateStroke)" stroke-width="1.5"/>
+    <path d="M806 445C729.02 445 666 508.02 666 585V610H714C727.333 610 738 620.667 738 634V650H874V634C874 620.667 884.667 610 898 610H946V585C946 508.02 882.98 445 806 445Z" stroke="url(#goldStroke)" stroke-width="2.5" stroke-linejoin="round"/>
+    <path d="M706 650H906" stroke="url(#goldStroke)" stroke-width="2"/>
+    <path d="M725 538C741.667 523.333 768.667 516 806 516C843.333 516 870.333 523.333 887 538" stroke="url(#slateStroke)" stroke-width="1.5" stroke-linecap="round"/>
+    <path d="M806 533V610" stroke="url(#goldStroke)" stroke-width="2.2" stroke-linecap="round"/>
+    <path d="M733 576L806 610L879 576" stroke="url(#goldStroke)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M628 710C661.333 680 722 665 810 665C898 665 964 680 1008 710" stroke="url(#slateStroke)" stroke-width="1.5" stroke-linecap="round"/>
+    <path d="M670 743H940" stroke="url(#slateStroke)" stroke-width="1.5" stroke-linecap="round"/>
+    <path d="M681 770H928" stroke="url(#goldStroke)" stroke-width="1.5" stroke-linecap="round" stroke-dasharray="2 12"/>
+    <path d="M584 618C599 572.667 632.667 535 685 505" stroke="url(#slateStroke)" stroke-width="1.5" stroke-linecap="round"/>
+    <path d="M1027 618C1012 572.667 978.333 535 926 505" stroke="url(#slateStroke)" stroke-width="1.5" stroke-linecap="round"/>
+  </g>
+
+  <g opacity="0.33">
+    <path d="M232 824C246 786.667 275.333 754.667 320 728C364.667 701.333 422.333 688 493 688H603" stroke="url(#goldStroke)" stroke-width="2" stroke-linecap="round"/>
+    <path d="M252 907C281.333 846.333 333 807.333 407 790C441.667 781.333 481 777 525 777H648" stroke="url(#slateStroke)" stroke-width="1.5" stroke-linecap="round"/>
+    <path d="M307 989C338.333 918.333 398 880.333 486 875H667" stroke="url(#goldStroke)" stroke-width="2" stroke-linecap="round"/>
+    <path d="M677 689L722 729" stroke="url(#slateStroke)" stroke-width="1.5" stroke-linecap="round"/>
+    <path d="M686 778L742 826" stroke="url(#slateStroke)" stroke-width="1.5" stroke-linecap="round"/>
+    <path d="M706 872L759 922" stroke="url(#slateStroke)" stroke-width="1.5" stroke-linecap="round"/>
+    <path d="M470 714L548 900" stroke="url(#goldStroke)" stroke-width="1.5" stroke-linecap="round"/>
+    <path d="M424 756L501 933" stroke="url(#slateStroke)" stroke-width="1.25" stroke-linecap="round"/>
+    <path d="M563 700L616 835" stroke="url(#slateStroke)" stroke-width="1.25" stroke-linecap="round"/>
+    <path d="M285 983H751" stroke="url(#slateStroke)" stroke-width="1.25" stroke-linecap="round" stroke-dasharray="1 10"/>
+  </g>
+
+  <g opacity="0.34">
+    <path d="M1077 836C1106.33 792 1150 770 1208 770C1266 770 1310.33 792 1341 836" stroke="url(#goldStroke)" stroke-width="2.3" stroke-linecap="round"/>
+    <path d="M1041 928C1082.33 860.667 1138 827 1208 827C1278 827 1334.33 860.667 1377 928" stroke="url(#slateStroke)" stroke-width="1.5" stroke-linecap="round"/>
+    <path d="M1012 1016C1059.33 924 1124.67 878 1208 878C1291.33 878 1357.33 924 1406 1016" stroke="url(#goldStroke)" stroke-width="2.3" stroke-linecap="round"/>
+    <path d="M1208 878V944" stroke="url(#goldStroke)" stroke-width="2.2" stroke-linecap="round"/>
+    <path d="M1162 934L1208 878L1256 934" stroke="url(#goldStroke)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M1100 744C1131 721.333 1167 710 1208 710C1249 710 1285.33 721.333 1317 744" stroke="url(#slateStroke)" stroke-width="1.5" stroke-linecap="round"/>
+    <circle cx="1208" cy="944" r="54" stroke="url(#slateStroke)" stroke-width="1.5"/>
+    <path d="M1208 907V918" stroke="url(#goldStroke)" stroke-width="1.8" stroke-linecap="round"/>
+    <path d="M1234 944H1245" stroke="url(#goldStroke)" stroke-width="1.8" stroke-linecap="round"/>
+    <path d="M1208 971V982" stroke="url(#goldStroke)" stroke-width="1.8" stroke-linecap="round"/>
+    <path d="M1171 944H1182" stroke="url(#goldStroke)" stroke-width="1.8" stroke-linecap="round"/>
+  </g>
+
+  <g opacity="0.18" filter="url(#softBlur)">
+    <path d="M93 264C167.667 221.333 249.667 196.667 339 190C428.333 183.333 508.667 190 580 210C651.333 230 716 266.333 774 319" stroke="#E1A24A" stroke-width="22" stroke-linecap="round"/>
+    <path d="M1169 103C1263.67 111.667 1338.33 147.667 1393 211" stroke="#F0D18A" stroke-width="18" stroke-linecap="round"/>
+    <path d="M665 550C722.333 500.667 787 476 859 476C931 476 995.667 500.667 1053 550" stroke="#9FB2CC" stroke-width="16" stroke-linecap="round"/>
+  </g>
+
+  <path d="M79 1077L442 694" stroke="url(#slateStroke)" stroke-opacity="0.28" stroke-width="1.25"/>
+  <path d="M1142 457L1503 95" stroke="url(#slateStroke)" stroke-opacity="0.28" stroke-width="1.25"/>
+  <path d="M834 1195L1402 611" stroke="url(#goldStroke)" stroke-opacity="0.18" stroke-width="1.25"/>
+</svg>

@@ -1,12 +1,10 @@
 import { getAdminClient } from "@/lib/leads/helpers";
-import type { EditorialStageKey } from "../types/editorial";
+import type { EditorialPipelineStageKey } from "../types/editorial";
 import type {
-  ClientTimelineEntry,
   ClientTimelineState,
   ClientTimelineStageView,
   ClientArtifactView,
   StageArtifact,
-  TimelineOverride,
   TimelineOverrideType,
 } from "./types";
 import { JOURNEY_STAGES, JOURNEY_STAGE_MAP, JOURNEY_TOTAL_DAYS } from "./journey-config";
@@ -237,7 +235,7 @@ export async function advanceTimeline(projectId: string): Promise<void> {
   if (!entries) return;
 
   for (const entry of entries) {
-    const config = JOURNEY_STAGE_MAP[entry.stage_key as EditorialStageKey];
+    const config = JOURNEY_STAGE_MAP[entry.stage_key as EditorialPipelineStageKey];
     if (!config) continue;
 
     const entryDay = entry.visible_day as number;
@@ -283,7 +281,7 @@ export async function applyTimelineOverride(
   projectId: string,
   overrideType: TimelineOverrideType,
   staffId: string,
-  stageKey?: EditorialStageKey | null,
+  stageKey?: EditorialPipelineStageKey | null,
   payload?: Record<string, unknown> | null,
   reason?: string | null
 ): Promise<boolean> {
@@ -373,7 +371,7 @@ export async function applyTimelineOverride(
 /** Create or attach an artifact to a stage. */
 export async function createArtifact(params: {
   projectId: string;
-  stageKey: EditorialStageKey;
+  stageKey: EditorialPipelineStageKey;
   artifactType: string;
   title: string;
   description?: string | null;
@@ -462,7 +460,7 @@ function mapArtifactRow(row: Record<string, unknown>): StageArtifact {
   return {
     id: row.id as string,
     projectId: row.project_id as string,
-    stageKey: row.stage_key as EditorialStageKey,
+    stageKey: row.stage_key as EditorialPipelineStageKey,
     artifactType: row.artifact_type as StageArtifact["artifactType"],
     title: row.title as string,
     description: (row.description as string) ?? null,

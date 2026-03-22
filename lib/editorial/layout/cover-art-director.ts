@@ -236,7 +236,7 @@ export interface CoverZones {
  * Calculate cover zones for element positioning.
  */
 export function calculateCoverZones(specs: KDPCoverSpecs): CoverZones {
-  const { bleed, trimSize, spineWidth, totalWidth, totalHeight } = specs;
+  const { bleed, trimSize, spineWidth } = specs;
   const safeMargin = 0.25; // 0.25" safe margin inside trim
 
   return {

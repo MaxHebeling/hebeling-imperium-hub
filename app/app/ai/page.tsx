@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -19,14 +18,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -39,35 +30,26 @@ import {
   Users,
   FolderKanban,
   Globe,
-  DollarSign,
   TrendingUp,
   AlertTriangle,
   Clock,
   CheckCircle2,
   ArrowRight,
-  ChevronDown,
   ChevronUp,
   History,
   Settings,
   Target,
   Search,
   RefreshCw,
-  ExternalLink,
   Bot,
   Lightbulb,
   Calendar,
   Mail,
-  Bell,
-  FileEdit,
-  UserPlus,
-  Play,
-  Download,
   Building2,
   Briefcase,
   CreditCard,
   Workflow,
 } from "lucide-react";
-import Link from "next/link";
 
 // Module configuration with colors
 const MODULE_CONFIG = {
@@ -713,11 +695,10 @@ export default function AICommandCenterPage() {
               {/* Priorities */}
               <div>
                 <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2">
-                  Today's Priorities
+                  Today&apos;s Priorities
                 </h4>
                 <div className="space-y-2">
                   {EXECUTIVE_SUMMARY.priorities.map((priority, i) => {
-                    const moduleConfig = MODULE_CONFIG[priority.module as keyof typeof MODULE_CONFIG];
                     return (
                       <div key={i} className="flex items-start gap-2">
                         <span className="h-5 w-5 rounded-full bg-cyan-500/20 text-cyan-400 flex items-center justify-center text-[10px] font-medium shrink-0 mt-0.5">

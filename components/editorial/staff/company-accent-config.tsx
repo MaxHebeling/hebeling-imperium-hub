@@ -11,7 +11,6 @@ import {
   Save,
   Loader2,
   RotateCcw,
-  Eye,
 } from "lucide-react";
 
 interface CompanyAccentColors {

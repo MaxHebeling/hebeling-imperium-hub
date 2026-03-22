@@ -357,6 +357,7 @@ const COPY: Record<Language, {
 function LogoBlock({ className }: { className?: string }) {
   return (
     <div className={`flex justify-center min-h-12 items-center ${className ?? ""}`}>
+      {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         src="/assets/ikingdom-logo-512.png"
         alt="iKingdom"

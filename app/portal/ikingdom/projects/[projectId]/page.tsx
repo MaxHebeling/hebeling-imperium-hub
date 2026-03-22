@@ -8,7 +8,6 @@ import {
   Globe,
   Loader2,
   CheckCircle2,
-  Clock,
   AlertCircle,
   Code2,
   Palette,

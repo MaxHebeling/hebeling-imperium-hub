@@ -8,6 +8,29 @@ export {
   getKdpMinimumMargins,
 } from "./constants";
 
+export {
+  REINO_EDITORIAL_COLLECTION_TRIM_SIZE_IDS,
+  REINO_EDITORIAL_COLLECTION_TRIM_SIZE_OPTIONS,
+  REINO_EDITORIAL_DEFAULT_TRIM_SIZE_ID,
+  isReinoEditorialCollectionTrimSizeId,
+  isSupportedKdpTrimSizeId,
+  resolveReinoEditorialCollectionTrimSizeId,
+  getReinoEditorialLayoutPresetId,
+  buildEditorialBookSpecsSeed,
+  buildReinoEditorialBookSpecsSeed,
+} from "./reino-collection";
+
+export {
+  REINO_EDITORIAL_DEFAULT_TYPOGRAPHY_PRESET_ID,
+  REINO_EDITORIAL_TYPOGRAPHY_PRESET_OPTIONS,
+  REINO_EDITORIAL_FONT_SIZE_OPTIONS,
+  isReinoEditorialTypographyPresetId,
+  resolveReinoEditorialTypographyPresetId,
+  getReinoEditorialTypographyPreset,
+  getReinoEditorialDefaultFontSize,
+  getReinoEditorialDefaultLineSpacing,
+} from "./typography";
+
 export type {
   KdpPaperType,
   KdpBindingType,
@@ -17,3 +40,11 @@ export type {
   KdpCoverDimensions,
   KdpFormatConfig,
 } from "./types";
+
+export type {
+  ReinoEditorialCollectionTrimSizeId,
+} from "./reino-collection";
+
+export type {
+  ReinoEditorialTypographyPresetId,
+} from "./typography";

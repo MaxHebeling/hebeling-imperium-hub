@@ -1,42 +1,52 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
 import { AuthorDashboardPanel } from "@/components/editorial/portal/author-dashboard-panel";
 import { AppDownloadSection } from "@/components/editorial/portal/app-download-section";
 import type { PortalLocale } from "@/lib/editorial/i18n/portal-translations";
 
+const PORTAL_LOCALE_KEY = "reino-locale";
+const PORTAL_LOCALE_EVENT = "reino-locale-change";
+
+function getPortalLocaleSnapshot(): PortalLocale {
+  if (typeof window === "undefined") return "es";
+  const saved = localStorage.getItem(PORTAL_LOCALE_KEY);
+  return saved === "en" || saved === "es" ? saved : "es";
+}
+
+function subscribePortalLocale(callback: () => void) {
+  if (typeof window === "undefined") return () => {};
+
+  const handleChange = () => callback();
+  window.addEventListener("storage", handleChange);
+  window.addEventListener(PORTAL_LOCALE_EVENT, handleChange);
+
+  return () => {
+    window.removeEventListener("storage", handleChange);
+    window.removeEventListener(PORTAL_LOCALE_EVENT, handleChange);
+  };
+}
+
 export default function AuthorDashboardPage() {
-  const [locale, setLocale] = useState<PortalLocale>("es");
+  const locale = useSyncExternalStore<PortalLocale>(
+    subscribePortalLocale,
+    getPortalLocaleSnapshot,
+    () => "es"
+  );
   const [projectId, setProjectId] = useState<string | null>(null);
-
-  useEffect(() => {
-    const saved = localStorage.getItem("reino-locale") as PortalLocale | null;
-    if (saved === "en" || saved === "es") setLocale(saved);
-  }, []);
-
-  // Listen for locale changes from nav
-  useEffect(() => {
-    const interval = setInterval(() => {
-      const current = localStorage.getItem("reino-locale") as PortalLocale | null;
-      if (current && current !== locale) setLocale(current);
-    }, 500);
-    return () => clearInterval(interval);
-  }, [locale]);
 
   // Fetch first project for the client
   useEffect(() => {
-    async function fetchProject() {
-      try {
-        const res = await fetch("/api/editorial/client/projects");
-        const json = await res.json();
+    void fetch("/api/editorial/client/projects")
+      .then((res) => res.json())
+      .then((json) => {
         if (json.success && json.projects?.length > 0) {
           setProjectId(json.projects[0].id);
         }
-      } catch {
+      })
+      .catch(() => {
         // silently fail
-      }
-    }
-    fetchProject();
+      });
   }, []);
 
   return (

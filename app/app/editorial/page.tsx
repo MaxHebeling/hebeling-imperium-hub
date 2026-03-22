@@ -4,25 +4,18 @@ import {
   Zap,
   ArrowRight,
   Layers,
-  FileText,
-  CheckCircle,
-  Globe,
   Palette,
   Building2,
   FileOutput,
-  PenTool,
   Type,
   ShieldCheck,
-  Send,
   FileSearch,
 } from "lucide-react";
 
 export default function EditorialPage() {
   return (
     <div className="flex flex-col gap-8 p-8 max-w-6xl mx-auto">
-      {/* Premium Header Section */}
       <section className="flex flex-col gap-6">
-        {/* Logo + Title */}
         <div className="flex items-start gap-5">
           <div
             className="flex items-center justify-center w-16 h-16 rounded-2xl shrink-0 shadow-lg"
@@ -38,23 +31,23 @@ export default function EditorialPage() {
                 className="text-3xl font-bold tracking-tight"
                 style={{ color: "var(--re-text)" }}
               >
-                Editorial AI Engine
+                Sesión Editorial
               </h1>
               <span className="re-badge re-badge-blue">
                 <Zap className="w-3 h-3" />
-                v2.0
+                HEBELING AI
               </span>
             </div>
             <p
-              className="text-base max-w-xl"
+              className="text-base max-w-2xl"
               style={{ color: "var(--re-text-muted)" }}
             >
-              Pipeline de produccion editorial inteligente con IA en cada fase del proceso.
+              Una mesa de trabajo editorial clara para recibir manuscritos, diagnosticar, editar,
+              corregir y preparar la salida final sin perder control humano.
             </p>
           </div>
         </div>
 
-        {/* Quick Stats */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
           {QUICK_STATS.map((stat) => (
             <div
@@ -84,7 +77,6 @@ export default function EditorialPage() {
         </div>
       </section>
 
-      {/* Description Card */}
       <section
         className="re-card-blue p-6"
       >
@@ -97,27 +89,27 @@ export default function EditorialPage() {
             className="text-base font-semibold"
             style={{ color: "var(--re-text)" }}
           >
-            Pipeline Automatizado con n8n + IA
+            Flujo Editorial Base
           </h2>
         </div>
         <p
           className="text-sm leading-relaxed"
           style={{ color: "var(--re-text-muted)" }}
         >
-          El flujo editorial es orquestado automaticamente por <strong>n8n</strong> a traves de 8 etapas secuenciales. 
-          Cada etapa utiliza modelos de IA (GPT-4 y Claude) para analizar, corregir y mejorar el manuscrito. 
-          El staff puede supervisar el progreso, ver los resultados de cada etapa y descargar reportes de correcciones.
+          La sesión editorial ya no se presenta como una cadena larga de microetapas. La operación visible
+          se organiza en <strong>4 fases</strong>: recepción y diagnóstico, edición editorial, corrección final
+          y maquetación con salida. Por debajo, el sistema puede seguir ejecutando tareas internas, pero la
+          experiencia de staff y dirección editorial se mantiene limpia.
         </p>
       </section>
 
-      {/* Pipeline Visual */}
       <section>
         <div className="flex items-center justify-between mb-5">
           <h2
             className="text-lg font-semibold"
             style={{ color: "var(--re-text)" }}
           >
-            Pipeline Editorial
+            Fases de Operación
           </h2>
           <span 
             className="text-xs font-medium px-3 py-1 rounded-full"
@@ -126,11 +118,10 @@ export default function EditorialPage() {
               color: "var(--re-text-muted)" 
             }}
           >
-            8 etapas automatizadas
+            4 fases visibles
           </span>
         </div>
 
-        {/* Pipeline Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {PIPELINE_STAGES.map((stage, index) => (
             <div
@@ -197,7 +188,6 @@ export default function EditorialPage() {
         </div>
       </section>
 
-      {/* Quick Actions */}
       <section
         className="re-card p-6"
       >
@@ -207,13 +197,13 @@ export default function EditorialPage() {
               className="font-semibold text-base"
               style={{ color: "var(--re-text)" }}
             >
-              Acciones Rapidas
+              Punto de Entrada
             </p>
             <p
               className="text-sm mt-0.5"
               style={{ color: "var(--re-text-muted)" }}
             >
-              Accede a las funciones principales del motor editorial.
+              Entra a proyectos activos o registra un manuscrito nuevo para comenzar la sesión editorial.
             </p>
           </div>
           <div className="flex gap-3 flex-wrap">
@@ -229,13 +219,12 @@ export default function EditorialPage() {
               className="re-btn-secondary inline-flex items-center gap-2"
             >
               <BookOpen className="w-4 h-4" />
-              Nuevo Manuscrito
+              Registrar Manuscrito
             </Link>
           </div>
         </div>
       </section>
 
-      {/* Feature Cards */}
       <section className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         {FEATURE_CARDS.map((feature) => (
           <Link
@@ -280,74 +269,42 @@ export default function EditorialPage() {
 }
 
 const QUICK_STATS = [
-  { label: "Etapas Pipeline", value: "8", icon: Layers, color: "var(--re-blue)" },
-  { label: "Motor IA", value: "GPT + Claude", icon: Zap, color: "var(--re-cyan)" },
-  { label: "Automatizacion", value: "n8n", icon: Zap, color: "var(--re-gold)" },
-  { label: "Formatos Export", value: "PDF EPUB", icon: FileOutput, color: "var(--re-success)" },
+  { label: "Fases visibles", value: "4", icon: Layers, color: "var(--re-blue)" },
+  { label: "Control humano", value: "2 gates", icon: ShieldCheck, color: "var(--re-gold)" },
+  { label: "Motor editorial", value: "HEBELING AI", icon: Zap, color: "var(--re-cyan)" },
+  { label: "Salida", value: "Texto + PDF", icon: FileOutput, color: "var(--re-success)" },
 ];
 
 const PIPELINE_STAGES = [
   {
-    key: "ingesta",
-    label: "Ingesta",
+    key: "diagnostico",
+    label: "Recepción y diagnóstico",
     icon: BookOpen,
-    description: "Carga del manuscrito original y validacion de formato.",
+    description: "Ingreso del manuscrito, metadata del proyecto y panorama editorial inicial.",
     color: "var(--re-cyan)",
-    progress: 10,
-  },
-  {
-    key: "estructura",
-    label: "Estructura",
-    icon: FileSearch,
-    description: "Analisis y reorganizacion de la estructura narrativa.",
-    color: "var(--re-blue)",
     progress: 25,
   },
   {
-    key: "estilo",
-    label: "Estilo",
-    icon: PenTool,
-    description: "Mejora y homogeneizacion del estilo de escritura.",
-    color: "var(--re-gold)",
-    progress: 40,
+    key: "edicion",
+    label: "Edición editorial",
+    icon: FileSearch,
+    description: "Trabajo estructural, claridad narrativa y ajustes de contenido.",
+    color: "var(--re-blue)",
+    progress: 50,
   },
   {
-    key: "ortotipografia",
-    label: "Ortotipografia",
+    key: "correccion",
+    label: "Corrección final",
     icon: Type,
-    description: "Correccion ortografica, gramatical y tipografica.",
+    description: "Ortografía, gramática, ortotipografía y cierre de texto.",
     color: "var(--re-cyan)",
-    progress: 55,
+    progress: 75,
   },
   {
     key: "maquetacion",
-    label: "Maquetacion",
+    label: "Maquetación y salida",
     icon: Palette,
-    description: "Diseno y composicion del interior del libro.",
-    color: "var(--re-blue)",
-    progress: 70,
-  },
-  {
-    key: "revision_final",
-    label: "Revision Final",
-    icon: ShieldCheck,
-    description: "Revision integral y aprobacion para exportacion.",
-    color: "var(--re-gold)",
-    progress: 85,
-  },
-  {
-    key: "export",
-    label: "Export",
-    icon: FileOutput,
-    description: "Generacion de PDF, EPUB y MOBI en alta calidad.",
-    color: "var(--re-cyan)",
-    progress: 95,
-  },
-  {
-    key: "distribution",
-    label: "Distribucion",
-    icon: Send,
-    description: "Amazon, Apple Books, Kobo y canales directos.",
+    description: "Interior, revisión final, assets de portada y archivo listo para salida.",
     color: "var(--re-success)",
     progress: 100,
   },
@@ -355,15 +312,15 @@ const PIPELINE_STAGES = [
 
 const FEATURE_CARDS = [
   {
-    title: "Portadas AI",
-    description: "Genera portadas profesionales con DALL-E 3.",
+    title: "Portadas Premium",
+    description: "Dirección visual, briefing y workflow creativo para la portada final.",
     icon: Palette,
     href: "/app/editorial/portadas",
     gradient: "linear-gradient(135deg, #9333ea 0%, #ec4899 100%)",
   },
   {
     title: "Oficina Editorial",
-    description: "Contratos, facturas y documentos administrativos.",
+    description: "Contratos, facturación, organización operativa y documentos de staff.",
     icon: Building2,
     href: "/app/editorial/oficina",
     gradient: "linear-gradient(135deg, #1a3a6b 0%, #2563eb 100%)",

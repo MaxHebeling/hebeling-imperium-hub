@@ -31,11 +31,9 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Progress } from "@/components/ui/progress";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
 import {
-  ChevronLeft,
   ChevronRight,
   Play,
   Pause,
@@ -313,7 +311,7 @@ function formatDuration(ms: number): string {
 }
 
 export default function AutomationDetailPage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = use(params);
+  use(params);
   const [activeTab, setActiveTab] = useState("overview");
   const [automation] = useState<Automation>(mockAutomation);
   const [selectedTriggerModule, setSelectedTriggerModule] = useState<ModuleType>(automation.trigger.module);

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
@@ -26,25 +26,51 @@ interface PortalNavProps {
   userEmail?: string | null;
 }
 
+const PORTAL_LOCALE_KEY = "reino-locale";
+const PORTAL_LOCALE_EVENT = "reino-locale-change";
+
+function getPortalLocaleSnapshot(): PortalLocale {
+  if (typeof window === "undefined") {
+    return "es";
+  }
+
+  const saved = localStorage.getItem(PORTAL_LOCALE_KEY);
+  return saved === "en" || saved === "es" ? saved : "es";
+}
+
+function subscribePortalLocale(callback: () => void) {
+  if (typeof window === "undefined") {
+    return () => {};
+  }
+
+  const handleChange = () => callback();
+  window.addEventListener("storage", handleChange);
+  window.addEventListener(PORTAL_LOCALE_EVENT, handleChange);
+
+  return () => {
+    window.removeEventListener("storage", handleChange);
+    window.removeEventListener(PORTAL_LOCALE_EVENT, handleChange);
+  };
+}
+
 export function PortalNav({ userEmail }: PortalNavProps) {
   const pathname = usePathname();
   const router = useRouter();
   const [installPrompt, setInstallPrompt] = useState<Event | null>(null);
   const [showInstallBanner, setShowInstallBanner] = useState(false);
-  const [locale, setLocale] = useState<PortalLocale>("es");
+  const locale = useSyncExternalStore<PortalLocale>(
+    subscribePortalLocale,
+    getPortalLocaleSnapshot,
+    () => "es"
+  );
 
   const t = getTranslations(locale);
   const navItems = getNavItems(locale);
 
-  useEffect(() => {
-    const saved = localStorage.getItem("reino-locale") as PortalLocale | null;
-    if (saved === "en" || saved === "es") setLocale(saved);
-  }, []);
-
   const toggleLocale = () => {
     const next: PortalLocale = locale === "es" ? "en" : "es";
-    setLocale(next);
-    localStorage.setItem("reino-locale", next);
+    localStorage.setItem(PORTAL_LOCALE_KEY, next);
+    window.dispatchEvent(new Event(PORTAL_LOCALE_EVENT));
   };
 
   useEffect(() => {

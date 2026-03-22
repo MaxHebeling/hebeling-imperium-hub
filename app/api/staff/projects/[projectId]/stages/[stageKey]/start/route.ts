@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireStaff } from "@/lib/auth/staff";
 import { getEditorialProject } from "@/lib/editorial/db/queries";
-import { updateStageStatus, logEditorialActivity } from "@/lib/editorial/db/mutations";
+import { logEditorialActivity } from "@/lib/editorial/db/mutations";
 import { isValidStageKey } from "@/lib/editorial/pipeline/stage-utils";
 import { requireEditorialCapability } from "@/lib/editorial/permissions";
 import { logWorkflowEvent } from "@/lib/editorial/workflow-events";
@@ -10,6 +10,10 @@ import { STAGE_CONFIG } from "@/lib/editorial/pipeline/stage-transitions";
 import { requestStageAiAssist, isTaskAllowedForStage } from "@/lib/editorial/ai/stage-assist";
 import type { EditorialStageKey } from "@/lib/editorial/types/editorial";
 import type { EditorialAiTaskKey } from "@/lib/editorial/types/ai";
+import {
+  mapLegacyStageToWorkflowStage,
+  WORKFLOW_STAGE_AI_CONFIG,
+} from "@/lib/editorial/stage-engine/service";
 
 /**
  * POST /api/staff/projects/[projectId]/stages/[stageKey]/start
@@ -102,29 +106,31 @@ export async function POST(
     // Optionally trigger AI task
     let aiJobId: string | null = null;
     const stageKeyTyped = stageKey as EditorialStageKey;
-    const config = STAGE_CONFIG[stageKeyTyped];
+    const workflowStageKey = mapLegacyStageToWorkflowStage(stageKeyTyped);
+    const pipelineStageKey = WORKFLOW_STAGE_AI_CONFIG[workflowStageKey]?.aiStageKey;
+    const config = pipelineStageKey ? STAGE_CONFIG[pipelineStageKey] : null;
 
-    if (triggerAi && config.aiTaskKey) {
+    if (triggerAi && pipelineStageKey && config?.aiTaskKey) {
       const aiTaskKey = config.aiTaskKey as EditorialAiTaskKey;
-      if (isTaskAllowedForStage(stageKeyTyped, aiTaskKey)) {
+      if (isTaskAllowedForStage(pipelineStageKey, aiTaskKey)) {
         try {
           // Get the latest file for this project
           const { data: latestFile } = await supabase
             .from("editorial_files")
-            .select("id, version_number")
+            .select("id, version")
             .eq("project_id", projectId)
-            .order("version_number", { ascending: false })
+            .order("version", { ascending: false })
             .limit(1)
             .single();
 
           const result = await requestStageAiAssist({
             orgId: project.org_id,
             projectId,
-            stageKey: stageKeyTyped,
+            stageKey: pipelineStageKey,
             taskKey: aiTaskKey,
             requestedBy: staff.userId,
             sourceFileId: latestFile?.id,
-            sourceFileVersion: latestFile?.version_number,
+            sourceFileVersion: latestFile?.version,
           });
 
           aiJobId = result.jobId;

@@ -1,5 +1,6 @@
 import {
   Document,
+  FileChild,
   Packer,
   Paragraph,
   TextRun,
@@ -14,7 +15,6 @@ import {
   Header,
   Footer,
   PageNumber,
-  NumberFormat,
 } from "docx";
 
 // ---------- Types ----------
@@ -67,11 +67,6 @@ function severityColor(severity: string): string {
   return "27AE60";
 }
 
-function noBorders() {
-  const none = { style: BorderStyle.NONE, size: 0, color: "FFFFFF" };
-  return { top: none, bottom: none, left: none, right: none };
-}
-
 function thinBorders() {
   const border = { style: BorderStyle.SINGLE, size: 1, color: "D5D8DC" };
   return { top: border, bottom: border, left: border, right: border };
@@ -98,7 +93,7 @@ export function buildCorrectionReportDocument(input: CorrectionReportInput): Doc
     byKind.get(key)!.push(c);
   }
 
-  const sections: Paragraph[] = [];
+  const sections: FileChild[] = [];
 
   // ---- Title page ----
   sections.push(

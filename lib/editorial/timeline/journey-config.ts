@@ -1,4 +1,4 @@
-import type { EditorialStageKey } from "../types/editorial";
+import type { EditorialPipelineStageKey } from "../types/editorial";
 import type { JourneyStageConfig } from "./types";
 
 /**
@@ -97,9 +97,9 @@ export const JOURNEY_STAGES: JourneyStageConfig[] = [
 ];
 
 /** Map from stage key to journey config for quick lookup. */
-export const JOURNEY_STAGE_MAP: Record<EditorialStageKey, JourneyStageConfig> =
+export const JOURNEY_STAGE_MAP: Record<EditorialPipelineStageKey, JourneyStageConfig> =
   Object.fromEntries(JOURNEY_STAGES.map((s) => [s.stageKey, s])) as Record<
-    EditorialStageKey,
+    EditorialPipelineStageKey,
     JourneyStageConfig
   >;
 

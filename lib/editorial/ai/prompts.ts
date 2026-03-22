@@ -1,10 +1,10 @@
 import { getAdminClient } from "@/lib/leads/helpers";
-import type { EditorialStageKey } from "@/lib/editorial/types/editorial";
+import type { EditorialPipelineStageKey } from "@/lib/editorial/types/editorial";
 import type { EditorialAiPromptTemplate, EditorialAiTaskKey } from "@/lib/editorial/types/ai";
 
 export async function getActivePromptTemplate(options: {
   orgId: string;
-  stageKey: EditorialStageKey;
+  stageKey: EditorialPipelineStageKey;
   taskKey: EditorialAiTaskKey;
 }): Promise<EditorialAiPromptTemplate | null> {
   const supabase = getAdminClient();
@@ -35,4 +35,3 @@ export function buildPrompt(template: EditorialAiPromptTemplate, context: Record
   
   return result;
 }
-

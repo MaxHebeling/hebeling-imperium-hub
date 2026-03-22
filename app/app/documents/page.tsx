@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useLanguage } from "@/lib/i18n";
 import { Button } from "@/components/ui/button";
@@ -66,6 +66,23 @@ interface Brand {
   name: string;
 }
 
+type LinkedEntity = { id: string; name: string };
+
+function normalizeLinkedEntity(value: LinkedEntity | LinkedEntity[] | null | undefined) {
+  return Array.isArray(value) ? (value[0] ?? null) : (value ?? null);
+}
+
+function mapDocumentRow(row: Omit<Document, "tenant" | "brand"> & {
+  tenant: LinkedEntity | LinkedEntity[] | null;
+  brand: LinkedEntity | LinkedEntity[] | null;
+}): Document {
+  return {
+    ...row,
+    tenant: normalizeLinkedEntity(row.tenant),
+    brand: normalizeLinkedEntity(row.brand),
+  };
+}
+
 const DOCUMENT_TYPES = [
   { value: "contract", label: "Contract", icon: FileSignature },
   { value: "proposal", label: "Proposal", icon: FileText },
@@ -117,6 +134,7 @@ export default function DocumentsPage() {
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [creating, setCreating] = useState(false);
   const [activeTab, setActiveTab] = useState("all");
+  const [refreshKey, setRefreshKey] = useState(0);
 
   // Form state
   const [formType, setFormType] = useState("contract");
@@ -127,48 +145,84 @@ export default function DocumentsPage() {
 
   const supabase = createClient();
 
-  const fetchData = useCallback(async () => {
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-    if (!user) return;
-
-    const { data: profileData } = await supabase
-      .from("profiles")
-      .select("org_id")
-      .eq("id", user.id)
-      .single();
-
-    if (!profileData) return;
-    setProfile(profileData);
-
-    const [docsRes, tenantsRes, brandsRes] = await Promise.all([
-      supabase
-        .from("documents")
-        .select("*, tenant:tenants(id, name), brand:brands(id, name)")
-        .eq("org_id", profileData.org_id)
-        .order("created_at", { ascending: false }),
-      supabase
-        .from("tenants")
-        .select("id, name")
-        .eq("org_id", profileData.org_id)
-        .order("name"),
-      supabase
-        .from("brands")
-        .select("id, name")
-        .eq("org_id", profileData.org_id)
-        .order("name"),
-    ]);
-
-    setDocuments((docsRes.data as Document[]) || []);
-    setTenants(tenantsRes.data || []);
-    setBrands(brandsRes.data || []);
-    setLoading(false);
-  }, [supabase]);
-
   useEffect(() => {
-    fetchData();
-  }, [fetchData]);
+    let active = true;
+
+    async function run() {
+      setLoading(true);
+
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      if (!active) return;
+
+      if (!user) {
+        setProfile(null);
+        setDocuments([]);
+        setTenants([]);
+        setBrands([]);
+        setLoading(false);
+        return;
+      }
+
+      const { data: profileData } = await supabase
+        .from("profiles")
+        .select("org_id")
+        .eq("id", user.id)
+        .single();
+
+      if (!active) return;
+
+      if (!profileData) {
+        setProfile(null);
+        setDocuments([]);
+        setTenants([]);
+        setBrands([]);
+        setLoading(false);
+        return;
+      }
+
+      const [docsRes, tenantsRes, brandsRes] = await Promise.all([
+        supabase
+          .from("documents")
+          .select("*, tenant:tenants(id, name), brand:brands(id, name)")
+          .eq("org_id", profileData.org_id)
+          .order("created_at", { ascending: false }),
+        supabase
+          .from("tenants")
+          .select("id, name")
+          .eq("org_id", profileData.org_id)
+          .order("name"),
+        supabase
+          .from("brands")
+          .select("id, name")
+          .eq("org_id", profileData.org_id)
+          .order("name"),
+      ]);
+
+      if (!active) return;
+
+      setProfile(profileData);
+      setDocuments(
+        ((docsRes.data ?? []) as Array<
+          Omit<Document, "tenant" | "brand"> & {
+            tenant: LinkedEntity | LinkedEntity[] | null;
+            brand: LinkedEntity | LinkedEntity[] | null;
+          }
+        >).map(mapDocumentRow)
+      );
+      setTenants(tenantsRes.data || []);
+      setBrands(brandsRes.data || []);
+      setLoading(false);
+    }
+
+    void run();
+
+    return () => {
+      active = false;
+    };
+  }, [refreshKey, supabase]);
 
   const handleCreate = async () => {
     if (!profile) return;
@@ -190,7 +244,7 @@ export default function DocumentsPage() {
       setFormTenant("");
       setFormBrand("");
       setFormFileUrl("");
-      fetchData();
+      setRefreshKey((value) => value + 1);
     }
     setCreating(false);
   };
@@ -198,7 +252,7 @@ export default function DocumentsPage() {
   const handleDelete = async (id: string) => {
     if (!confirm("Are you sure you want to delete this document?")) return;
     await supabase.from("documents").delete().eq("id", id);
-    fetchData();
+    setRefreshKey((value) => value + 1);
   };
 
   // Filter documents
@@ -287,7 +341,12 @@ export default function DocumentsPage() {
               </div>
               <div className="grid gap-2">
                 <Label>{t.crm.clients} ({t.common.optional})</Label>
-                <Select value={formTenant} onValueChange={setFormTenant}>
+                <Select
+                  value={formTenant || "none"}
+                  onValueChange={(nextValue) =>
+                    setFormTenant(nextValue === "none" ? "" : nextValue)
+                  }
+                >
                   <SelectTrigger>
                     <SelectValue placeholder={t.documents.selectClient} />
                   </SelectTrigger>
@@ -303,7 +362,12 @@ export default function DocumentsPage() {
               </div>
               <div className="grid gap-2">
                 <Label>{t.projects.brand} ({t.common.optional})</Label>
-                <Select value={formBrand} onValueChange={setFormBrand}>
+                <Select
+                  value={formBrand || "none"}
+                  onValueChange={(nextValue) =>
+                    setFormBrand(nextValue === "none" ? "" : nextValue)
+                  }
+                >
                   <SelectTrigger>
                     <SelectValue placeholder={t.documents.selectBrand} />
                   </SelectTrigger>

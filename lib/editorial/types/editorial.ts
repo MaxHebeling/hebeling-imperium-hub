@@ -1,6 +1,6 @@
 export type EditorialFileVisibility = "internal" | "client" | "public";
 
-export type EditorialStageKey =
+export type EditorialProjectStageKey =
   | "recepcion"
   | "preparacion"
   | "correccion_linguistica"
@@ -12,6 +12,19 @@ export type EditorialStageKey =
   | "generacion_portada"
   | "marketing_editorial"
   | "entrega_final";
+
+export type EditorialPipelineStageKey =
+  | "ingesta"
+  | "estructura"
+  | "estilo"
+  | "ortotipografia"
+  | "maquetacion"
+  | "revision_final"
+  | "export"
+  | "distribution";
+
+export type EditorialStageKey = EditorialProjectStageKey;
+export type EditorialAnyStageKey = EditorialProjectStageKey | EditorialPipelineStageKey;
 
 export type CreativeMode = "author_directed" | "editorial_directed";
 
@@ -26,6 +39,65 @@ export type EditorialStageStatus =
 
 export type EditorialServiceType = "full_pipeline" | "reedicion" | "rediseno_portada" | "reedicion_y_portada";
 
+export type EditorialInterventionLevel =
+  | "conservador"
+  | "editorial"
+  | "intervencion_alta";
+
+export type EditorialPolicyGuardStage =
+  | "content_editing"
+  | "proofreading"
+  | "semantic_validation";
+
+export type EditorialPolicyAuditDirection =
+  | "expansion"
+  | "reduction"
+  | "stable";
+
+export type EditorialPolicyAuditViolationKind =
+  | "total_delta_guard"
+  | "item_delta_guard"
+  | "paragraph_delta_guard"
+  | "paragraph_similarity_guard"
+  | "paragraph_count_mismatch";
+
+export interface EditorialPolicyAuditViolation {
+  label: string;
+  kind: EditorialPolicyAuditViolationKind;
+  direction: EditorialPolicyAuditDirection;
+  delta_words: number;
+  delta_ratio: number;
+  original_word_count: number;
+  revised_word_count: number;
+  paragraph_index: number | null;
+  similarity_ratio: number | null;
+  original_paragraph_count: number | null;
+  revised_paragraph_count: number | null;
+}
+
+export interface EditorialPolicyAuditSummary {
+  stage: EditorialPolicyGuardStage;
+  level: EditorialInterventionLevel;
+  total_original_word_count: number;
+  total_revised_word_count: number;
+  total_delta_words: number;
+  total_delta_ratio: number;
+  max_total_delta_ratio: number;
+  max_item_delta_ratio: number;
+  min_item_word_count: number;
+  min_item_delta_words: number;
+  paragraph_guard_enabled: boolean;
+  total_original_paragraph_count: number;
+  total_revised_paragraph_count: number;
+  max_paragraph_delta_ratio: number;
+  min_paragraph_similarity_ratio: number;
+  min_paragraph_word_count: number;
+  paragraph_violation_count: number;
+  checked_item_count: number;
+  violation_count: number;
+  violations: EditorialPolicyAuditViolation[];
+}
+
 export interface EditorialProject {
   id: string;
   org_id: string;
@@ -38,7 +110,7 @@ export interface EditorialProject {
   target_audience: string | null;
   word_count: number | null;
   page_estimate: number | null;
-  current_stage: EditorialStageKey;
+  current_stage: EditorialProjectStageKey;
   status: string;
   progress_percent: number;
   service_type?: EditorialServiceType;
@@ -56,7 +128,7 @@ export interface EditorialProject {
 export interface EditorialStage {
   id: string;
   project_id: string;
-  stage_key: EditorialStageKey;
+  stage_key: EditorialProjectStageKey;
   status: EditorialStageStatus;
   started_at: string | null;
   completed_at: string | null;
@@ -70,7 +142,7 @@ export interface EditorialStage {
 export interface EditorialFile {
   id: string;
   project_id: string;
-  stage_key: EditorialStageKey | null;
+  stage_key: EditorialAnyStageKey | null;
   file_type: string;
   version: number;
   storage_path: string;
@@ -84,7 +156,7 @@ export interface EditorialFile {
 export interface EditorialJob {
   id: string;
   project_id: string;
-  stage_key: EditorialStageKey | null;
+  stage_key: EditorialAnyStageKey | null;
   job_type: string;
   provider: string | null;
   status: string;
@@ -99,7 +171,7 @@ export interface EditorialJob {
 export interface EditorialComment {
   id: string;
   project_id: string;
-  stage_key: EditorialStageKey | null;
+  stage_key: EditorialAnyStageKey | null;
   author_type: string | null;
   author_id: string | null;
   comment: string;
@@ -122,7 +194,7 @@ export interface EditorialExport {
 export interface EditorialActivityLogEntry {
   id: string;
   project_id: string;
-  stage_key: string | null;
+  stage_key: EditorialAnyStageKey | null;
   event_type: string;
   actor_id: string | null;
   actor_type: string | null;
@@ -131,7 +203,7 @@ export interface EditorialActivityLogEntry {
 }
 
 export interface StaffActivityLogEntry extends EditorialActivityLogEntry {
-  stage_key: EditorialStageKey | null;
+  stage_key: EditorialAnyStageKey | null;
   actor_name: string | null;
   actor_email: string | null;
 }
@@ -313,7 +385,7 @@ export interface EditorialWorkflowEvent {
   id: string;
   org_id: string;
   project_id: string;
-  stage_key: EditorialStageKey | null;
+  stage_key: EditorialAnyStageKey | null;
   event_type: EditorialWorkflowEventType | string;
   actor_id: string | null;
   actor_role: string | null;

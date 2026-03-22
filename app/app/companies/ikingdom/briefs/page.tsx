@@ -22,6 +22,27 @@ interface LeadBriefRow {
   } | null;
 }
 
+type LeadSummary = NonNullable<LeadBriefRow["lead"]>;
+type LeadRelation = LeadSummary | LeadSummary[] | null;
+type LeadBriefRowRaw = Omit<LeadBriefRow, "lead"> & {
+  lead: LeadRelation;
+};
+
+function normalizeLeadRelation(value: LeadRelation) {
+  return Array.isArray(value) ? (value[0] ?? null) : value;
+}
+
+function isMissingBriefsSchema(error: { code?: string | null; message?: string | null }) {
+  const message = error.message ?? "";
+  return (
+    error.code === "PGRST205" ||
+    error.code === "PGRST204" ||
+    message.includes("schema cache") ||
+    message.includes("Could not find the table") ||
+    message.includes("does not exist")
+  );
+}
+
 function formatDate(value: string) {
   return new Date(value).toLocaleDateString("es-MX", {
     year: "numeric",
@@ -43,11 +64,18 @@ async function getRecentBriefs(): Promise<LeadBriefRow[]> {
       .limit(12);
 
     if (error) {
+      if (isMissingBriefsSchema(error)) {
+        return [];
+      }
+
       console.error("[ikingdom/briefs] failed to load lead briefs:", error.message);
       return [];
     }
 
-    return (data ?? []) as LeadBriefRow[];
+    return ((data ?? []) as LeadBriefRowRaw[]).map((brief) => ({
+      ...brief,
+      lead: normalizeLeadRelation(brief.lead),
+    }));
   } catch (error) {
     console.error("[ikingdom/briefs] unexpected load error:", error);
     return [];

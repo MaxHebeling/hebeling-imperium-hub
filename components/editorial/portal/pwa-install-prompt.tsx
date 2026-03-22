@@ -15,15 +15,13 @@ interface PWAInstallPromptProps {
 export function PWAInstallPrompt({ locale = "es" }: PWAInstallPromptProps) {
   const [deferredPrompt, setDeferredPrompt] =
     useState<BeforeInstallPromptEvent | null>(null);
-  const [dismissed, setDismissed] = useState(false);
+  const [dismissed, setDismissed] = useState(() => {
+    if (typeof window === "undefined") return false;
+    return localStorage.getItem("reino-pwa-dismissed") === "true";
+  });
 
   useEffect(() => {
-    // Check if already dismissed
-    const wasDismissed = localStorage.getItem("reino-pwa-dismissed");
-    if (wasDismissed === "true") {
-      setDismissed(true);
-      return;
-    }
+    if (dismissed) return;
 
     function handleBeforeInstall(e: Event) {
       e.preventDefault();
@@ -33,7 +31,7 @@ export function PWAInstallPrompt({ locale = "es" }: PWAInstallPromptProps) {
     window.addEventListener("beforeinstallprompt", handleBeforeInstall);
     return () =>
       window.removeEventListener("beforeinstallprompt", handleBeforeInstall);
-  }, []);
+  }, [dismissed]);
 
   async function handleInstall() {
     if (!deferredPrompt) return;

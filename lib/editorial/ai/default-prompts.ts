@@ -1,9 +1,9 @@
 import type { EditorialAiTaskKey } from "@/lib/editorial/types/ai";
-import type { EditorialStageKey } from "@/lib/editorial/types/editorial";
+import type { EditorialPipelineStageKey } from "@/lib/editorial/types/editorial";
 
 interface DefaultPrompt {
   taskKey: EditorialAiTaskKey;
-  stageKey: EditorialStageKey;
+  stageKey: EditorialPipelineStageKey;
   systemPrompt: string;
   userPromptTemplate: string;
 }
@@ -735,7 +735,10 @@ MANUSCRITO:
   },
 ];
 
-export function getDefaultPrompt(stageKey: EditorialStageKey, taskKey: EditorialAiTaskKey): DefaultPrompt | undefined {
+export function getDefaultPrompt(
+  stageKey: EditorialPipelineStageKey,
+  taskKey: EditorialAiTaskKey
+): DefaultPrompt | undefined {
   return DEFAULT_PROMPTS.find(p => p.stageKey === stageKey && p.taskKey === taskKey);
 }
 

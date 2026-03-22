@@ -5,6 +5,23 @@ import { isValidStageKey } from "@/lib/editorial/pipeline/stage-utils";
 import { requireEditorialCapability } from "@/lib/editorial/permissions";
 import type { EditorialStageKey } from "@/lib/editorial/types/editorial";
 import { listAiFindings } from "@/lib/editorial/ai/findings";
+import type {
+  EditorialAiFindingSeverity,
+  EditorialAiFindingStatus,
+  EditorialAiFindingType,
+} from "@/lib/editorial/types/ai-findings";
+
+function isFindingStatus(value: string): value is EditorialAiFindingStatus {
+  return ["open", "acknowledged", "resolved", "dismissed"].includes(value);
+}
+
+function isFindingSeverity(value: string): value is EditorialAiFindingSeverity {
+  return ["info", "warning", "critical"].includes(value);
+}
+
+function isFindingType(value: string): value is EditorialAiFindingType {
+  return ["issue", "recommendation", "flag"].includes(value);
+}
 
 /**
  * GET /api/staff/projects/[projectId]/stages/[stageKey]/ai/findings
@@ -38,16 +55,19 @@ export async function GET(
     }
 
     const { searchParams } = new URL(request.url);
-    const status = searchParams.get("status") ?? undefined;
-    const severity = searchParams.get("severity") ?? undefined;
-    const findingType = searchParams.get("type") ?? undefined;
+    const rawStatus = searchParams.get("status");
+    const rawSeverity = searchParams.get("severity");
+    const rawFindingType = searchParams.get("type");
+    const status = rawStatus && isFindingStatus(rawStatus) ? rawStatus : undefined;
+    const severity = rawSeverity && isFindingSeverity(rawSeverity) ? rawSeverity : undefined;
+    const findingType = rawFindingType && isFindingType(rawFindingType) ? rawFindingType : undefined;
 
     const findings = await listAiFindings({
       projectId,
       stageKey: stageKey as EditorialStageKey,
-      status: status as any,
-      severity: severity as any,
-      findingType: findingType as any,
+      status,
+      severity,
+      findingType,
       limit: 200,
     });
 
@@ -58,4 +78,3 @@ export async function GET(
     return NextResponse.json({ success: false, error: message }, { status });
   }
 }
-

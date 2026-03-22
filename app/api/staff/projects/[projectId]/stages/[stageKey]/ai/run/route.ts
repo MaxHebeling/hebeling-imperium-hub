@@ -6,6 +6,11 @@ import { requireEditorialCapability } from "@/lib/editorial/permissions";
 import type { EditorialStageKey } from "@/lib/editorial/types/editorial";
 import type { EditorialAiTaskKey } from "@/lib/editorial/types/ai";
 import { requestStageAiAssist } from "@/lib/editorial/ai/stage-assist";
+import { processAiJob } from "@/lib/editorial/ai/processor";
+import {
+  mapLegacyStageToWorkflowStage,
+  WORKFLOW_STAGE_AI_CONFIG,
+} from "@/lib/editorial/stage-engine/service";
 
 function isAiTaskKey(value: string): value is EditorialAiTaskKey {
   return [
@@ -31,7 +36,7 @@ function isAiTaskKey(value: string): value is EditorialAiTaskKey {
  * POST /api/staff/projects/[projectId]/stages/[stageKey]/ai/run
  * Body: { taskKey, sourceFileId?, sourceFileVersion? }
  *
- * Creates an AI job (queued) for the given project+stage+task.
+ * Creates and processes an AI job for the given project+stage+task.
  * Human review remains mandatory; no auto-apply.
  */
 export async function POST(
@@ -72,22 +77,48 @@ export async function POST(
       body?.sourceFileVersion !== undefined && body?.sourceFileVersion !== null
         ? Number(body.sourceFileVersion)
         : undefined;
+    const projectStageKey = stageKey as EditorialStageKey;
+    const workflowStageKey = mapLegacyStageToWorkflowStage(projectStageKey);
+    const pipelineStageKey = WORKFLOW_STAGE_AI_CONFIG[workflowStageKey]?.aiStageKey;
 
-    const result = await requestStageAiAssist({
+    if (!pipelineStageKey) {
+      return NextResponse.json(
+        { success: false, error: `No AI pipeline is configured for ${projectStageKey}` },
+        { status: 400 }
+      );
+    }
+
+    const queued = await requestStageAiAssist({
       orgId: project.org_id,
       projectId,
-      stageKey: stageKey as EditorialStageKey,
+      stageKey: pipelineStageKey,
       taskKey: taskKeyRaw,
       requestedBy: staff.userId,
       sourceFileId,
       sourceFileVersion,
     });
 
+    const result = await processAiJob({
+      jobId: queued.jobId,
+      projectId,
+      stageKey: pipelineStageKey,
+      taskKey: taskKeyRaw,
+      context: {
+        project_id: projectId,
+        stage_key: pipelineStageKey,
+        source_file_id: sourceFileId ?? null,
+        source_file_version: sourceFileVersion ?? null,
+        requested_by: staff.userId,
+      },
+      skipAutoAdvance: true,
+    });
+
     return NextResponse.json({
       success: true,
-      jobId: result.jobId,
-      promptTemplateId: result.promptTemplateId,
-      promptTemplateVersion: result.promptTemplateVersion,
+      jobId: queued.jobId,
+      promptTemplateId: queued.promptTemplateId,
+      promptTemplateVersion: queued.promptTemplateVersion,
+      result,
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Internal server error";
@@ -95,4 +126,3 @@ export async function POST(
     return NextResponse.json({ success: false, error: message }, { status });
   }
 }
-

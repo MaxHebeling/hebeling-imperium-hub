@@ -60,7 +60,7 @@ export async function GET() {
     // Enrich profiles with project counts
     const profileIds = (profiles ?? []).map((p) => p.id);
 
-    let projectCounts: Record<string, number> = {};
+    const projectCounts: Record<string, number> = {};
     if (profileIds.length > 0) {
       const { data: projects } = await supabase
         .from("editorial_projects")

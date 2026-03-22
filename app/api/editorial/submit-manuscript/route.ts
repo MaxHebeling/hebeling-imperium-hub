@@ -3,6 +3,12 @@ import { createEditorialProject, registerManuscriptFile } from "@/lib/editorial/
 import { requestAiTask } from "@/lib/editorial/ai/jobs";
 import { uploadManuscript } from "@/lib/editorial/storage/upload";
 import { logWorkflowEvent } from "@/lib/editorial/workflow-events/service";
+import { upsertBookSpecifications } from "@/lib/editorial/workflow/professional";
+import {
+  buildReinoEditorialBookSpecsSeed,
+  isReinoEditorialCollectionTrimSizeId,
+  REINO_EDITORIAL_DEFAULT_TRIM_SIZE_ID,
+} from "@/lib/editorial/kdp";
 import { ORG_ID } from "@/lib/leads/helpers";
 
 const MAX_FILE_SIZE = 25 * 1024 * 1024; // 25MB
@@ -53,6 +59,17 @@ export async function POST(request: Request) {
       );
     }
 
+    const selectedTrimSizeId = bookSize ?? REINO_EDITORIAL_DEFAULT_TRIM_SIZE_ID;
+    if (!isReinoEditorialCollectionTrimSizeId(selectedTrimSizeId)) {
+      return NextResponse.json(
+        {
+          error:
+            'Reino Editorial solo permite los formatos Amazon KDP 6" x 9" y 5.5" x 8.5".',
+        },
+        { status: 400 }
+      );
+    }
+
     if (!manuscript || !(manuscript instanceof File) || manuscript.size === 0) {
       console.log("[v0] Manuscript file is required");
       return NextResponse.json(
@@ -80,10 +97,17 @@ export async function POST(request: Request) {
       creative_mode: creativeMode as "author_directed" | "editorial_directed",
       cover_prompt: coverPrompt,
       cover_notes: coverNotes,
-      book_size: bookSize,
+      book_size: selectedTrimSizeId,
       observations,
     });
     console.log("[v0] Project created:", project.id);
+
+    console.log("[v0] Persisting KDP collection book specs");
+    await upsertBookSpecifications(
+      project.id,
+      buildReinoEditorialBookSpecsSeed(selectedTrimSizeId)
+    );
+    console.log("[v0] KDP book specs saved");
 
     // 2. Upload manuscript to bucket
     console.log("[v0] Uploading manuscript to storage");
@@ -108,7 +132,7 @@ export async function POST(request: Request) {
     await requestAiTask({
       orgId: ORG_ID,
       projectId: project.id,
-      stageKey: "recepcion",
+      stageKey: "ingesta",
       taskKey: "manuscript_analysis",
       sourceFileId: fileRecord.id,
       sourceFileVersion: 1,

@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAdminClient } from "@/lib/leads/helpers";
 import { DEFAULT_PROMPTS } from "@/lib/editorial/ai/default-prompts";
-import type { EditorialStageKey } from "@/lib/editorial/types/editorial";
+import type { EditorialPipelineStageKey } from "@/lib/editorial/types/editorial";
+import { isPipelineStageKey } from "@/lib/editorial/pipeline/stage-compat";
 
 /** Build a fallback response from defaults (used when DB is unavailable). */
-function buildDefaultResponse(stageKey: EditorialStageKey | null) {
+function buildDefaultResponse(stageKey: EditorialPipelineStageKey | null) {
   const defaults = stageKey
     ? DEFAULT_PROMPTS.filter((p) => p.stageKey === stageKey)
     : DEFAULT_PROMPTS;
@@ -24,7 +25,11 @@ function buildDefaultResponse(stageKey: EditorialStageKey | null) {
  * Returns the prompts for a given stage (custom overrides + defaults).
  */
 export async function GET(request: NextRequest) {
-  const stageKey = request.nextUrl.searchParams.get("stageKey") as EditorialStageKey | null;
+  const rawStageKey = request.nextUrl.searchParams.get("stageKey");
+  const stageKey =
+    rawStageKey && isPipelineStageKey(rawStageKey)
+      ? rawStageKey
+      : null;
 
   try {
     const defaults = stageKey
@@ -93,6 +98,12 @@ export async function POST(request: NextRequest) {
     if (!stageKey || !taskKey) {
       return NextResponse.json(
         { success: false, error: "stageKey y taskKey son requeridos" },
+        { status: 400 }
+      );
+    }
+    if (!isPipelineStageKey(stageKey)) {
+      return NextResponse.json(
+        { success: false, error: "stageKey invalido para prompts editoriales" },
         { status: 400 }
       );
     }
@@ -170,6 +181,12 @@ export async function DELETE(request: NextRequest) {
     if (!stageKey || !taskKey) {
       return NextResponse.json(
         { success: false, error: "stageKey y taskKey son requeridos" },
+        { status: 400 }
+      );
+    }
+    if (!isPipelineStageKey(stageKey)) {
+      return NextResponse.json(
+        { success: false, error: "stageKey invalido para prompts editoriales" },
         { status: 400 }
       );
     }

@@ -1,6 +1,6 @@
 "use client";
 
-import { Users, Briefcase, TrendingUp, BookOpen, Church, Target, ArrowUpRight, ArrowDownRight, Sparkles, Activity, Building2, Clock, ExternalLink } from "lucide-react";
+import { Users, Briefcase, TrendingUp, BookOpen, Church, Target, ArrowUpRight, ArrowDownRight, Sparkles, Activity, Building2, ExternalLink } from "lucide-react";
 import Link from "next/link";
 
 /* ═══════════════════════════════════════════════════════════════
@@ -138,13 +138,11 @@ function RelationshipCard({
 
 // Activity Item
 function ActivityItem({
-  type,
   message,
   time,
   icon: Icon,
   iconColor,
 }: {
-  type: string;
   message: string;
   time: string;
   icon: React.ElementType;

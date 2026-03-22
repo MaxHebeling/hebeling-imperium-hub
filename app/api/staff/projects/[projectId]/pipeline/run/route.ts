@@ -2,41 +2,50 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireStaff } from "@/lib/auth/staff";
 import { getEditorialProject } from "@/lib/editorial/db/queries";
 import { requireEditorialCapability } from "@/lib/editorial/permissions";
-import { advanceProjectStage, approveStage, updateStageStatus, logEditorialActivity } from "@/lib/editorial/db/mutations";
-import { getNextStage } from "@/lib/editorial/pipeline/stage-utils";
-import { EDITORIAL_STAGE_KEYS } from "@/lib/editorial/pipeline/constants";
-import { initializeNextStage } from "@/lib/editorial/pipeline/stage-transitions";
+import { logEditorialActivity, updateStageStatus } from "@/lib/editorial/db/mutations";
 import { processAiJob } from "@/lib/editorial/ai/processor";
 import { requestAiTask } from "@/lib/editorial/ai/jobs";
 import { logWorkflowEvent } from "@/lib/editorial/workflow-events";
 import { getLatestManuscriptForProject } from "@/lib/editorial/files/get-latest-manuscript";
-import type { EditorialStageKey } from "@/lib/editorial/types/editorial";
-import type { EditorialAiTaskKey } from "@/lib/editorial/types/ai";
+import type {
+  EditorialPipelineStageKey,
+} from "@/lib/editorial/types/editorial";
+import {
+  ensureFileVersionFromEditorialFile,
+  ensureStageRun,
+  getLatestEditorialFile,
+  mapLegacyStageToWorkflowStage,
+  replaceFindingsForStageRun,
+  updateStageRunStatus,
+  WORKFLOW_STAGE_AI_CONFIG,
+} from "@/lib/editorial/stage-engine/service";
+import type { AnalysisResult } from "@/lib/editorial/ai/processor";
 
-/**
- * Primary AI task to run for each editorial stage.
- * ingesta uses OpenAI (processManuscriptNow), all others use Claude via processAiJob.
- */
-const STAGE_PRIMARY_AI_TASK: Record<EditorialStageKey, EditorialAiTaskKey | null> = {
-  ingesta: "manuscript_analysis",        // OpenAI gpt-4.1-mini
-  estructura: "structure_analysis",       // Claude – análisis estructural
-  estilo: "style_suggestions",            // Claude – sugerencias de estilo
-  ortotipografia: "orthotypography_review", // Claude – corrección ortotipográfica
-  maquetacion: "layout_analysis",         // Claude – análisis de maquetación
-  revision_final: "redline_diff",         // Claude – revisión final exhaustiva
-  export: "export_validation",            // Claude – validación para exportación
-  distribution: "metadata_generation",    // Claude – metadatos para distribución
-};
+function isProcessableSourceFile(file: { file_type: string; storage_path: string; mime_type?: string | null } | null | undefined) {
+  if (!file) return false;
+  if (file.file_type === "working_file" || file.file_type.startsWith("manuscript")) return true;
+  const lowerPath = file.storage_path.toLowerCase();
+  return [".docx", ".doc", ".pdf", ".txt", ".md"].some((extension) => lowerPath.endsWith(extension));
+}
+
+function mapIssueTypeToFindingType(type: AnalysisResult["issues"][number]["type"]) {
+  if (type === "error") return "editorial" as const;
+  if (type === "warning") return "style" as const;
+  return "editorial" as const;
+}
+
+function mapIssueSeverity(type: AnalysisResult["issues"][number]["type"]) {
+  if (type === "error") return "critical" as const;
+  if (type === "warning") return "warning" as const;
+  return "info" as const;
+}
 
 /**
  * POST /api/staff/projects/[projectId]/pipeline/run
  *
- * Runs the full editorial pipeline automatically:
- * 1. Starts at the project's current stage
- * 2. For each stage: runs AI analysis (OpenAI for ingesta, Claude for the rest), approves, advances
- * 3. Returns a summary of what was processed
- *
- * This is a long-running request that processes all stages sequentially.
+ * Runs AI for the CURRENT editorial stage only.
+ * It creates or reuses a stage run, attaches evidence, stores findings,
+ * and leaves the project waiting for human review.
  */
 export async function POST(
   _request: NextRequest,
@@ -61,145 +70,158 @@ export async function POST(
       return NextResponse.json({ success: false, error: "FORBIDDEN" }, { status: 403 });
     }
 
-    // Get the latest manuscript file for AI jobs
+    const workflowStageKey = mapLegacyStageToWorkflowStage(project.current_stage);
+    const stageAiConfig = WORKFLOW_STAGE_AI_CONFIG[workflowStageKey];
+
     const latestManuscript = await getLatestManuscriptForProject(projectId);
-    const manuscriptFileId = latestManuscript?.file?.id ?? null;
-    const manuscriptFileVersion = latestManuscript?.file?.version ?? null;
+    const latestEditorialFile = await getLatestEditorialFile(projectId);
+    const sourceFile =
+      (isProcessableSourceFile(latestEditorialFile) ? latestEditorialFile : null) ??
+      latestManuscript?.file ??
+      null;
 
-    const stagesProcessed: Array<{
-      stage: string;
-      status: "completed" | "skipped" | "failed";
-      aiAnalysis?: boolean;
-      aiTask?: string;
-      error?: string;
-    }> = [];
-
-    let currentStage: EditorialStageKey = project.current_stage;
-    const startIdx = EDITORIAL_STAGE_KEYS.indexOf(currentStage);
-
-    // Process each stage from current to the end
-    for (let i = startIdx; i < EDITORIAL_STAGE_KEYS.length; i++) {
-      const stageKey = EDITORIAL_STAGE_KEYS[i];
-      const stageResult: (typeof stagesProcessed)[number] = {
-        stage: stageKey,
-        status: "completed",
-        aiAnalysis: false,
-      };
-
-      try {
-        // Initialize stage if not already started
-        if (i > startIdx) {
-          await initializeNextStage({
-            projectId,
-            stageKey,
-            actorId: staff.userId,
-          });
-        }
-
-        // Mark stage as processing
-        await updateStageStatus(projectId, stageKey, "processing");
-
-        // Run AI analysis for this stage
-        const primaryTask = STAGE_PRIMARY_AI_TASK[stageKey];
-
-        if (primaryTask && manuscriptFileId) {
-          // All other stages use Claude via processAiJob
-          try {
-            const { jobId } = await requestAiTask({
-              orgId: project.org_id,
-              projectId,
-              stageKey,
-              taskKey: primaryTask,
-              requestedBy: staff.userId,
-              sourceFileId: manuscriptFileId,
-              sourceFileVersion: manuscriptFileVersion ?? undefined,
-            });
-
-            await processAiJob({
-              jobId,
-              projectId,
-              stageKey,
-              taskKey: primaryTask,
-              context: {
-                project_id: projectId,
-                stage_key: stageKey,
-                source_file_id: manuscriptFileId,
-                source_file_version: manuscriptFileVersion,
-                requested_by: staff.userId,
-              },
-            });
-
-            stageResult.aiAnalysis = true;
-            stageResult.aiTask = primaryTask;
-          } catch (aiError) {
-            console.warn(`[pipeline/run] AI analysis failed for ${stageKey}/${primaryTask}:`, aiError);
-            // Continue pipeline even if AI fails for this stage
-          }
-        }
-
-        // Approve the stage
-        await approveStage({ projectId, stageKey, actorId: staff.userId });
-
-        // Log workflow event
-        await logWorkflowEvent({
-          orgId: project.org_id,
-          projectId,
-          stageKey,
-          eventType: "stage_completed",
-          actorId: staff.userId,
-          actorRole: staff.role,
-          payload: { via: "automated_pipeline", aiTask: stageResult.aiTask ?? null },
-        });
-
-        // Advance to next stage
-        const nextStage = getNextStage(stageKey);
-        if (nextStage) {
-          await advanceProjectStage(projectId, nextStage);
-          currentStage = nextStage;
-        } else {
-          // Last stage — mark project as completed
-          const { getAdminClient } = await import("@/lib/leads/helpers");
-          const supabase = getAdminClient();
-          await supabase
-            .from("editorial_projects")
-            .update({ status: "completed", progress_percent: 100 })
-            .eq("id", projectId);
-        }
-
-        stagesProcessed.push(stageResult);
-      } catch (stageError) {
-        const errorMsg = stageError instanceof Error ? stageError.message : "Error desconocido";
-        console.error(`[pipeline/run] Stage ${stageKey} failed:`, stageError);
-        stagesProcessed.push({
-          stage: stageKey,
-          status: "failed",
-          error: errorMsg,
-        });
-        // Stop pipeline on failure
-        break;
-      }
+    const manuscriptFileId = sourceFile?.id ?? null;
+    const manuscriptFileVersion = sourceFile?.version ?? null;
+    if (!sourceFile) {
+      return NextResponse.json(
+        { success: false, error: "No hay archivos del proyecto para iniciar la etapa actual." },
+        { status: 400 }
+      );
     }
 
-    // Log the full pipeline run
-    await logEditorialActivity(projectId, "automated_pipeline_completed", {
-      actorId: staff.userId,
-      actorType: "staff",
-      payload: {
-        stagesProcessed: stagesProcessed.length,
-        startedAt: currentStage,
-        completedAll: stagesProcessed.every((s) => s.status === "completed"),
-      },
+    const inputVersion = await ensureFileVersionFromEditorialFile({
+      projectId,
+      file: sourceFile,
+      createdBy: staff.userId,
     });
 
-    const allCompleted = stagesProcessed.every((s) => s.status === "completed");
+    const stageRun = await ensureStageRun({
+      projectId,
+      stageKey: workflowStageKey,
+      ownerUserId: staff.userId,
+      inputVersionId: inputVersion?.id ?? null,
+    });
+
+    await updateStageStatus(projectId, project.current_stage, "processing");
+    if (stageRun?.id) {
+      await updateStageRunStatus({
+        stageRunId: stageRun.id,
+        status: "ai_processing",
+      });
+    }
+
+    if (!stageAiConfig.aiTaskKey || !stageAiConfig.aiStageKey) {
+      if (stageRun?.id) {
+        await updateStageRunStatus({
+          stageRunId: stageRun.id,
+          status: "human_review",
+          aiSummary: "Etapa preparada para revision humana. No tiene automatizacion AI configurada.",
+        });
+      }
+
+      await logWorkflowEvent({
+        orgId: project.org_id,
+        projectId,
+        stageKey: project.current_stage,
+        eventType: "stage_started",
+        actorId: staff.userId,
+        actorRole: staff.role,
+        payload: {
+          via: "stage_engine",
+          workflowStageKey,
+          stageRunId: stageRun?.id ?? null,
+          aiEnabled: false,
+        },
+      });
+
+      await logEditorialActivity(projectId, "editorial_stage_run_prepared", {
+        stageKey: project.current_stage,
+        actorId: staff.userId,
+        actorType: "staff",
+        payload: { workflowStageKey, stageRunId: stageRun?.id ?? null, aiEnabled: false },
+      });
+
+      return NextResponse.json({
+        success: true,
+        completed: false,
+        stagesProcessed: 1,
+        stageRunId: stageRun?.id ?? null,
+        workflowStageKey,
+        message: `Etapa ${workflowStageKey} preparada para revision humana.`,
+      });
+    }
+
+    if (!manuscriptFileId) {
+      return NextResponse.json(
+        { success: false, error: "No hay manuscrito disponible para ejecutar AI en la etapa actual." },
+        { status: 400 }
+      );
+    }
+
+    const aiStageKey = stageAiConfig.aiStageKey as EditorialPipelineStageKey;
+    const { jobId } = await requestAiTask({
+      orgId: project.org_id,
+      projectId,
+      stageKey: aiStageKey,
+      taskKey: stageAiConfig.aiTaskKey,
+      requestedBy: staff.userId,
+      sourceFileId: manuscriptFileId,
+      sourceFileVersion: manuscriptFileVersion ?? undefined,
+    });
+
+    const result = await processAiJob({
+      jobId,
+      projectId,
+      stageKey: aiStageKey,
+      taskKey: stageAiConfig.aiTaskKey,
+      context: {
+        project_id: projectId,
+        stage_key: aiStageKey,
+        source_file_id: manuscriptFileId,
+        source_file_version: manuscriptFileVersion,
+        requested_by: staff.userId,
+      },
+      skipAutoAdvance: true,
+    });
+
+    const findings = result?.issues?.map((issue, index) => ({
+      findingType: mapIssueTypeToFindingType(issue.type),
+      severity: mapIssueSeverity(issue.type),
+      title: `Hallazgo ${index + 1}: ${issue.type}`,
+      description: issue.description,
+      suggestion: issue.suggestion,
+      locationRef: issue.location ? { location: issue.location } : null,
+      evidenceRef: { jobId, workflowStageKey },
+    })) ?? [];
+
+    if (stageRun?.id) {
+      await replaceFindingsForStageRun({
+        projectId,
+        stageRunId: stageRun.id,
+        jobId,
+        fileVersionId: inputVersion?.id ?? null,
+        findings,
+      });
+
+      await updateStageRunStatus({
+        stageRunId: stageRun.id,
+        status: "human_review",
+        aiSummary: result?.summary ?? "Analisis AI completado para revision humana.",
+        qualityScore: result?.score ?? null,
+      });
+    }
+
+    await updateStageStatus(projectId, project.current_stage, "review_required");
 
     return NextResponse.json({
       success: true,
-      completed: allCompleted,
-      stagesProcessed,
-      message: allCompleted
-        ? "Pipeline editorial completado con AI en todas las etapas. El libro está listo para publicar."
-        : `Pipeline procesó ${stagesProcessed.filter((s) => s.status === "completed").length} de ${EDITORIAL_STAGE_KEYS.length} etapas.`,
+      completed: false,
+      stagesProcessed: 1,
+      stageRunId: stageRun?.id ?? null,
+      workflowStageKey,
+      aiJobId: jobId,
+      findingsCount: findings.length,
+      message: `Analisis AI completado para ${workflowStageKey}. La etapa queda lista para revision humana.`,
     });
   } catch (error) {
     console.error("[pipeline/run] error:", error);

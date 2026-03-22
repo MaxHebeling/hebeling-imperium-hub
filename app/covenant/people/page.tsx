@@ -14,9 +14,7 @@ import {
   Building2,
   Star,
   MoreHorizontal,
-  ArrowUpDown,
   ChevronDown,
-  X,
   Loader2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -42,6 +40,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+
+type RelationshipTier = "vip" | "gold" | "standard" | "new";
 import { Textarea } from "@/components/ui/textarea";
 import type { CovenantPerson } from "@/lib/covenant/types";
 
@@ -51,7 +51,7 @@ import type { CovenantPerson } from "@/lib/covenant/types";
    ═══════════════════════════════════════════════════════════════ */
 
 // Contact Card Component
-function PersonCard({ person, onRefresh }: { person: CovenantPerson; onRefresh: () => void }) {
+function PersonCard({ person }: { person: CovenantPerson; onRefresh: () => void }) {
   const getScoreColor = (score: number) => {
     if (score >= 80) return { bg: "rgba(52, 211, 153, 0.15)", text: "#34d399" };
     if (score >= 60) return { bg: "rgba(251, 191, 36, 0.15)", text: "#fbbf24" };
@@ -340,7 +340,7 @@ function AddPersonModal({
     company: "",
     city: "",
     country: "",
-    relationship_tier: "new" as const,
+    relationship_tier: "new" as RelationshipTier,
     opportunity_score: 50,
     tags: [] as string[],
     notes: "",

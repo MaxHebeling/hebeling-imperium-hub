@@ -1,3 +1,6 @@
+import type { EditorialAiTaskKey } from "@/lib/editorial/types/ai";
+import type { EditorialPipelineStageKey } from "@/lib/editorial/types/editorial";
+
 /**
  * Reino Editorial AI Publishing Engine — Types
  *
@@ -38,7 +41,6 @@ export type AiProvider =
   | "openai"
   | "claude"
   | "languagetool"
-  | "stability"
   | "internal"
   | "human";
 
@@ -66,8 +68,8 @@ export interface PublishingPhaseDefinition {
   descriptionEn: string;
   aiAgent: AiAgentType | null;
   aiProvider: AiProvider;
-  legacyStageKey: string;
-  aiTaskKey: string | null;
+  legacyStageKey: EditorialPipelineStageKey;
+  aiTaskKey: EditorialAiTaskKey | null;
   requiresHumanReview: boolean;
   isAiAutomated: boolean;
   outputs: PhaseOutput[];

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { ArrowUpRight, Network, Users, Sparkles } from "lucide-react";
+import { useLanguage } from "@/lib/i18n";
 
 interface CompanyCardProps {
   name: string;
@@ -29,6 +30,8 @@ function CompanyCard({
   accentBg,
   accentText,
 }: CompanyCardProps) {
+  const { locale } = useLanguage();
+
   return (
     <Link href={href} className="block h-full">
       <div
@@ -62,15 +65,21 @@ function CompanyCard({
         <div className="grid grid-cols-3 gap-2 mb-4">
           <div className="rounded-lg bg-background/60 px-3 py-2 text-center border border-border/60">
             <p className="text-lg font-bold text-foreground">{activeProjects}</p>
-            <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Projects</p>
+            <p className="text-[10px] text-muted-foreground uppercase tracking-wide">
+              {locale === "es" ? "Proyectos" : "Projects"}
+            </p>
           </div>
           <div className="rounded-lg bg-background/60 px-3 py-2 text-center border border-border/60">
             <p className="text-lg font-bold text-foreground">{leads}</p>
-            <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Leads</p>
+            <p className="text-[10px] text-muted-foreground uppercase tracking-wide">
+              {locale === "es" ? "Leads" : "Leads"}
+            </p>
           </div>
           <div className="rounded-lg bg-background/60 px-3 py-2 text-center border border-border/60">
             <p className={`text-lg font-bold ${accentText}`}>{revenue}</p>
-            <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Revenue</p>
+            <p className="text-[10px] text-muted-foreground uppercase tracking-wide">
+              {locale === "es" ? "Ingresos" : "Revenue"}
+            </p>
           </div>
         </div>
 
@@ -83,6 +92,8 @@ function CompanyCard({
 
 // Premium Covenant Core Card - Central Intelligence Layer
 function CovenantCoreCard() {
+  const { locale } = useLanguage();
+
   return (
     <Link href="/covenant" className="block col-span-full">
       <div
@@ -144,10 +155,12 @@ function CovenantCoreCard() {
                 </span>
               </div>
               <p className="text-sm text-[#C7CED8]">
-                Relationship Intelligence Platform
+                {locale === "es" ? "Plataforma de inteligencia relacional" : "Relationship Intelligence Platform"}
               </p>
               <p className="text-xs text-[#8A95A5] mt-1">
-                Unified CRM across Editorial, iKingdom, Lead Hunter, Imperium & Ministerio
+                {locale === "es"
+                  ? "CRM unificado entre Editorial, iKingdom, Lead Hunter, Imperium y Ministerio"
+                  : "Unified CRM across Editorial, iKingdom, Lead Hunter, Imperium & Ministerio"}
               </p>
             </div>
           </div>
@@ -161,7 +174,9 @@ function CovenantCoreCard() {
                   <Users className="h-3.5 w-3.5 text-[#21D1AC]" />
                   <span className="text-lg font-bold text-white">2,847</span>
                 </div>
-                <p className="text-[10px] text-[#8A95A5] uppercase tracking-wide">People</p>
+                <p className="text-[10px] text-[#8A95A5] uppercase tracking-wide">
+                  {locale === "es" ? "Personas" : "People"}
+                </p>
               </div>
               <div className="w-px h-8 bg-[#1E3048]" />
               <div className="text-center">
@@ -169,7 +184,9 @@ function CovenantCoreCard() {
                   <Sparkles className="h-3.5 w-3.5 text-[#C9A96E]" />
                   <span className="text-lg font-bold text-white">47</span>
                 </div>
-                <p className="text-[10px] text-[#8A95A5] uppercase tracking-wide">Insights</p>
+                <p className="text-[10px] text-[#8A95A5] uppercase tracking-wide">
+                  {locale === "es" ? "Insights" : "Insights"}
+                </p>
               </div>
             </div>
 
@@ -182,15 +199,31 @@ function CovenantCoreCard() {
 }
 
 export function CompaniesPanel() {
+  const { locale } = useLanguage();
   const companies: CompanyCardProps[] = [
+    {
+      name: "Inversionistas del Reino",
+      href: "/app/companies/idr",
+      tagline: locale === "es" ? "Comunidad privada premium" : "Premium private community",
+      activeProjects: 2,
+      leads: 0,
+      revenue: "IDR",
+      recentActivity:
+        locale === "es"
+          ? "Nuevo módulo privado IDR inicializado dentro de HEBELING OS"
+          : "New private IDR module initialized inside HEBELING OS",
+      logo: "/logo-idr.jpeg",
+      accentBg: "bg-[#C9A646]",
+      accentText: "text-[#E2C36B]",
+    },
     {
       name: "Red Apostólica",
       href: "/app/companies/red-apostolica",
-      tagline: "Kingdom & revival movement",
+      tagline: locale === "es" ? "Movimiento de reino y avivamiento" : "Kingdom & revival movement",
       activeProjects: 3,
       leads: 18,
       revenue: "$45.2K",
-      recentActivity: "New outreach program launched",
+      recentActivity: locale === "es" ? "Nuevo programa de alcance lanzado" : "New outreach program launched",
       logo: "/logo-red-apostolica.png",
       accentBg: "bg-amber-600",
       accentText: "text-amber-400",
@@ -198,11 +231,11 @@ export function CompaniesPanel() {
     {
       name: "Reino Editorial",
       href: "/app/editorial",
-      tagline: "Publishing & distribution",
+      tagline: locale === "es" ? "Publicación y distribución" : "Publishing & distribution",
       activeProjects: 5,
       leads: 32,
       revenue: "$52.8K",
-      recentActivity: "3 manuscripts entered production phase",
+      recentActivity: locale === "es" ? "3 manuscritos entraron a producción" : "3 manuscripts entered production phase",
       logo: "/logo-reino-editorial.png",
       accentBg: "bg-primary",
       accentText: "text-primary",
@@ -210,11 +243,11 @@ export function CompaniesPanel() {
     {
       name: "iKingdom",
       href: "/app/companies/ikingdom",
-      tagline: "Digital ventures & acquisitions",
+      tagline: locale === "es" ? "Ventures digitales y adquisiciones" : "Digital ventures & acquisitions",
       activeProjects: 2,
       leads: 12,
       revenue: "$18.5K",
-      recentActivity: "New partnership agreement signed",
+      recentActivity: locale === "es" ? "Nuevo acuerdo de partnership firmado" : "New partnership agreement signed",
       logo: "/logo-ikingdom.png",
       accentBg: "bg-secondary",
       accentText: "text-[#C8A84B]",
@@ -222,11 +255,11 @@ export function CompaniesPanel() {
     {
       name: "Lead Hunter",
       href: "/app/companies/lead-hunter",
-      tagline: "Construction lead engine",
+      tagline: locale === "es" ? "Motor de leads para construcción" : "Construction lead engine",
       activeProjects: 1,
       leads: 24,
       revenue: "$12.4K",
-      recentActivity: "ANNA qualification flow approved for construction intake",
+      recentActivity: locale === "es" ? "Flujo de calificación ANNA aprobado para construction intake" : "ANNA qualification flow approved for construction intake",
       logo: "/logo-lead-hunter.svg",
       accentBg: "bg-[#C96F2D]",
       accentText: "text-[#E1A24A]",
@@ -234,11 +267,11 @@ export function CompaniesPanel() {
     {
       name: "Imperium Group",
       href: "/app/companies/imperium",
-      tagline: "Holding & strategic operations",
+      tagline: locale === "es" ? "Holding y operaciones estratégicas" : "Holding & strategic operations",
       activeProjects: 4,
       leads: 28,
       revenue: "$61.3K",
-      recentActivity: "Q1 expansion strategy initiated",
+      recentActivity: locale === "es" ? "Estrategia de expansión Q1 iniciada" : "Q1 expansion strategy initiated",
       logo: "/logo-imperium.png",
       accentBg: "bg-emerald-600",
       accentText: "text-emerald-400",
@@ -249,11 +282,15 @@ export function CompaniesPanel() {
     <div>
       <div className="flex items-center justify-between mb-4">
         <div>
-          <h3 className="text-sm font-semibold text-foreground">Portfolio Companies</h3>
-          <p className="text-xs text-muted-foreground mt-0.5">5 active entities</p>
+          <h3 className="text-sm font-semibold text-foreground">
+            {locale === "es" ? "Empresas del portafolio" : "Portfolio Companies"}
+          </h3>
+          <p className="text-xs text-muted-foreground mt-0.5">
+            {locale === "es" ? "6 entidades activas" : "6 active entities"}
+          </p>
         </div>
         <Link href="/app/companies" className="text-xs text-primary hover:text-primary/80 transition-colors font-medium">
-          View all
+          {locale === "es" ? "Ver todo" : "View all"}
         </Link>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

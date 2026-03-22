@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, Suspense } from "react";
+import { useState, useEffect, Suspense, useMemo } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -39,7 +39,13 @@ function ClientLoginContent() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const initialUrlError = useMemo(() => {
+    const urlError = searchParams.get("error");
+    return urlError === "expired" || urlError === "magic_link_expired"
+      ? "Tu enlace de acceso ha expirado. Por favor inicia sesion con tu correo y contrasena."
+      : null;
+  }, [searchParams]);
+  const [error, setError] = useState<string | null>(initialUrlError);
   const [success, setSuccess] = useState<string | null>(null);
 
   useEffect(() => {
@@ -47,13 +53,6 @@ function ClientLoginContent() {
       navigator.serviceWorker.register("/sw.js").catch(() => {});
     }
   }, []);
-
-  useEffect(() => {
-    const urlError = searchParams.get("error");
-    if (urlError === "expired" || urlError === "magic_link_expired") {
-      setError("Tu enlace de acceso ha expirado. Por favor inicia sesion con tu correo y contrasena.");
-    }
-  }, [searchParams]);
 
   const resetForm = () => {
     setEmail("");
@@ -63,7 +62,7 @@ function ClientLoginContent() {
     setPhone("");
     setDateOfBirth("");
     setAcceptTerms(false);
-    setError(null);
+    setError(initialUrlError);
     setSuccess(null);
     setShowPassword(false);
     setShowConfirm(false);

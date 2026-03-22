@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAdminClient } from "@/lib/leads/helpers";
-import { getJobResult, processAiJob } from "@/lib/editorial/ai/processor";
+import { processAiJob } from "@/lib/editorial/ai/processor";
 import type { EditorialAiJobContext, EditorialAiTaskKey } from "@/lib/editorial/types/ai";
-import type { EditorialStageKey } from "@/lib/editorial/types/editorial";
+import type { EditorialAnyStageKey } from "@/lib/editorial/types/editorial";
+import { resolvePipelineStageKey } from "@/lib/editorial/pipeline/stage-compat";
 
 /**
  * GET /api/editorial/ai/jobs/[jobId]
@@ -90,11 +91,12 @@ export async function POST(
     const context: EditorialAiJobContext = typeof job.input_ref === "string"
       ? JSON.parse(job.input_ref)
       : job.input_ref;
+    const stageKey = resolvePipelineStageKey(job.stage_key as EditorialAnyStageKey);
 
     const result = await processAiJob({
       jobId: job.id,
       projectId: job.project_id,
-      stageKey: job.stage_key as EditorialStageKey,
+      stageKey,
       taskKey: job.job_type as EditorialAiTaskKey,
       context,
     });

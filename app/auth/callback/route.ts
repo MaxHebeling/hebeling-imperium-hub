@@ -10,6 +10,9 @@ export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url);
   const code = searchParams.get("code");
   const next = searchParams.get("next") ?? "/portal/editorial/projects";
+  const hasSafeExplicitNext =
+    searchParams.has("next") && next.startsWith("/") && !next.startsWith("//");
+  const safeNext = hasSafeExplicitNext ? next : "/portal/editorial/projects";
 
   if (code) {
     const supabase = await createClient();
@@ -28,34 +31,34 @@ export async function GET(request: Request) {
           .eq("id", user.id)
           .single();
 
-        // If `next` was explicitly set to a portal route, always respect it
-        const hasExplicitPortalNext =
-          searchParams.has("next") && next.startsWith("/portal");
-
         if (profile?.role === "client") {
-          return NextResponse.redirect(`${origin}${next}`);
+          return NextResponse.redirect(
+            `${origin}${safeNext}`
+          );
         }
 
-        // Staff users: if they came from client-login (portal next), send them to portal
+        // Staff users can land on an explicit safe destination after invite/magic link.
         if (
           ["superadmin", "admin", "sales", "ops"].includes(
             profile?.role ?? ""
           )
         ) {
-          if (hasExplicitPortalNext) {
-            return NextResponse.redirect(`${origin}${next}`);
+          if (safeNext) {
+            return NextResponse.redirect(`${origin}${safeNext}`);
           }
           return NextResponse.redirect(`${origin}/app/companies`);
         }
       }
 
       // Default redirect
-      return NextResponse.redirect(`${origin}${next}`);
+      return NextResponse.redirect(
+        `${origin}${safeNext}`
+      );
     }
   }
 
-  // If code exchange failed, redirect to client login with error
+  // No code means the auth provider likely returned tokens in the URL hash.
   return NextResponse.redirect(
-    `${origin}/client-login?error=magic_link_expired`
+    `${origin}/auth/magic-callback?next=${encodeURIComponent(safeNext)}`
   );
 }

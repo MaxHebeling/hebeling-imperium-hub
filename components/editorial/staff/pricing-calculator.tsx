@@ -2,7 +2,6 @@
 
 import { useState, useMemo, useCallback } from "react";
 import {
-  SERVICE_PRICES,
   getServicesByCategory,
   COUNTRY_PRICING,
   COMPLEXITY_LEVELS,
@@ -10,7 +9,6 @@ import {
   DISCOUNT_REASON_PRESETS,
   calculatePriceEstimate,
   suggestDiscountFromCRM,
-  formatPriceSummary,
   detectComplexity,
 } from "@/lib/editorial/oficina/pricing";
 import type {
@@ -19,7 +17,6 @@ import type {
   BookComplexity,
   DiscountType,
   DiscountMode,
-  SpecialDiscount,
   PriceEstimateInput,
   PriceEstimateBreakdown,
   CRMClientTag,
@@ -85,17 +82,6 @@ export function PricingCalculator({
   }, []);
 
   // Build discount object
-  const discount: SpecialDiscount | undefined = discountEnabled
-    ? {
-        type: discountType,
-        mode: discountMode,
-        value: discountValue,
-        reason: discountReason,
-        approvedBy: discountApprovedBy,
-        suggestedByCRM: crmSuggestion.suggested && crmSuggestion.discountType === discountType,
-      }
-    : undefined;
-
   // Calculate estimate
   const input: PriceEstimateInput = useMemo(
     () => ({
@@ -104,21 +90,42 @@ export function PricingCalculator({
       customCountry: country === "custom" ? customCountry : undefined,
       complexity,
       pageCount,
-      discount,
+      discount: discountEnabled
+        ? {
+            type: discountType,
+            mode: discountMode,
+            value: discountValue,
+            reason: discountReason,
+            approvedBy: discountApprovedBy,
+            suggestedByCRM:
+              crmSuggestion.suggested &&
+              crmSuggestion.discountType === discountType,
+          }
+        : undefined,
       locale,
     }),
-    [selectedServices, country, customCountry, complexity, pageCount, discount, locale]
+    [
+      selectedServices,
+      country,
+      customCountry,
+      complexity,
+      pageCount,
+      discountEnabled,
+      discountType,
+      discountMode,
+      discountValue,
+      discountReason,
+      discountApprovedBy,
+      crmSuggestion.suggested,
+      crmSuggestion.discountType,
+      locale,
+    ]
   );
 
   const breakdown = useMemo(() => {
     if (selectedServices.length === 0) return null;
     return calculatePriceEstimate(input);
   }, [input, selectedServices.length]);
-
-  const summary = useMemo(() => {
-    if (!breakdown) return "";
-    return formatPriceSummary(breakdown, locale);
-  }, [breakdown, locale]);
 
   // Apply CRM suggestion
   const applyCRMSuggestion = useCallback(() => {

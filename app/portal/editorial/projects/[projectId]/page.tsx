@@ -7,7 +7,6 @@ import {
   ArrowLeft,
   BookOpen,
   CheckCircle2,
-  Clock,
   AlertCircle,
   Loader2,
   Upload,
@@ -16,7 +15,6 @@ import {
   MessageSquare,
   Send,
   Globe,
-  Lock,
   Palette,
   Zap,
 } from "lucide-react";
@@ -24,16 +22,12 @@ import { Button } from "@/components/ui/button";
 import type {
   EditorialProject,
   EditorialStage,
+  EditorialStageKey,
   EditorialFile,
   EditorialComment,
   EditorialExport,
-  EditorialStageKey,
 } from "@/lib/editorial/types/editorial";
-import { EDITORIAL_STAGE_KEYS } from "@/lib/editorial/pipeline/constants";
-import {
-  getClientVisibleStages,
-  getClientVisibleProgress,
-} from "@/lib/editorial/pipeline/client-delays";
+import { getClientVisibleProgress } from "@/lib/editorial/pipeline/client-delays";
 import type { PortalLocale } from "@/lib/editorial/i18n/portal-translations";
 import { getTranslations } from "@/lib/editorial/i18n/portal-translations";
 import { EditorialJourneyTimeline } from "@/components/editorial/portal/editorial-journey-timeline";
@@ -79,6 +73,17 @@ function formatBytes(b: number | null) {
   if (b < 1024 * 1024) return `${(b / 1024).toFixed(1)} KB`;
   return `${(b / (1024 * 1024)).toFixed(2)} MB`;
 }
+
+const DELIVERABLE_READY_STAGES: EditorialStageKey[] = [
+  "correccion_linguistica",
+  "preprensa_kdp",
+  "validacion_paginas",
+  "maquetacion_interior",
+  "briefing_portada",
+  "generacion_portada",
+  "marketing_editorial",
+  "entrega_final",
+];
 
 // ---------------------------------------------------------------------------
 // Page
@@ -302,15 +307,14 @@ export default function ClientProjectDetailPage() {
   }
 
   const { project, files, comments, exports: projectExports } = data;
+  const correctionReportUrl = `/api/editorial/projects/${projectId}/correction-report`;
+  const finalManuscriptUrl = `/api/editorial/projects/${projectId}/final-manuscript`;
+  const deliverablesReady = DELIVERABLE_READY_STAGES.includes(project.current_stage);
 
   // Client-visible stages with delays
-  const visibleStages = getClientVisibleStages(
-    project.created_at,
-    project.current_stage as EditorialStageKey
-  );
   const visibleProgress = getClientVisibleProgress(
     project.created_at,
-    project.current_stage as EditorialStageKey
+    project.current_stage
   );
 
   return (
@@ -673,6 +677,46 @@ export default function ClientProjectDetailPage() {
       {/* Contracts & Invoices */}
       <ContractViewerPanel projectId={projectId} locale={locale} />
       <InvoiceViewerPanel projectId={projectId} locale={locale} />
+
+      <div className="rounded-2xl border border-gray-200 bg-white overflow-hidden shadow-sm">
+        <div className="p-4 border-b border-gray-100">
+          <h2 className="text-sm font-semibold text-gray-900 flex items-center gap-2">
+            <Download className="w-4 h-4 text-gray-400" />
+            {locale === "es" ? "Entregables editoriales" : "Editorial deliverables"}
+          </h2>
+          <p className="text-xs text-gray-400 mt-1">
+            {locale === "es"
+              ? "Descarga el manuscrito final en DOCX para maquetación y el reporte de correcciones."
+              : "Download the final DOCX manuscript for layout and the correction report."}
+          </p>
+        </div>
+        <div className="p-4">
+          {deliverablesReady ? (
+            <div className="flex flex-col gap-2 sm:flex-row">
+              <a
+                href={finalManuscriptUrl}
+                className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#1a3a6b] px-4 py-3 text-sm font-semibold text-white transition-colors hover:bg-[#2a5a9b]"
+              >
+                <FileText className="w-4 h-4" />
+                {locale === "es" ? "Manuscrito final" : "Final manuscript"}
+              </a>
+              <a
+                href={correctionReportUrl}
+                className="inline-flex items-center justify-center gap-2 rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm font-semibold text-gray-700 transition-colors hover:bg-gray-100"
+              >
+                <Download className="w-4 h-4" />
+                {locale === "es" ? "Reporte de corrección" : "Correction report"}
+              </a>
+            </div>
+          ) : (
+            <p className="text-sm text-gray-500">
+              {locale === "es"
+                ? "Estos archivos aparecerán cuando el manuscrito quede consolidado tras la corrección editorial."
+                : "These files will appear once the manuscript is consolidated after editorial correction."}
+            </p>
+          )}
+        </div>
+      </div>
 
       {/* Downloads */}
       {projectExports.length > 0 && (

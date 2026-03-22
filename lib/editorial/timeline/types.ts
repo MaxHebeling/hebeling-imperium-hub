@@ -1,4 +1,4 @@
-import type { EditorialStageKey } from "../types/editorial";
+import type { EditorialPipelineStageKey } from "../types/editorial";
 
 /** Status of a timeline entry from the client's perspective. */
 export type TimelineEntryStatus = "locked" | "upcoming" | "active" | "completed";
@@ -7,7 +7,7 @@ export type TimelineEntryStatus = "locked" | "upcoming" | "active" | "completed"
 export interface ClientTimelineEntry {
   id: string;
   projectId: string;
-  stageKey: EditorialStageKey;
+  stageKey: EditorialPipelineStageKey;
   visibleDay: number;
   status: TimelineEntryStatus;
   title: string;
@@ -37,7 +37,7 @@ export type ArtifactType =
 export interface StageArtifact {
   id: string;
   projectId: string;
-  stageKey: EditorialStageKey;
+  stageKey: EditorialPipelineStageKey;
   artifactType: ArtifactType;
   title: string;
   description: string | null;
@@ -64,7 +64,7 @@ export interface TimelineOverride {
   id: string;
   projectId: string;
   overrideType: TimelineOverrideType;
-  stageKey: EditorialStageKey | null;
+  stageKey: EditorialPipelineStageKey | null;
   payload: Record<string, unknown> | null;
   reason: string | null;
   createdBy: string | null;
@@ -73,7 +73,7 @@ export interface TimelineOverride {
 
 /** The 12-day editorial journey stage configuration. */
 export interface JourneyStageConfig {
-  stageKey: EditorialStageKey;
+  stageKey: EditorialPipelineStageKey;
   day: number;
   title: string;
   clientTitle: string;
@@ -99,7 +99,7 @@ export interface ClientTimelineState {
 
 /** A single stage as seen by the client. */
 export interface ClientTimelineStageView {
-  stageKey: EditorialStageKey;
+  stageKey: EditorialPipelineStageKey;
   day: number;
   title: string;
   message: string;

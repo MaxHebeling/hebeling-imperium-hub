@@ -53,7 +53,7 @@ export async function getControlCenterData(): Promise<ControlCenterData> {
   const projectIds = projects.map((p) => p.id);
 
   // Fetch all jobs for all projects to determine AI status per project
-  let jobsByProject = new Map<string, { status: string }[]>();
+  const jobsByProject = new Map<string, { status: string }[]>();
   if (projectIds.length > 0) {
     const { data: jobs } = await supabase
       .from("editorial_jobs")
@@ -68,7 +68,7 @@ export async function getControlCenterData(): Promise<ControlCenterData> {
   }
 
   // Fetch stages for review status
-  let stagesByProject = new Map<string, { stage_key: string; status: string }[]>();
+  const stagesByProject = new Map<string, { stage_key: string; status: string }[]>();
   if (projectIds.length > 0) {
     const { data: stages } = await supabase
       .from("editorial_stages")

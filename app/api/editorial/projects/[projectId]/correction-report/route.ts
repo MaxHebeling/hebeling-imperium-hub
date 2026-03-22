@@ -1,6 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAdminClient } from "@/lib/leads/helpers";
 import {
+  CORRECTION_REPORT_PRIORITY,
+  getCurrentEditorialTextAsset,
+  type CurrentEditorialTextAsset,
+} from "@/lib/editorial/files/final-manuscript";
+import {
   generateCorrectionReportBuffer,
   type CorrectionEntry,
 } from "@/lib/editorial/reports/correction-report-docx";
@@ -9,7 +14,7 @@ import {
  * GET /api/editorial/projects/[projectId]/correction-report
  *
  * Generates a Word (.docx) document with all spelling and grammar corrections
- * found during the copyediting / line-editing stages.
+ * found during the editorial correction workflow.
  *
  * The document is returned as a download (Content-Disposition: attachment).
  */
@@ -24,7 +29,7 @@ export async function GET(
     // 1. Get project info
     const { data: project, error: projectError } = await supabase
       .from("editorial_projects")
-      .select("id, title, org_id, client_id")
+      .select("id, title, author_name, org_id, client_id")
       .eq("id", projectId)
       .single();
 
@@ -36,7 +41,8 @@ export async function GET(
     }
 
     // 2. Get author name if client is linked
-    let authorName: string | null = null;
+    let authorName: string | null =
+      ((project as { author_name?: string | null }).author_name ?? null);
     if (project.client_id) {
       const { data: profile } = await supabase
         .from("profiles")
@@ -50,31 +56,43 @@ export async function GET(
 
     // 3. Collect corrections from all available sources
     let corrections: CorrectionEntry[] = [];
+    let summary: string | undefined;
 
-    // 3a. Try editorial_ai_suggestions table (may not exist yet)
-    try {
-      const { data: suggestions } = await supabase
-        .from("editorial_ai_suggestions")
-        .select("*")
-        .eq("project_id", projectId)
-        .order("severity", { ascending: true })
-        .order("created_at", { ascending: true });
+    const nativeEditorialAsset = await getCurrentEditorialTextAsset(
+      projectId,
+      CORRECTION_REPORT_PRIORITY
+    );
+    if (nativeEditorialAsset) {
+      corrections = extractCorrectionsFromNativeAsset(nativeEditorialAsset);
+      summary = nativeEditorialAsset.summary;
+    }
 
-      if (suggestions && suggestions.length > 0) {
-        corrections = suggestions.map((s) => ({
-          id: s.id as string,
-          kind: (s.kind as string) || "gramatica",
-          severity: s.severity as "baja" | "media" | "alta",
-          confidence: (s.confidence as number) ?? 0.8,
-          original_text: (s.original_text as string) || "",
-          suggested_text: (s.suggested_text as string) || "",
-          justification: (s.justification as string) || "",
-          location: s.location as CorrectionEntry["location"],
-        }));
+    if (corrections.length === 0) {
+      // 3a. Try editorial_ai_suggestions table (may not exist yet)
+      try {
+        const { data: suggestions } = await supabase
+          .from("editorial_ai_suggestions")
+          .select("*")
+          .eq("project_id", projectId)
+          .order("severity", { ascending: true })
+          .order("created_at", { ascending: true });
+
+        if (suggestions && suggestions.length > 0) {
+          corrections = suggestions.map((s) => ({
+            id: s.id as string,
+            kind: (s.kind as string) || "gramatica",
+            severity: s.severity as "baja" | "media" | "alta",
+            confidence: (s.confidence as number) ?? 0.8,
+            original_text: (s.original_text as string) || "",
+            suggested_text: (s.suggested_text as string) || "",
+            justification: (s.justification as string) || "",
+            location: s.location as CorrectionEntry["location"],
+          }));
+        }
+      } catch {
+        // Table may not exist yet — continue to fallback sources
+        console.log("[correction-report] editorial_ai_suggestions table not available, using fallback");
       }
-    } catch {
-      // Table may not exist yet — continue to fallback sources
-      console.log("[correction-report] editorial_ai_suggestions table not available, using fallback");
     }
 
     // 3b. Also check all completed AI jobs for issues (works with all task types)
@@ -145,23 +163,24 @@ export async function GET(
       );
     }
 
-    // 4. Get summary from the latest completed job (any AI task)
-    let summary: string | undefined;
-    const { data: latestJob } = await supabase
-      .from("editorial_jobs")
-      .select("output_ref")
-      .eq("project_id", projectId)
-      .eq("status", "completed")
-      .order("finished_at", { ascending: false })
-      .limit(1)
-      .single();
+    // 4. Get summary from the latest completed job (any AI task) if native workflow did not provide it
+    if (!summary) {
+      const { data: latestJob } = await supabase
+        .from("editorial_jobs")
+        .select("output_ref")
+        .eq("project_id", projectId)
+        .eq("status", "completed")
+        .order("finished_at", { ascending: false })
+        .limit(1)
+        .single();
 
-    if (latestJob?.output_ref) {
-      const output = typeof latestJob.output_ref === "string"
-        ? safeJsonParse(latestJob.output_ref)
-        : (latestJob.output_ref as Record<string, unknown> | null);
-      if (output?.summary) {
-        summary = output.summary as string;
+      if (latestJob?.output_ref) {
+        const output = typeof latestJob.output_ref === "string"
+          ? safeJsonParse(latestJob.output_ref)
+          : (latestJob.output_ref as Record<string, unknown> | null);
+        if (output?.summary) {
+          summary = output.summary as string;
+        }
       }
     }
 
@@ -210,6 +229,107 @@ function mapTaskToKind(taskKey: string): string {
     metadata_generation: "otro",
   };
   return map[taskKey] ?? "otro";
+}
+
+function mapProofreadingCategoryToKind(category: string): string {
+  const map: Record<string, string> = {
+    grammar: "gramatica",
+    spelling: "ortografia",
+    punctuation: "puntuacion",
+    style: "estilo",
+    consistency: "estilo",
+  };
+  return map[category] ?? "otro";
+}
+
+function mapTrackedChangeTypeToKind(changeType: string): string {
+  const map: Record<string, string> = {
+    structure: "estructura",
+    tone: "estilo",
+    clarity: "estilo",
+    language: "gramatica",
+  };
+  return map[changeType] ?? "otro";
+}
+
+function mapValidationCategoryToKind(category: string): string {
+  const map: Record<string, string> = {
+    consistency: "estilo",
+    contradiction: "estructura",
+    entity: "estilo",
+    timeline: "estructura",
+  };
+  return map[category] ?? "otro";
+}
+
+function mapNativeSeverity(value: "low" | "medium" | "high"): "baja" | "media" | "alta" {
+  if (value === "high") return "alta";
+  if (value === "medium") return "media";
+  return "baja";
+}
+
+function buildLocation(index: number): NonNullable<CorrectionEntry["location"]> {
+  return {
+    chapter: index + 1,
+    paragraph_index: null,
+    sentence_index: null,
+  };
+}
+
+function prependChapterTitle(chapterTitle: string, rationale: string): string {
+  const trimmedTitle = chapterTitle.trim();
+  const trimmedRationale = rationale.trim();
+
+  if (!trimmedTitle) return trimmedRationale;
+  if (!trimmedRationale) return `Capítulo: ${trimmedTitle}`;
+  return `Capítulo: ${trimmedTitle}. ${trimmedRationale}`;
+}
+
+function extractCorrectionsFromNativeAsset(
+  asset: CurrentEditorialTextAsset
+): CorrectionEntry[] {
+  if (asset.assetKind === "proofread_manuscript") {
+    return asset.manuscript.chapter_revisions.flatMap((chapter, chapterIndex) =>
+      chapter.changes.map((change) => ({
+        id: change.id,
+        kind: mapProofreadingCategoryToKind(change.category),
+        severity: mapNativeSeverity(change.severity),
+        confidence: 0.95,
+        original_text: change.before_excerpt,
+        suggested_text: change.after_excerpt,
+        justification: prependChapterTitle(chapter.chapter_title, change.rationale),
+        location: buildLocation(chapterIndex),
+      }))
+    );
+  }
+
+  if (asset.assetKind === "edited_manuscript") {
+    return asset.manuscript.chapter_revisions.flatMap((chapter, chapterIndex) =>
+      chapter.tracked_changes.map((change) => ({
+        id: change.id,
+        kind: mapTrackedChangeTypeToKind(change.change_type),
+        severity: mapNativeSeverity(change.impact),
+        confidence: 0.9,
+        original_text: change.before_excerpt,
+        suggested_text: change.after_excerpt,
+        justification: prependChapterTitle(chapter.chapter_title, change.rationale),
+        location: buildLocation(chapterIndex),
+      }))
+    );
+  }
+
+  return asset.manuscript.chapter_revisions.flatMap((chapter, chapterIndex) =>
+    chapter.applied_fixes.map((fix) => ({
+      id: fix.id,
+      kind: mapValidationCategoryToKind(fix.category),
+      severity: mapNativeSeverity(fix.severity),
+      confidence: 0.88,
+      original_text: fix.original_excerpt,
+      suggested_text: fix.revised_excerpt,
+      justification: prependChapterTitle(chapter.chapter_title, fix.rationale),
+      location: buildLocation(chapterIndex),
+    }))
+  );
 }
 
 function safeJsonParse(value: string): Record<string, unknown> | null {

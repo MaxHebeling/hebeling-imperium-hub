@@ -1,10 +1,13 @@
 import { getAdminClient } from "@/lib/leads/helpers";
-import type { EditorialStageKey, EditorialWorkflowEventType } from "@/lib/editorial/types/editorial";
+import type {
+  EditorialAnyStageKey,
+  EditorialWorkflowEventType,
+} from "@/lib/editorial/types/editorial";
 
 export async function logWorkflowEvent(options: {
   orgId: string;
   projectId: string;
-  stageKey?: EditorialStageKey | null;
+  stageKey?: EditorialAnyStageKey | null;
   eventType: EditorialWorkflowEventType;
   actorId?: string | null;
   actorRole?: string | null;
@@ -24,4 +27,3 @@ export async function logWorkflowEvent(options: {
     throw new Error(`Failed to log workflow event: ${error.message}`);
   }
 }
-

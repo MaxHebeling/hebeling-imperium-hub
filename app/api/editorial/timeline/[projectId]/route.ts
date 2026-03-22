@@ -6,7 +6,7 @@ import {
   applyTimelineOverride,
   initializeTimeline,
 } from "@/lib/editorial/timeline";
-import type { EditorialStageKey } from "@/lib/editorial/types/editorial";
+import type { EditorialPipelineStageKey } from "@/lib/editorial/types/editorial";
 import type { TimelineOverrideType } from "@/lib/editorial/timeline";
 
 /**
@@ -79,7 +79,7 @@ export async function POST(
     const body = await req.json();
     const { overrideType, stageKey, payload, reason } = body as {
       overrideType: TimelineOverrideType;
-      stageKey?: EditorialStageKey;
+      stageKey?: EditorialPipelineStageKey;
       payload?: Record<string, unknown>;
       reason?: string;
     };

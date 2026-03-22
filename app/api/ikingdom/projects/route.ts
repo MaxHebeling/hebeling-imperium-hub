@@ -1,7 +1,18 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { getAdminClient } from "@/lib/leads/helpers";
 
-export async function GET(_request: NextRequest) {
+function isMissingIkingdomSchema(error: { code?: string | null; message?: string | null }) {
+  const message = error.message ?? "";
+  return (
+    error.code === "PGRST205" ||
+    error.code === "PGRST204" ||
+    message.includes("schema cache") ||
+    message.includes("Could not find the table") ||
+    message.includes("does not exist")
+  );
+}
+
+export async function GET() {
   try {
     const supabase = getAdminClient();
 
@@ -11,6 +22,14 @@ export async function GET(_request: NextRequest) {
       .order("created_at", { ascending: false });
 
     if (error) {
+      if (isMissingIkingdomSchema(error)) {
+        return NextResponse.json({
+          success: true,
+          degraded: true,
+          projects: [],
+        });
+      }
+
       console.error("[ikingdom/projects] error:", error);
       return NextResponse.json(
         { success: false, error: "Error al obtener proyectos" },

@@ -3,7 +3,8 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { AppSidebar } from "@/components/app-sidebar";
 import { AppTopbar } from "@/components/app-topbar";
-import { LanguageProvider } from "@/lib/i18n";
+import { getStaffBrandScope, isRestrictedStaffRole } from "@/lib/staff-brand-access";
+import type { StaffBrandScope } from "@/lib/staff-brand-access";
 
 export const metadata: Metadata = {
   title: "Hebeling OS | Enterprise Operating System",
@@ -31,12 +32,24 @@ export default async function AppLayout({
   // Get profile with role check
   const { data: profile } = await supabase
     .from("profiles")
-    .select("id, full_name, email, role, org_id")
+    .select("id, full_name, email, role, org_id, brand_id")
     .eq("id", user.id)
     .single();
 
   if (!profile || !STAFF_ROLES.includes(profile.role)) {
     redirect("/portal/overview");
+  }
+
+  let brandScope: StaffBrandScope | null = null;
+
+  if (profile?.brand_id && isRestrictedStaffRole(profile.role)) {
+    const { data: brand } = await supabase
+      .from("brands")
+      .select("slug")
+      .eq("id", profile.brand_id)
+      .maybeSingle();
+
+    brandScope = getStaffBrandScope(brand?.slug);
   }
 
   // Get organization name
@@ -46,23 +59,26 @@ export default async function AppLayout({
     .eq("id", profile.org_id)
     .single();
 
+  const resolvedUserName = profile.full_name || profile.email || "User";
+
   return (
-    <LanguageProvider>
-      <div className="flex min-h-screen bg-background">
-        <AppSidebar 
-          userName={profile.full_name || profile.email || "User"} 
+    <div className="flex min-h-screen bg-background">
+      <AppSidebar 
+        userName={resolvedUserName} 
+        userRole={profile.role}
+        brandScope={brandScope}
+      />
+      <div className="flex-1 flex flex-col min-w-0">
+        <AppTopbar 
+          organizationName={brandScope?.label || organization?.name || "Organization"}
+          userName={resolvedUserName}
           userRole={profile.role}
+          brandScope={brandScope}
         />
-        <div className="flex-1 flex flex-col min-w-0">
-          <AppTopbar 
-            organizationName={organization?.name || "Organization"}
-            userName={profile.full_name || profile.email || "User"}
-          />
-          <main className="flex-1 overflow-auto">
-            {children}
-          </main>
-        </div>
+        <main className="flex-1 overflow-auto">
+          {children}
+        </main>
       </div>
-    </LanguageProvider>
+    </div>
   );
 }

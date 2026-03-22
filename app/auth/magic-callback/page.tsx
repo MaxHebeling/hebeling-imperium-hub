@@ -17,7 +17,11 @@ import { createClient } from "@/lib/supabase/client";
 function MagicCallbackContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const next = searchParams.get("next") || "/portal/editorial/projects";
+  const requestedNext = searchParams.get("next");
+  const next =
+    requestedNext && requestedNext.startsWith("/") && !requestedNext.startsWith("//")
+      ? requestedNext
+      : "/portal/editorial/projects";
   const [status, setStatus] = useState<"loading" | "error">("loading");
   const [errorMsg, setErrorMsg] = useState("");
 

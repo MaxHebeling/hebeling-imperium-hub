@@ -122,6 +122,11 @@
   --company-ikingdom-gold:       #C8A75B;
   --company-ikingdom-gold-light: #E3C98B;
 
+  /* Lead Hunter */
+  --company-leadhunter-copper:    #C96F2D;
+  --company-leadhunter-amber:     #E1A24A;
+  --company-leadhunter-charcoal:  #162235;
+
   /* Imperium Group */
   --company-imperium-navy:  #0B1C2E;
   --company-imperium-gold:  #C8A75B;
@@ -635,5 +640,43 @@
   .hos-lift:hover {
     transform: translateY(-1px);
     box-shadow: 0 6px 24px rgba(0, 0, 0, 0.2);
+  }
+
+  /* ═══════════════════════════════════════════════════════
+     IDR — Premium private portal theme
+     ═══════════════════════════════════════════════════════ */
+  .idr-theme {
+    --idr-bg: #07101C;
+    --idr-bg-secondary: #0C1626;
+    --idr-panel: #101C2E;
+    --idr-panel-alt: #152338;
+    --idr-border: rgba(201, 166, 70, 0.16);
+    --idr-border-strong: rgba(201, 166, 70, 0.28);
+    --idr-gold: #C9A646;
+    --idr-gold-soft: #E2C36B;
+    --idr-ivory: #F5F0E8;
+    --idr-muted: #9DA9BA;
+    background:
+      radial-gradient(circle at top left, rgba(201, 166, 70, 0.11), transparent 26%),
+      linear-gradient(180deg, #07101C 0%, #0A1320 100%);
+    color: var(--idr-ivory);
+  }
+
+  .idr-theme::selection {
+    background: rgba(201, 166, 70, 0.28);
+    color: #07101C;
+  }
+
+  .idr-grid {
+    background-image:
+      linear-gradient(rgba(255,255,255,0.14) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.14) 1px, transparent 1px);
+    background-size: 42px 42px;
+  }
+
+  .idr-card {
+    border: 1px solid var(--idr-border);
+    background: linear-gradient(135deg, rgba(16, 28, 46, 0.92), rgba(21, 35, 56, 0.88));
+    box-shadow: 0 24px 70px rgba(0, 0, 0, 0.22);
   }
 }

@@ -8,6 +8,15 @@ export type AiSuggestionKind =
   | "gramatica"
   | "doctrina"
   | "formato"
+  | "claridad"
+  | "fluidez"
+  | "precision"
+  | "concision"
+  | "fuerza"
+  | "ritmo"
+  | "ortografia"
+  | "puntuacion"
+  | "tipografia"
   | "otro";
 
 export interface AiTextLocation {
@@ -38,4 +47,3 @@ export interface AiTextSuggestion {
   validated_by: string | null;
   created_at: string;
 }
-

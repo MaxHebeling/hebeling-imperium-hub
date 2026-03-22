@@ -1,20 +1,14 @@
 "use client";
 
 import { useState } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
   Users,
   Search,
-  Filter,
   Mail,
-  Phone,
-  BookOpen,
-  Calendar,
-  ArrowUpDown,
-  MoreHorizontal,
   UserPlus,
 } from "lucide-react";
 
@@ -42,10 +36,10 @@ const STATUS_LABELS: Record<string, { label: string; color: string }> = {
   prospect: { label: "Prospecto", color: "bg-blue-500/10 text-blue-600" },
 };
 
-export function CrmEnhancedView({ clients, companySlug }: CrmEnhancedViewProps) {
+export function CrmEnhancedView({ clients }: CrmEnhancedViewProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
-  const [sortBy, setSortBy] = useState<"name" | "lastActivity" | "totalSpent">("lastActivity");
+  const [sortBy] = useState<"name" | "lastActivity" | "totalSpent">("lastActivity");
 
   const filteredClients = clients
     .filter((c) => {
