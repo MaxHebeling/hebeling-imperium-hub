@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 
 import { addPermitHunterTask } from "@/lib/lead-hunter/permit-hunter-service";
+import { requirePermitHunterStaffAccess } from "@/lib/lead-hunter/route-auth";
 
 const taskSchema = z.object({
   title: z.string().min(1),
@@ -18,6 +19,11 @@ export async function POST(
   request: Request,
   { params }: { params: Promise<{ permitNumber: string }> }
 ) {
+  const access = await requirePermitHunterStaffAccess();
+  if (!access.ok) {
+    return access.response;
+  }
+
   const { permitNumber } = await params;
   const body = taskSchema.parse(await request.json());
   const task = await addPermitHunterTask(decodeURIComponent(permitNumber), {
