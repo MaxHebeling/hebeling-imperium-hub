@@ -1,6 +1,6 @@
 import { getAdminClient, ORG_ID } from "@/lib/leads/helpers";
 import { listEditorialProjects } from "@/lib/editorial/db/queries";
-import type { EditorialStageKey } from "@/lib/editorial/types/editorial";
+import type { EditorialAnyStageKey } from "@/lib/editorial/types/editorial";
 
 export interface AiDashboardKpis {
   jobsQueued: number;
@@ -15,7 +15,7 @@ export interface AiDashboardKpis {
 export interface AiDashboardJobRow {
   id: string;
   project_id: string;
-  stage_key: EditorialStageKey | null;
+  stage_key: EditorialAnyStageKey | null;
   job_type: string;
   status: string;
   created_at: string;
@@ -25,7 +25,7 @@ export interface AiDashboardJobRow {
 export interface AiDashboardFindingRow {
   id: string;
   project_id: string;
-  stage_key: EditorialStageKey | null;
+  stage_key: EditorialAnyStageKey | null;
   severity: string;
   status: string;
   title: string;
@@ -33,7 +33,7 @@ export interface AiDashboardFindingRow {
 }
 
 export interface AiDashboardBacklogByStage {
-  stage_key: EditorialStageKey | null;
+  stage_key: EditorialAnyStageKey | null;
   open_count: number;
 }
 
@@ -109,12 +109,12 @@ export async function getAiDashboard(): Promise<AiDashboardData> {
   let findingsCriticalOpen = 0;
   let findingsPendingReview = 0;
 
-  const backlogByStageMap = new Map<string | null, number>();
+  const backlogByStageMap = new Map<EditorialAnyStageKey | null, number>();
 
   for (const f of findings) {
     const status = f.status;
     const severity = f.severity;
-    const stageKey = (f.stage_key as EditorialStageKey | null) ?? null;
+    const stageKey = (f.stage_key as EditorialAnyStageKey | null) ?? null;
 
     if (status === "open") {
       findingsOpen += 1;
@@ -129,7 +129,7 @@ export async function getAiDashboard(): Promise<AiDashboardData> {
 
   const backlogByStage: AiDashboardBacklogByStage[] = Array.from(backlogByStageMap.entries()).map(
     ([stage_key, open_count]) => ({
-      stage_key,
+      stage_key: stage_key ?? null,
       open_count,
     })
   );
@@ -149,4 +149,3 @@ export async function getAiDashboard(): Promise<AiDashboardData> {
     backlogByStage,
   };
 }
-

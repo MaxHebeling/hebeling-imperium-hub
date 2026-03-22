@@ -8,7 +8,6 @@ import {
   Loader2,
   ArrowLeft,
   Eye,
-  BarChart2,
   Trash2,
   MoreHorizontal,
   FolderOpen,
@@ -16,6 +15,8 @@ import {
   CheckCircle2,
   TrendingUp,
   Search,
+  ShieldCheck,
+  Sparkles,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -47,11 +48,46 @@ function formatDate(dateStr: string) {
 
 type ServiceType = "full_pipeline" | "reedicion" | "rediseno_portada" | "reedicion_y_portada";
 
-const SERVICE_TYPES: { value: ServiceType; label: string; desc: string; icon: typeof BookOpen }[] = [
-  { value: "full_pipeline", label: "Pipeline Completo", desc: "Nuevo libro: 8 etapas completas", icon: BookOpen },
-  { value: "reedicion", label: "Re-edicion", desc: "Correccion y mejora de libro existente", icon: BookOpen },
-  { value: "rediseno_portada", label: "Re-diseno de Portada", desc: "Nueva portada para libro existente", icon: Eye },
-  { value: "reedicion_y_portada", label: "Re-edicion + Portada", desc: "Edicion completa + nueva portada", icon: BookOpen },
+const SERVICE_TYPES: {
+  value: ServiceType;
+  label: string;
+  desc: string;
+  icon: typeof BookOpen;
+  orderLabel: string;
+  stageHint: string;
+}[] = [
+  {
+    value: "full_pipeline",
+    label: "Sesion completa",
+    desc: "Manuscrito nuevo con recorrido editorial completo.",
+    icon: BookOpen,
+    orderLabel: "01",
+    stageHint: "Diagnostico, edicion, correccion final, maquetacion y salida.",
+  },
+  {
+    value: "reedicion_y_portada",
+    label: "Reedicion + portada",
+    desc: "Libro existente con mejora interior y nueva portada.",
+    icon: BookOpen,
+    orderLabel: "02",
+    stageHint: "Ideal para relanzar un libro con trabajo textual y ajuste visual.",
+  },
+  {
+    value: "reedicion",
+    label: "Reedicion de texto",
+    desc: "Trabajo editorial centrado en el manuscrito y su correccion.",
+    icon: BookOpen,
+    orderLabel: "03",
+    stageHint: "Enfoque en diagnostico, claridad, estructura y correccion final.",
+  },
+  {
+    value: "rediseno_portada",
+    label: "Portada solamente",
+    desc: "Trabajo visual para un libro ya cerrado en texto.",
+    icon: Eye,
+    orderLabel: "04",
+    stageHint: "Briefing, direccion creativa y entrega final de portada.",
+  },
 ];
 
 interface CreateProjectForm {
@@ -187,30 +223,68 @@ export default function EditorialProjectsPage() {
               </div>
               <div>
                 <h1 className="text-2xl font-bold" style={{ color: "var(--re-text)" }}>
-                  Proyectos Editoriales
+                  Sesion Editorial
                 </h1>
                 <p className="text-sm" style={{ color: "var(--re-text-muted)" }}>
-                  Gestiona y supervisa todos los proyectos del pipeline
+                  Una vista limpia para abrir proyectos, decidir la fase activa y mover cada libro con criterio.
                 </p>
               </div>
             </div>
           </div>
-          <button
-            onClick={() => setDialogOpen(true)}
+          <Link
+            href="/app/companies/reino-editorial/projects/new"
             className="re-btn-primary flex items-center gap-2"
           >
             <Plus className="w-4 h-4" />
-            Nuevo Proyecto
-          </button>
+            Nuevo proyecto
+          </Link>
+        </div>
+
+        <div
+          className="re-card-blue p-5 grid gap-4 md:grid-cols-[1.4fr,1fr]"
+        >
+          <div className="space-y-2">
+            <div className="flex items-center gap-2">
+              <Sparkles className="w-4 h-4" style={{ color: "var(--re-blue)" }} />
+              <p className="text-sm font-semibold" style={{ color: "var(--re-text)" }}>
+                Flujo editorial simplificado
+              </p>
+            </div>
+            <p className="text-sm leading-relaxed" style={{ color: "var(--re-text-muted)" }}>
+              La sesion ya no expone una cadena larga de microetapas. Operas solo 4 fases visibles y
+              el sistema puede seguir resolviendo subtareas internas por debajo sin romper la lectura editorial.
+            </p>
+          </div>
+          <div className="grid grid-cols-2 gap-3 text-sm">
+            {[
+              "Recepcion y diagnostico",
+              "Edicion editorial",
+              "Correccion final",
+              "Maquetacion y salida",
+            ].map((phase, index) => (
+              <div
+                key={phase}
+                className="rounded-xl px-3 py-3"
+                style={{ background: "rgba(255,255,255,0.58)", border: "1px solid var(--re-border)" }}
+              >
+                <p className="text-[10px] font-bold tracking-[0.16em]" style={{ color: "var(--re-text-subtle)" }}>
+                  0{index + 1}
+                </p>
+                <p className="mt-1 font-medium" style={{ color: "var(--re-text)" }}>
+                  {phase}
+                </p>
+              </div>
+            ))}
+          </div>
         </div>
 
         {/* Stats Row */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
           {[
-            { label: "Total", value: stats.total, icon: FolderOpen, color: "var(--re-blue)" },
-            { label: "En progreso", value: stats.inProgress, icon: Clock, color: "var(--re-gold)" },
-            { label: "Completados", value: stats.completed, icon: CheckCircle2, color: "var(--re-success)" },
-            { label: "Progreso medio", value: `${stats.avgProgress}%`, icon: TrendingUp, color: "var(--re-cyan)" },
+            { label: "Proyectos", value: stats.total, icon: FolderOpen, color: "var(--re-blue)" },
+            { label: "Abiertos", value: stats.inProgress, icon: Clock, color: "var(--re-gold)" },
+            { label: "Cerrados", value: stats.completed, icon: ShieldCheck, color: "var(--re-success)" },
+            { label: "Avance medio", value: `${stats.avgProgress}%`, icon: TrendingUp, color: "var(--re-cyan)" },
           ].map(({ label, value, icon: Icon, color }) => (
             <div
               key={label}
@@ -284,18 +358,18 @@ export default function EditorialProjectsPage() {
             <BookOpen className="w-8 h-8" style={{ color: "var(--re-blue)" }} />
           </div>
           <div>
-            <p className="font-semibold text-lg" style={{ color: "var(--re-text)" }}>Sin proyectos</p>
+            <p className="font-semibold text-lg" style={{ color: "var(--re-text)" }}>Todavia no hay proyectos editoriales</p>
             <p className="text-sm mt-1 max-w-sm" style={{ color: "var(--re-text-muted)" }}>
-              Aun no hay proyectos editoriales. Crea el primero para comenzar el pipeline de produccion.
+              Crea el primer proyecto para abrir una sesion editorial nueva, recibir el manuscrito y arrancar el diagnostico.
             </p>
           </div>
-          <button
-            onClick={() => setDialogOpen(true)}
+          <Link
+            href="/app/companies/reino-editorial/projects/new"
             className="re-btn-primary flex items-center gap-2"
           >
             <Plus className="w-4 h-4" />
-            Crear Proyecto
-          </button>
+            Crear proyecto
+          </Link>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -314,40 +388,72 @@ export default function EditorialProjectsPage() {
         <DialogContent className="sm:max-w-[480px]">
           <form onSubmit={handleCreate}>
             <DialogHeader>
-              <DialogTitle>Nuevo Proyecto Editorial</DialogTitle>
+              <DialogTitle>Nueva sesion editorial</DialogTitle>
               <DialogDescription>
-                Completa los datos basicos. Podras cargar el manuscrito desde el detalle del proyecto.
+                Esta vista ya no crea proyectos vacios. Los proyectos nuevos se abren desde el intake con manuscrito.
               </DialogDescription>
             </DialogHeader>
             <div className="flex flex-col gap-4 py-4">
               {/* Service Type Selector */}
               <div className="flex flex-col gap-1.5">
-                <Label>Tipo de servicio</Label>
+                <Label>Tipo de sesion</Label>
+                <p className="text-xs" style={{ color: "var(--re-text-muted)" }}>
+                  Define el tipo de encargo y la forma en que entrara al flujo editorial.
+                </p>
                 <div className="grid grid-cols-2 gap-2">
                   {SERVICE_TYPES.map((st) => (
                     <button
                       key={st.value}
                       type="button"
                       onClick={() => handleFieldChange("service_type", st.value)}
+                      aria-pressed={form.service_type === st.value}
                       className="p-3 rounded-xl border text-left transition-all"
                       style={{
                         background: form.service_type === st.value ? "var(--re-blue-pale)" : "var(--re-surface)",
                         borderColor: form.service_type === st.value ? "var(--re-blue)" : "var(--re-border)",
+                        boxShadow: form.service_type === st.value ? "0 0 0 1px var(--re-blue)" : "none",
                       }}
                     >
-                      <div className="flex items-center gap-2">
-                        <st.icon 
-                          className="w-4 h-4" 
-                          style={{ color: form.service_type === st.value ? "var(--re-blue)" : "var(--re-text-muted)" }}
-                        />
-                        <span 
-                          className="text-xs font-semibold"
-                          style={{ color: form.service_type === st.value ? "var(--re-blue)" : "var(--re-text)" }}
-                        >
-                          {st.label}
-                        </span>
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex items-start gap-2.5">
+                          <div
+                            className="flex h-8 w-8 items-center justify-center rounded-lg shrink-0"
+                            style={{
+                              background: form.service_type === st.value ? "rgba(27, 64, 192, 0.12)" : "var(--re-surface-2)",
+                            }}
+                          >
+                            <st.icon
+                              className="w-4 h-4"
+                              style={{ color: form.service_type === st.value ? "var(--re-blue)" : "var(--re-text-muted)" }}
+                            />
+                          </div>
+                          <div className="min-w-0">
+                            <div className="flex items-center gap-2">
+                              <span
+                                className="text-[10px] font-bold tracking-[0.14em]"
+                                style={{ color: form.service_type === st.value ? "var(--re-blue)" : "var(--re-text-subtle)" }}
+                              >
+                                {st.orderLabel}
+                              </span>
+                              <span
+                                className="text-xs font-semibold"
+                                style={{ color: form.service_type === st.value ? "var(--re-blue)" : "var(--re-text)" }}
+                              >
+                                {st.label}
+                              </span>
+                            </div>
+                            <p className="text-[10px] mt-1" style={{ color: "var(--re-text-muted)" }}>
+                              {st.desc}
+                            </p>
+                          </div>
+                        </div>
+                        {form.service_type === st.value ? (
+                          <CheckCircle2 className="w-4 h-4 shrink-0" style={{ color: "var(--re-blue)" }} />
+                        ) : null}
                       </div>
-                      <p className="text-[10px] mt-1 ml-6" style={{ color: "var(--re-text-muted)" }}>{st.desc}</p>
+                      <p className="text-[10px] mt-3 leading-relaxed" style={{ color: "var(--re-text-subtle)" }}>
+                        {st.stageHint}
+                      </p>
                     </button>
                   ))}
                 </div>
@@ -430,7 +536,7 @@ export default function EditorialProjectsPage() {
                     Creando...
                   </>
                 ) : (
-                  "Crear Proyecto"
+                  "Crear proyecto"
                 )}
               </Button>
             </DialogFooter>
@@ -443,14 +549,24 @@ export default function EditorialProjectsPage() {
 
 function ProjectCard({ project, onDelete }: { project: EditorialProject; onDelete: () => void }) {
   const statusConfig = {
-    created: { label: "Creado", color: "var(--re-text-muted)", bg: "var(--re-surface-2)" },
+    created: { label: "Recepcion", color: "var(--re-text-muted)", bg: "var(--re-surface-2)" },
     in_progress: { label: "En progreso", color: "var(--re-gold)", bg: "var(--re-gold-pale)" },
-    review: { label: "En revision", color: "var(--re-blue)", bg: "var(--re-blue-pale)" },
-    completed: { label: "Completado", color: "var(--re-success)", bg: "var(--re-success-pale)" },
+    review: { label: "Esperando criterio", color: "var(--re-blue)", bg: "var(--re-blue-pale)" },
+    completed: { label: "Cerrado", color: "var(--re-success)", bg: "var(--re-success-pale)" },
     archived: { label: "Archivado", color: "var(--re-text-subtle)", bg: "var(--re-surface-2)" },
   };
 
   const status = statusConfig[project.status as keyof typeof statusConfig] || statusConfig.created;
+  const visiblePhaseLabel =
+    project.current_stage === "recepcion" || project.current_stage === "preparacion"
+      ? "Recepcion y diagnostico"
+      : project.current_stage === "edicion_editorial"
+        ? "Edicion editorial"
+        : project.current_stage === "correccion_linguistica" ||
+            project.current_stage === "preprensa_kdp" ||
+            project.current_stage === "validacion_paginas"
+          ? "Correccion final"
+          : "Maquetacion y salida";
 
   return (
     <div className="re-card re-lift p-5 flex flex-col gap-4 group">
@@ -518,11 +634,11 @@ function ProjectCard({ project, onDelete }: { project: EditorialProject; onDelet
       )}
 
       {/* Stage Badge */}
-      <div className="flex items-center gap-2">
+      <div className="flex flex-wrap items-center gap-2">
         <span
           className="re-badge re-badge-blue"
         >
-          {EDITORIAL_STAGE_LABELS[project.current_stage] ?? project.current_stage}
+          {visiblePhaseLabel}
         </span>
         <span
           className="text-xs px-2 py-0.5 rounded-full"
@@ -531,6 +647,9 @@ function ProjectCard({ project, onDelete }: { project: EditorialProject; onDelet
           {status.label}
         </span>
       </div>
+      <p className="text-[11px]" style={{ color: "var(--re-text-subtle)" }}>
+        Fase tecnica actual: {EDITORIAL_STAGE_LABELS[project.current_stage] ?? project.current_stage}
+      </p>
 
       {/* Progress */}
       <div className="flex items-center gap-3">

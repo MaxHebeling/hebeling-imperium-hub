@@ -16,21 +16,27 @@ export function LanguageSelector() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon" className="h-9 w-9">
+        <Button
+          variant="ghost"
+          className="h-9 gap-2 px-3 text-[#9FB2CC]/70 hover:text-[#E7ECF5] hover:bg-[#162235]/50"
+        >
           <Globe className="h-4 w-4" />
+          <span className="text-xs font-semibold uppercase tracking-wide">
+            {locale}
+          </span>
           <span className="sr-only">{t.common.language}</span>
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end">
+      <DropdownMenuContent align="end" className="bg-[#162235] border-[#1E3048]">
         <DropdownMenuItem
           onClick={() => setLocale("es")}
-          className={locale === "es" ? "bg-accent" : ""}
+          className={locale === "es" ? "bg-accent text-foreground" : "text-[#E7ECF5]"}
         >
           {t.common.spanish}
         </DropdownMenuItem>
         <DropdownMenuItem
           onClick={() => setLocale("en")}
-          className={locale === "en" ? "bg-accent" : ""}
+          className={locale === "en" ? "bg-accent text-foreground" : "text-[#E7ECF5]"}
         >
           {t.common.english}
         </DropdownMenuItem>

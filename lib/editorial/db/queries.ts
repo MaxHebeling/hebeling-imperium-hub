@@ -8,12 +8,52 @@ import type {
   EditorialJob,
   EditorialActivityLogEntry,
 } from "../types/editorial";
+import type {
+  EditorialApproval,
+  EditorialFindingV2,
+  EditorialStageRun,
+  EditorialWorkflowStageKey,
+} from "../types/stage-engine";
+
+export interface EditorialWorkflowSummaryRow {
+  id: string;
+  project_id: string;
+  current_state: string;
+  status: string | null;
+  context: Record<string, unknown> | null;
+  metrics: Record<string, unknown> | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ManuscriptAssetSummaryRow {
+  id: string;
+  project_id: string;
+  workflow_id: string | null;
+  asset_kind: string;
+  source_label: string;
+  source_uri: string | null;
+  original_file_name: string;
+  mime_type: string;
+  version: number;
+  is_current: boolean;
+  created_at: string;
+  updated_at: string;
+}
 
 /** Profile row for staff display (creator/assignee). */
 export interface ProfileRow {
   id: string;
   full_name: string | null;
   email: string | null;
+}
+
+function getErrorCode(error: unknown): string | undefined {
+  if (typeof error === "object" && error !== null && "code" in error) {
+    const code = error.code;
+    return typeof code === "string" ? code : undefined;
+  }
+  return undefined;
 }
 
 // ---------------------------------------------------------------------------
@@ -30,7 +70,7 @@ export async function getEditorialProject(projectId: string): Promise<EditorialP
   if (error) {
     console.error("[editorial] getEditorialProject error", {
       projectId,
-      code: (error as any).code,
+      code: getErrorCode(error),
       message: error.message,
     });
     return null;
@@ -117,6 +157,37 @@ export async function getProjectJobs(projectId: string): Promise<EditorialJob[]>
     .order("created_at", { ascending: true });
   if (error) return [];
   return (data ?? []) as EditorialJob[];
+}
+
+export async function getProjectWorkflow(
+  projectId: string
+): Promise<EditorialWorkflowSummaryRow | null> {
+  const supabase = getAdminClient();
+  const { data, error } = await supabase
+    .from("editorial_workflows")
+    .select("id, project_id, current_state, status, context, metrics, created_at, updated_at")
+    .eq("project_id", projectId)
+    .maybeSingle();
+
+  if (error || !data) return null;
+  return data as EditorialWorkflowSummaryRow;
+}
+
+export async function getCurrentWorkflowAssets(
+  projectId: string
+): Promise<ManuscriptAssetSummaryRow[]> {
+  const supabase = getAdminClient();
+  const { data, error } = await supabase
+    .from("manuscript_assets")
+    .select(
+      "id, project_id, workflow_id, asset_kind, source_label, source_uri, original_file_name, mime_type, version, is_current, created_at, updated_at"
+    )
+    .eq("project_id", projectId)
+    .eq("is_current", true)
+    .order("created_at", { ascending: false });
+
+  if (error) return [];
+  return (data ?? []) as ManuscriptAssetSummaryRow[];
 }
 
 // ---------------------------------------------------------------------------
@@ -310,4 +381,46 @@ export async function getProjectStaffAssignments(
     .eq("project_id", projectId);
   if (error) return [];
   return (data ?? []) as EditorialProjectStaffAssignmentRow[];
+}
+
+export async function getLatestStageRunForWorkflowStage(
+  projectId: string,
+  workflowStageKey: EditorialWorkflowStageKey
+): Promise<EditorialStageRun | null> {
+  const supabase = getAdminClient();
+  const { data, error } = await supabase
+    .from("editorial_stage_runs")
+    .select("*")
+    .eq("project_id", projectId)
+    .eq("stage_key", workflowStageKey)
+    .order("sequence_number", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (error || !data) return null;
+  return data as EditorialStageRun;
+}
+
+export async function getStageRunFindings(stageRunId: string): Promise<EditorialFindingV2[]> {
+  const supabase = getAdminClient();
+  const { data, error } = await supabase
+    .from("editorial_findings_v2")
+    .select("*")
+    .eq("stage_run_id", stageRunId)
+    .order("created_at", { ascending: false });
+
+  if (error) return [];
+  return (data ?? []) as EditorialFindingV2[];
+}
+
+export async function getStageRunApprovals(stageRunId: string): Promise<EditorialApproval[]> {
+  const supabase = getAdminClient();
+  const { data, error } = await supabase
+    .from("editorial_approvals_v2")
+    .select("*")
+    .eq("stage_run_id", stageRunId)
+    .order("approved_at", { ascending: false });
+
+  if (error) return [];
+  return (data ?? []) as EditorialApproval[];
 }

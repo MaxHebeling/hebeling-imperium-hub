@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowLeft, Smartphone, Download, Globe, MessageSquare, HelpCircle } from "lucide-react";
@@ -164,12 +164,11 @@ const T = {
 };
 
 export default function PortalHelpPage() {
-  const [locale, setLocale] = useState<Locale>("es");
-
-  useEffect(() => {
-    const saved = localStorage.getItem("reino-locale") as Locale | null;
-    if (saved === "es" || saved === "en") setLocale(saved);
-  }, []);
+  const [locale, setLocale] = useState<Locale>(() => {
+    if (typeof window === "undefined") return "es";
+    const saved = localStorage.getItem("reino-locale");
+    return saved === "es" || saved === "en" ? saved : "es";
+  });
 
   const t = T[locale];
 
@@ -177,6 +176,7 @@ export default function PortalHelpPage() {
     const next = locale === "es" ? "en" : "es";
     setLocale(next);
     localStorage.setItem("reino-locale", next);
+    window.dispatchEvent(new Event("reino-locale-change"));
   };
 
   return (

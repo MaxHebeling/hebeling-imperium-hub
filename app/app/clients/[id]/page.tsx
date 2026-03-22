@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -308,24 +308,28 @@ export default function ClientDetailPage() {
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [isAddContactOpen, setIsAddContactOpen] = useState(false);
 
-  const fetchClient = useCallback(async () => {
-    setLoading(true);
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 500));
-    setClient(MOCK_CLIENT);
-    setDeals(MOCK_DEALS);
-    setProjects(MOCK_PROJECTS);
-    setWebsites(MOCK_WEBSITES);
-    setDocuments(MOCK_DOCUMENTS);
-    setInvoices(MOCK_INVOICES);
-    setActivities(MOCK_ACTIVITIES);
-    setContacts(MOCK_CONTACTS);
-    setLoading(false);
-  }, [clientId]);
-
   useEffect(() => {
-    fetchClient();
-  }, [fetchClient]);
+    const startTimer = window.setTimeout(() => {
+      setLoading(true);
+    }, 0);
+
+    const timer = window.setTimeout(() => {
+      setClient(MOCK_CLIENT);
+      setDeals(MOCK_DEALS);
+      setProjects(MOCK_PROJECTS);
+      setWebsites(MOCK_WEBSITES);
+      setDocuments(MOCK_DOCUMENTS);
+      setInvoices(MOCK_INVOICES);
+      setActivities(MOCK_ACTIVITIES);
+      setContacts(MOCK_CONTACTS);
+      setLoading(false);
+    }, 500);
+
+    return () => {
+      window.clearTimeout(startTimer);
+      window.clearTimeout(timer);
+    };
+  }, [clientId]);
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat("en-US", {
@@ -391,7 +395,7 @@ export default function ClientDetailPage() {
       <div className="flex flex-col items-center justify-center min-h-[400px]">
         <Users className="h-12 w-12 text-muted-foreground/50 mb-4" />
         <h3 className="text-lg font-semibold mb-1">Client not found</h3>
-        <p className="text-sm text-muted-foreground mb-4">The client you're looking for doesn't exist.</p>
+        <p className="text-sm text-muted-foreground mb-4">The client you&apos;re looking for doesn&apos;t exist.</p>
         <Link href="/app/clients">
           <Button>Back to Clients</Button>
         </Link>
@@ -1384,7 +1388,7 @@ export default function ClientDetailPage() {
             <Card className="bg-card/40 border-border/40">
               <CardHeader>
                 <CardTitle className="text-base font-medium">Basic Information</CardTitle>
-                <CardDescription>Update the client's basic details</CardDescription>
+                <CardDescription>Update the client&apos;s basic details</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="grid gap-2">

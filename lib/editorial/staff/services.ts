@@ -75,7 +75,7 @@ export async function getStaffDashboard(): Promise<StaffDashboardData> {
     (p) => p.status === "review" || p.status === "review_required"
   ).length;
   const completedThisMonthCount = items.filter((p) => {
-    if (p.current_stage !== "revision_final" || p.status !== "completed")
+    if (p.current_stage !== "entrega_final" || p.status !== "completed")
       return false;
     const updated = p.updated_at ?? p.created_at;
     return new Date(updated) >= startOfMonth;

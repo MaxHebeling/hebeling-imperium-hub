@@ -11,6 +11,7 @@ import { createClient } from "@/lib/supabase/client";
 import Image from "next/image";
 import { LanguageProvider, useLanguage } from "@/lib/i18n";
 import { LanguageSelector } from "@/components/language-selector";
+import { getStaffBrandScope, isRestrictedStaffRole } from "@/lib/staff-brand-access";
 
 function LoginForm() {
   const router = useRouter();
@@ -49,7 +50,7 @@ function LoginForm() {
     // Fetch profile to check role
     const { data: profile, error: profileError } = await supabase
       .from("profiles")
-      .select("role")
+      .select("role, brand_id")
       .eq("id", authData.user.id)
       .single();
     
@@ -65,7 +66,22 @@ function LoginForm() {
     
     // Redirect based on role — staff lands in company-first OS
     if (profile.role === "superadmin" || profile.role === "admin" || profile.role === "sales" || profile.role === "ops") {
-      router.push("/app/companies");
+      let destination = "/app/companies";
+
+      if (isRestrictedStaffRole(profile.role) && profile.brand_id) {
+        const { data: brand } = await supabase
+          .from("brands")
+          .select("slug")
+          .eq("id", profile.brand_id)
+          .maybeSingle();
+
+        const brandScope = getStaffBrandScope(brand?.slug);
+        if (brandScope) {
+          destination = brandScope.homePath;
+        }
+      }
+
+      router.push(destination);
       router.refresh();
     } else if (profile.role === "client") {
       // Clients should use client-login

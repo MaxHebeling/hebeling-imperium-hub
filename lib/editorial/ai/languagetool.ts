@@ -89,15 +89,32 @@ export interface LanguageToolCorrection {
 const LANGUAGETOOL_API_URL =
   process.env.LANGUAGETOOL_API_URL || "https://api.languagetoolplus.com/v2";
 
+function normalizeDetectedLanguage(
+  languageCode: string | undefined
+): "es" | "en-US" | "auto" {
+  if (!languageCode) return "auto";
+  if (languageCode.toLowerCase().startsWith("es")) return "es";
+  if (languageCode.toLowerCase().startsWith("en")) return "en-US";
+  return "auto";
+}
+
 function getApiKey(): string | null {
   return process.env.LANGUAGETOOL_API_KEY || null;
+}
+
+function getUsername(): string | null {
+  return (
+    process.env.LANGUAGETOOL_USERNAME ||
+    process.env.LANGUAGETOOL_API_USERNAME ||
+    null
+  );
 }
 
 /**
  * Check if LanguageTool is available (API key configured)
  */
 export function isLanguageToolAvailable(): boolean {
-  return !!getApiKey();
+  return !!getApiKey() && !!getUsername();
 }
 
 // ─── Core API Call ──────────────────────────────────────────────────
@@ -111,6 +128,7 @@ async function checkText(
   language: "es" | "en-US" | "auto"
 ): Promise<LanguageToolResponse> {
   const apiKey = getApiKey();
+  const username = getUsername();
 
   const headers: Record<string, string> = {
     "Content-Type": "application/x-www-form-urlencoded",
@@ -124,8 +142,9 @@ async function checkText(
   });
 
   // Add API key if available (premium features)
-  if (apiKey) {
+  if (apiKey && username) {
     params.set("apiKey", apiKey);
+    params.set("username", username);
     // Enable premium-only rules
     params.set("level", "picky");
   }
@@ -162,8 +181,12 @@ export async function runLanguageToolCorrection(
   const startTime = Date.now();
 
   // LanguageTool has a 10,000 char limit per request on free tier.
-  // For premium, it's higher but we chunk anyway for safety.
-  const CHUNK_SIZE = 10000;
+  // The effective limit of the configured account in production is lower,
+  // so we stay well below it to avoid 413 responses.
+  const CHUNK_SIZE = Math.max(
+    500,
+    Math.min(Number(process.env.LANGUAGETOOL_CHUNK_SIZE ?? 1400), 5000)
+  );
   const allMatches: LanguageToolMatch[] = [];
   let detectedLang = language;
 
@@ -196,7 +219,9 @@ export async function runLanguageToolCorrection(
 
     // Capture detected language from first chunk
     if (detectedLang === "auto" && result.language.detectedLanguage) {
-      detectedLang = result.language.detectedLanguage.code;
+      detectedLang = normalizeDetectedLanguage(
+        result.language.detectedLanguage.code
+      );
     }
 
     // Adjust offsets for chunked processing

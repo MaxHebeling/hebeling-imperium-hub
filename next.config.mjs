@@ -6,7 +6,6 @@ const nextConfig = {
   images: {
     unoptimized: true,
   },
-  swcMinify: true,
   productionBrowserSourceMaps: false,
   experimental: {
     serverActions: {

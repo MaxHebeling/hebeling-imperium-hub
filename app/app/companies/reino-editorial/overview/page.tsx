@@ -248,7 +248,7 @@ export default async function ReinoEditorialOverviewPage() {
                       <TableRow key={project.id} className="hover:bg-muted/30">
                         <TableCell>
                           <Link
-                            href={`/app/companies/reino-editorial/projects/${project.id}`}
+                            href={`/app/editorial/projects/${project.id}`}
                             className="font-medium hover:underline text-sm"
                             style={{ color: "var(--re-text)" }}
                           >

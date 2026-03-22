@@ -3,6 +3,7 @@ import { getAdminClient } from "@/lib/leads/helpers";
 import { getEditorialProject, getLatestFileVersion } from "@/lib/editorial/db/queries";
 import { registerManuscriptFile, logEditorialActivity } from "@/lib/editorial/db/mutations";
 import { EDITORIAL_BUCKETS } from "@/lib/editorial/storage/buckets";
+import { ensureEditorialBucket } from "@/lib/editorial/storage/provision";
 
 /**
  * POST /api/editorial/projects/[projectId]/upload-url
@@ -42,6 +43,7 @@ export async function POST(
     }
 
     const supabase = getAdminClient();
+    await ensureEditorialBucket(EDITORIAL_BUCKETS.manuscripts);
 
     // Auto-increment version
     const latestVersion = await getLatestFileVersion(projectId, "manuscript_original");

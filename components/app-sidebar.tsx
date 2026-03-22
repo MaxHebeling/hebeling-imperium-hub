@@ -14,6 +14,7 @@ import {
   ChevronRight,
   FolderOpen,
   Network,
+  Building2,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -24,6 +25,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import type { StaffBrandScope } from "@/lib/staff-brand-access";
 
 /* ─────────────────────────────────────────────────────────────
    Hebeling OS — Sidebar Navigation Structure
@@ -64,9 +66,10 @@ const navSections = [
 interface AppSidebarProps {
   userName: string;
   userRole: string;
+  brandScope?: StaffBrandScope | null;
 }
 
-export function AppSidebar({ userName, userRole }: AppSidebarProps) {
+export function AppSidebar({ userName, userRole, brandScope = null }: AppSidebarProps) {
   const pathname = usePathname();
   const { t } = useLanguage();
   const [isCollapsed, setIsCollapsed] = useState(false);
@@ -96,6 +99,19 @@ export function AppSidebar({ userName, userRole }: AppSidebarProps) {
     return sidebarTranslations[titleKey] || titleKey;
   };
 
+  const sections = brandScope
+    ? [
+        {
+          titleKey: "empresas" as const,
+          titleHref: brandScope.homePath,
+          items: [
+            { href: brandScope.homePath, label: brandScope.label, icon: Building2 },
+            { href: brandScope.crmPath, labelKey: "crm", icon: Users },
+          ],
+        },
+      ]
+    : navSections;
+
   return (
     <TooltipProvider delayDuration={0}>
       <aside
@@ -107,7 +123,7 @@ export function AppSidebar({ userName, userRole }: AppSidebarProps) {
         {/* Logo */}
         <div className={cn("border-b border-sidebar-border", isCollapsed ? "p-3" : "p-4")}>
           <Link
-            href="/app/companies"
+            href={brandScope?.homePath || "/app/companies"}
             className={cn(
               "flex items-center gap-3",
               isCollapsed && "justify-center"
@@ -137,7 +153,7 @@ export function AppSidebar({ userName, userRole }: AppSidebarProps) {
 
         {/* Navigation */}
         <nav className="flex-1 overflow-y-auto p-2 space-y-1">
-          {navSections.map((section, sectionIndex) => (
+          {sections.map((section, sectionIndex) => (
             <div key={section.titleKey ?? `section-${sectionIndex}`}>
               {!isCollapsed && section.titleKey && (
                 <div className="px-3 pt-4 pb-1.5">
@@ -156,10 +172,16 @@ export function AppSidebar({ userName, userRole }: AppSidebarProps) {
                 </div>
               )}
               <div className="space-y-0.5">
-                {section.items.map((item) => {
+                {section.items
+                  .filter((item): item is typeof item & { href: string } => Boolean(item.href))
+                  .map((item) => {
                   const isActive =
                     pathname === item.href ||
                     pathname.startsWith(item.href + "/");
+                  const itemLabel =
+                    "label" in item && item.label
+                      ? item.label
+                      : getTranslatedNavLabel(item.labelKey ?? "");
 
                   const linkContent = (
                     <Link
@@ -186,7 +208,7 @@ export function AppSidebar({ userName, userRole }: AppSidebarProps) {
                       {!isCollapsed && (
                         <>
                           <span className="truncate">
-                            {getTranslatedNavLabel(item.labelKey)}
+                            {itemLabel}
                           </span>
                           {isActive && (
                             <ChevronRight className="h-3 w-3 ml-auto text-[#C8A75B]/50" />
@@ -201,7 +223,7 @@ export function AppSidebar({ userName, userRole }: AppSidebarProps) {
                       <Tooltip key={item.href}>
                         <TooltipTrigger asChild>{linkContent}</TooltipTrigger>
                         <TooltipContent side="right" className="font-medium bg-[#162235] border-[#1E3048] text-[#E7ECF5]">
-                          {getTranslatedNavLabel(item.labelKey)}
+                          {itemLabel}
                         </TooltipContent>
                       </Tooltip>
                     );
@@ -262,7 +284,7 @@ export function AppSidebar({ userName, userRole }: AppSidebarProps) {
                       getRoleBadgeColor(userRole)
                     )}
                   >
-                    {userRole}
+                    {brandScope ? brandScope.label : userRole}
                   </Badge>
                 </div>
               </div>

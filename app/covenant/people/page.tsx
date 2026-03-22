@@ -42,6 +42,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+
+type RelationshipTier = "vip" | "gold" | "standard" | "new";
 import { Textarea } from "@/components/ui/textarea";
 import type { CovenantPerson } from "@/lib/covenant/types";
 
@@ -340,7 +342,7 @@ function AddPersonModal({
     company: "",
     city: "",
     country: "",
-    relationship_tier: "new" as const,
+    relationship_tier: "new" as RelationshipTier,
     opportunity_score: 50,
     tags: [] as string[],
     notes: "",

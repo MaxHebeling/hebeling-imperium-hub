@@ -2,6 +2,7 @@
 
 import { TrendingUp, TrendingDown, Users, FolderOpen, BookOpen, DollarSign, CalendarCheck, Cpu } from "lucide-react";
 import { LineChart, Line, ResponsiveContainer, Tooltip } from "recharts";
+import { useLanguage } from "@/lib/i18n";
 
 interface MetricCardProps {
   title: string;
@@ -58,9 +59,10 @@ function MetricCard({ title, value, icon, trend, chartData, accentColor, textAcc
 }
 
 export function MetricsSection() {
+  const { locale } = useLanguage();
   const metrics: MetricCardProps[] = [
     {
-      title: "New Leads Today",
+      title: locale === "es" ? "Nuevos leads hoy" : "New Leads Today",
       value: "24",
       icon: <Users className="w-4 h-4" />,
       trend: 12,
@@ -69,7 +71,7 @@ export function MetricsSection() {
       chartData: [{ value: 18 }, { value: 21 }, { value: 19 }, { value: 24 }],
     },
     {
-      title: "Active Projects",
+      title: locale === "es" ? "Proyectos activos" : "Active Projects",
       value: "8",
       icon: <FolderOpen className="w-4 h-4" />,
       trend: 5,
@@ -78,7 +80,7 @@ export function MetricsSection() {
       chartData: [{ value: 6 }, { value: 7 }, { value: 7 }, { value: 8 }],
     },
     {
-      title: "Books in Production",
+      title: locale === "es" ? "Libros en producción" : "Books in Production",
       value: "12",
       icon: <BookOpen className="w-4 h-4" />,
       trend: -2,
@@ -87,7 +89,7 @@ export function MetricsSection() {
       chartData: [{ value: 14 }, { value: 13 }, { value: 12 }, { value: 12 }],
     },
     {
-      title: "Monthly Revenue",
+      title: locale === "es" ? "Ingresos mensuales" : "Monthly Revenue",
       value: "$127.5K",
       icon: <DollarSign className="w-4 h-4" />,
       trend: 23,
@@ -96,7 +98,7 @@ export function MetricsSection() {
       chartData: [{ value: 80 }, { value: 100 }, { value: 115 }, { value: 127 }],
     },
     {
-      title: "Meetings Scheduled",
+      title: locale === "es" ? "Reuniones agendadas" : "Meetings Scheduled",
       value: "16",
       icon: <CalendarCheck className="w-4 h-4" />,
       trend: 8,
@@ -105,7 +107,7 @@ export function MetricsSection() {
       chartData: [{ value: 12 }, { value: 14 }, { value: 15 }, { value: 16 }],
     },
     {
-      title: "AI Activity",
+      title: locale === "es" ? "Actividad IA" : "AI Activity",
       value: "324",
       icon: <Cpu className="w-4 h-4" />,
       trend: 34,

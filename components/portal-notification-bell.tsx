@@ -15,6 +15,7 @@ const TYPE_CONFIG: Record<NotificationType, { icon: typeof Bell; color: string }
   project_update: { icon: BookOpen, color: "text-cyan-500" },
   file_shared: { icon: FileText, color: "text-teal-500" },
   project_completed: { icon: PartyPopper, color: "text-emerald-500" },
+  birthday: { icon: PartyPopper, color: "text-pink-500" },
 };
 
 function timeAgo(dateStr: string): string {

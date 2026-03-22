@@ -333,12 +333,12 @@ if (!validation.isValid) {
                   <tr className="border-b border-border/30">
                     <td className="py-2 px-3"><code className="text-xs bg-muted px-1.5 py-0.5 rounded">brand_slug</code></td>
                     <td className="py-2 px-3 text-muted-foreground">string</td>
-                    <td className="py-2 px-3">Brand identifier (e.g., "ikingdom", "editorial-reino")</td>
+                    <td className="py-2 px-3">Brand identifier (for example, &quot;ikingdom&quot; or &quot;editorial-reino&quot;)</td>
                   </tr>
                   <tr>
                     <td className="py-2 px-3"><code className="text-xs bg-muted px-1.5 py-0.5 rounded">full_name</code></td>
                     <td className="py-2 px-3 text-muted-foreground">string</td>
-                    <td className="py-2 px-3">Lead's full name</td>
+                    <td className="py-2 px-3">Lead&apos;s full name</td>
                   </tr>
                 </tbody>
               </table>
@@ -376,12 +376,12 @@ if (!validation.isValid) {
                   <tr className="border-b border-border/30">
                     <td className="py-2 px-3"><code className="text-xs bg-muted px-1.5 py-0.5 rounded">source</code></td>
                     <td className="py-2 px-3 text-muted-foreground">string</td>
-                    <td className="py-2 px-3">Lead source: "landing_page" | "linkedin" | "whatsapp" | "referral" | "manual"</td>
+                    <td className="py-2 px-3">Lead source: &quot;landing_page&quot; | &quot;linkedin&quot; | &quot;whatsapp&quot; | &quot;referral&quot; | &quot;manual&quot;</td>
                   </tr>
                   <tr className="border-b border-border/30">
                     <td className="py-2 px-3"><code className="text-xs bg-muted px-1.5 py-0.5 rounded">deal_title</code></td>
                     <td className="py-2 px-3 text-muted-foreground">string</td>
-                    <td className="py-2 px-3">Custom deal title (defaults to "Lead: [name]")</td>
+                    <td className="py-2 px-3">Custom deal title (defaults to &quot;Lead: [name]&quot;)</td>
                   </tr>
                   <tr className="border-b border-border/30">
                     <td className="py-2 px-3"><code className="text-xs bg-muted px-1.5 py-0.5 rounded">deal_value</code></td>
@@ -391,7 +391,7 @@ if (!validation.isValid) {
                   <tr>
                     <td className="py-2 px-3"><code className="text-xs bg-muted px-1.5 py-0.5 rounded">deal_currency</code></td>
                     <td className="py-2 px-3 text-muted-foreground">string</td>
-                    <td className="py-2 px-3">Currency code (defaults to "USD")</td>
+                    <td className="py-2 px-3">Currency code (defaults to &quot;USD&quot;)</td>
                   </tr>
                 </tbody>
               </table>

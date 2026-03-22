@@ -2,17 +2,6 @@ import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { createClient as createServerClient } from "@/lib/supabase/server";
 
-function getSupabaseAdmin() {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-
-  if (!supabaseUrl || !serviceRoleKey) {
-    throw new Error("Supabase admin configuration is missing.");
-  }
-
-  return createClient(supabaseUrl, serviceRoleKey);
-}
-
 interface VercelProject {
   id: string;
   name: string;
@@ -43,7 +32,17 @@ interface VercelProjectsResponse {
 
 export async function POST() {
   try {
-    const supabaseAdmin = getSupabaseAdmin();
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+    if (!supabaseUrl || !serviceRoleKey) {
+      return NextResponse.json(
+        { error: "Supabase environment variables are not configured" },
+        { status: 500 }
+      );
+    }
+
+    const supabaseAdmin = createClient(supabaseUrl, serviceRoleKey);
 
     // Validate environment variables
     const VERCEL_ACCESS_TOKEN = process.env.VERCEL_ACCESS_TOKEN;

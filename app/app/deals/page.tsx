@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -116,11 +116,7 @@ export default function DealsPage() {
 
   const supabase = createClient();
 
-  useEffect(() => {
-    loadData();
-  }, []);
-
-  async function loadData() {
+  const loadData = useCallback(async () => {
     setLoading(true);
 
     const {
@@ -153,8 +149,10 @@ export default function DealsPage() {
 
       if (stagesData) {
         setStages(stagesData);
-        if (stagesData.length > 0 && !newDeal.stage_id) {
-          setNewDeal((prev) => ({ ...prev, stage_id: stagesData[0].id }));
+        if (stagesData.length > 0) {
+          setNewDeal((prev) =>
+            prev.stage_id ? prev : { ...prev, stage_id: stagesData[0].id }
+          );
         }
       }
     }
@@ -187,7 +185,15 @@ export default function DealsPage() {
     }
 
     setLoading(false);
-  }
+  }, [supabase]);
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      void loadData();
+    }, 0);
+
+    return () => window.clearTimeout(timer);
+  }, [loadData]);
 
   async function handleAddDeal(e: React.FormEvent) {
     e.preventDefault();

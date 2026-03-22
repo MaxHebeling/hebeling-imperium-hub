@@ -837,7 +837,6 @@ function ClientAutocomplete({
   placeholder?: string;
   onSelect: (client: OficinaClient) => void;
 }) {
-  const [suggestions, setSuggestions] = useState<OficinaClient[]>([]);
   const [showDropdown, setShowDropdown] = useState(false);
   const [loadingSuggestions, setLoadingSuggestions] = useState(false);
   const [allClients, setAllClients] = useState<OficinaClient[]>([]);
@@ -854,36 +853,31 @@ function ClientAutocomplete({
       const json = await res.json();
       if (json.success) {
         setAllClients(json.clients);
-        setSuggestions(json.clients);
       }
     } catch { /* ignore */ }
     setLoadingSuggestions(false);
     setHasFetched(true);
   }, [hasFetched]);
 
-  // Filter locally when typing
-  useEffect(() => {
-    if (!hasFetched) return;
-    if (!value.trim()) {
-      setSuggestions(allClients);
-      return;
-    }
-    const q = value.toLowerCase();
-    setSuggestions(
-      allClients.filter(
-        (c) =>
-          c.fullName.toLowerCase().includes(q) ||
-          c.email.toLowerCase().includes(q) ||
-          (c.legalName && c.legalName.toLowerCase().includes(q)) ||
-          c.taxId.toLowerCase().includes(q)
-      )
-    );
-  }, [value, allClients, hasFetched]);
+  const filteredSuggestions =
+    !hasFetched
+      ? []
+      : !value.trim()
+        ? allClients
+        : allClients.filter((client) => {
+            const query = value.toLowerCase();
+            return (
+              client.fullName.toLowerCase().includes(query) ||
+              client.email.toLowerCase().includes(query) ||
+              (client.legalName && client.legalName.toLowerCase().includes(query)) ||
+              client.taxId.toLowerCase().includes(query)
+            );
+          });
 
   // Also search server if local results are empty
   useEffect(() => {
     if (!hasFetched || !value.trim()) return;
-    if (suggestions.length > 0) return;
+    if (filteredSuggestions.length > 0) return;
     if (debounceRef.current) clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(async () => {
       setLoadingSuggestions(true);
@@ -891,8 +885,6 @@ function ClientAutocomplete({
         const res = await fetch(`/api/staff/oficina/clients?q=${encodeURIComponent(value)}`);
         const json = await res.json();
         if (json.success && json.clients.length > 0) {
-          setSuggestions(json.clients);
-          // Merge new results into allClients
           setAllClients((prev) => {
             const ids = new Set(prev.map((c) => c.id));
             const newClients = json.clients.filter((c: OficinaClient) => !ids.has(c.id));
@@ -903,7 +895,7 @@ function ClientAutocomplete({
       setLoadingSuggestions(false);
     }, 300);
     return () => { if (debounceRef.current) clearTimeout(debounceRef.current); };
-  }, [value, suggestions.length, hasFetched]);
+  }, [filteredSuggestions.length, hasFetched, value]);
 
   // Close dropdown on outside click
   useEffect(() => {
@@ -949,8 +941,8 @@ function ClientAutocomplete({
           className="absolute z-50 mt-1 w-full max-h-64 overflow-y-auto rounded-xl border border-gray-200 bg-white shadow-lg"
           style={{ minWidth: 280 }}
         >
-          {suggestions.length > 0 ? (
-            suggestions.map((c) => (
+          {filteredSuggestions.length > 0 ? (
+            filteredSuggestions.map((c) => (
               <button
                 key={c.id}
                 type="button"
@@ -1066,8 +1058,8 @@ const QUICK_LINKS: {
     iconBg: "linear-gradient(135deg, #059669 0%, #10b981 100%)",
   },
   {
-    label: "Portadas AI",
-    description: "Generador de portadas con DALL-E",
+    label: "Portadas Premium",
+    description: "Workspace visual con HEBELING AI y prompts para Midjourney",
     href: "/app/editorial/portadas",
     icon: FileText,
     iconBg: "linear-gradient(135deg, #d97706 0%, #f59e0b 100%)",

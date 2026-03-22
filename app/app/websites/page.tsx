@@ -95,6 +95,24 @@ interface Tenant {
   name: string;
 }
 
+type WebsiteRelation = { id: string; name: string } | Array<{ id: string; name: string }> | null;
+type WebsiteRow = Omit<Website, "tenant" | "brand"> & {
+  tenant: WebsiteRelation;
+  brand: WebsiteRelation;
+};
+
+function normalizeWebsiteRelation(value: WebsiteRelation) {
+  return Array.isArray(value) ? (value[0] ?? null) : value;
+}
+
+function mapWebsite(row: WebsiteRow): Website {
+  return {
+    ...row,
+    tenant: normalizeWebsiteRelation(row.tenant),
+    brand: normalizeWebsiteRelation(row.brand),
+  };
+}
+
 interface VercelProject {
   id: string;
   vercel_project_id: string;
@@ -213,7 +231,7 @@ export default function WebsitesPage() {
         .eq("org_id", profile.org_id)
         .order("created_at", { ascending: false });
 
-      setWebsites(websitesData as Website[] || []);
+      setWebsites(((websitesData ?? []) as WebsiteRow[]).map(mapWebsite));
 
       // Fetch Vercel projects
       const { data: vercelData } = await supabase
@@ -299,7 +317,7 @@ export default function WebsitesPage() {
         .single();
 
       if (!error && data) {
-        setWebsites([data as Website, ...websites]);
+        setWebsites((current) => [mapWebsite(data as WebsiteRow), ...current]);
         setIsModalOpen(false);
         setNewWebsite({
           name: "",

@@ -1,4 +1,4 @@
-import type { EditorialStageKey } from "../types/editorial";
+import type { EditorialAnyStageKey } from "../types/editorial";
 
 /** All notification event types. */
 export type NotificationType =
@@ -22,7 +22,7 @@ export interface EditorialNotification {
   type: NotificationType;
   title: string;
   message: string;
-  stage_key: EditorialStageKey | null;
+  stage_key: EditorialAnyStageKey | null;
   metadata: Record<string, unknown> | null;
   is_read: boolean;
   created_at: string;
@@ -36,6 +36,6 @@ export interface CreateNotificationPayload {
   type: NotificationType;
   title: string;
   message: string;
-  stageKey?: EditorialStageKey | null;
+  stageKey?: EditorialAnyStageKey | null;
   metadata?: Record<string, unknown> | null;
 }

@@ -1,8 +1,9 @@
 import { getAdminClient, ORG_ID } from "@/lib/leads/helpers";
-import type { EditorialStageKey } from "../types/editorial";
+import type { EditorialPipelineStageKey } from "../types/editorial";
 import type { EditorialAiTaskKey } from "../types/ai";
 import { logWorkflowEvent } from "../workflow-events";
 import { requestStageAiAssist, isTaskAllowedForStage } from "../ai/stage-assist";
+import { mapPipelineStageToProjectStage } from "./stage-compat";
 import {
   notifyStageStarted,
   notifyStageCompleted,
@@ -13,7 +14,7 @@ import {
  * Stage configuration: defines behavior for each stage
  */
 export const STAGE_CONFIG: Record<
-  EditorialStageKey,
+  EditorialPipelineStageKey,
   {
     autoStart: boolean; // If true, starts processing automatically
     requiresReview: boolean; // If true, requires manual review before completion
@@ -68,12 +69,13 @@ export const STAGE_CONFIG: Record<
  */
 export async function initializeNextStage(options: {
   projectId: string;
-  stageKey: EditorialStageKey;
+  stageKey: EditorialPipelineStageKey;
   actorId?: string;
 }): Promise<void> {
   const supabase = getAdminClient();
   const now = new Date().toISOString();
   const config = STAGE_CONFIG[options.stageKey];
+  const projectStageKey = mapPipelineStageToProjectStage(options.stageKey);
 
   // Determine initial status based on stage config
   const initialStatus = config.autoStart ? "processing" : "pending";
@@ -86,7 +88,7 @@ export async function initializeNextStage(options: {
       started_at: now,
     })
     .eq("project_id", options.projectId)
-    .eq("stage_key", options.stageKey);
+    .eq("stage_key", projectStageKey);
 
   if (error) {
     throw new Error(`Failed to initialize stage ${options.stageKey}: ${error.message}`);
@@ -174,13 +176,14 @@ export async function initializeNextStage(options: {
  */
 export async function transitionStageStatus(options: {
   projectId: string;
-  stageKey: EditorialStageKey;
+  stageKey: EditorialPipelineStageKey;
   fromStatus: string;
   toStatus: string;
   actorId?: string;
 }): Promise<{ success: boolean; error?: string }> {
   const supabase = getAdminClient();
   const now = new Date().toISOString();
+  const projectStageKey = mapPipelineStageToProjectStage(options.stageKey);
 
   // Build the update payload based on the target status
   const updatePayload: Record<string, unknown> = {
@@ -199,7 +202,7 @@ export async function transitionStageStatus(options: {
     .from("editorial_stages")
     .update(updatePayload)
     .eq("project_id", options.projectId)
-    .eq("stage_key", options.stageKey);
+    .eq("stage_key", projectStageKey);
 
   if (error) {
     return { success: false, error: error.message };
@@ -243,14 +246,15 @@ export async function transitionStageStatus(options: {
  */
 export async function getStageStatus(
   projectId: string,
-  stageKey: EditorialStageKey
+  stageKey: EditorialPipelineStageKey
 ): Promise<string | null> {
   const supabase = getAdminClient();
+  const projectStageKey = mapPipelineStageToProjectStage(stageKey);
   const { data } = await supabase
     .from("editorial_stages")
     .select("status")
     .eq("project_id", projectId)
-    .eq("stage_key", stageKey)
+    .eq("stage_key", projectStageKey)
     .single();
 
   return data?.status ?? null;

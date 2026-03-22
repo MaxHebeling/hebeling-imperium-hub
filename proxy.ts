@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import { updateSession } from "@/lib/supabase/middleware";
+import { updateSession } from "./lib/supabase/middleware";
+import { getStaffBrandScope, isRestrictedStaffRole } from "@/lib/staff-brand-access";
 
 function normalizeHost(host: string) {
   return host.toLowerCase().split(":")[0];
@@ -8,7 +9,14 @@ function normalizeHost(host: string) {
 
 const STAFF_ROLES = ["superadmin", "admin", "sales", "ops"];
 
-export async function middleware(request: NextRequest) {
+function isPublicEditorialApi(pathname: string) {
+  return (
+    pathname === "/api/editorial/submit-manuscript" ||
+    pathname === "/api/editorial/leads"
+  );
+}
+
+export async function proxy(request: NextRequest) {
   if (request.nextUrl.pathname.startsWith("/external/ikingdom-intake")) {
     return NextResponse.next();
   }
@@ -53,7 +61,7 @@ export async function middleware(request: NextRequest) {
         pathname.startsWith("/apply") ||
         pathname === "/publica-tu-libro" ||
         pathname === "/submit-manuscript" ||
-        pathname.startsWith("/api/editorial/") ||
+        isPublicEditorialApi(pathname) ||
         pathname.startsWith("/api/leads")
       ) {
         return NextResponse.next();
@@ -80,10 +88,7 @@ export async function middleware(request: NextRequest) {
   if (pathname === "/submit-manuscript") {
     return NextResponse.next();
   }
-  if (pathname === "/api/editorial/submit-manuscript") {
-    return NextResponse.next();
-  }
-  if (pathname.startsWith("/api/editorial/")) {
+  if (isPublicEditorialApi(pathname)) {
     return NextResponse.next();
   }
   if (pathname === "/publica-tu-libro") {
@@ -102,6 +107,10 @@ export async function middleware(request: NextRequest) {
 
   const isStaff = profile && STAFF_ROLES.includes(profile.role);
   const isClient = profile && profile.role === "client";
+  const restrictedBrandScope =
+    profile && isRestrictedStaffRole(profile.role)
+      ? getStaffBrandScope(profile.brand_slug)
+      : null;
 
   // Helpers
   const isAsset =
@@ -152,8 +161,26 @@ export async function middleware(request: NextRequest) {
     // If staff user is logged in and visits /login, redirect to company-first OS
     if (pathname === "/login" && user && isStaff) {
       const url = request.nextUrl.clone();
-      url.pathname = "/app/companies";
+      url.pathname = restrictedBrandScope?.homePath || "/app/companies";
       return NextResponse.redirect(url);
+    }
+
+    if (restrictedBrandScope?.workspaceOnly) {
+      const isBrandHome =
+        pathname === restrictedBrandScope.homePath ||
+        pathname.startsWith(`${restrictedBrandScope.homePath}/`);
+      const isAllowedWorkspaceRoute =
+        isBrandHome ||
+        pathname.startsWith("/api") ||
+        pathname.startsWith("/auth") ||
+        isAsset;
+
+      if (!isAllowedWorkspaceRoute && pathname !== "/login") {
+        const url = request.nextUrl.clone();
+        url.pathname = restrictedBrandScope.homePath;
+        url.search = "";
+        return NextResponse.redirect(url);
+      }
     }
 
     // Protected routes under /app/* require authentication AND staff role
@@ -167,6 +194,40 @@ export async function middleware(request: NextRequest) {
         const url = request.nextUrl.clone();
         url.pathname = "/login";
         return NextResponse.redirect(url);
+      }
+
+      if (restrictedBrandScope) {
+        const isBrandHome =
+          pathname === restrictedBrandScope.homePath ||
+          pathname.startsWith(`${restrictedBrandScope.homePath}/`);
+        const isScopedCrm =
+          restrictedBrandScope.canAccessCrm && pathname === "/app/crm";
+
+        if (pathname === "/app" || pathname === "/app/dashboard" || pathname === "/app/companies") {
+          const url = request.nextUrl.clone();
+          url.pathname = restrictedBrandScope.homePath;
+          return NextResponse.redirect(url);
+        }
+
+        if (isScopedCrm) {
+          const scopedBrand = request.nextUrl.searchParams.get("brand");
+          const scopedTab = request.nextUrl.searchParams.get("tab");
+
+          if (scopedBrand !== restrictedBrandScope.crmBrand || scopedTab !== "leads") {
+            const url = request.nextUrl.clone();
+            url.pathname = "/app/crm";
+            url.searchParams.set("tab", "leads");
+            url.searchParams.set("brand", restrictedBrandScope.crmBrand);
+            return NextResponse.redirect(url);
+          }
+        }
+
+        if (!isBrandHome && !isScopedCrm) {
+          const url = request.nextUrl.clone();
+          url.pathname = restrictedBrandScope.homePath;
+          url.search = "";
+          return NextResponse.redirect(url);
+        }
       }
     }
 
@@ -215,7 +276,7 @@ export async function middleware(request: NextRequest) {
         }
         // Staff already logged in visiting /staff/login → company-first OS
         const url = request.nextUrl.clone();
-        url.pathname = "/app/companies";
+        url.pathname = restrictedBrandScope?.homePath || "/app/companies";
         return NextResponse.redirect(url);
       }
     }

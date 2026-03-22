@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from 'next'
 import { Inter, Playfair_Display } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
 import { Toaster } from '@/components/ui/toaster'
+import { LanguageProvider } from '@/lib/i18n'
 import { GoogleTagManager, GoogleTagManagerNoScript } from '@/components/tracking/google-tag-manager'
 import { GoogleAnalytics } from '@/components/tracking/google-analytics'
 import { MetaPixel } from '@/components/tracking/meta-pixel'
@@ -34,7 +35,7 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en" className="dark">
+    <html lang="es" className="dark">
       <head>
         <meta name="facebook-domain-verification" content="hcz89foxj2tw19osjlonjey79sq7vb" />
         <GoogleTagManager />
@@ -43,7 +44,7 @@ export default function RootLayout({
       </head>
       <body className={`${inter.variable} ${playfair.variable} font-sans antialiased`}>
         <GoogleTagManagerNoScript />
-        {children}
+        <LanguageProvider>{children}</LanguageProvider>
         <Toaster />
         <Analytics />
       </body>

@@ -19,7 +19,10 @@
  * - Extensible architecture for future modules
  */
 
-import type { EditorialStageKey, EditorialStageStatus } from "../types/editorial";
+import type {
+  EditorialPipelineStageKey,
+  EditorialStageStatus,
+} from "../types/editorial";
 
 // ─── Orchestrator Project Lifecycle ─────────────────────────────────
 
@@ -37,7 +40,7 @@ export const PROJECT_PHASES: {
   phase: ProjectPhase;
   label: string;
   description: string;
-  stages: EditorialStageKey[];
+  stages: EditorialPipelineStageKey[];
 }[] = [
   {
     phase: "initialization",
@@ -113,7 +116,7 @@ export interface OrchestratorState {
 export interface BlockingIssue {
   id: string;
   phase: ProjectPhase;
-  stageKey: EditorialStageKey;
+  stageKey: EditorialPipelineStageKey;
   severity: "warning" | "critical";
   issueType: BlockingIssueType;
   message: string;
@@ -135,7 +138,7 @@ export type BlockingIssueType =
 export interface StaffAction {
   id: string;
   actionType: "review" | "approve" | "adjust" | "upload" | "override";
-  stageKey: EditorialStageKey;
+  stageKey: EditorialPipelineStageKey;
   description: string;
   priority: "low" | "medium" | "high" | "urgent";
   createdAt: string;
@@ -168,11 +171,11 @@ export interface ValidationDetail {
  * Checks that all correction stages are complete.
  */
 export function validateEditorialQuality(stages: {
-  stageKey: EditorialStageKey;
+  stageKey: EditorialPipelineStageKey;
   status: EditorialStageStatus;
 }[]): ValidationResult {
   const details: ValidationDetail[] = [];
-  const correctionStages: EditorialStageKey[] = [
+  const correctionStages: EditorialPipelineStageKey[] = [
     "estructura",
     "estilo",
     "ortotipografia",
@@ -327,7 +330,7 @@ export type ReportType =
 export interface OrchestratorReport {
   id: string;
   type: ReportType;
-  stageKey: EditorialStageKey;
+  stageKey: EditorialPipelineStageKey;
   title: string;
   summary: string;
   /** Number of issues found */
@@ -375,8 +378,8 @@ export interface PackageFile {
 // ─── Workflow Automation ────────────────────────────────────────────
 
 export interface WorkflowTransition {
-  fromStage: EditorialStageKey;
-  toStage: EditorialStageKey;
+  fromStage: EditorialPipelineStageKey;
+  toStage: EditorialPipelineStageKey;
   /** Whether this transition requires staff approval */
   requiresApproval: boolean;
   /** Validation checkpoint to run before transitioning */
@@ -445,7 +448,7 @@ export const WORKFLOW_TRANSITIONS: WorkflowTransition[] = [
  * Get the workflow transition for a completed stage.
  */
 export function getNextTransition(
-  completedStage: EditorialStageKey
+  completedStage: EditorialPipelineStageKey
 ): WorkflowTransition | undefined {
   return WORKFLOW_TRANSITIONS.find((t) => t.fromStage === completedStage);
 }
@@ -454,7 +457,7 @@ export function getNextTransition(
  * Check if a stage can auto-advance based on workflow rules.
  */
 export function canAutoAdvance(
-  completedStage: EditorialStageKey,
+  completedStage: EditorialPipelineStageKey,
   orchestratorState: OrchestratorState
 ): { canAdvance: boolean; reason: string } {
   // Check if workflow is paused
@@ -506,7 +509,7 @@ export type OverrideAction =
 
 export interface OverrideRequest {
   action: OverrideAction;
-  stageKey: EditorialStageKey;
+  stageKey: EditorialPipelineStageKey;
   requestedBy: string;
   reason: string;
   /** Additional data for the override */
@@ -560,9 +563,9 @@ export interface ErrorCheck {
  * Run error prevention checks before allowing stage progression.
  */
 export function runErrorPreventionChecks(
-  stageKey: EditorialStageKey,
+  stageKey: EditorialPipelineStageKey,
   projectData: {
-    stages: { stageKey: EditorialStageKey; status: EditorialStageStatus }[];
+    stages: { stageKey: EditorialPipelineStageKey; status: EditorialStageStatus }[];
     hasMetadata: boolean;
     hasTrimSize: boolean;
     hasISBN: boolean;
@@ -574,7 +577,7 @@ export function runErrorPreventionChecks(
 
   // Check for unresolved corrections before maquetacion
   if (stageKey === "maquetacion") {
-    const correctionStages: EditorialStageKey[] = ["estructura", "estilo", "ortotipografia"];
+    const correctionStages: EditorialPipelineStageKey[] = ["estructura", "estilo", "ortotipografia"];
     for (const cs of correctionStages) {
       const stage = projectData.stages.find((s) => s.stageKey === cs);
       if (stage && stage.status !== "completed" && stage.status !== "approved") {
@@ -650,11 +653,11 @@ export interface ProjectMonitoringData {
   /** Overall progress (0-100) */
   overallProgress: number;
   /** Per-stage status */
-  stageStatuses: { stageKey: EditorialStageKey; status: EditorialStageStatus }[];
+  stageStatuses: { stageKey: EditorialPipelineStageKey; status: EditorialStageStatus }[];
   /** Number of regeneration attempts per stage */
   regenerationAttempts: Record<string, number>;
   /** Approvals received */
-  approvals: { stageKey: EditorialStageKey; approvedBy: string; approvedAt: string }[];
+  approvals: { stageKey: EditorialPipelineStageKey; approvedBy: string; approvedAt: string }[];
   /** Exports generated */
   exports: { exportType: string; generatedAt: string }[];
   /** Timestamp */
@@ -665,9 +668,9 @@ export interface ProjectMonitoringData {
  * Calculate overall project progress based on stage statuses.
  */
 export function calculateOverallProgress(
-  stages: { stageKey: EditorialStageKey; status: EditorialStageStatus }[]
+  stages: { stageKey: EditorialPipelineStageKey; status: EditorialStageStatus }[]
 ): number {
-  const stageWeights: Record<EditorialStageKey, number> = {
+  const stageWeights: Record<EditorialPipelineStageKey, number> = {
     ingesta: 10,
     estructura: 15,
     estilo: 15,
@@ -702,17 +705,17 @@ export function calculateOverallProgress(
  * Determine the current project phase based on stage statuses.
  */
 export function determineCurrentPhase(
-  stages: { stageKey: EditorialStageKey; status: EditorialStageStatus }[]
+  stages: { stageKey: EditorialPipelineStageKey; status: EditorialStageStatus }[]
 ): ProjectPhase {
-  const getStatus = (key: EditorialStageKey): EditorialStageStatus | undefined =>
+  const getStatus = (key: EditorialPipelineStageKey): EditorialStageStatus | undefined =>
     stages.find((s) => s.stageKey === key)?.status;
 
-  const isComplete = (key: EditorialStageKey) => {
+  const isComplete = (key: EditorialPipelineStageKey) => {
     const status = getStatus(key);
     return status === "completed" || status === "approved";
   };
 
-  const isActive = (key: EditorialStageKey) => {
+  const isActive = (key: EditorialPipelineStageKey) => {
     const status = getStatus(key);
     return status === "processing" || status === "review_required";
   };

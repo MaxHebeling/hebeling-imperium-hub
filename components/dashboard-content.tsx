@@ -3,7 +3,6 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Progress } from "@/components/ui/progress";
 import {
   Building2,
   Users,
@@ -90,6 +89,7 @@ function formatTimeAgo(dateString: string, t: ReturnType<typeof useLanguage>["t"
 /* Hebeling OS Design System — Company accent colors */
 const brandColors: Record<string, string> = {
   ikingdom: "from-[#C8A75B]/15 to-[#C8A75B]/5 border-[#C8A75B]/20 hover:border-[#C8A75B]/40",
+  "lead-hunter": "from-[#C96F2D]/15 to-[#E1A24A]/5 border-[#C96F2D]/20 hover:border-[#E1A24A]/40",
   "editorial-reino": "from-[#2F6FA3]/15 to-[#2F6FA3]/5 border-[#2F6FA3]/20 hover:border-[#2F6FA3]/40",
   imperiug: "from-[#0B1C2E]/30 to-[#0B1C2E]/15 border-[#C8A75B]/20 hover:border-[#C8A75B]/40",
   "max-hebeling": "from-[#F0652A]/15 to-[#F0652A]/5 border-[#F0652A]/20 hover:border-[#F0652A]/40",
@@ -97,6 +97,7 @@ const brandColors: Record<string, string> = {
 
 const brandStatusColors: Record<string, string> = {
   ikingdom: "bg-[#C8A75B]",
+  "lead-hunter": "bg-[#C96F2D]",
   "editorial-reino": "bg-[#2F6FA3]",
   imperiug: "bg-[#C8A75B]",
   "max-hebeling": "bg-[#F0652A]",

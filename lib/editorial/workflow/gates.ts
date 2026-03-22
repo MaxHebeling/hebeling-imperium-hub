@@ -9,8 +9,6 @@ import type {
 import {
   getStageRuleDefinitions,
   getChecklistTemplateForStage,
-  getProjectStageChecklist,
-  getProjectStageChecklistItems,
 } from "./queries";
 import { materializeProjectStageChecklist } from "./mutations";
 import { getProjectFiles } from "@/lib/editorial/db/queries";
@@ -41,10 +39,15 @@ async function evaluateRequiredFileRule(options: {
   rule: EditorialStageRuleDefinition;
 }): Promise<StageGateReason[]> {
   const reasons: StageGateReason[] = [];
-  const config = options.rule.config as { required_file_types?: string[] } | Record<string, unknown>;
-  const requiredFileTypes = Array.isArray((config as any).required_file_types)
-    ? ((config as any).required_file_types as string[])
-    : [];
+  const config =
+    typeof options.rule.config === "object" && options.rule.config !== null
+      ? options.rule.config
+      : null;
+  const rawRequiredFileTypes = config?.required_file_types;
+  const requiredFileTypes =
+    Array.isArray(rawRequiredFileTypes) && rawRequiredFileTypes.every((item) => typeof item === "string")
+      ? rawRequiredFileTypes
+      : [];
   if (requiredFileTypes.length === 0) return reasons;
 
   const files = await getProjectFiles(options.projectId);
@@ -115,7 +118,7 @@ async function evaluateChecklistForStage(options: {
       message: "Checklist instance for this etapa is missing.",
       blocking: template.is_required,
       stage_key: options.stageKey,
-      checklist_id: null,
+      checklist_id: undefined,
     });
     return { reasons, checklist: null, items: [] };
   }
@@ -208,4 +211,3 @@ export async function evaluateStageCanComplete(options: {
     checklist: summarizeChecklist(checklistEval.checklist, checklistEval.items),
   };
 }
-

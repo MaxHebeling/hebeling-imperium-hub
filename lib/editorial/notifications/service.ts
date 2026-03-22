@@ -1,5 +1,5 @@
 import { getAdminClient } from "@/lib/leads/helpers";
-import type { EditorialStageKey } from "../types/editorial";
+import type { EditorialAnyStageKey } from "../types/editorial";
 import type {
   CreateNotificationPayload,
   EditorialNotification,
@@ -9,6 +9,7 @@ import {
   STAGE_CLIENT_LABELS,
   STAGE_CLIENT_MESSAGES,
 } from "../pipeline/client-delays";
+import { resolvePipelineStageKey } from "../pipeline/stage-compat";
 
 // ---------------------------------------------------------------------------
 // Core CRUD
@@ -130,11 +131,12 @@ export async function notifyWelcome(
 export async function notifyStageStarted(
   projectId: string,
   clientId: string,
-  stageKey: EditorialStageKey,
+  stageKey: EditorialAnyStageKey,
   projectTitle: string
 ): Promise<void> {
-  const label = STAGE_CLIENT_LABELS[stageKey];
-  const msg = STAGE_CLIENT_MESSAGES[stageKey].active;
+  const normalizedStageKey = resolvePipelineStageKey(stageKey);
+  const label = STAGE_CLIENT_LABELS[normalizedStageKey];
+  const msg = STAGE_CLIENT_MESSAGES[normalizedStageKey].active;
 
   await createNotification({
     projectId,
@@ -151,11 +153,12 @@ export async function notifyStageStarted(
 export async function notifyStageCompleted(
   projectId: string,
   clientId: string,
-  stageKey: EditorialStageKey,
+  stageKey: EditorialAnyStageKey,
   projectTitle: string
 ): Promise<void> {
-  const label = STAGE_CLIENT_LABELS[stageKey];
-  const msg = STAGE_CLIENT_MESSAGES[stageKey].completed;
+  const normalizedStageKey = resolvePipelineStageKey(stageKey);
+  const label = STAGE_CLIENT_LABELS[normalizedStageKey];
+  const msg = STAGE_CLIENT_MESSAGES[normalizedStageKey].completed;
 
   await createNotification({
     projectId,
@@ -174,7 +177,7 @@ export async function notifyStaffComment(
   clientId: string,
   commentPreview: string,
   staffName: string,
-  stageKey?: EditorialStageKey | null
+  stageKey?: EditorialAnyStageKey | null
 ): Promise<void> {
   const preview =
     commentPreview.length > 120
@@ -199,7 +202,7 @@ export async function notifySuggestion(
   clientId: string,
   suggestionPreview: string,
   staffName: string,
-  stageKey?: EditorialStageKey | null
+  stageKey?: EditorialAnyStageKey | null
 ): Promise<void> {
   const preview =
     suggestionPreview.length > 120
@@ -274,7 +277,7 @@ export async function notifyClientComment(
   staffId: string,
   clientName: string,
   commentPreview: string,
-  stageKey?: EditorialStageKey | null
+  stageKey?: EditorialAnyStageKey | null
 ): Promise<void> {
   const preview =
     commentPreview.length > 120

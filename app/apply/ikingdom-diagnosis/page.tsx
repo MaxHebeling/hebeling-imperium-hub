@@ -99,7 +99,7 @@ const STEPS = [
 
 const STORAGE_KEY = "ikingdom_diagnosis_form";
 
-export default function iKingdomDiagnosisPage() {
+export default function IKingdomDiagnosisPage() {
   const [step, setStep] = useState(1);
   const [formData, setFormData] = useState<DiagnosisFormData>(initialFormData);
   const [isSubmitting, setIsSubmitting] = useState(false);

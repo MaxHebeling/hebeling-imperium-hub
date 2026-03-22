@@ -14,7 +14,7 @@ import type { EditorialProject } from "@/lib/editorial/types/editorial";
 import { getClientVisibleProgress } from "@/lib/editorial/pipeline/client-delays";
 import type { PortalLocale } from "@/lib/editorial/i18n/portal-translations";
 import { getTranslations } from "@/lib/editorial/i18n/portal-translations";
-import type { EditorialStageKey } from "@/lib/editorial/types/editorial";
+import { resolvePipelineStageKey } from "@/lib/editorial/pipeline/stage-compat";
 
 export default function ClientEditorialProjectsPage() {
   const [projects, setProjects] = useState<EditorialProject[]>([]);
@@ -111,12 +111,13 @@ export default function ClientEditorialProjectsPage() {
         </div>
       ) : (
         <div className="flex flex-col gap-3">
-          {projects.map((project) => {
+              {projects.map((project) => {
+            const pipelineStageKey = resolvePipelineStageKey(project.current_stage);
             const visibleProgress = getClientVisibleProgress(
               project.created_at,
-              project.current_stage as EditorialStageKey
+              project.current_stage
             );
-            const stageLabel = t.stageLabels[project.current_stage as EditorialStageKey] ?? project.current_stage;
+            const stageLabel = t.stageLabels[pipelineStageKey] ?? project.current_stage;
 
             return (
               <Link

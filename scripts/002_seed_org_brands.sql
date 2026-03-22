@@ -13,6 +13,7 @@ from org,
   values
     ('iKingdom', 'ikingdom', 'ikingdom.org'),
     ('Editorial Reino', 'editorial-reino', 'editorialreino.com'),
+    ('Inversionistas del Reino', 'idr', 'idr.com.mx'),
     ('Imperiug', 'imperiug', 'imperiug.org'),
     ('Max Hebeling', 'max-hebeling', 'maxhebeling.com')
 ) as x(name, slug, primary_domain)

@@ -22,6 +22,16 @@ interface LeadBriefRow {
   } | null;
 }
 
+type LeadSummary = NonNullable<LeadBriefRow["lead"]>;
+type LeadRelation = LeadSummary | LeadSummary[] | null;
+type LeadBriefRowRaw = Omit<LeadBriefRow, "lead"> & {
+  lead: LeadRelation;
+};
+
+function normalizeLeadRelation(value: LeadRelation) {
+  return Array.isArray(value) ? (value[0] ?? null) : value;
+}
+
 function formatDate(value: string) {
   return new Date(value).toLocaleDateString("es-MX", {
     year: "numeric",
@@ -47,7 +57,10 @@ async function getRecentBriefs(): Promise<LeadBriefRow[]> {
       return [];
     }
 
-    return (data ?? []) as LeadBriefRow[];
+    return ((data ?? []) as LeadBriefRowRaw[]).map((brief) => ({
+      ...brief,
+      lead: normalizeLeadRelation(brief.lead),
+    }));
   } catch (error) {
     console.error("[ikingdom/briefs] unexpected load error:", error);
     return [];

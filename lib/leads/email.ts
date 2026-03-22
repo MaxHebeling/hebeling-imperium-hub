@@ -7,6 +7,7 @@ import {
   formatMainGoal,
   formatContactMethod 
 } from "./helpers";
+import { getLeadBrandProfile } from "./brand-config";
 
 // Internal notification email recipient
 const INTERNAL_EMAIL = process.env.INTERNAL_NOTIFICATION_EMAIL || "max@hebeling.io";
@@ -25,13 +26,15 @@ function getResendClient(): Resend | null {
  * Generate HTML email body for internal lead notification
  */
 function generateEmailBody(lead: Lead): string {
+  const brandProfile = getLeadBrandProfile(lead.brand);
+
   return `
 <!DOCTYPE html>
 <html>
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Nuevo Lead iKingdom</title>
+  <title>Nuevo Lead ${brandProfile.label}</title>
 </head>
 <body style="margin: 0; padding: 0; background-color: #f4f4f5; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;">
   <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f4f4f5; padding: 40px 20px;">
@@ -43,7 +46,7 @@ function generateEmailBody(lead: Lead): string {
           <tr>
             <td style="background-color: #182433; padding: 32px; text-align: center;">
               <h1 style="margin: 0; color: #ffffff; font-size: 24px; font-weight: 600;">
-                Nuevo Lead iKingdom
+                Nuevo Lead ${brandProfile.label}
               </h1>
               <p style="margin: 8px 0 0; color: #94a3b8; font-size: 14px;">
                 ${new Date().toLocaleDateString('es-MX', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
@@ -211,10 +214,10 @@ function generateEmailBody(lead: Lead): string {
           <tr>
             <td style="background-color: #f4f4f5; padding: 24px 32px; text-align: center;">
               <p style="margin: 0; color: #71717a; font-size: 12px;">
-                Este email fue generado automaticamente por el sistema iKingdom.
+                Este email fue generado automaticamente por el sistema ${brandProfile.label}.
               </p>
               <p style="margin: 8px 0 0; color: #a1a1aa; font-size: 11px;">
-                Hebeling Imperium Group
+                HEBELING OS
               </p>
             </td>
           </tr>
@@ -232,8 +235,10 @@ function generateEmailBody(lead: Lead): string {
  * Generate plain text email body for fallback
  */
 function generatePlainTextBody(lead: Lead): string {
+  const brandProfile = getLeadBrandProfile(lead.brand);
+
   return `
-NUEVO LEAD IKINGDOM
+NUEVO LEAD ${brandProfile.label.toUpperCase()}
 ${'='.repeat(50)}
 
 Codigo de Lead: ${lead.lead_code}
@@ -260,23 +265,27 @@ ${lead.project_description ? `DESCRIPCION\n${'─'.repeat(30)}\n${lead.project_d
 ${'─'.repeat(50)}
 Ver en CRM: ${process.env.NEXT_PUBLIC_APP_URL || 'https://hub.hebeling.io'}/app/crm
 
-Este email fue generado automaticamente por el sistema iKingdom.
-Hebeling Imperium Group
+Este email fue generado automaticamente por el sistema ${brandProfile.label}.
+HEBELING OS
   `.trim();
 }
 
 /**
- * Send confirmation email to executive@ikingdom.org
+ * Send branded internal escalation email for a new lead.
  */
 export async function sendLeadConfirmationEmail(lead: Lead): Promise<boolean> {
   const resend = getResendClient();
+  const brandProfile = getLeadBrandProfile(lead.brand);
+  const crmUrl = `${process.env.NEXT_PUBLIC_APP_URL || "https://hub.hebeling.io"}/app/crm`;
   
   if (!resend) {
     console.log("Confirmation email skipped - Resend not configured");
     return false;
   }
 
-  const subject = `Nuevo Diagnóstico iKingdom — ${lead.full_name} (${lead.lead_code})`;
+  const subject = `Nueva oportunidad ${brandProfile.label} — ${lead.full_name} (${lead.lead_code})`;
+  const recipient =
+    lead.brand === "ikingdom" ? "executive@ikingdom.org" : INTERNAL_EMAIL;
 
   const confirmationHtml = `
 <!DOCTYPE html>
@@ -284,7 +293,7 @@ export async function sendLeadConfirmationEmail(lead: Lead): Promise<boolean> {
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Nuevo Diagnóstico iKingdom</title>
+  <title>Nueva oportunidad ${brandProfile.label}</title>
 </head>
 <body style="margin: 0; padding: 0; background-color: #0F172A; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;">
   <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #0F172A; padding: 40px 20px;">
@@ -296,10 +305,10 @@ export async function sendLeadConfirmationEmail(lead: Lead): Promise<boolean> {
           <tr>
             <td style="background: linear-gradient(135deg, #0F172A 0%, #111827 100%); padding: 40px 32px; text-align: center;">
               <h1 style="margin: 0; color: #D4AF37; font-size: 28px; font-weight: 600;">
-                Nuevo Diagnóstico Recibido
+                Nueva oportunidad recibida
               </h1>
               <p style="margin: 12px 0 0; color: #9CA3AF; font-size: 16px;">
-                ${lead.full_name} ha completado el formulario
+                ${lead.full_name} ha completado el formulario de ${brandProfile.label}
               </p>
             </td>
           </tr>
@@ -379,7 +388,7 @@ export async function sendLeadConfirmationEmail(lead: Lead): Promise<boolean> {
           <!-- Action Button -->
           <tr>
             <td style="padding: 32px; text-align: center; border-top: 1px solid rgba(212, 175, 55, 0.1);">
-              <a href="https://hub.hebelingimperium.com/app/crm" style="display: inline-block; background-color: #D4AF37; color: #0F172A; padding: 14px 32px; text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 14px;">
+              <a href="${crmUrl}" style="display: inline-block; background-color: #D4AF37; color: #0F172A; padding: 14px 32px; text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 14px;">
                 Ver en el CRM
               </a>
             </td>
@@ -389,10 +398,10 @@ export async function sendLeadConfirmationEmail(lead: Lead): Promise<boolean> {
           <tr>
             <td style="background-color: #0A0E17; padding: 24px 32px; text-align: center; border-top: 1px solid rgba(212, 175, 55, 0.1);">
               <p style="margin: 0 0 8px; color: #D4AF37; font-size: 14px; font-weight: 600;">
-                iKingdom
+                ${brandProfile.label}
               </p>
               <p style="margin: 0; color: #71717a; font-size: 12px;">
-                Arquitectura Digital Estratégica
+                HEBELING OS
               </p>
               <p style="margin: 8px 0 0; color: #52525b; font-size: 11px;">
                 © ${new Date().getFullYear()} Hebeling Imperium Group. Todos los derechos reservados.
@@ -409,15 +418,16 @@ export async function sendLeadConfirmationEmail(lead: Lead): Promise<boolean> {
   `.trim();
 
   try {
-    const fromEmail = process.env.RESEND_FROM_EMAIL || "iKingdom <onboarding@resend.dev>";
-    console.log("[v0] Sending confirmation email from:", fromEmail, "to: executive@ikingdom.org");
+    const fromEmail =
+      process.env.RESEND_FROM_EMAIL || `${brandProfile.label} <onboarding@resend.dev>`;
+    console.log("[v0] Sending confirmation email from:", fromEmail, "to:", recipient);
     
     const { data, error } = await resend.emails.send({
       from: fromEmail,
-      to: "executive@ikingdom.org",
+      to: recipient,
       subject,
       html: confirmationHtml,
-      text: `Nuevo Diagnóstico iKingdom\n\nCliente: ${lead.full_name}\nEmail: ${lead.email}\nCódigo: ${lead.lead_code}\n\nVer en el CRM: https://hub.hebelingimperium.com/app/crm`,
+      text: `Nueva oportunidad ${brandProfile.label}\n\nCliente: ${lead.full_name}\nEmail: ${lead.email}\nCódigo: ${lead.lead_code}\n\nVer en el CRM: ${crmUrl}`,
     });
 
     if (error) {
@@ -438,17 +448,18 @@ export async function sendLeadConfirmationEmail(lead: Lead): Promise<boolean> {
  */
 export async function sendLeadNotificationEmail(lead: Lead): Promise<boolean> {
   const resend = getResendClient();
+  const brandProfile = getLeadBrandProfile(lead.brand);
   
   if (!resend) {
     console.log("Email notification skipped - Resend not configured");
     return false;
   }
 
-  const subject = `Nuevo lead iKingdom — ${lead.full_name} — ${lead.lead_code}`;
+  const subject = `Nuevo lead ${brandProfile.label} — ${lead.full_name} — ${lead.lead_code}`;
 
   try {
     const { error } = await resend.emails.send({
-      from: process.env.RESEND_FROM_EMAIL || "iKingdom <noreply@hebeling.io>",
+      from: process.env.RESEND_FROM_EMAIL || `${brandProfile.label} <noreply@hebeling.io>`,
       to: INTERNAL_EMAIL,
       subject,
       html: generateEmailBody(lead),

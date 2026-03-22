@@ -104,7 +104,6 @@ export const PORTAL_TRANSLATIONS = {
     // Author Dashboard
     authorDashboard: "Panel del Autor",
     myBook: "Mi Libro",
-    myFiles: "Mis Archivos",
     updates: "Actualizaciones",
     authorPanel: "Panel del Autor",
 
@@ -287,7 +286,6 @@ export const PORTAL_TRANSLATIONS = {
     // Author Dashboard
     authorDashboard: "Author Dashboard",
     myBook: "My Book",
-    myFiles: "My Files",
     updates: "Updates",
     authorPanel: "Author Dashboard",
 

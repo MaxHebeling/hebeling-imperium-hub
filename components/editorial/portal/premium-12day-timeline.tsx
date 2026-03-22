@@ -17,17 +17,21 @@ import {
 } from "lucide-react";
 import type { PortalLocale } from "@/lib/editorial/i18n/portal-translations";
 import { getTranslations } from "@/lib/editorial/i18n/portal-translations";
-import type { EditorialStageKey } from "@/lib/editorial/types/editorial";
+import type {
+  EditorialAnyStageKey,
+  EditorialPipelineStageKey,
+} from "@/lib/editorial/types/editorial";
+import { resolvePipelineStageKey } from "@/lib/editorial/pipeline/stage-compat";
 
 interface Premium12DayTimelineProps {
-  currentStage: EditorialStageKey;
+  currentStage: EditorialAnyStageKey;
   createdAt: string;
   locale: PortalLocale;
 }
 
 interface TimelineDay {
   day: string;
-  stageKey: EditorialStageKey;
+  stageKey: EditorialPipelineStageKey;
   labelEs: string;
   labelEn: string;
   icon: React.ElementType;
@@ -44,7 +48,7 @@ const TIMELINE_DAYS: TimelineDay[] = [
   { day: "12", stageKey: "distribution", labelEs: "Entrega editorial", labelEn: "Editorial delivery", icon: Send },
 ];
 
-const STAGE_ORDER: EditorialStageKey[] = [
+const STAGE_ORDER: EditorialPipelineStageKey[] = [
   "ingesta", "estructura", "estilo", "ortotipografia",
   "maquetacion", "revision_final", "export", "distribution",
 ];
@@ -57,11 +61,11 @@ function getDaysSinceCreation(createdAt: string): number {
 }
 
 function getStageStatus(
-  stageKey: EditorialStageKey,
-  currentStage: EditorialStageKey,
+  stageKey: EditorialPipelineStageKey,
+  currentStage: EditorialAnyStageKey,
   daysSince: number
 ): "completed" | "active" | "upcoming" | "locked" {
-  const currentIdx = STAGE_ORDER.indexOf(currentStage);
+  const currentIdx = STAGE_ORDER.indexOf(resolvePipelineStageKey(currentStage));
   const stageIdx = STAGE_ORDER.indexOf(stageKey);
 
   if (stageIdx < currentIdx) return "completed";

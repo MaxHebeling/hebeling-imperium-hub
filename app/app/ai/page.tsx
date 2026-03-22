@@ -713,7 +713,7 @@ export default function AICommandCenterPage() {
               {/* Priorities */}
               <div>
                 <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2">
-                  Today's Priorities
+                  Today&apos;s Priorities
                 </h4>
                 <div className="space-y-2">
                   {EXECUTIVE_SUMMARY.priorities.map((priority, i) => {

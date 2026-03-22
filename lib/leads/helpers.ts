@@ -1,4 +1,5 @@
 import { createClient as createAdminClient } from "@supabase/supabase-js";
+import { getLeadBrandProfile, normalizeLeadBrand } from "./brand-config";
 
 // Hardcoded org_id for Hebeling Imperium Group
 export const ORG_ID = "4059832a-ff39-43e6-984f-d9e866dfb8a4";
@@ -12,19 +13,20 @@ export function getAdminClient() {
 }
 
 /**
- * Generate unique lead code in format: IK-YYYYMMDD-XXXX
+ * Generate unique lead code in format: XX-YYYYMMDD-XXXX
  * Uses timestamp + random number to guarantee uniqueness
  */
-export async function generateLeadCode(): Promise<string> {
+export async function generateLeadCode(brand?: string | null): Promise<string> {
   const today = new Date();
   const dateKey = today.toISOString().slice(0, 10).replace(/-/g, '');
+  const brandProfile = getLeadBrandProfile(brand);
   
   // Generate a unique code using timestamp milliseconds + random number
   const timestamp = Date.now() % 10000; // Get last 4 digits of timestamp
   const random = Math.floor(Math.random() * 9000) + 1000; // 4-digit random number
   const uniqueSuffix = ((timestamp + random) % 10000).toString().padStart(4, '0');
   
-  return `IK-${dateKey}-${uniqueSuffix}`;
+  return `${brandProfile.codePrefix}-${dateKey}-${uniqueSuffix}`;
 }
 
 export interface LeadPayload {
@@ -108,59 +110,15 @@ export interface Lead {
   updated_at: string;
 }
 
-interface FindLeadByContactInput {
-  brand?: string;
-  email?: string;
-  whatsapp?: string;
-}
-
-/**
- * Find an existing lead by contact details to avoid duplicate records.
- */
-export async function findLeadByContact({
-  brand,
-  email,
-  whatsapp,
-}: FindLeadByContactInput): Promise<Lead | null> {
-  const supabase = getAdminClient();
-  const filters: string[] = [];
-
-  if (email?.trim()) {
-    filters.push(`email.eq.${email.trim()}`);
-  }
-
-  if (whatsapp?.trim()) {
-    filters.push(`whatsapp.eq.${whatsapp.trim()}`);
-  }
-
-  if (filters.length === 0) {
-    return null;
-  }
-
-  let query = supabase.from("leads").select("*").or(filters.join(",")).limit(1);
-
-  if (brand?.trim()) {
-    query = query.eq("brand", brand.trim());
-  }
-
-  const { data, error } = await query.maybeSingle();
-
-  if (error) {
-    console.error("Lead lookup error:", error);
-    throw new Error(`Failed to find lead by contact: ${error.message}`);
-  }
-
-  return data ?? null;
-}
-
 /**
  * Create a new lead in the database
  */
 export async function createLead(payload: LeadPayload): Promise<Lead> {
   const supabase = getAdminClient();
+  const normalizedBrand = normalizeLeadBrand(payload.brand);
   
   // Generate unique lead code
-  const leadCode = await generateLeadCode();
+  const leadCode = await generateLeadCode(normalizedBrand);
   
   const { data: lead, error } = await supabase
     .from("leads")
@@ -193,7 +151,7 @@ export async function createLead(payload: LeadPayload): Promise<Lead> {
       preferred_contact_method: payload.preferred_contact_method || null,
       additional_notes: payload.additional_notes || null,
       source: payload.source || "website",
-      brand: payload.brand || null,
+      brand: normalizedBrand,
       origin_page: payload.origin_page || null,
       form_type: payload.form_type || null,
       status: "new_lead",
@@ -207,6 +165,135 @@ export async function createLead(payload: LeadPayload): Promise<Lead> {
   }
 
   return lead;
+}
+
+function normalizePhoneCandidate(value?: string | null): string {
+  return (value || "").replace(/\D/g, "");
+}
+
+/**
+ * Find the most recent lead for the same brand using email or WhatsApp.
+ */
+export async function findLeadByContact(params: {
+  brand?: string | null;
+  email?: string | null;
+  whatsapp?: string | null;
+}): Promise<Lead | null> {
+  const supabase = getAdminClient();
+  const normalizedBrand = normalizeLeadBrand(params.brand);
+  const email = params.email?.trim().toLowerCase();
+  const whatsapp = normalizePhoneCandidate(params.whatsapp);
+
+  if (email) {
+    const { data, error } = await supabase
+      .from("leads")
+      .select("*")
+      .eq("brand", normalizedBrand)
+      .ilike("email", email)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (error) {
+      console.error("Lead email lookup error:", error);
+    } else if (data) {
+      return data;
+    }
+  }
+
+  if (!whatsapp) {
+    return null;
+  }
+
+  const { data, error } = await supabase
+    .from("leads")
+    .select("*")
+    .eq("brand", normalizedBrand)
+    .not("whatsapp", "is", null)
+    .order("created_at", { ascending: false })
+    .limit(100);
+
+  if (error) {
+    console.error("Lead WhatsApp lookup error:", error);
+    return null;
+  }
+
+  return (
+    data?.find((lead) => normalizePhoneCandidate(lead.whatsapp) === whatsapp) || null
+  );
+}
+
+/**
+ * Update an existing lead without overwriting fields with undefined.
+ */
+export async function updateLead(
+  leadId: string,
+  payload: Partial<LeadPayload> & { status?: string }
+): Promise<Lead> {
+  const supabase = getAdminClient();
+  const updates: Record<string, string | boolean | null> = {};
+
+  const assignString = (field: keyof LeadPayload, value?: string | null) => {
+    if (value === undefined) return;
+    updates[field] = value || null;
+  };
+
+  assignString("full_name", payload.full_name);
+  assignString("company_name", payload.company_name);
+  assignString("email", payload.email);
+  assignString("whatsapp", payload.whatsapp);
+  assignString("country", payload.country);
+  assignString("city", payload.city);
+  assignString("project_description", payload.project_description);
+  assignString("organization_type", payload.organization_type);
+  assignString("website_url", payload.website_url);
+  assignString("social_links", payload.social_links);
+  assignString("main_goal", payload.main_goal);
+  assignString("expected_result", payload.expected_result);
+  assignString("main_service", payload.main_service);
+  assignString("ideal_client", payload.ideal_client);
+  assignString("visual_style", payload.visual_style);
+  assignString("available_content", payload.available_content);
+  assignString("reference_websites", payload.reference_websites);
+  assignString("project_type", payload.project_type);
+  assignString("budget_range", payload.budget_range);
+  assignString("timeline", payload.timeline);
+  assignString("preferred_contact_method", payload.preferred_contact_method);
+  assignString("additional_notes", payload.additional_notes);
+  assignString("source", payload.source);
+  assignString("brand", payload.brand ? normalizeLeadBrand(payload.brand) : undefined);
+  assignString("origin_page", payload.origin_page);
+  assignString("form_type", payload.form_type);
+
+  if (payload.has_logo !== undefined) {
+    updates.has_logo = payload.has_logo ?? null;
+  }
+
+  if (payload.has_brand_colors !== undefined) {
+    updates.has_brand_colors = payload.has_brand_colors ?? null;
+  }
+
+  if (payload.has_current_landing !== undefined) {
+    updates.has_current_landing = payload.has_current_landing ?? null;
+  }
+
+  if (payload.status !== undefined) {
+    updates.status = payload.status || null;
+  }
+
+  const { data, error } = await supabase
+    .from("leads")
+    .update(updates)
+    .eq("id", leadId)
+    .select()
+    .single();
+
+  if (error) {
+    console.error("Lead update error:", error);
+    throw new Error(`Failed to update lead: ${error.message}`);
+  }
+
+  return data;
 }
 
 export interface DealFromLead {
@@ -225,6 +312,7 @@ export interface DealFromLead {
  */
 export async function createDealFromLead(lead: Lead): Promise<DealFromLead | null> {
   const supabase = getAdminClient();
+  const brandProfile = getLeadBrandProfile(lead.brand);
   
   // Get the "New" or "Lead" stage from the default pipeline
   const { data: stages } = await supabase
@@ -237,8 +325,8 @@ export async function createDealFromLead(lead: Lead): Promise<DealFromLead | nul
   
   // Generate deal name
   const dealName = lead.company_name 
-    ? `Landing Page - ${lead.company_name}` 
-    : `Landing Page - ${lead.full_name}`;
+    ? `${brandProfile.dealLabel} - ${lead.company_name}` 
+    : `${brandProfile.dealLabel} - ${lead.full_name}`;
   
   const { data: deal, error } = await supabase
     .from("deals")
@@ -247,7 +335,7 @@ export async function createDealFromLead(lead: Lead): Promise<DealFromLead | nul
       lead_id: lead.id,
       lead_code: lead.lead_code,
       title: dealName,
-      pipeline: "ikingdom",
+      pipeline: brandProfile.pipeline,
       stage_id: stageId,
       status: "open",
       owner: "max",
@@ -327,6 +415,11 @@ export function formatMainService(service: string | undefined): string {
     "branding": "Branding / Identidad",
     "sistema_web": "Sistema Web / App",
     "consultoria": "Consultoria Digital",
+    "residential_construction": "Construcción residencial",
+    "commercial_construction": "Construcción comercial",
+    "remodeling_renovation": "Remodelación y renovación",
+    "general_contracting": "General contracting",
+    "specialty_trade": "Especialidad o subcontracting",
   };
   return service ? serviceMap[service] || service : "No especificado";
 }
@@ -342,6 +435,10 @@ export function formatMainGoal(goal: string | undefined): string {
     "construir_marca": "Construir presencia de marca",
     "lanzar_producto": "Lanzar nuevo producto/servicio",
     "escalar_negocio": "Escalar mi negocio",
+    "fill_pipeline": "Llenar pipeline de oportunidades",
+    "book_estimates": "Agendar estimaciones o visitas",
+    "find_high_value_projects": "Captar proyectos de mayor valor",
+    "expand_new_market": "Expandirse a una nueva zona o mercado",
   };
   return goal ? goalMap[goal] || goal : "No especificado";
 }

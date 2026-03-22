@@ -1,9 +1,9 @@
-import type { EditorialStageKey } from "@/lib/editorial/types/editorial";
+import type { EditorialPipelineStageKey } from "@/lib/editorial/types/editorial";
 import type { EditorialAiTaskKey } from "@/lib/editorial/types/ai";
 import { getActivePromptTemplate } from "@/lib/editorial/ai/prompts";
 import { requestAiTask } from "@/lib/editorial/ai/jobs";
 
-export const STAGE_AI_TASKS: Record<EditorialStageKey, EditorialAiTaskKey[]> = {
+export const STAGE_AI_TASKS: Record<EditorialPipelineStageKey, EditorialAiTaskKey[]> = {
   ingesta: ["manuscript_analysis", "issue_detection", "quality_scoring"],
   estructura: ["structure_analysis", "issue_detection"],
   estilo: ["style_suggestions", "line_editing", "issue_detection"],
@@ -14,14 +14,17 @@ export const STAGE_AI_TASKS: Record<EditorialStageKey, EditorialAiTaskKey[]> = {
   distribution: ["metadata_generation"],
 };
 
-export function isTaskAllowedForStage(stageKey: EditorialStageKey, taskKey: EditorialAiTaskKey): boolean {
+export function isTaskAllowedForStage(
+  stageKey: EditorialPipelineStageKey,
+  taskKey: EditorialAiTaskKey
+): boolean {
   return STAGE_AI_TASKS[stageKey]?.includes(taskKey) ?? false;
 }
 
 export async function requestStageAiAssist(options: {
   orgId: string;
   projectId: string;
-  stageKey: EditorialStageKey;
+  stageKey: EditorialPipelineStageKey;
   taskKey: EditorialAiTaskKey;
   requestedBy: string;
   sourceFileId?: string;
@@ -51,4 +54,3 @@ export async function requestStageAiAssist(options: {
 
   return { jobId, promptTemplateId: template?.id ?? null, promptTemplateVersion: template?.version ?? null };
 }
-

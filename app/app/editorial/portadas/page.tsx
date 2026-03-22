@@ -173,8 +173,8 @@ export default function PortadasAIPage() {
           <Palette className="w-5 h-5 text-white" />
         </div>
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Generador de Portadas AI</h1>
-          <p className="text-sm text-gray-500">Genera portadas profesionales con DALL-E 3</p>
+          <h1 className="text-2xl font-bold text-gray-900">Portadas Premium</h1>
+          <p className="text-sm text-gray-500">HEBELING AI prepara conceptos visuales y prompts listos para tu workflow de portada</p>
         </div>
       </div>
 
@@ -209,8 +209,8 @@ export default function PortadasAIPage() {
 
           <p className="text-xs text-gray-500 bg-gray-50 px-3 py-2 rounded-lg">
             {mode === "editorial"
-              ? "La AI generará una portada basada en el contenido, género y público objetivo del libro."
-              : "El autor describe su visión y la AI la convierte en una portada profesional."}
+              ? "HEBELING AI construye el concepto visual editorial a partir del manuscrito, género y lector objetivo."
+              : "El autor comparte su visión y HEBELING AI la convierte en una dirección visual clara para portada."}
           </p>
 
           {/* Project selector (optional) */}
@@ -407,18 +407,18 @@ export default function PortadasAIPage() {
             {generating ? (
               <>
                 <Loader2 className="w-4 h-4 animate-spin" />
-                Generando portada con DALL-E 3...
+                Construyendo concepto visual...
               </>
             ) : (
               <>
                 <Zap className="w-4 h-4" />
-                Generar Portada AI
+                Generar Concepto de Portada
               </>
             )}
           </button>
 
           <p className="text-xs text-gray-400 text-center">
-            Cada generación usa DALL-E 3 (HD). Costo aprox: ~$0.08 USD por imagen.
+            HEBELING AI te devuelve una propuesta visual y un prompt refinado para continuar el diseño final dentro de tu workflow.
           </p>
         </div>
 
@@ -444,7 +444,7 @@ export default function PortadasAIPage() {
               {generating ? (
                 <div className="text-center">
                   <Loader2 className="w-10 h-10 animate-spin text-[#1a3a6b] mx-auto mb-3" />
-                  <p className="text-sm text-gray-500">Generando portada...</p>
+                  <p className="text-sm text-gray-500">Preparando dirección visual...</p>
                   <p className="text-xs text-gray-400 mt-1">Esto puede tardar 15-30 segundos</p>
                 </div>
               ) : selectedCover ? (
@@ -515,7 +515,7 @@ export default function PortadasAIPage() {
           {selectedCover && (
             <details className="group">
               <summary className="text-xs text-gray-400 cursor-pointer hover:text-gray-600">
-                Ver prompt utilizado por DALL-E 3
+                Ver prompt maestro para Midjourney / dirección visual
               </summary>
               <p className="mt-2 text-xs text-gray-500 bg-gray-50 p-3 rounded-lg leading-relaxed">
                 {selectedCover.revisedPrompt}

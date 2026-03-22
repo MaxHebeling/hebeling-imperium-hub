@@ -462,7 +462,7 @@ export default function AppsRegistryPage() {
             </div>
             <h3 className="text-lg font-semibold mb-1 text-foreground">No apps found</h3>
             <p className="text-sm text-muted-foreground text-center max-w-sm">
-              Try adjusting your filters to find the apps you're looking for.
+              Try adjusting your filters to find the apps you&apos;re looking for.
             </p>
           </CardContent>
         </Card>

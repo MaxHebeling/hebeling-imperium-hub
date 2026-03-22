@@ -5,7 +5,7 @@ import {
   getArtifacts,
   toggleArtifactVisibility,
 } from "@/lib/editorial/timeline";
-import type { EditorialStageKey } from "@/lib/editorial/types/editorial";
+import type { EditorialPipelineStageKey } from "@/lib/editorial/types/editorial";
 
 /**
  * GET /api/editorial/artifacts/[projectId]
@@ -84,7 +84,7 @@ export async function POST(
 
     const artifact = await createArtifact({
       projectId,
-      stageKey: stageKey as EditorialStageKey,
+      stageKey: stageKey as EditorialPipelineStageKey,
       artifactType,
       title,
       description: description ?? null,

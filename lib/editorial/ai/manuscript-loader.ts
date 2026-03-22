@@ -1,4 +1,12 @@
 import { getAdminClient } from "@/lib/leads/helpers";
+import { EDITORIAL_BUCKETS } from "@/lib/editorial/storage/buckets";
+import { bucketKeyForFileType } from "@/lib/editorial/storage/upload";
+
+const PROCESSABLE_FILE_TYPES = [
+  "working_file",
+  "manuscript_original",
+  "manuscript_edited",
+] as const;
 
 /**
  * Fetch manuscript content from storage.
@@ -10,13 +18,17 @@ export async function fetchManuscriptContent(projectId: string, fileId?: string 
   // Get the file record
   let fileQuery = supabase
     .from("editorial_files")
-    .select("storage_path")
+    .select("storage_path, file_type")
     .eq("project_id", projectId);
 
   if (fileId) {
     fileQuery = fileQuery.eq("id", fileId);
   } else {
-    fileQuery = fileQuery.order("version", { ascending: false }).limit(1);
+    fileQuery = fileQuery
+      .in("file_type", [...PROCESSABLE_FILE_TYPES])
+      .order("created_at", { ascending: false })
+      .order("version", { ascending: false })
+      .limit(1);
   }
 
   const { data: fileRecord, error: fileError } = await fileQuery.single();
@@ -26,8 +38,10 @@ export async function fetchManuscriptContent(projectId: string, fileId?: string 
   }
 
   // Download from storage
+  const bucketKey = bucketKeyForFileType(fileRecord.file_type);
+  const bucket = EDITORIAL_BUCKETS[bucketKey];
   const { data: fileData, error: downloadError } = await supabase.storage
-    .from("editorial-manuscripts")
+    .from(bucket)
     .download(fileRecord.storage_path);
 
   if (downloadError || !fileData) {

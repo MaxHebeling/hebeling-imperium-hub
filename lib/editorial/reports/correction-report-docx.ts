@@ -1,5 +1,6 @@
 import {
   Document,
+  FileChild,
   Packer,
   Paragraph,
   TextRun,
@@ -98,7 +99,7 @@ export function buildCorrectionReportDocument(input: CorrectionReportInput): Doc
     byKind.get(key)!.push(c);
   }
 
-  const sections: Paragraph[] = [];
+  const sections: FileChild[] = [];
 
   // ---- Title page ----
   sections.push(

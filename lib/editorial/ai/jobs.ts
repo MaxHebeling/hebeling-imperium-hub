@@ -1,6 +1,6 @@
 import { getAdminClient } from "@/lib/leads/helpers";
 import type { EditorialAiJobContext, EditorialAiJobStatus, EditorialAiTaskKey } from "@/lib/editorial/types/ai";
-import type { EditorialStageKey } from "@/lib/editorial/types/editorial";
+import type { EditorialPipelineStageKey } from "@/lib/editorial/types/editorial";
 
 function mapJobStatusToDb(status: EditorialAiJobStatus): { status: string; setStartedAt: boolean; setFinishedAt: boolean } {
   switch (status) {
@@ -22,7 +22,7 @@ function mapJobStatusToDb(status: EditorialAiJobStatus): { status: string; setSt
 export async function requestAiTask(options: {
   orgId: string;
   projectId: string;
-  stageKey: EditorialStageKey;
+  stageKey: EditorialPipelineStageKey;
   taskKey: EditorialAiTaskKey;
   sourceFileId?: string;
   sourceFileVersion?: number;
@@ -96,4 +96,3 @@ export async function markAiJobStatus(options: {
     throw new Error(`Failed to update AI job status: ${error.message}`);
   }
 }
-

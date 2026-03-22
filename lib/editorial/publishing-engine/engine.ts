@@ -26,7 +26,11 @@ import type {
 } from "./types";
 import { processAiJob, fetchManuscriptContent } from "@/lib/editorial/ai/processor";
 import type { EditorialAiTaskKey } from "@/lib/editorial/types/ai";
-import type { EditorialStageKey } from "@/lib/editorial/types/editorial";
+import type { EditorialAnyStageKey } from "@/lib/editorial/types/editorial";
+import {
+  mapPipelineStageToProjectStage,
+  resolvePipelineStageKey,
+} from "@/lib/editorial/pipeline/stage-compat";
 
 // ─── Get full pipeline state for a project ──────────────────────────
 
@@ -61,7 +65,9 @@ export async function getPipelineState(
 
   // Map legacy stage to 13-phase key
   const currentPhaseKey = legacyStageToPhaseKey(
-    project.current_stage ?? "ingesta"
+    resolvePipelineStageKey(
+      (project.current_stage ?? "recepcion") as EditorialAnyStageKey
+    )
   );
   const currentPhaseDef = getPhaseDefinition(currentPhaseKey);
   const currentPhaseIndex = currentPhaseDef?.order ?? 1;
@@ -85,9 +91,10 @@ export async function getPipelineState(
 
   // Build phase states from jobs + stages
   const phases: PhaseState[] = PUBLISHING_PHASES.map((phaseDef) => {
+    const projectStageKey = mapPipelineStageToProjectStage(phaseDef.legacyStageKey);
     const stage = (stages ?? []).find(
       (s: Record<string, unknown>) =>
-        s.stage_key === phaseDef.legacyStageKey
+        s.stage_key === projectStageKey
     );
     const phaseJobs = (jobs ?? []).filter(
       (j: Record<string, unknown>) =>
@@ -226,7 +233,7 @@ export async function advanceToPhase(
   const { error } = await supabase
     .from("editorial_projects")
     .update({
-      current_stage: phase.legacyStageKey,
+      current_stage: mapPipelineStageToProjectStage(phase.legacyStageKey),
       progress_percent: progress,
       status:
         phase.order === PUBLISHING_PHASES.length
@@ -273,7 +280,7 @@ export async function advanceToPhase(
           : {}),
       })
       .eq("project_id", projectId)
-      .eq("stage_key", legacyKey);
+      .eq("stage_key", mapPipelineStageToProjectStage(legacyKey));
   }
 
   // Log activity
@@ -316,7 +323,7 @@ export async function executePhaseAi(
     .insert({
       project_id: projectId,
       stage_key: phase.legacyStageKey,
-      task_type: phase.aiTaskKey,
+      job_type: phase.aiTaskKey,
       status: "queued",
       provider:
         phase.aiProvider === "internal"
@@ -343,18 +350,18 @@ export async function executePhaseAi(
       started_at: new Date().toISOString(),
     })
     .eq("project_id", projectId)
-    .eq("stage_key", phase.legacyStageKey);
+    .eq("stage_key", mapPipelineStageToProjectStage(phase.legacyStageKey));
 
   // ── Actually execute the AI job inline ──
   try {
     const analysisResult = await processAiJob({
       jobId: job.id as string,
       projectId,
-      stageKey: phase.legacyStageKey as EditorialStageKey,
+      stageKey: phase.legacyStageKey,
       taskKey: phase.aiTaskKey as EditorialAiTaskKey,
       context: {
         project_id: projectId,
-        stage_key: phase.legacyStageKey as EditorialStageKey,
+        stage_key: phase.legacyStageKey,
         source_file_id: null,
         source_file_version: null,
         requested_by: "system",
@@ -476,7 +483,7 @@ export async function runFullAiPipeline(
     await supabase
       .from("editorial_projects")
       .update({
-        current_stage: phase.legacyStageKey,
+        current_stage: mapPipelineStageToProjectStage(phase.legacyStageKey),
         progress_percent: progress,
         updated_at: new Date().toISOString(),
       })
@@ -521,7 +528,7 @@ export async function savePhasePrompt(
   try {
     await supabase.from("editorial_custom_prompts").insert({
       project_id: projectId,
-      stage_key: phaseKey,
+      stage_key: getPhaseDefinition(phaseKey)?.legacyStageKey ?? null,
       prompt_type: "override",
       prompt_content: prompt,
       is_active: true,

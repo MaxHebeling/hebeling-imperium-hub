@@ -28,52 +28,95 @@ import {
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
+import type { StaffBrandScope } from "@/lib/staff-brand-access";
 
 interface AppTopbarProps {
   organizationName: string;
   userName: string;
   userRole?: string;
+  brandScope?: StaffBrandScope | null;
 }
 
-// Breadcrumb mapping (company-first + shared infra)
-const pathLabels: Record<string, string> = {
-  app: "Hebeling OS",
-  dashboard: "Dashboard Global",
-  companies: "Empresas",
-  "reino-editorial": "Reino Editorial",
-  ikingdom: "iKingdom",
-  imperium: "Imperium",
-  "max-hebeling": "Max Hebeling",
-  overview: "Overview",
-  projects: "Projects",
-  pipeline: "Pipeline",
-  ai: "AI Review",
-  authors: "Authors",
-  staff: "Staff",
-  marketplace: "Marketplace",
-  distribution: "Distribution",
-  operations: "Operations",
-  reports: "Reports",
-  applications: "Applications",
-  crm: "CRM",
-  deals: "Deals",
-  clients: "Clients",
-  "finance-vault": "Billing",
-  documents: "Files",
-  websites: "Websites",
-  settings: "Settings",
-  organizations: "Organizations",
-  team: "Team",
-  roles: "Roles & Permissions",
-  analytics: "Intelligence",
-  payments: "Payments",
-  automations: "Automations",
-};
-
-export function AppTopbar({ organizationName, userName, userRole = "admin" }: AppTopbarProps) {
+export function AppTopbar({
+  organizationName,
+  userName,
+  userRole = "admin",
+  brandScope = null,
+}: AppTopbarProps) {
   const router = useRouter();
   const pathname = usePathname();
-  const { t } = useLanguage();
+  const { t, locale } = useLanguage();
+
+  const pathLabels: Record<string, string> =
+    locale === "es"
+      ? {
+          app: "Hebeling OS",
+          dashboard: "Dashboard Global",
+          companies: "Empresas",
+          "reino-editorial": "Reino Editorial",
+          ikingdom: "iKingdom",
+          "lead-hunter": "Lead Hunter",
+          imperium: "Imperium",
+          "max-hebeling": "Max Hebeling",
+          overview: "Resumen",
+          projects: "Proyectos",
+          pipeline: "Pipeline",
+          ai: "Revisión IA",
+          authors: "Autores",
+          staff: "Equipo",
+          marketplace: "Marketplace",
+          distribution: "Distribución",
+          operations: "Operaciones",
+          reports: "Reportes",
+          applications: "Aplicaciones",
+          crm: "CRM",
+          deals: "Negocios",
+          clients: "Clientes",
+          "finance-vault": "Facturación",
+          documents: "Archivos",
+          websites: "Sitios Web",
+          settings: "Configuración",
+          organizations: "Organizaciones",
+          team: "Equipo",
+          roles: "Roles y Permisos",
+          analytics: "Inteligencia",
+          payments: "Pagos",
+          automations: "Automatizaciones",
+        }
+      : {
+          app: "Hebeling OS",
+          dashboard: "Global Dashboard",
+          companies: "Companies",
+          "reino-editorial": "Reino Editorial",
+          ikingdom: "iKingdom",
+          "lead-hunter": "Lead Hunter",
+          imperium: "Imperium",
+          "max-hebeling": "Max Hebeling",
+          overview: "Overview",
+          projects: "Projects",
+          pipeline: "Pipeline",
+          ai: "AI Review",
+          authors: "Authors",
+          staff: "Staff",
+          marketplace: "Marketplace",
+          distribution: "Distribution",
+          operations: "Operations",
+          reports: "Reports",
+          applications: "Applications",
+          crm: "CRM",
+          deals: "Deals",
+          clients: "Clients",
+          "finance-vault": "Billing",
+          documents: "Files",
+          websites: "Websites",
+          settings: "Settings",
+          organizations: "Organizations",
+          team: "Team",
+          roles: "Roles & Permissions",
+          analytics: "Intelligence",
+          payments: "Payments",
+          automations: "Automations",
+        };
 
   const handleSignOut = async () => {
     const supabase = createClient();
@@ -184,39 +227,54 @@ export function AppTopbar({ organizationName, userName, userRole = "admin" }: Ap
           </DropdownMenuContent>
         </DropdownMenu>
 
-        {/* Organization Switcher */}
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button
-              variant="ghost"
-              className="h-9 px-3 gap-2 text-[#9FB2CC]/70 hover:text-[#E7ECF5] hover:bg-[#162235]/50"
-            >
+        {/* Organization / Brand Scope */}
+        {brandScope ? (
+          <Button
+            asChild
+            variant="ghost"
+            className="h-9 px-3 gap-2 text-[#9FB2CC]/70 hover:text-[#E7ECF5] hover:bg-[#162235]/50"
+          >
+            <Link href={brandScope.homePath}>
               <Building2 className="h-4 w-4" />
-              <span className="hidden lg:inline text-sm font-medium truncate max-w-[120px]">
-                {organizationName}
+              <span className="hidden lg:inline text-sm font-medium truncate max-w-[140px]">
+                {brandScope.label}
               </span>
-              <ChevronDown className="h-3 w-3" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-56 bg-[#162235] border-[#1E3048]">
-            <DropdownMenuLabel className="text-[#E7ECF5]">{t.topbar.organizations}</DropdownMenuLabel>
-            <DropdownMenuSeparator className="bg-[#1E3048]" />
-            <DropdownMenuItem className="flex items-center gap-2 cursor-pointer">
-              <div className="h-6 w-6 rounded bg-[#C8A75B]/10 flex items-center justify-center">
-                <Building2 className="h-3.5 w-3.5 text-[#C8A75B]" />
-              </div>
-              <span className="font-medium">{organizationName}</span>
-              <Badge variant="secondary" className="ml-auto text-xs bg-[#C8A75B]/10 text-[#C8A75B]">{t.topbar.current}</Badge>
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem asChild>
-              <Link href="/app/organizations" className="text-muted-foreground cursor-pointer">
-                <Settings className="h-4 w-4 mr-2" />
-                {t.topbar.manageOrganizations}
-              </Link>
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+            </Link>
+          </Button>
+        ) : (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="ghost"
+                className="h-9 px-3 gap-2 text-[#9FB2CC]/70 hover:text-[#E7ECF5] hover:bg-[#162235]/50"
+              >
+                <Building2 className="h-4 w-4" />
+                <span className="hidden lg:inline text-sm font-medium truncate max-w-[120px]">
+                  {organizationName}
+                </span>
+                <ChevronDown className="h-3 w-3" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-56 bg-[#162235] border-[#1E3048]">
+              <DropdownMenuLabel className="text-[#E7ECF5]">{t.topbar.organizations}</DropdownMenuLabel>
+              <DropdownMenuSeparator className="bg-[#1E3048]" />
+              <DropdownMenuItem className="flex items-center gap-2 cursor-pointer">
+                <div className="h-6 w-6 rounded bg-[#C8A75B]/10 flex items-center justify-center">
+                  <Building2 className="h-3.5 w-3.5 text-[#C8A75B]" />
+                </div>
+                <span className="font-medium">{organizationName}</span>
+                <Badge variant="secondary" className="ml-auto text-xs bg-[#C8A75B]/10 text-[#C8A75B]">{t.topbar.current}</Badge>
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem asChild>
+                <Link href="/app/organizations" className="text-muted-foreground cursor-pointer">
+                  <Settings className="h-4 w-4 mr-2" />
+                  {t.topbar.manageOrganizations}
+                </Link>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        )}
 
         {/* Language Selector */}
         <LanguageSelector />

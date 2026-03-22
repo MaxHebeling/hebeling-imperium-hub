@@ -16,7 +16,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { LanguageProvider, useLanguage } from "@/lib/i18n";
+import { LeadHunterChat } from "@/components/anna/lead-hunter-chat";
+import { useLanguage } from "@/lib/i18n";
 
 const LEAD_HUNTER_BACKGROUND = "/lead-hunter-cinematic-luxury-v1.jpg";
 
@@ -55,14 +56,6 @@ const initialFormData: LeadHunterFormData = {
 };
 
 export default function LeadHunterApplyPage() {
-  return (
-    <LanguageProvider>
-      <LeadHunterApplyContent />
-    </LanguageProvider>
-  );
-}
-
-function LeadHunterApplyContent() {
   const { locale } = useLanguage();
   const isES = locale === "es";
   const [formData, setFormData] = useState<LeadHunterFormData>(initialFormData);
@@ -104,7 +97,7 @@ function LeadHunterApplyContent() {
     } catch (error) {
       setStatus("error");
       setErrorMessage(
-        error instanceof Error ? error.message : isES ? "Ocurrio un error inesperado." : "An unexpected error occurred."
+        error instanceof Error ? error.message : isES ? "Ocurrió un error inesperado." : "An unexpected error occurred."
       );
     }
   };
@@ -166,16 +159,16 @@ function LeadHunterApplyContent() {
               <div className="relative space-y-4">
                 <div className="inline-flex items-center gap-2 rounded-full border border-[#E1A24A]/20 bg-[#E1A24A]/10 px-3 py-1 text-xs font-medium text-[#F7D7AF]">
                   <Target className="h-3.5 w-3.5" />
-                  {isES ? "Intake de leads para construccion" : "Construction Lead Intake"}
+                  {isES ? "Intake de leads para construcción" : "Construction Lead Intake"}
                 </div>
                 <h1 className="max-w-xl text-4xl font-semibold tracking-tight md:text-5xl">
                   {isES
-                    ? "Captura oportunidades de construccion con una entrada clara y seria."
+                    ? "Captura oportunidades de construcción con una entrada clara y seria."
                     : "Capture construction opportunities with a clear and serious intake flow."}
                 </h1>
                 <p className="max-w-xl text-base leading-8 text-[#9FB2CC]">
                   {isES
-                    ? "Este formulario abre el primer circuito real de Lead Hunter dentro de HEBELING OS. La informacion entra al CRM, se clasifica, y prepara el handoff para seguimiento humano o coordinacion con ANNA."
+                    ? "Este formulario abre el primer circuito real de Lead Hunter dentro de HEBELING OS. La información entra al CRM, se clasifica, y prepara el handoff para seguimiento humano o coordinación con ANNA."
                     : "This form opens the first real Lead Hunter circuit inside HEBELING OS. The information enters the CRM, is classified, and prepares the handoff for human follow-up or coordination with ANNA."}
                 </p>
               </div>
@@ -184,7 +177,7 @@ function LeadHunterApplyContent() {
             <div className="grid gap-3">
               {[
                 isES ? "Captura datos clave de la oportunidad" : "Capture key opportunity data",
-                isES ? "Clasifica intencion, alcance y urgencia" : "Classify intent, scope, and urgency",
+                isES ? "Clasifica intención, alcance y urgencia" : "Classify intent, scope, and urgency",
                 isES ? "Registra el lead dentro del CRM central" : "Register the lead inside the central CRM",
                 isES ? "Prepara seguimiento por llamada o WhatsApp" : "Prepare follow-up by phone call or WhatsApp",
               ].map((item) => (
@@ -206,23 +199,25 @@ function LeadHunterApplyContent() {
                 </CardTitle>
                 <CardDescription className="text-[#9FB2CC]">
                   {isES
-                    ? "Esta primera version prioriza intake, calificacion y visibilidad operativa sobre automatizacion avanzada."
+                    ? "Esta primera versión prioriza intake, calificación y visibilidad operativa sobre automatización avanzada."
                     : "This first version prioritizes intake, qualification, and operational visibility over advanced automation."}
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-2 text-sm leading-6 text-[#D6DEEA]">
                 <p>
                   {isES
-                    ? "Si la oportunidad es clara y completa, el equipo puede moverla rapidamente a llamada, reunion o seguimiento comercial."
+                    ? "Si la oportunidad es clara y completa, el equipo puede moverla rápidamente a llamada, reunión o seguimiento comercial."
                     : "If the opportunity is clear and complete, the team can quickly move it to a call, meeting, or commercial follow-up."}
                 </p>
                 <p>
                   {isES
-                    ? "Si la solicitud es ambigua, el CRM conserva suficiente contexto para que ANNA o una persona continuen sin perder informacion."
+                    ? "Si la solicitud es ambigua, el CRM conserva suficiente contexto para que ANNA o una persona continúen sin perder información."
                     : "If the request is ambiguous, the CRM preserves enough context for ANNA or a person to continue without losing information."}
                 </p>
               </CardContent>
             </Card>
+
+            <LeadHunterChat inline floating />
           </section>
 
           <section>
@@ -231,7 +226,7 @@ function LeadHunterApplyContent() {
                 <CardTitle>{isES ? "Intake de Lead Hunter" : "Lead Hunter Intake"}</CardTitle>
                 <CardDescription className="text-[#9FB2CC]">
                   {isES
-                    ? "Completa la informacion esencial para abrir una oportunidad de construccion."
+                    ? "Completa la información esencial para abrir una oportunidad de construcción."
                     : "Complete the essential information to open a construction opportunity."}
                 </CardDescription>
               </CardHeader>
@@ -246,7 +241,7 @@ function LeadHunterApplyContent() {
                         </p>
                         <p className="text-sm text-emerald-200/80">
                           {isES
-                            ? "El lead ya entro al CRM y quedo listo para seguimiento."
+                            ? "El lead ya entró al CRM y quedó listo para seguimiento."
                             : "The lead has already entered the CRM and is ready for follow-up."}
                         </p>
                       </div>
@@ -254,7 +249,7 @@ function LeadHunterApplyContent() {
                     {leadCode && (
                       <div className="rounded-xl border border-emerald-400/20 bg-[#0F1B2D]/70 px-4 py-3">
                         <p className="text-xs uppercase tracking-wide text-emerald-200/70">
-                          {isES ? "Codigo del lead" : "Lead code"}
+                          {isES ? "Código del lead" : "Lead code"}
                         </p>
                         <p className="mt-1 font-mono text-lg text-white">{leadCode}</p>
                       </div>
@@ -334,7 +329,7 @@ function LeadHunterApplyContent() {
                         />
                       </div>
                       <div className="space-y-2">
-                        <Label htmlFor="country">{isES ? "Pais" : "Country"}</Label>
+                        <Label htmlFor="country">{isES ? "País" : "Country"}</Label>
                         <Input
                           id="country"
                           value={formData.country}
@@ -352,10 +347,10 @@ function LeadHunterApplyContent() {
                             <SelectValue placeholder={isES ? "Selecciona el tipo de proyecto" : "Select the project type"} />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="residential_build">{isES ? "Construccion residencial" : "Residential construction"}</SelectItem>
-                            <SelectItem value="commercial_build">{isES ? "Construccion comercial" : "Commercial construction"}</SelectItem>
-                            <SelectItem value="remodeling">{isES ? "Remodelacion" : "Remodeling"}</SelectItem>
-                            <SelectItem value="renovation">{isES ? "Renovacion" : "Renovation"}</SelectItem>
+                            <SelectItem value="residential_build">{isES ? "Construcción residencial" : "Residential construction"}</SelectItem>
+                            <SelectItem value="commercial_build">{isES ? "Construcción comercial" : "Commercial construction"}</SelectItem>
+                            <SelectItem value="remodeling">{isES ? "Remodelación" : "Remodeling"}</SelectItem>
+                            <SelectItem value="renovation">{isES ? "Renovación" : "Renovation"}</SelectItem>
                             <SelectItem value="general_contracting">General contracting</SelectItem>
                             <SelectItem value="other">{isES ? "Otro" : "Other"}</SelectItem>
                           </SelectContent>
@@ -365,12 +360,12 @@ function LeadHunterApplyContent() {
                         <Label>{isES ? "Enfoque principal *" : "Primary focus *"}</Label>
                         <Select value={formData.main_service} onValueChange={(value) => handleFieldChange("main_service", value)}>
                           <SelectTrigger className="border-[#1E3048] bg-[#0F1B2D]/70">
-                            <SelectValue placeholder={isES ? "Que tipo de oportunidad buscas?" : "What type of opportunity are you looking for?"} />
+                            <SelectValue placeholder={isES ? "¿Qué tipo de oportunidad buscas?" : "What type of opportunity are you looking for?"} />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="residential_construction">{isES ? "Construccion residencial" : "Residential construction"}</SelectItem>
-                            <SelectItem value="commercial_construction">{isES ? "Construccion comercial" : "Commercial construction"}</SelectItem>
-                            <SelectItem value="remodeling_renovation">{isES ? "Remodelacion y renovacion" : "Remodeling and renovation"}</SelectItem>
+                            <SelectItem value="residential_construction">{isES ? "Construcción residencial" : "Residential construction"}</SelectItem>
+                            <SelectItem value="commercial_construction">{isES ? "Construcción comercial" : "Commercial construction"}</SelectItem>
+                            <SelectItem value="remodeling_renovation">{isES ? "Remodelación y renovación" : "Remodeling and renovation"}</SelectItem>
                             <SelectItem value="general_contracting">General contracting</SelectItem>
                             <SelectItem value="specialty_trade">{isES ? "Especialidad o subcontracting" : "Specialty trade or subcontracting"}</SelectItem>
                           </SelectContent>
@@ -382,7 +377,7 @@ function LeadHunterApplyContent() {
                       <Label>{isES ? "Objetivo *" : "Goal *"}</Label>
                       <Select value={formData.main_goal} onValueChange={(value) => handleFieldChange("main_goal", value)}>
                         <SelectTrigger className="border-[#1E3048] bg-[#0F1B2D]/70">
-                          <SelectValue placeholder={isES ? "Que resultado quieres lograr?" : "What result do you want to achieve?"} />
+                          <SelectValue placeholder={isES ? "¿Qué resultado quieres lograr?" : "What result do you want to achieve?"} />
                         </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="fill_pipeline">{isES ? "Llenar pipeline de oportunidades" : "Fill the opportunity pipeline"}</SelectItem>
@@ -395,7 +390,7 @@ function LeadHunterApplyContent() {
 
                     <div className="grid gap-4 md:grid-cols-3">
                       <div className="space-y-2">
-                        <Label>Timeline</Label>
+                        <Label>{isES ? "Timeline" : "Timeline"}</Label>
                         <Select value={formData.timeline} onValueChange={(value) => handleFieldChange("timeline", value)}>
                           <SelectTrigger className="border-[#1E3048] bg-[#0F1B2D]/70">
                             <SelectValue placeholder={isES ? "Selecciona" : "Select"} />
@@ -420,7 +415,7 @@ function LeadHunterApplyContent() {
                             <SelectItem value="1000_2500">$1,000 - $2,500 USD</SelectItem>
                             <SelectItem value="2500_5000">$2,500 - $5,000 USD</SelectItem>
                             <SelectItem value="5000_10000">$5,000 - $10,000 USD</SelectItem>
-                            <SelectItem value="mas_10000">{isES ? "Mas de $10,000 USD" : "More than $10,000 USD"}</SelectItem>
+                            <SelectItem value="mas_10000">{isES ? "Más de $10,000 USD" : "More than $10,000 USD"}</SelectItem>
                             <SelectItem value="por_definir">{isES ? "Por definir" : "To be defined"}</SelectItem>
                           </SelectContent>
                         </Select>
@@ -452,7 +447,7 @@ function LeadHunterApplyContent() {
                         className="min-h-[140px] border-[#1E3048] bg-[#0F1B2D]/70"
                         placeholder={
                           isES
-                            ? "Cuentanos que tipo de proyecto, servicio o cliente estas buscando."
+                            ? "Cuéntanos qué tipo de proyecto, servicio o cliente estás buscando."
                             : "Tell us what kind of project, service, or client you are looking for."
                         }
                         required
@@ -468,7 +463,7 @@ function LeadHunterApplyContent() {
                         className="min-h-[96px] border-[#1E3048] bg-[#0F1B2D]/70"
                         placeholder={
                           isES
-                            ? "Contexto extra, zonas de interes, ticket promedio o cualquier detalle util."
+                            ? "Contexto extra, zonas de interés, ticket promedio o cualquier detalle útil."
                             : "Extra context, target areas, average ticket, or any useful detail."
                         }
                       />

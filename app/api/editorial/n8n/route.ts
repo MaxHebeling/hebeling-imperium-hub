@@ -73,9 +73,11 @@ export async function POST(req: NextRequest) {
             }
           } else if (ext === "pdf") {
             try {
-              const pdfParse = (await import("pdf-parse")).default;
               const buffer = Buffer.from(await fileData.arrayBuffer());
-              const pdfData = await pdfParse(buffer);
+              const { PDFParse } = await import("pdf-parse");
+              const parser = new PDFParse({ data: buffer });
+              const pdfData = await parser.getText();
+              await parser.destroy();
               manuscriptText = pdfData.text;
             } catch {
               manuscriptText = "[Contenido PDF - requiere extracción manual]";

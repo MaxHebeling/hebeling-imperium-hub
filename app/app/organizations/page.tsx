@@ -12,6 +12,10 @@ interface Organization {
   created_at: string;
 }
 
+interface OrganizationRow extends Omit<Organization, "members_count"> {
+  organization_members?: Array<{ count: number | null }> | null;
+}
+
 async function getOrganizations(supabase: Awaited<ReturnType<typeof createClient>>) {
   const { data: orgs, error } = await supabase
     .from("organizations")
@@ -34,7 +38,7 @@ async function getOrganizations(supabase: Awaited<ReturnType<typeof createClient
     return [];
   }
 
-  return (orgs || []).map((org: any) => ({
+  return ((orgs ?? []) as OrganizationRow[]).map((org) => ({
     ...org,
     members_count: org.organization_members?.[0]?.count || 0,
   })) as Organization[];

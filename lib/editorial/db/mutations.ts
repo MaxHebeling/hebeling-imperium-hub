@@ -45,6 +45,7 @@ export async function createEditorialProject(
       current_stage: "recepcion",
       status: "created",
       progress_percent: 0,
+      service_type: input.service_type ?? "full_pipeline",
       created_by: input.created_by ?? null,
       creative_mode: input.creative_mode ?? "author_directed",
       cover_prompt: input.cover_prompt ?? null,

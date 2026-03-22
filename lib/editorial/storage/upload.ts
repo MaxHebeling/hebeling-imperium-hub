@@ -1,6 +1,7 @@
 import { getAdminClient } from "@/lib/leads/helpers";
 import { EDITORIAL_BUCKETS } from "./buckets";
 import type { EditorialBucketKey } from "./buckets";
+import { ensureEditorialBucket } from "./provision";
 
 export interface UploadManuscriptResult {
   storagePath: string;
@@ -33,6 +34,7 @@ export async function uploadManuscript(
   version = 1
 ): Promise<UploadManuscriptResult> {
   const supabase = getAdminClient();
+  await ensureEditorialBucket(EDITORIAL_BUCKETS.manuscripts);
   const ext = file.name.split(".").pop() ?? "bin";
   // Each version lives at its own path – no upsert/overwrite needed.
   const storagePath = `${projectId}/manuscripts/v${version}.${ext}`;
@@ -89,6 +91,7 @@ export async function uploadEditorialFile(
 ): Promise<UploadEditorialFileResult> {
   const supabase = getAdminClient();
   const bucket = bucketForFileType(options.fileType);
+  await ensureEditorialBucket(bucket);
   const ext = file.name.split(".").pop() ?? "bin";
   const stageSegment = options.stageKey ? `/${options.stageKey}` : "";
   const storagePath = `${projectId}${stageSegment}/${options.fileType}/v${options.version}.${ext}`;

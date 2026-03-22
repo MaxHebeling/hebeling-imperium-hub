@@ -10,6 +10,14 @@ export interface EditorialManuscriptAnalysis {
   readiness_score: number;
 }
 
+interface OpenAiChatCompletionResponse {
+  choices?: Array<{
+    message?: {
+      content?: string | null;
+    };
+  }>;
+}
+
 const MAX_CHARS_FOR_MVP = 20_000;
 
 function buildEditorialPrompt(text: string, truncated: boolean): string {
@@ -121,8 +129,8 @@ export async function runEditorialManuscriptAnalysis(
     throw new Error("Fallo al llamar a OpenAI después de múltiples reintentos.");
   }
 
-  const json = (await response.json()) as any;
-  const raw = json?.choices?.[0]?.message?.content;
+  const json = (await response.json()) as OpenAiChatCompletionResponse;
+  const raw = json.choices?.[0]?.message?.content;
 
   if (!raw || typeof raw !== "string") {
     console.error("[editorial-ai][openai] invalid response shape", { json });
@@ -148,4 +156,3 @@ export async function runEditorialManuscriptAnalysis(
 
   return parsed;
 }
-

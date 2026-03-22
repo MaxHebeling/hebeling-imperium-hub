@@ -52,7 +52,7 @@ export async function POST(
       const evaluation = await evaluateStageCanComplete({
         orgId: project.org_id,
         projectId,
-        stageKey: stageKey as any, // validated above with isValidStageKey
+        stageKey,
       });
       if (!evaluation.canComplete) {
         return NextResponse.json(
@@ -127,4 +127,3 @@ export async function POST(
     return NextResponse.json({ success: false, error: message }, { status });
   }
 }
-
