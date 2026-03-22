@@ -9,7 +9,6 @@ import { getAdminClient } from "@/lib/leads/helpers";
 import {
   PUBLISHING_PHASES,
   getPhaseDefinition,
-  getNextPhase,
   legacyStageToPhaseKey,
   calculateProgressPercent,
   AUTHOR_TIMELINE_12_DAYS,

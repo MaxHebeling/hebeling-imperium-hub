@@ -174,6 +174,7 @@ export function CoverGeneratorPanel({ projectId }: { projectId: string }) {
                 {/* Cover Image */}
                 {result.publicUrl && (
                   <div className="shrink-0">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                       src={result.publicUrl}
                       alt={`Portada generada v${result.version}`}
@@ -259,11 +260,14 @@ export function CoverGeneratorPanel({ projectId }: { projectId: string }) {
               {existingCovers.map((cover) => (
                 <div key={cover.id} className="group relative">
                   {cover.publicUrl ? (
-                    <img
-                      src={cover.publicUrl}
-                      alt={`Portada v${cover.version}`}
-                      className="h-auto w-full rounded-lg border border-border shadow-sm transition-shadow group-hover:shadow-md"
-                    />
+                    <>
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={cover.publicUrl}
+                        alt={`Portada v${cover.version}`}
+                        className="h-auto w-full rounded-lg border border-border shadow-sm transition-shadow group-hover:shadow-md"
+                      />
+                    </>
                   ) : (
                     <div className="flex aspect-[9/16] items-center justify-center rounded-lg border border-dashed border-border bg-muted/30">
                       <ImageIcon className="h-8 w-8 text-muted-foreground/50" />

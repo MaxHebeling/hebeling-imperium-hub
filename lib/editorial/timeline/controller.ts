@@ -1,12 +1,10 @@
 import { getAdminClient } from "@/lib/leads/helpers";
 import type { EditorialPipelineStageKey } from "../types/editorial";
 import type {
-  ClientTimelineEntry,
   ClientTimelineState,
   ClientTimelineStageView,
   ClientArtifactView,
   StageArtifact,
-  TimelineOverride,
   TimelineOverrideType,
 } from "./types";
 import { JOURNEY_STAGES, JOURNEY_STAGE_MAP, JOURNEY_TOTAL_DAYS } from "./journey-config";

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -16,11 +16,9 @@ import {
   MoreHorizontal,
   Trash2,
   Edit,
-  Mail,
   Copy,
   Check,
 } from "lucide-react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
   Table,
@@ -112,7 +110,7 @@ const mockTeams: Team[] = [];
 
 const mockRoles: Role[] = [];
 
-export default function OrganizationDetailPage({ params }: { params: { id: string } }) {
+export default function OrganizationDetailPage() {
   const router = useRouter();
   const [copiedEmail, setCopiedEmail] = useState<string | null>(null);
 

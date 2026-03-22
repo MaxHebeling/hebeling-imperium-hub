@@ -20,7 +20,6 @@ import {
   TrendingUp,
   Target,
   Users,
-  BookOpen,
   Briefcase,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";

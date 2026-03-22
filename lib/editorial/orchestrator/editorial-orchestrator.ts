@@ -573,7 +573,6 @@ export function runErrorPreventionChecks(
   }
 ): BlockingIssue[] {
   const issues: BlockingIssue[] = [];
-  const now = new Date().toISOString();
 
   // Check for unresolved corrections before maquetacion
   if (stageKey === "maquetacion") {

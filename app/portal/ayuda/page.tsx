@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import Image from "next/image";
 import Link from "next/link";
 import { ArrowLeft, Smartphone, Download, Globe, MessageSquare, HelpCircle } from "lucide-react";
 

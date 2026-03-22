@@ -4,16 +4,11 @@ import {
   Zap,
   ArrowRight,
   Layers,
-  FileText,
-  CheckCircle,
-  Globe,
   Palette,
   Building2,
   FileOutput,
-  PenTool,
   Type,
   ShieldCheck,
-  Send,
   FileSearch,
 } from "lucide-react";
 

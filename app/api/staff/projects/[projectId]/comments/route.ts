@@ -5,7 +5,7 @@ import { createEditorialComment, logEditorialActivity } from "@/lib/editorial/db
 import { isValidStageKey } from "@/lib/editorial/pipeline/stage-utils";
 import type { EditorialStageKey } from "@/lib/editorial/types/editorial";
 import { requireEditorialCapability } from "@/lib/editorial/permissions";
-import { notifyStaffComment, notifySuggestion } from "@/lib/editorial/notifications/service";
+import { notifyStaffComment } from "@/lib/editorial/notifications/service";
 import { getAdminClient } from "@/lib/leads/helpers";
 
 /**
@@ -109,4 +109,3 @@ export async function POST(
     return NextResponse.json({ success: false, error: message }, { status: 500 });
   }
 }
-

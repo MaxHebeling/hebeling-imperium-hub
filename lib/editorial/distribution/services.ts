@@ -175,10 +175,11 @@ export async function getOrgDistributionChannels(): Promise<DistributionChannelC
 
 export async function submitToChannel(
   distributionId: string,
-  _channel: DistributionChannel
+  channel: DistributionChannel
 ): Promise<{ success: boolean; externalId?: string; error?: string }> {
   // This is a placeholder for actual API integration
   // In production, this would connect to each platform's API
+  void channel;
   
   try {
     // Simulate submission process

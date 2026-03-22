@@ -310,7 +310,6 @@ export function generateEbookExportFiles(
   config: EbookProjectConfig
 ): EbookExportFile[] {
   const files: EbookExportFile[] = [];
-  const now = new Date().toISOString();
 
   // EPUB is always generated
   files.push({

@@ -301,7 +301,6 @@ export async function upsertProjectMember(options: {
   role: "author" | "reviewer" | "editor";
 }): Promise<void> {
   const supabase = getAdminClient();
-  const now = new Date().toISOString();
   const { error } = await supabase
     .from("editorial_project_members")
     .upsert(

@@ -40,7 +40,6 @@ import {
 import {
   Card,
   CardContent,
-  CardDescription,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
@@ -50,7 +49,6 @@ import {
   Search,
   Globe,
   ExternalLink,
-  Server,
   Activity,
   Pause,
   Archive,
@@ -69,7 +67,6 @@ import {
   Zap,
 } from "lucide-react";
 import Link from "next/link";
-import { useLanguage } from "@/lib/i18n";
 
 type WebsiteStatus = "draft" | "in_progress" | "live" | "paused" | "archived";
 
@@ -160,7 +157,6 @@ const STATUS_CONFIG: Record<WebsiteStatus, { label: string; color: string; icon:
 };
 
 export default function WebsitesPage() {
-  const { t } = useLanguage();
   const [websites, setWebsites] = useState<Website[]>([]);
   const [vercelProjects, setVercelProjects] = useState<VercelProject[]>([]);
   const [brands, setBrands] = useState<Brand[]>([]);
@@ -286,7 +282,7 @@ export default function WebsitesPage() {
       } else {
         setSyncMessage(`Error: ${data.error}`);
       }
-    } catch (error) {
+    } catch {
       setSyncMessage("Error connecting to Vercel");
     } finally {
       setIsSyncing(false);

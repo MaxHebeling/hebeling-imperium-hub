@@ -7,10 +7,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
-import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
@@ -44,7 +43,6 @@ import {
 } from "@/components/ui/dialog";
 import {
   Users,
-  UserPlus,
   ChevronRight,
   MoreHorizontal,
   Eye,
@@ -53,7 +51,6 @@ import {
   Globe,
   FileText,
   Briefcase,
-  Building2,
   Mail,
   Phone,
   ExternalLink,
@@ -66,17 +63,13 @@ import {
   Send,
   Trash2,
   Star,
-  StarOff,
   Copy,
   CheckCircle2,
   Clock,
   AlertTriangle,
   Rocket,
-  FileCheck,
   DollarSign,
   TrendingUp,
-  Calendar,
-  User,
   Handshake,
   Flag,
   Upload,
@@ -84,7 +77,6 @@ import {
   LayoutDashboard,
   Loader2,
   Archive,
-  Link2,
 } from "lucide-react";
 import Link from "next/link";
 

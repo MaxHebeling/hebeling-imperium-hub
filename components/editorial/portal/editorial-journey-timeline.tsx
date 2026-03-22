@@ -17,7 +17,7 @@ import {
   ChevronDown,
   ChevronUp,
   FileText,
-  Image,
+  Image as ImageIcon,
 } from "lucide-react";
 import type {
   ClientTimelineState,
@@ -275,15 +275,18 @@ function ArtifactCard({
     <div className="flex items-center gap-3 p-3 rounded-xl bg-gray-50 border border-gray-100">
       <div className="w-10 h-10 rounded-lg bg-white border border-gray-200 flex items-center justify-center shrink-0">
         {isImage && artifact.thumbnailUrl ? (
-          <img
-            src={artifact.thumbnailUrl}
-            alt={artifact.title}
-            className="w-full h-full object-cover rounded-lg"
-          />
+          <>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={artifact.thumbnailUrl}
+              alt={artifact.title}
+              className="w-full h-full object-cover rounded-lg"
+            />
+          </>
         ) : artifact.type === "pdf_preview" ? (
           <FileText className="w-4 h-4 text-red-400" />
         ) : (
-          <Image className="w-4 h-4 text-gray-400" />
+          <ImageIcon className="w-4 h-4 text-gray-400" />
         )}
       </div>
       <div className="flex-1 min-w-0">

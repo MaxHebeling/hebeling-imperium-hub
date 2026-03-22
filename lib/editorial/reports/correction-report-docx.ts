@@ -15,7 +15,6 @@ import {
   Header,
   Footer,
   PageNumber,
-  NumberFormat,
 } from "docx";
 
 // ---------- Types ----------
@@ -66,11 +65,6 @@ function severityColor(severity: string): string {
   if (severity === "alta") return "C0392B";
   if (severity === "media") return "E67E22";
   return "27AE60";
-}
-
-function noBorders() {
-  const none = { style: BorderStyle.NONE, size: 0, color: "FFFFFF" };
-  return { top: none, bottom: none, left: none, right: none };
 }
 
 function thinBorders() {

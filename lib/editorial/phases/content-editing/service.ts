@@ -1,18 +1,13 @@
-import { generateText } from "ai";
-import { createOpenAI } from "@ai-sdk/openai";
 import { createFoundationId, createFoundationTimestamp } from "@/lib/editorial/foundation";
 import { validateEditorialWorkflowTransition } from "@/lib/editorial/foundation/pipeline/state-machine";
 import {
   assertEditorialPolicyAudit,
-  buildEditorialPolicyPromptSection,
   buildMergedEditorialProjectPipelineContext,
   getEditorialInterventionLevelForProject,
 } from "@/lib/editorial/pipeline/editorial-policy";
-import { mapWithConcurrency } from "@/lib/editorial/pipeline/concurrency";
 import { mapWorkflowStateToLegacyStage } from "@/lib/editorial/pipeline/workflow-stage-sync";
 import { EDITORIAL_BUCKETS } from "@/lib/editorial/storage/buckets";
 import { getAdminClient } from "@/lib/leads/helpers";
-import type { EditorialAnalysisReport } from "../analysis/types";
 import type { EditorialEditingPlan } from "../editing-plan/types";
 import type {
   NormalizedManuscriptBlock,
@@ -23,25 +18,12 @@ import type {
   EditorialContentEditingResult,
   EditorialEditedManuscript,
 } from "./types";
-import { parseChapterRevision } from "./parser";
 import {
   assertContentEditingState,
   parseEditorialContentEditingInput,
 } from "./validation";
 
 const EDITING_MODEL = "gpt-4o-mini";
-const CONTENT_EDITING_BATCH_SIZE = Math.max(
-  1,
-  Math.min(Number(process.env.EDITORIAL_CONTENT_EDITING_BATCH_SIZE ?? 2), 4)
-);
-const CONTENT_EDITING_CONCURRENCY = Math.max(
-  1,
-  Math.min(Number(process.env.EDITORIAL_CONTENT_EDITING_CONCURRENCY ?? 2), 4)
-);
-const openai = createOpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-  baseURL: "https://api.openai.com/v1",
-});
 
 type WorkflowRow = {
   id: string;
@@ -64,18 +46,6 @@ type AssetRow = {
   version: number;
 };
 
-function asObject(value: unknown): Record<string, unknown> {
-  if (typeof value === "object" && value !== null && !Array.isArray(value)) {
-    return value as Record<string, unknown>;
-  }
-
-  return {};
-}
-
-function getEditedDraftStoragePath(projectId: string): string {
-  return `${projectId}/edited-manuscript/draft.json`;
-}
-
 function getChapterText(
   blocks: NormalizedManuscriptBlock[],
   startBlockIndex: number,
@@ -87,83 +57,6 @@ function getChapterText(
     .map((block) => block.text)
     .join("\n\n")
     .trim();
-}
-
-function buildChapterEditingPrompt(options: {
-  title: string;
-  author: string;
-  genre: string;
-  language: string;
-  strategy: string;
-  globalObjective: string;
-  chapterTitle: string;
-  chapterObjective: string;
-  focusAreas: string[];
-  chapterInstructions: string[];
-  reportSummary: string;
-  issues: string[];
-  chapterText: string;
-  policyPromptSection: string;
-}): string {
-  return [
-    "You are a senior developmental editor and line editor.",
-    "Rewrite the chapter while preserving meaning, facts, character intent, plot logic, and authorial core voice.",
-    "Return only valid JSON. No markdown. No surrounding explanation.",
-    "",
-    "Required JSON shape:",
-    JSON.stringify(
-      {
-        summary: "string",
-        edited_text: "string",
-        structure_actions: ["string"],
-        tone_alignment_notes: ["string"],
-        preservation_notes: ["string"],
-        tracked_changes: [
-          {
-            change_type: "structure | tone | clarity | language",
-            title: "string",
-            rationale: "string",
-            before_excerpt: "string",
-            after_excerpt: "string",
-            impact: "low | medium | high",
-          },
-        ],
-      },
-      null,
-      2
-    ),
-    "",
-    "Rules:",
-    "- preserve meaning",
-    "- do not invent plot or claims",
-    "- improve structure, clarity, and tone according to the plan",
-    "- edited_text must be publication-ready for the next proofreading phase",
-    "- tracked_changes should summarize the most meaningful editorial interventions",
-    "",
-    "Editorial policy:",
-    options.policyPromptSection,
-    "",
-    `Book title: ${options.title}`,
-    `Author: ${options.author}`,
-    `Genre: ${options.genre}`,
-    `Language: ${options.language}`,
-    `Strategy: ${options.strategy}`,
-    `Global objective: ${options.globalObjective}`,
-    `Chapter title: ${options.chapterTitle}`,
-    `Chapter objective: ${options.chapterObjective}`,
-    `Focus areas: ${options.focusAreas.join(", ")}`,
-    "Chapter instructions:",
-    options.chapterInstructions.map((item) => `- ${item}`).join("\n"),
-    "",
-    "Editorial analysis summary:",
-    options.reportSummary,
-    "",
-    "Relevant issues:",
-    options.issues.length > 0 ? options.issues.map((item) => `- ${item}`).join("\n") : "- None",
-    "",
-    "Chapter text:",
-    options.chapterText,
-  ].join("\n");
 }
 
 async function getProjectAndWorkflow(projectId: string): Promise<{
@@ -244,27 +137,6 @@ async function readWorkingJson<T>(storagePath: string): Promise<T> {
   return JSON.parse(Buffer.from(await data.arrayBuffer()).toString("utf8")) as T;
 }
 
-async function readEditedDraft(
-  storagePath: string | null | undefined
-): Promise<EditorialEditedManuscript | null> {
-  if (!storagePath) {
-    return null;
-  }
-
-  const supabase = getAdminClient();
-  const { data, error } = await supabase.storage
-    .from(EDITORIAL_BUCKETS.working)
-    .download(storagePath);
-
-  if (error || !data) {
-    return null;
-  }
-
-  return JSON.parse(
-    Buffer.from(await data.arrayBuffer()).toString("utf8")
-  ) as EditorialEditedManuscript;
-}
-
 async function getNextEditedVersion(projectId: string): Promise<number> {
   const supabase = getAdminClient();
   const { data, error } = await supabase
@@ -281,56 +153,6 @@ async function getNextEditedVersion(projectId: string): Promise<number> {
   }
 
   return (data?.version ?? 0) + 1;
-}
-
-async function runChapterRewrite(options: {
-  project: ProjectRow;
-  report: EditorialAnalysisReport;
-  plan: EditorialEditingPlan;
-  chapterPlan: EditorialEditingPlan["chapter_plan"][number];
-  chapterText: string;
-  policyPromptSection: string;
-}): Promise<EditorialChapterRevision> {
-  const relevantIssues = options.report.issues
-    .filter((issue) => {
-      if (options.plan.strategy === "restructure") {
-        return issue.category === "structure" || issue.category === "clarity";
-      }
-      if (options.plan.strategy === "deep_edit") {
-        return issue.category !== "market_fit";
-      }
-      return issue.category === "clarity" || issue.category === "language";
-    })
-    .slice(0, 5)
-    .map((issue) => `${issue.title}: ${issue.explanation}`);
-
-  const result = await generateText({
-    model: openai(EDITING_MODEL),
-    temperature: 0,
-    prompt: buildChapterEditingPrompt({
-      title: options.project.title,
-      author: options.project.author ?? "Autor",
-      genre: options.project.genre ?? "general",
-      language: options.project.language ?? "es",
-      strategy: options.plan.strategy,
-      globalObjective: options.plan.global_objective,
-      chapterTitle: options.chapterPlan.chapter_title,
-      chapterObjective: options.chapterPlan.objective,
-      focusAreas: options.chapterPlan.focus_areas,
-      chapterInstructions: options.chapterPlan.instructions,
-      reportSummary: options.report.executive_summary,
-      issues: relevantIssues,
-      chapterText: options.chapterText,
-      policyPromptSection: options.policyPromptSection,
-    }),
-  });
-
-  return parseChapterRevision({
-    chapterId: options.chapterPlan.chapter_id,
-    chapterTitle: options.chapterPlan.chapter_title,
-    originalText: options.chapterText,
-    rawModelText: result.text,
-  });
 }
 
 function buildStrictPreservationRevision(input: {
@@ -439,103 +261,6 @@ async function uploadEditedManuscript(
   }
 
   return storagePath;
-}
-
-async function uploadEditedDraft(
-  projectId: string,
-  editedManuscript: EditorialEditedManuscript
-): Promise<string> {
-  const supabase = getAdminClient();
-  const storagePath = getEditedDraftStoragePath(projectId);
-  const buffer = Buffer.from(JSON.stringify(editedManuscript, null, 2), "utf8");
-
-  const { error } = await supabase.storage
-    .from(EDITORIAL_BUCKETS.working)
-    .upload(storagePath, buffer, {
-      contentType: "application/json",
-      upsert: true,
-    });
-
-  if (error) {
-    throw new Error(`Failed to upload edited manuscript draft: ${error.message}`);
-  }
-
-  return storagePath;
-}
-
-async function persistEditedProgress(input: {
-  projectId: string;
-  workflowId: string;
-  workflowContext: Record<string, unknown> | null;
-  draftStoragePath: string;
-  completedChapterCount: number;
-  totalChapterCount: number;
-}): Promise<void> {
-  const supabase = getAdminClient();
-  const now = createFoundationTimestamp();
-  const nextWorkflowContext = {
-    ...asObject(input.workflowContext),
-    content_editing_draft_path: input.draftStoragePath,
-    content_editing_completed_chapter_count: input.completedChapterCount,
-    content_editing_total_chapter_count: input.totalChapterCount,
-  };
-
-  const { error: workflowError } = await supabase
-    .from("editorial_workflows")
-    .update({
-      current_state: "editing_planned",
-      context: nextWorkflowContext,
-      updated_at: now,
-    })
-    .eq("id", input.workflowId);
-
-  if (workflowError) {
-    throw new Error(`Failed to persist content editing progress: ${workflowError.message}`);
-  }
-
-  const { error: projectError } = await supabase
-    .from("editorial_projects")
-    .update({
-      current_stage: mapWorkflowStateToLegacyStage("content_edited"),
-      current_status: "editing_planned",
-      pipeline_context: await buildMergedEditorialProjectPipelineContext(
-        input.projectId,
-        {
-          content_editing_started: true,
-          content_editing_completed_chapter_count: input.completedChapterCount,
-          content_editing_total_chapter_count: input.totalChapterCount,
-        }
-      ),
-      updated_at: now,
-    })
-    .eq("id", input.projectId);
-
-  if (projectError) {
-    throw new Error(
-      `Failed to persist editorial project content editing progress: ${projectError.message}`
-    );
-  }
-
-  const { error: logsError } = await supabase.from("pipeline_logs").insert({
-    id: createFoundationId(),
-    project_id: input.projectId,
-    workflow_id: input.workflowId,
-    stage_id: null,
-    stage_key: "editing_planned",
-    event_type: "content_editing.batch_completed",
-    level: "info",
-    message: `Content editing processed ${input.completedChapterCount} of ${input.totalChapterCount} chapters.`,
-    payload: {
-      completedChapterCount: input.completedChapterCount,
-      totalChapterCount: input.totalChapterCount,
-      draftStoragePath: input.draftStoragePath,
-    },
-    created_at: now,
-  });
-
-  if (logsError) {
-    throw new Error(`Failed to persist content editing progress logs: ${logsError.message}`);
-  }
 }
 
 async function persistEditedState(input: {
@@ -724,10 +449,6 @@ export async function executeEditorialContentEditing(
   const interventionLevel = await getEditorialInterventionLevelForProject(
     parsed.projectId
   );
-  const policyPromptSection = buildEditorialPolicyPromptSection({
-    stage: "content_editing",
-    level: interventionLevel,
-  });
 
   const normalizedAsset = await getCurrentAsset(parsed.projectId, "normalized_text");
   const analysisAsset = await getCurrentAsset(parsed.projectId, "analysis_output");
@@ -735,9 +456,6 @@ export async function executeEditorialContentEditing(
 
   const normalizedDocument = await readWorkingJson<NormalizedManuscriptDocument>(
     normalizedAsset.source_uri!
-  );
-  const analysisReport = await readWorkingJson<EditorialAnalysisReport>(
-    analysisAsset.source_uri!
   );
   const editingPlan = await readWorkingJson<EditorialEditingPlan>(
     editingPlanAsset.source_uri!

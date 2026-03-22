@@ -27,7 +27,7 @@ const brandExamples = [
   { name: "Max Hebeling", slug: "max-hebeling", domain: "maxhebeling.com" },
 ];
 
-function CodeBlock({ code, language = "javascript" }: { code: string; language?: string }) {
+function CodeBlock({ code }: { code: string; language?: string }) {
   const [copied, setCopied] = useState(false);
 
   const handleCopy = async () => {

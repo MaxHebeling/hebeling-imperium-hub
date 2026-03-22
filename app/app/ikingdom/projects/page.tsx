@@ -10,10 +10,8 @@ import {
   Search,
   Loader2,
   CheckCircle2,
-  Clock,
   AlertCircle,
   Code2,
-  Palette,
   Rocket,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
@@ -34,7 +32,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import type { WebProject, WebProjectStatus, WebServiceType } from "@/lib/ikingdom/types/web-project";
+import type { WebProject, WebProjectStatus } from "@/lib/ikingdom/types/web-project";
 import { WEB_STAGE_LABELS, WEB_SERVICE_TYPE_LABELS } from "@/lib/ikingdom/pipeline/constants";
 import type { WebStageKey } from "@/lib/ikingdom/types/web-project";
 

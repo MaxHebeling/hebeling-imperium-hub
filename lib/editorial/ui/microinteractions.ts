@@ -111,7 +111,7 @@ export function skeletonFor(type: "text" | "avatar" | "card" | "button" | "badge
  * @param baseDelay - Base delay in ms (default 50)
  */
 export function staggerDelay(index: number, baseDelay = 50): string {
-  const delay = index * baseDelay;
+  void (index * baseDelay);
   return `animate-in fade-in slide-in-from-bottom-1 duration-300 fill-mode-backwards`;
 }
 

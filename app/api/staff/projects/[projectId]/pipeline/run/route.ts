@@ -9,7 +9,6 @@ import { logWorkflowEvent } from "@/lib/editorial/workflow-events";
 import { getLatestManuscriptForProject } from "@/lib/editorial/files/get-latest-manuscript";
 import type {
   EditorialPipelineStageKey,
-  EditorialStageKey,
 } from "@/lib/editorial/types/editorial";
 import {
   ensureFileVersionFromEditorialFile,

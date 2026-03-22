@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { useLanguage } from "@/lib/i18n";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -57,7 +56,6 @@ import {
   Trash2,
   CheckCircle2,
   Clock,
-  AlertTriangle,
   Activity,
   Building2,
 } from "lucide-react";

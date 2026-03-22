@@ -18,7 +18,6 @@ interface CompanySecondaryNavProps {
 export function CompanySecondaryNav({
   title,
   items,
-  basePath,
 }: CompanySecondaryNavProps) {
   const pathname = usePathname();
 

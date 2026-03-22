@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useTransition } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
   Select,
   SelectContent,
@@ -207,7 +207,6 @@ const DEPLOYMENT_STATUS_CONFIG: Record<string, { color: string; icon: React.Reac
 
 export default function WebsiteDetailPage() {
   const params = useParams();
-  const router = useRouter();
   const [website, setWebsite] = useState<Website | null>(null);
   const [brands, setBrands] = useState<Brand[]>([]);
   const [tenants, setTenants] = useState<Tenant[]>([]);

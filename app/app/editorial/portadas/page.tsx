@@ -7,12 +7,10 @@ import {
   User,
   Loader2,
   Download,
-  RefreshCw,
   ImageIcon,
   ArrowLeft,
 } from "lucide-react";
 import Link from "next/link";
-import Image from "next/image";
 
 type ImageStyle = "realistic" | "illustrated" | "abstract" | "typographic" | "photographic";
 
@@ -449,6 +447,7 @@ export default function PortadasAIPage() {
                 </div>
               ) : selectedCover ? (
                 <div className="relative w-full max-w-sm">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={selectedCover.imageUrl}
                     alt="Portada generada"
@@ -491,6 +490,7 @@ export default function PortadasAIPage() {
                         : "border-gray-200 hover:border-gray-300"
                     }`}
                   >
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                       src={c.imageUrl}
                       alt={`Portada ${i + 1}`}

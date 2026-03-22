@@ -19,10 +19,7 @@ import type {
 } from "@/lib/editorial/types/editorial";
 import type { EditorialAiTaskKey } from "@/lib/editorial/types/ai";
 import type { EditorialAiJobContext } from "@/lib/editorial/types/ai";
-import {
-  buildQueueEntries,
-  type QueueEntry,
-} from "@/lib/editorial/ai/queue";
+import { buildQueueEntries } from "@/lib/editorial/ai/queue";
 import {
   mapPipelineStageToProjectStage,
   resolvePipelineStageKey,

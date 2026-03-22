@@ -11,13 +11,11 @@ import {
   FolderOpen,
   Download,
   Eye,
-  Trash2,
   Upload,
   File,
   FileImage,
   Grid3X3,
   List,
-  Filter,
 } from "lucide-react";
 
 interface FileEntry {
@@ -49,7 +47,7 @@ function formatSize(bytes: number): string {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
-export function FilesManagerEnhanced({ files, projectId }: FilesManagerEnhancedProps) {
+export function FilesManagerEnhanced({ files }: FilesManagerEnhancedProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [viewMode, setViewMode] = useState<"list" | "grid">("list");
   const [stageFilter, setStageFilter] = useState<string>("all");

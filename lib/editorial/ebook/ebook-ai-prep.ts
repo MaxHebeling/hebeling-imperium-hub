@@ -189,7 +189,6 @@ export function generateEbookAITasks(
   projectId: string,
   config: EbookProjectConfig
 ): EbookAITask[] {
-  const now = new Date().toISOString();
   const taskTypes: EbookAITaskType[] = [
     "clean_print_formatting",
     "preserve_structure",

@@ -344,23 +344,6 @@ function isEditorialWorkflowState(value: unknown): value is ActiveEditorialWorkf
   );
 }
 
-function normalizeVisibleWorkflowState(
-  state: EditorialWorkflowState | null | undefined
-): ActiveEditorialWorkflowState | null {
-  if (!state) return null;
-  if (state === "metadata_ready" || state === "cover_ready") return "validated";
-  if (state === "packaged" || state === "published" || state === "marketed") {
-    return "qa_passed";
-  }
-  return isEditorialWorkflowState(state) ? state : null;
-}
-
-function getWorkflowStateIndex(state: EditorialWorkflowState | null | undefined) {
-  const normalizedState = normalizeVisibleWorkflowState(state);
-  if (!normalizedState) return -1;
-  return EDITORIAL_VISIBLE_WORKFLOW_SEQUENCE.indexOf(normalizedState);
-}
-
 export default function EditorialProjectDetailPage() {
   const params = useParams();
   const projectId = params.projectId as string;

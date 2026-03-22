@@ -1,11 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { useParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
@@ -55,12 +52,10 @@ import {
   LogIn,
   LogOut,
   FileText,
-  Eye,
   Download,
   AlertTriangle,
   Key,
   Bell,
-  XCircle,
 } from "lucide-react";
 import Link from "next/link";
 
@@ -225,7 +220,6 @@ function getDeviceIcon(type: Session["deviceType"]) {
 }
 
 export default function TeamMemberDetailPage() {
-  const params = useParams();
   const [member] = useState<TeamMember>(mockMember);
   const [permissions, setPermissions] = useState<Permission[]>(mockPermissions);
   const [selectedRole, setSelectedRole] = useState<MemberRole>(member.role);

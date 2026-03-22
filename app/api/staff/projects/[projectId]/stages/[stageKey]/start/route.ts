@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireStaff } from "@/lib/auth/staff";
 import { getEditorialProject } from "@/lib/editorial/db/queries";
-import { updateStageStatus, logEditorialActivity } from "@/lib/editorial/db/mutations";
+import { logEditorialActivity } from "@/lib/editorial/db/mutations";
 import { isValidStageKey } from "@/lib/editorial/pipeline/stage-utils";
 import { requireEditorialCapability } from "@/lib/editorial/permissions";
 import { logWorkflowEvent } from "@/lib/editorial/workflow-events";

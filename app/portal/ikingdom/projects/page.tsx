@@ -5,7 +5,6 @@ import Link from "next/link";
 import {
   Globe,
   ChevronRight,
-  Loader2,
   AlertCircle,
   Code2,
 } from "lucide-react";

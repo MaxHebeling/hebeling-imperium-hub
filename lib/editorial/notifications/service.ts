@@ -3,7 +3,6 @@ import type { EditorialAnyStageKey } from "../types/editorial";
 import type {
   CreateNotificationPayload,
   EditorialNotification,
-  NotificationType,
 } from "./types";
 import {
   STAGE_CLIENT_LABELS,

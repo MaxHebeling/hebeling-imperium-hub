@@ -25,7 +25,7 @@ export function StaffHeader({
   const defaultBreadcrumbs: BreadcrumbItem[] = [
     { label: "HEBELING OS", href: "/app" },
     { label: "Reino Editorial", href: "/app/companies/reino-editorial" },
-    { label: "Editorial AI Engine" },
+    { label: title },
   ];
 
   const items = breadcrumbs || defaultBreadcrumbs;
@@ -47,7 +47,7 @@ export function StaffHeader({
           <span className="font-medium">HEBELING OS</span>
         </Link>
         
-        {items.slice(1).map((item, index) => (
+        {items.slice(1).map((item) => (
           <span key={item.label} className="flex items-center gap-2">
             <ChevronRight className="w-3.5 h-3.5 re-breadcrumb-separator" />
             {item.href ? (

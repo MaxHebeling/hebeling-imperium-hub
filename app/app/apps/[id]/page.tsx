@@ -13,13 +13,6 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
   Table,
   TableBody,
   TableCell,
@@ -30,19 +23,11 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import {
   ChevronRight,
   Contact,
   TrendingUp,
-  Users,
-  FolderKanban,
-  Globe,
-  FileText,
-  CreditCard,
-  Briefcase,
   Zap,
-  BarChart3,
   Lock,
   ExternalLink,
   Settings,
@@ -50,16 +35,11 @@ import {
   XCircle,
   Clock,
   Activity,
-  Database,
   Link2,
   Shield,
   Info,
   Layers,
   BarChart,
-  Eye,
-  Pencil,
-  Plus,
-  Trash2,
   Check,
   X,
 } from "lucide-react";

@@ -46,11 +46,12 @@ function isPasswordPayload(
   return !payload || payload.method === undefined || payload.method === "password";
 }
 
-async function verifyPasskeyAssertion(_payload: PasskeyUnlockPayload) {
+async function verifyPasskeyAssertion(payload: PasskeyUnlockPayload) {
   // Future WebAuthn integration point:
   // 1) Load challenge by session/user
   // 2) Verify origin, rpId, challenge, signature, signCount
   // 3) Return true only for valid assertions
+  void payload;
   return false;
 }
 
