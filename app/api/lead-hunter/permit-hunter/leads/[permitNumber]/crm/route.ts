@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 
 import { savePermitHunterCrmRecord } from "@/lib/lead-hunter/permit-hunter-service";
+import { requirePermitHunterStaffAccess } from "@/lib/lead-hunter/route-auth";
 
 const crmSchema = z.object({
   stage: z
@@ -29,6 +30,11 @@ export async function PUT(
   request: Request,
   { params }: { params: Promise<{ permitNumber: string }> }
 ) {
+  const access = await requirePermitHunterStaffAccess();
+  if (!access.ok) {
+    return access.response;
+  }
+
   const { permitNumber } = await params;
   const body = crmSchema.parse(await request.json());
   const record = await savePermitHunterCrmRecord(

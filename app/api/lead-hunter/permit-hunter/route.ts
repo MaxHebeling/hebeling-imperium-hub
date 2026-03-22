@@ -5,12 +5,18 @@ import {
   getPermitHunterCommandCenterSnapshot,
   queuePermitHunterCommand,
 } from "@/lib/lead-hunter/permit-hunter-service";
+import { requirePermitHunterStaffAccess } from "@/lib/lead-hunter/route-auth";
 
 const commandSchema = z.object({
   commandType: z.enum(["daily_scan", "backfill_30", "contact_sweep"]),
 });
 
 export async function GET() {
+  const access = await requirePermitHunterStaffAccess();
+  if (!access.ok) {
+    return access.response;
+  }
+
   const snapshot = await getPermitHunterCommandCenterSnapshot();
 
   return NextResponse.json({
@@ -20,6 +26,11 @@ export async function GET() {
 }
 
 export async function POST(request: NextRequest) {
+  const access = await requirePermitHunterStaffAccess();
+  if (!access.ok) {
+    return access.response;
+  }
+
   const body = await request.json().catch(() => null);
   const parsed = commandSchema.safeParse(body);
 

@@ -5,6 +5,7 @@ import {
   getPermitHunterLeadDetail,
   savePermitHunterOutreach,
 } from "@/lib/lead-hunter/permit-hunter-service";
+import { requirePermitHunterStaffAccess } from "@/lib/lead-hunter/route-auth";
 
 const outreachSchema = z.object({
   status: z.enum(["new", "attempted", "contacted", "won", "lost"]),
@@ -18,6 +19,11 @@ export async function GET(
   _: NextRequest,
   { params }: { params: Promise<{ permitNumber: string }> }
 ) {
+  const access = await requirePermitHunterStaffAccess();
+  if (!access.ok) {
+    return access.response;
+  }
+
   const { permitNumber } = await params;
   const detail = await getPermitHunterLeadDetail(decodeURIComponent(permitNumber));
   return NextResponse.json({ success: true, outreach: detail.outreach });
@@ -27,6 +33,11 @@ export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ permitNumber: string }> }
 ) {
+  const access = await requirePermitHunterStaffAccess();
+  if (!access.ok) {
+    return access.response;
+  }
+
   const { permitNumber } = await params;
   const body = outreachSchema.parse(await request.json());
   const outreach = await savePermitHunterOutreach(
