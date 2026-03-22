@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getAdminClient } from "@/lib/leads/helpers";
+import { requireIKingdomSessionAccess } from "@/lib/ikingdom/route-auth";
 
 function isMissingIkingdomSchema(error: { code?: string | null; message?: string | null }) {
   const message = error.message ?? "";
@@ -14,9 +14,12 @@ function isMissingIkingdomSchema(error: { code?: string | null; message?: string
 
 export async function GET() {
   try {
-    const supabase = getAdminClient();
+    const access = await requireIKingdomSessionAccess();
+    if (!access.ok) {
+      return access.response;
+    }
 
-    const { data: projects, error } = await supabase
+    const { data: projects, error } = await access.supabase
       .from("ikingdom_web_projects")
       .select("*")
       .order("created_at", { ascending: false });
