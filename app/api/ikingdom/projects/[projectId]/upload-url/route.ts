@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getAdminClient } from "@/lib/leads/helpers";
+import { requireIKingdomStaffAccess } from "@/lib/ikingdom/route-auth";
 
 /**
  * POST /api/ikingdom/projects/[projectId]/upload-url
@@ -15,6 +15,11 @@ export async function POST(
   { params }: { params: Promise<{ projectId: string }> }
 ) {
   try {
+    const access = await requireIKingdomStaffAccess();
+    if (!access.ok) {
+      return access.response;
+    }
+
     const { projectId } = await params;
     const body = await request.json();
     const { fileName, mimeType, sizeBytes, stageKey } = body as {
@@ -31,16 +36,14 @@ export async function POST(
       );
     }
 
-    const supabase = getAdminClient();
-
     // Verify project exists
-    const { data: project, error: projectError } = await supabase
+    const { data: project, error: projectError } = await access.admin
       .from("ikingdom_web_projects")
-      .select("id")
+      .select("id, org_id")
       .eq("id", projectId)
       .single();
 
-    if (projectError || !project) {
+    if (projectError || !project || project.org_id !== access.orgId) {
       return NextResponse.json(
         { success: false, error: "Proyecto no encontrado" },
         { status: 404 }
@@ -52,7 +55,7 @@ export async function POST(
     const storagePath = `${projectId}/${stageKey ?? "general"}/${timestamp}.${ext}`;
 
     // Create a signed upload URL (valid for 10 minutes)
-    const { data, error } = await supabase.storage
+    const { data, error } = await access.admin.storage
       .from("ikingdom-files")
       .createSignedUploadUrl(storagePath);
 
@@ -65,7 +68,7 @@ export async function POST(
     }
 
     // Register file record in the database
-    await supabase.from("ikingdom_web_files").insert({
+    await access.admin.from("ikingdom_web_files").insert({
       project_id: projectId,
       stage_key: stageKey || null,
       file_type: "deliverable",
@@ -73,6 +76,7 @@ export async function POST(
       storage_path: storagePath,
       mime_type: mimeType || "application/octet-stream",
       size_bytes: sizeBytes || 0,
+      uploaded_by: access.staff.userId,
     });
 
     return NextResponse.json({

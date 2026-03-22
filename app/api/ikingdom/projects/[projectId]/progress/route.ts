@@ -1,31 +1,35 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getAdminClient } from "@/lib/leads/helpers";
+import { requireIKingdomSessionAccess } from "@/lib/ikingdom/route-auth";
 
 export async function GET(
   _request: NextRequest,
   { params }: { params: Promise<{ projectId: string }> }
 ) {
   try {
+    const access = await requireIKingdomSessionAccess();
+    if (!access.ok) {
+      return access.response;
+    }
+
     const { projectId } = await params;
-    const supabase = getAdminClient();
 
     const [projectRes, stagesRes, filesRes, deliverablesRes] = await Promise.all([
-      supabase
+      access.supabase
         .from("ikingdom_web_projects")
         .select("*")
         .eq("id", projectId)
         .single(),
-      supabase
+      access.supabase
         .from("ikingdom_web_stages")
         .select("*")
         .eq("project_id", projectId)
         .order("created_at", { ascending: true }),
-      supabase
+      access.supabase
         .from("ikingdom_web_files")
         .select("*")
         .eq("project_id", projectId)
         .order("created_at", { ascending: false }),
-      supabase
+      access.supabase
         .from("ikingdom_web_deliverables")
         .select("*")
         .eq("project_id", projectId)

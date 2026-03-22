@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireStaff } from "@/lib/auth/staff";
-import { getAdminClient } from "@/lib/leads/helpers";
 import { WEB_STAGE_KEYS, WEB_STAGE_PROGRESS } from "@/lib/ikingdom/pipeline/constants";
+import { requireIKingdomStaffAccess } from "@/lib/ikingdom/route-auth";
 import type { WebStageKey } from "@/lib/ikingdom/types/web-project";
 
 export async function PATCH(
@@ -9,7 +8,11 @@ export async function PATCH(
   { params }: { params: Promise<{ projectId: string }> }
 ) {
   try {
-    await requireStaff();
+    const access = await requireIKingdomStaffAccess();
+    if (!access.ok) {
+      return access.response;
+    }
+
     const { projectId } = await params;
     const body = await request.json();
     const { stage } = body as { stage: string };
@@ -22,16 +25,15 @@ export async function PATCH(
     }
 
     const targetStage = stage as WebStageKey;
-    const supabase = getAdminClient();
 
     // Get current project
-    const { data: project, error: fetchError } = await supabase
+    const { data: project, error: fetchError } = await access.admin
       .from("ikingdom_web_projects")
-      .select("id, current_stage, status")
+      .select("id, current_stage, status, org_id")
       .eq("id", projectId)
       .single();
 
-    if (fetchError || !project) {
+    if (fetchError || !project || project.org_id !== access.orgId) {
       return NextResponse.json(
         { success: false, error: "Proyecto no encontrado" },
         { status: 404 }
@@ -41,7 +43,7 @@ export async function PATCH(
     const newProgress = WEB_STAGE_PROGRESS[targetStage];
 
     // Update the project's current stage and progress
-    const { error: updateError } = await supabase
+    const { error: updateError } = await access.admin
       .from("ikingdom_web_projects")
       .update({
         current_stage: targetStage,
@@ -79,7 +81,7 @@ export async function PATCH(
       }
 
       // Upsert stage record
-      await supabase
+      await access.admin
         .from("ikingdom_web_stages")
         .upsert(
           {
@@ -88,6 +90,8 @@ export async function PATCH(
             status: newStatus,
             started_at: startedAt,
             completed_at: completedAt,
+            approved_at: i < targetIndex ? completedAt : null,
+            approved_by: i < targetIndex ? access.staff.userId : null,
           },
           { onConflict: "project_id,stage_key" }
         );

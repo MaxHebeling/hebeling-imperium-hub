@@ -1,10 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getAdminClient } from "@/lib/leads/helpers";
 import type { WebStageKey } from "@/lib/ikingdom/types/web-project";
 import { WEB_STAGE_KEYS } from "@/lib/ikingdom/pipeline/constants";
+import { requireIKingdomStaffAccess } from "@/lib/ikingdom/route-auth";
 
 export async function POST(request: NextRequest) {
   try {
+    const access = await requireIKingdomStaffAccess();
+    if (!access.ok) {
+      return access.response;
+    }
+
     const body = await request.json();
 
     if (!body.title || typeof body.title !== "string" || !body.title.trim()) {
@@ -14,22 +19,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const supabase = getAdminClient();
-
-    // Get org_id from first org (same pattern as editorial)
-    const { data: org } = await supabase
-      .from("organizations")
-      .select("id")
-      .limit(1)
-      .single();
-
-    const orgId = org?.id ?? "default";
-
     // Create project
-    const { data: project, error: projectError } = await supabase
+    const { data: project, error: projectError } = await access.admin
       .from("ikingdom_web_projects")
       .insert({
-        org_id: orgId,
+        org_id: access.orgId,
         title: body.title.trim(),
         description: body.description?.trim() || null,
         client_name: body.client_name?.trim() || null,
@@ -41,6 +35,7 @@ export async function POST(request: NextRequest) {
         progress_percent: 0,
         client_id: body.client_id || null,
         due_date: body.due_date || null,
+        created_by: access.staff.userId,
       })
       .select("*")
       .single();
@@ -60,7 +55,7 @@ export async function POST(request: NextRequest) {
       status: key === "briefing" ? "processing" : "pending",
     }));
 
-    const { error: stagesError } = await supabase
+    const { error: stagesError } = await access.admin
       .from("ikingdom_web_stages")
       .insert(stageRows);
 
@@ -72,6 +67,9 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error("[ikingdom/create] error:", error);
     const message = error instanceof Error ? error.message : "Error interno del servidor";
+    if (message === "UNAUTHORIZED" || message === "FORBIDDEN") {
+      return NextResponse.json({ success: false, error: "No autorizado" }, { status: 401 });
+    }
     return NextResponse.json({ success: false, error: message }, { status: 500 });
   }
 }
